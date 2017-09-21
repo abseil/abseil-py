@@ -30,6 +30,7 @@ from absl import app
 from absl import flags
 from absl.testing import _bazelize_command
 from absl.testing import absltest
+from absl.testing import flagsaver
 from absl.tests import app_test_helper
 import mock
 import six
@@ -102,6 +103,12 @@ class UnitTests(absltest.TestCase):
           sys, 'stderr', new=mock_stdio_type()) as mock_stderr:
         app.usage()
     self.assertIn('Name: %s, %%s, %@', mock_stderr.getvalue())
+
+  @flagsaver.flagsaver
+  def test_register_and_parse_flags_with_usage_exits_on_only_check_args(self):
+    with self.assertRaises(SystemExit):
+      app.register_and_parse_flags_with_usage(
+          argv=['./program', '--only_check_args'])
 
 
 class FunctionalTests(absltest.TestCase):

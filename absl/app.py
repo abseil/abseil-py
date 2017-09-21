@@ -179,6 +179,7 @@ def define_help_flags():
 def register_and_parse_flags_with_usage(argv=None):
   """Registers help flags, parses arguments and shows usage if appropriate.
 
+  This also calls sys.exit(0) if flag --only_check_args is True.
 
   Args:
     argv: [str], a non-empty list of the command line arguments including
@@ -191,6 +192,9 @@ def register_and_parse_flags_with_usage(argv=None):
   define_help_flags()
 
   argv = parse_flags_with_usage(sys.argv if argv is None else argv)
+  # Exit when told so.
+  if FLAGS.only_check_args:
+    sys.exit(0)
   # Immediately after flags are parsed, bump verbosity to INFO if the flag has
   # not been set.
   if FLAGS['verbosity'].using_default_value:
@@ -275,8 +279,6 @@ def _run_init(argv):
   # Set up absl logging handler.
   logging.use_absl_handler()
   argv = register_and_parse_flags_with_usage(argv=argv)
-  if FLAGS.only_check_args:
-    sys.exit(0)
   if faulthandler:
     try:
       faulthandler.enable()
