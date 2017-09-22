@@ -209,7 +209,6 @@ def _run_main(main, argv):
   elif FLAGS.run_with_profiling or FLAGS.profile_file:
     # Avoid import overhead since most apps (including performance-sensitive
     # ones) won't be run with profiling.
-
     import atexit
     if FLAGS.use_cprofile_for_profiling:
       import cProfile as profile

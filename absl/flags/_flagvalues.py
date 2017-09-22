@@ -683,7 +683,6 @@ class FlagValues(object):
 
     flag_dict = self._flags()
     args = iter(args)
-    non_gnu_break = False  # Whether args scanning breaks because of non-gnu.
     for arg in args:
       value = None
 
@@ -700,7 +699,6 @@ class FlagValues(object):
         if self.is_gnu_getopt():
           continue
         else:
-          non_gnu_break = True
           break
 
       if arg == '--':
@@ -723,7 +721,6 @@ class FlagValues(object):
         if self.is_gnu_getopt():
           continue
         else:
-          non_gnu_break = True
           break
 
       # --undefok is a special case.
@@ -773,8 +770,7 @@ class FlagValues(object):
       else:
         unknown_flags.append((name, arg))
 
-    remaining_args = list(args)
-    unparsed_args.extend(remaining_args)
+    unparsed_args.extend(list(args))
     return unknown_flags, unparsed_args, undefok
 
   def is_parsed(self):

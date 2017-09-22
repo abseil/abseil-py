@@ -31,11 +31,9 @@ assert logging.root.getEffectiveLevel() == logging.ERROR, (
     'logging.root level should be changed to ERROR, but found {}'.format(
         logging.root.getEffectiveLevel()))
 
-
 from absl import flags
 from absl import logging as _  # pylint: disable=unused-import
 from absl.testing import absltest
-
 
 FLAGS = flags.FLAGS
 
