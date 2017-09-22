@@ -77,9 +77,6 @@ class FlagValues(object):
   # able to do so. The mixin methods, e.g. keys, values, are not uncommon flag
   # names. Those flag values would not be accessible via the FLAGS.xxx form.
 
-  # This exists for legacy reasons, and will be removed in the future.
-  _USE_GNU_GET_OPT_BY_DEFAULT = True
-
   def __init__(self):
     # Since everything in this class is so heavily overloaded, the only
     # way of defining and using fields is to access __dict__ directly.
@@ -117,7 +114,7 @@ class FlagValues(object):
     self.__dict__['__banned_flag_names'] = frozenset(dir(FlagValues))
 
     # Bool: Whether to use GNU style scanning.
-    self.__dict__['__use_gnu_getopt'] = self._USE_GNU_GET_OPT_BY_DEFAULT
+    self.__dict__['__use_gnu_getopt'] = True
 
     # Bool: Whether use_gnu_getopt has been explicitly set by the user.
     self.__dict__['__use_gnu_getopt_explicitly_set'] = False
