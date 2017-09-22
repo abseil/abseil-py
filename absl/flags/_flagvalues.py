@@ -573,10 +573,11 @@ class FlagValues(object):
     self._cleanup_unregistered_flag_from_module_dicts(flag_obj)
 
   def set_default(self, name, value):
-    """Changes the default value (and current value) of the named flag object.
+    """Changes the default value of the named flag object.
 
-    Call this method at the top level of a module to avoid overwriting the value
-    passed at the command line.
+    The flag's current value is also updated if the flag is currently using
+    the default value, i.e. not specified in the command line, and not set
+    by FLAGS.name = value.
 
     Args:
       name: str, the name of the flag to modify.
