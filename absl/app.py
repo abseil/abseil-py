@@ -85,7 +85,7 @@ class UsageError(Error):
   """
 
   def __init__(self, message, exitcode=1):
-    Error.__init__(self, message)
+    super(UsageError, self).__init__(message)
     self.exitcode = exitcode
 
 
@@ -95,9 +95,9 @@ class HelpFlag(flags.BooleanFlag):
   SHORT_NAME = '?'
 
   def __init__(self):
-    flags.BooleanFlag.__init__(self, self.NAME, False, 'show this help',
-                               short_name=self.SHORT_NAME,
-                               allow_hide_cpp=True)
+    super(HelpFlag, self).__init__(
+        self.NAME, False, 'show this help',
+        short_name=self.SHORT_NAME, allow_hide_cpp=True)
 
   def parse(self, arg):
     if arg:
@@ -118,8 +118,8 @@ class HelpfullFlag(flags.BooleanFlag):
   """Display help for flags in this module and all dependent modules."""
 
   def __init__(self):
-    flags.BooleanFlag.__init__(self, 'helpfull', False, 'show full help',
-                               allow_hide_cpp=True)
+    super(HelpfullFlag, self).__init__(
+        'helpfull', False, 'show full help', allow_hide_cpp=True)
 
   def parse(self, arg):
     if arg:
@@ -131,9 +131,9 @@ class HelpXMLFlag(flags.BooleanFlag):
   """Similar to HelpfullFlag, but generates output in XML format."""
 
   def __init__(self):
-    flags.BooleanFlag.__init__(self, 'helpxml', False,
-                               'like --helpfull, but generates XML output',
-                               allow_hide_cpp=True)
+    super(HelpXMLFlag, self).__init__(
+        'helpxml', False, 'like --helpfull, but generates XML output',
+        allow_hide_cpp=True)
 
   def parse(self, arg):
     if arg:

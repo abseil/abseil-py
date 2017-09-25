@@ -96,8 +96,8 @@ class UnrecognizedFlagError(Error):
       tip = '. Did you mean: %s ?' % ', '.join(suggestions)
     else:
       tip = ''
-    Error.__init__(
-        self, 'Unknown command line flag \'%s\'%s' % (flagname, tip))
+    super(UnrecognizedFlagError, self).__init__(
+        'Unknown command line flag \'%s\'%s' % (flagname, tip))
 
 
 class UnparsedFlagAccessError(Error):
