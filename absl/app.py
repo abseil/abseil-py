@@ -38,6 +38,11 @@ from absl import command_name
 from absl import flags
 from absl import logging
 
+try:
+  import faulthandler
+except ImportError:
+  faulthandler = None
+
 
 FLAGS = flags.FLAGS
 
@@ -60,14 +65,11 @@ flags.DEFINE_boolean('only_check_args', False,
                      'Set to true to validate args and exit.',
                      allow_hide_cpp=True)
 
+
+
 # If main() exits via an abnormal exception, call into these
 # handlers before exiting.
-
 EXCEPTION_HANDLERS = []
-try:
-  import faulthandler
-except ImportError:
-  faulthandler = None
 
 
 class Error(Exception):
