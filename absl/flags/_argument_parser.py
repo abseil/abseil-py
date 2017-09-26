@@ -416,7 +416,7 @@ class ListParser(BaseListParser):
   """Parser for a comma-separated list of strings."""
 
   def __init__(self):
-    BaseListParser.__init__(self, ',', 'comma')
+    super(ListParser, self).__init__(',', 'comma')
 
   def parse(self, argument):
     """Parses argument as comma-separated list of strings."""
@@ -456,7 +456,7 @@ class WhitespaceSeparatedListParser(BaseListParser):
     """
     self._comma_compat = comma_compat
     name = 'whitespace or comma' if self._comma_compat else 'whitespace'
-    BaseListParser.__init__(self, None, name)
+    super(WhitespaceSeparatedListParser, self).__init__(None, name)
 
   def parse(self, argument):
     """Parses argument as whitespace-separated list of strings.
