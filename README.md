@@ -18,10 +18,14 @@ been extensively tested and used in production.
 To install the package, simply run:
 
 ```bash
-python setup.py install
+pip install absl-py
 ```
 
-We will also release the package on PyPI very soon.
+Or install from source:
+
+```bash
+python setup.py install
+```
 
 ### Running Tests
 
