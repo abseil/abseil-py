@@ -77,9 +77,6 @@ class FlagValues(object):
   # able to do so. The mixin methods, e.g. keys, values, are not uncommon flag
   # names. Those flag values would not be accessible via the FLAGS.xxx form.
 
-  # This exists for legacy reasons, and will be removed in the future.
-  _USE_GNU_GET_OPT_BY_DEFAULT = True
-
   def __init__(self):
     # Since everything in this class is so heavily overloaded, the only
     # way of defining and using fields is to access __dict__ directly.
@@ -117,7 +114,7 @@ class FlagValues(object):
     self.__dict__['__banned_flag_names'] = frozenset(dir(FlagValues))
 
     # Bool: Whether to use GNU style scanning.
-    self.__dict__['__use_gnu_getopt'] = self._USE_GNU_GET_OPT_BY_DEFAULT
+    self.__dict__['__use_gnu_getopt'] = True
 
     # Bool: Whether use_gnu_getopt has been explicitly set by the user.
     self.__dict__['__use_gnu_getopt_explicitly_set'] = False
@@ -573,10 +570,11 @@ class FlagValues(object):
     self._cleanup_unregistered_flag_from_module_dicts(flag_obj)
 
   def set_default(self, name, value):
-    """Changes the default value (and current value) of the named flag object.
+    """Changes the default value of the named flag object.
 
-    Call this method at the top level of a module to avoid overwriting the value
-    passed at the command line.
+    The flag's current value is also updated if the flag is currently using
+    the default value, i.e. not specified in the command line, and not set
+    by FLAGS.name = value.
 
     Args:
       name: str, the name of the flag to modify.
@@ -685,7 +683,6 @@ class FlagValues(object):
 
     flag_dict = self._flags()
     args = iter(args)
-    non_gnu_break = False  # Whether args scanning breaks because of non-gnu.
     for arg in args:
       value = None
 
@@ -702,7 +699,6 @@ class FlagValues(object):
         if self.is_gnu_getopt():
           continue
         else:
-          non_gnu_break = True
           break
 
       if arg == '--':
@@ -725,7 +721,6 @@ class FlagValues(object):
         if self.is_gnu_getopt():
           continue
         else:
-          non_gnu_break = True
           break
 
       # --undefok is a special case.
@@ -775,8 +770,7 @@ class FlagValues(object):
       else:
         unknown_flags.append((name, arg))
 
-    remaining_args = list(args)
-    unparsed_args.extend(remaining_args)
+    unparsed_args.extend(list(args))
     return unknown_flags, unparsed_args, undefok
 
   def is_parsed(self):

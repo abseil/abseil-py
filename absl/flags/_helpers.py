@@ -24,7 +24,6 @@ import re
 import struct
 import sys
 import textwrap
-
 try:
   import fcntl
 except ImportError:
@@ -36,7 +35,6 @@ except ImportError:
   termios = None
 
 import six
-
 
 
 _DEFAULT_HELP_WIDTH = 80  # Default width of help output.

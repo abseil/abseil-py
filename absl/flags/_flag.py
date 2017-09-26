@@ -290,7 +290,8 @@ class BooleanFlag(Flag):
 
   def __init__(self, name, default, help, short_name=None, **args):  # pylint: disable=redefined-builtin
     p = _argument_parser.BooleanParser()
-    Flag.__init__(self, p, None, name, default, help, short_name, 1, **args)
+    super(BooleanFlag, self).__init__(
+        p, None, name, default, help, short_name, 1, **args)
 
 
 class EnumFlag(Flag):
@@ -300,7 +301,8 @@ class EnumFlag(Flag):
                short_name=None, case_sensitive=True, **args):
     p = _argument_parser.EnumParser(enum_values, case_sensitive)
     g = _argument_parser.ArgumentSerializer()
-    Flag.__init__(self, p, g, name, default, help, short_name, **args)
+    super(EnumFlag, self).__init__(
+        p, g, name, default, help, short_name, **args)
     self.help = '<%s>: %s' % ('|'.join(enum_values), self.help)
 
   def _extra_xml_dom_elements(self, doc):

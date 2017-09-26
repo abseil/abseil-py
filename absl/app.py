@@ -38,6 +38,11 @@ from absl import command_name
 from absl import flags
 from absl import logging
 
+try:
+  import faulthandler
+except ImportError:
+  faulthandler = None
+
 
 FLAGS = flags.FLAGS
 
@@ -60,14 +65,11 @@ flags.DEFINE_boolean('only_check_args', False,
                      'Set to true to validate args and exit.',
                      allow_hide_cpp=True)
 
+
+
 # If main() exits via an abnormal exception, call into these
 # handlers before exiting.
-
 EXCEPTION_HANDLERS = []
-try:
-  import faulthandler
-except ImportError:
-  faulthandler = None
 
 
 class Error(Exception):
@@ -85,7 +87,7 @@ class UsageError(Error):
   """
 
   def __init__(self, message, exitcode=1):
-    Error.__init__(self, message)
+    super(UsageError, self).__init__(message)
     self.exitcode = exitcode
 
 
@@ -95,9 +97,9 @@ class HelpFlag(flags.BooleanFlag):
   SHORT_NAME = '?'
 
   def __init__(self):
-    flags.BooleanFlag.__init__(self, self.NAME, False, 'show this help',
-                               short_name=self.SHORT_NAME,
-                               allow_hide_cpp=True)
+    super(HelpFlag, self).__init__(
+        self.NAME, False, 'show this help',
+        short_name=self.SHORT_NAME, allow_hide_cpp=True)
 
   def parse(self, arg):
     if arg:
@@ -118,8 +120,8 @@ class HelpfullFlag(flags.BooleanFlag):
   """Display help for flags in this module and all dependent modules."""
 
   def __init__(self):
-    flags.BooleanFlag.__init__(self, 'helpfull', False, 'show full help',
-                               allow_hide_cpp=True)
+    super(HelpfullFlag, self).__init__(
+        'helpfull', False, 'show full help', allow_hide_cpp=True)
 
   def parse(self, arg):
     if arg:
@@ -131,9 +133,9 @@ class HelpXMLFlag(flags.BooleanFlag):
   """Similar to HelpfullFlag, but generates output in XML format."""
 
   def __init__(self):
-    flags.BooleanFlag.__init__(self, 'helpxml', False,
-                               'like --helpfull, but generates XML output',
-                               allow_hide_cpp=True)
+    super(HelpXMLFlag, self).__init__(
+        'helpxml', False, 'like --helpfull, but generates XML output',
+        allow_hide_cpp=True)
 
   def parse(self, arg):
     if arg:
@@ -179,6 +181,7 @@ def define_help_flags():
 def register_and_parse_flags_with_usage(argv=None):
   """Registers help flags, parses arguments and shows usage if appropriate.
 
+  This also calls sys.exit(0) if flag --only_check_args is True.
 
   Args:
     argv: [str], a non-empty list of the command line arguments including
@@ -191,6 +194,9 @@ def register_and_parse_flags_with_usage(argv=None):
   define_help_flags()
 
   argv = parse_flags_with_usage(sys.argv if argv is None else argv)
+  # Exit when told so.
+  if FLAGS.only_check_args:
+    sys.exit(0)
   # Immediately after flags are parsed, bump verbosity to INFO if the flag has
   # not been set.
   if FLAGS['verbosity'].using_default_value:
@@ -205,7 +211,6 @@ def _run_main(main, argv):
   elif FLAGS.run_with_profiling or FLAGS.profile_file:
     # Avoid import overhead since most apps (including performance-sensitive
     # ones) won't be run with profiling.
-
     import atexit
     if FLAGS.use_cprofile_for_profiling:
       import cProfile as profile
@@ -275,8 +280,6 @@ def _run_init(argv):
   # Set up absl logging handler.
   logging.use_absl_handler()
   argv = register_and_parse_flags_with_usage(argv=argv)
-  if FLAGS.only_check_args:
-    sys.exit(0)
   if faulthandler:
     try:
       faulthandler.enable()

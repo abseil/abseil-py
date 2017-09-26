@@ -84,12 +84,10 @@ from absl import flags
 from absl.logging import converter
 import six
 
-
 if six.PY2:
   import thread as _thread_lib  # For .get_ident().
 else:
   import threading as _thread_lib  # For .get_ident().
-
 
 
 FLAGS = flags.FLAGS
