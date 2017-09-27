@@ -482,7 +482,7 @@ class FlagValues(object):
       return fl[name].value
     else:
       error_message = (
-          'Trying to access flag %s before flags were parsed.' % name)
+          'Trying to access flag --%s before flags were parsed.' % name)
       if self._is_unparsed_flag_access_allowed(name):
         # Print warning to stderr. Messages in logs are often ignored/unnoticed.
         warnings.warn(
@@ -497,6 +497,15 @@ class FlagValues(object):
           logging.exception(error_message)
         return fl[name].value
       else:
+        if six.PY2:
+          # In Python 2, hasattr returns False if getattr raises any exception.
+          # That means if someone calls hasattr(FLAGS, 'flag'), it returns False
+          # instead of raises UnparsedFlagAccessError even if --flag is already
+          # defined. To make the error more visible, the best we can do is to
+          # log an error message before raising the exception.
+          # Don't log a full stacktrace here since that makes other callers
+          # get too much noise.
+          logging.error(error_message)
         raise _exceptions.UnparsedFlagAccessError(error_message)
 
   def __setattr__(self, name, value):

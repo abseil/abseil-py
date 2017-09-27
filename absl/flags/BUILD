@@ -133,6 +133,7 @@ py_test(
         "//absl/testing:absltest",
         "//absl/testing:parameterized",
         "@mock_archive//:mock",
+        "@six_archive//:six",
     ],
 )
 

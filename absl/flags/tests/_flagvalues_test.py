@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import types
+import unittest
 
 from absl import logging
 from absl.flags import _defines
@@ -29,6 +30,7 @@ from absl.flags.tests import module_foo
 from absl.testing import absltest
 from absl.testing import parameterized
 import mock
+import six
 
 
 class FlagValuesTest(absltest.TestCase):
@@ -566,15 +568,6 @@ class FlagsDashSyntaxTest(absltest.TestCase):
 
 class UnparseFlagsTest(absltest.TestCase):
 
-  def test_unparsed_flags_access_raises_after_unparse_flags(self):
-    fv = _flagvalues.FlagValues()
-    _defines.DEFINE_string('a_str', 'default_value', 'help', flag_values=fv)
-    fv.mark_as_parsed()
-    self.assertEqual(fv.a_str, 'default_value')
-    fv.unparse_flags()
-    with self.assertRaises(_exceptions.UnparsedFlagAccessError):
-      _ = fv.a_str
-
   def test_using_default_value_none(self):
     fv = _flagvalues.FlagValues()
     _defines.DEFINE_string('default_none', None, 'help', flag_values=fv)
@@ -675,11 +668,38 @@ class UnparseFlagsTest(absltest.TestCase):
     fv.unparse_flags()
     self.assertEqual(expected_default, fv['foo'].value)
 
-  def test_unitialized_flag_access(self):
+
+class UnparsedFlagAccessTest(absltest.TestCase):
+
+  def test_unparsed_flag_access(self):
     fv = _flagvalues.FlagValues()
     _defines.DEFINE_string('name', 'default', 'help', flag_values=fv)
     with self.assertRaises(_exceptions.UnparsedFlagAccessError):
       _ = fv.name
+
+  @unittest.skipIf(six.PY3, 'Python 2 only test')
+  def test_hasattr_logs_in_py2(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('name', 'default', 'help', flag_values=fv)
+    with mock.patch.object(_flagvalues.logging, 'error') as mock_error:
+      self.assertFalse(hasattr(fv, 'name'))
+    mock_error.assert_called_once()
+
+  @unittest.skipIf(six.PY2, 'Python 3 only test')
+  def test_hasattr_raises_in_py3(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('name', 'default', 'help', flag_values=fv)
+    with self.assertRaises(_exceptions.UnparsedFlagAccessError):
+      _ = hasattr(fv, 'name')
+
+  def test_unparsed_flags_access_raises_after_unparse_flags(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('a_str', 'default_value', 'help', flag_values=fv)
+    fv.mark_as_parsed()
+    self.assertEqual(fv.a_str, 'default_value')
+    fv.unparse_flags()
+    with self.assertRaises(_exceptions.UnparsedFlagAccessError):
+      _ = fv.a_str
 
 
 if __name__ == '__main__':
