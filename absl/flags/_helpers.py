@@ -35,6 +35,7 @@ except ImportError:
   termios = None
 
 import six
+from six.moves import range  # pylint: disable=redefined-builtin
 
 
 _DEFAULT_HELP_WIDTH = 80  # Default width of help output.
@@ -116,8 +117,7 @@ def get_calling_module_object_and_name():
   Raises:
     AssertionError: Raised when no calling module could be identified.
   """
-  range_func = range if sys.version_info[0] >= 3 else xrange
-  for depth in range_func(1, sys.getrecursionlimit()):
+  for depth in range(1, sys.getrecursionlimit()):
     # sys._getframe is the right thing to use here, as it's the best
     # way to walk up the call stack.
     globals_for_frame = sys._getframe(depth).f_globals  # pylint: disable=protected-access

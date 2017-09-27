@@ -32,7 +32,7 @@ python setup.py install
 To run Abseil tests, we use [bazel](https://bazel.build/):
 
 ```bash
-bazel absl/...
+bazel test absl/...
 ```
 
 ### Example Code
