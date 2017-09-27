@@ -116,7 +116,11 @@ def get_calling_module_object_and_name():
   Raises:
     AssertionError: Raised when no calling module could be identified.
   """
-  range_func = range if sys.version_info[0] >= 3 else xrange
+  try:
+    range_func = xrange  # Python 3
+  except NameError:
+    range_func = range   # Python 2
+
   for depth in range_func(1, sys.getrecursionlimit()):
     # sys._getframe is the right thing to use here, as it's the best
     # way to walk up the call stack.
