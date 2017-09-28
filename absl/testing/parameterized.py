@@ -297,8 +297,9 @@ class _ParameterizedTestIter(object):
 
 def _modify_class(class_object, testcases, naming_type):
   assert not getattr(class_object, '_test_method_ids', None), (
-      'Cannot add parameters to %s,'
-      ' which already has parameterized methods.' % (class_object,))
+      'Cannot add parameters to %s. Either it already has parameterized '
+      'methods, or its super class is also a parameterized class.' % (
+          class_object,))
   class_object._test_method_ids = test_method_ids = {}
   for name, obj in six.iteritems(class_object.__dict__.copy()):
     if (name.startswith(unittest.TestLoader.testMethodPrefix)
@@ -409,7 +410,7 @@ class TestGeneratorMetaclass(type):
   """
 
   def __new__(mcs, class_name, bases, dct):
-    dct['_test_method_ids'] = test_method_ids = {}
+    test_method_ids = dct.setdefault('_test_method_ids', {})
     for name, obj in six.iteritems(dct.copy()):
       if (name.startswith(unittest.TestLoader.testMethodPrefix) and
           _non_string_or_bytes_iterable(obj)):
@@ -417,6 +418,20 @@ class TestGeneratorMetaclass(type):
         dct.pop(name)
         _update_class_dict_for_param_test_case(
             dct, test_method_ids, name, iterator)
+    # If the base class is a subclass of parameterized.TestCase, inherit its
+    # _test_method_ids too.
+    for base in bases:
+      # Check if the base has _test_method_ids first, then check if it's a
+      # subclass of parameterized.TestCase. Otherwise when this is called for
+      # the parameterized.TestCase definition itself, this raises because
+      # itself is not defined yet. This works as long as absltest.TestCase does
+      # not define _test_method_ids.
+      if getattr(base, '_test_method_ids', None) and issubclass(base, TestCase):
+        for test_method, test_method_id in six.iteritems(base._test_method_ids):
+          # test_method may both exists in base and this class.
+          # This class's method overrides base class's.
+          # That's why it should only inherit it if it does not exist.
+          test_method_ids.setdefault(test_method, test_method_id)
 
     return type.__new__(mcs, class_name, bases, dct)
 
