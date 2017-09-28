@@ -344,6 +344,15 @@ class ParameterizedTestsTest(absltest.TestCase):
     def testSomethingElse(self, unused_obj):
       pass
 
+  class SuperclassTestCase(parameterized.TestCase):
+
+    @parameterized.parameters('foo', 'bar')
+    def test_name(self, name):
+      del name
+
+  class SubclassTestCase(SuperclassTestCase):
+    pass
+
   def test_missing_inheritance(self):
     ts = unittest.makeSuite(self.BadAdditionParams)
     self.assertEqual(1, ts.countTestCases())
@@ -692,6 +701,22 @@ class ParameterizedTestsTest(absltest.TestCase):
         def test_something(self, unused_obj):
           pass
 
+  def tes_double_class_decorations_not_supported(self):
+
+    @parameterized.parameters('foo', 'bar')
+    class SuperclassWithClassDecorator(parameterized.TestCase):
+
+      def test_name(self, name):
+        del name
+
+    with self.assertRaises(AssertionError):
+
+      @parameterized.parameters('foo', 'bar')
+      class SubclassWithClassDecorator(SuperclassWithClassDecorator):
+        pass
+
+      del SubclassWithClassDecorator
+
   def test_other_decorator_ordering(self):
     ts = unittest.makeSuite(self.OtherDecorator)
     res = unittest.TestResult()
@@ -758,12 +783,20 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEqual(2, res.testsRun)
     self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
 
-  def testNamedParametersReusable(self):
+  def test_named_parameters_reusable(self):
     ts = unittest.makeSuite(self.NamedParametersReusableTestCase)
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(8, res.testsRun)
     self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
+
+  def test_subclass_inherits_superclass_test_method_ids(self):
+    self.assertEqual(
+        {'test_name0': "test_name('foo')", 'test_name1': "test_name('bar')"},
+        self.SuperclassTestCase._test_method_ids)
+    self.assertEqual(
+        {'test_name0': "test_name('foo')", 'test_name1': "test_name('bar')"},
+        self.SubclassTestCase._test_method_ids)
 
 
 def _decorate_with_side_effects(func, self):
