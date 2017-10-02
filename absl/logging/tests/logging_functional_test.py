@@ -662,8 +662,12 @@ Arguments: \(\)'''
         expected_stderr = ''
         expected_info = '''\
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
-NoneType: None
 '''
+        # Python 3.5.0 to 3.5.2 are different too.
+        if (3, 5, 0) <= sys.version_info[:3] <= (3, 5, 2):
+          expected_info += 'NoneType\n'
+        else:
+          expected_info += 'NoneType: None\n'
 
     expected_logs = [
         ['stderr', None, expected_stderr],
