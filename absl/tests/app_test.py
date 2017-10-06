@@ -107,7 +107,7 @@ class UnitTests(absltest.TestCase):
   @flagsaver.flagsaver
   def test_register_and_parse_flags_with_usage_exits_on_only_check_args(self):
     with self.assertRaises(SystemExit):
-      app.register_and_parse_flags_with_usage(
+      app._register_and_parse_flags_with_usage(
           argv=['./program', '--only_check_args'])
 
 

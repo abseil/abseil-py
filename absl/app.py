@@ -178,7 +178,7 @@ def define_help_flags():
     _define_help_flags_called = True
 
 
-def register_and_parse_flags_with_usage(argv=None):
+def _register_and_parse_flags_with_usage(argv=None):
   """Registers help flags, parses arguments and shows usage if appropriate.
 
   This also calls sys.exit(0) if flag --only_check_args is True.
@@ -279,7 +279,7 @@ def _run_init(argv):
   command_name.make_process_name_useful()
   # Set up absl logging handler.
   logging.use_absl_handler()
-  argv = register_and_parse_flags_with_usage(argv=argv)
+  argv = _register_and_parse_flags_with_usage(argv=argv)
   if faulthandler:
     try:
       faulthandler.enable()
