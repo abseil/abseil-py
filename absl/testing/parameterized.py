@@ -78,7 +78,7 @@ be a string (or an object that returns an apt name when converted via str()):
        {'testcase_name': 'Normal',
         'result': True, 'string': 'aaa', 'prefix': 'aa'},
        {'testcase_name': 'EmptyPrefix',
-        'result': True, 'string: 'abc', 'prefix': ''},
+        'result': True, 'string': 'abc', 'prefix': ''},
        {'testcase_name': 'BothEmpty',
         'result': True, 'string': '', 'prefix': ''})
     def testStartsWith(self, prefix, string, result):
