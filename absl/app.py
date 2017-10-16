@@ -190,7 +190,13 @@ def _register_and_parse_flags_with_usage(argv=None):
   Returns:
     [str], a non-empty list of remaining command line arguments after parsing
     flags, including program name.
+
+  Raises:
+    SystemError: Raised when it's called more than once.
   """
+  if _register_and_parse_flags_with_usage.done:
+    raise SystemError('Flag registration can be done only once.')
+
   define_help_flags()
 
   argv = parse_flags_with_usage(sys.argv if argv is None else argv)
@@ -201,7 +207,11 @@ def _register_and_parse_flags_with_usage(argv=None):
   # not been set.
   if FLAGS['verbosity'].using_default_value:
     FLAGS.verbosity = 0
+  _register_and_parse_flags_with_usage.done = True
+
   return argv
+
+_register_and_parse_flags_with_usage.done = False
 
 
 def _run_main(main, argv):
