@@ -106,9 +106,18 @@ class UnitTests(absltest.TestCase):
 
   @flagsaver.flagsaver
   def test_register_and_parse_flags_with_usage_exits_on_only_check_args(self):
-    with self.assertRaises(SystemExit):
-      app._register_and_parse_flags_with_usage(
-          argv=['./program', '--only_check_args'])
+    done = app._register_and_parse_flags_with_usage.done
+    try:
+      app._register_and_parse_flags_with_usage.done = False
+      with self.assertRaises(SystemExit):
+        app._register_and_parse_flags_with_usage(
+            argv=['./program', '--only_check_args'])
+    finally:
+      app._register_and_parse_flags_with_usage.done = done
+
+  def test_register_and_parse_flags_with_usage_exits_on_second_run(self):
+    with self.assertRaises(SystemError):
+      app._register_and_parse_flags_with_usage()
 
 
 class FunctionalTests(absltest.TestCase):
