@@ -570,7 +570,7 @@ class PythonHandler(logging.StreamHandler):
 
   def start_logging_to_file(self, program_name=None, log_dir=None):
     """Starts logging messages to files instead of standard error."""
-    FLAGS.logtostderr = 0
+    FLAGS.logtostderr = False
 
     actual_log_dir, file_prefix, symlink_prefix = find_log_dir_and_names(
         program_name=program_name, log_dir=log_dir)
