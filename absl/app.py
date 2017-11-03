@@ -117,7 +117,7 @@ class HelpshortFlag(HelpFlag):
 
 
 class HelpfullFlag(flags.BooleanFlag):
-  """Display help for flags in this module and all dependent modules."""
+  """Display help for flags in the main module and all dependent modules."""
 
   def __init__(self):
     super(HelpfullFlag, self).__init__(
@@ -309,7 +309,7 @@ def usage(shorthelp=False, writeto_stdout=False, detailed_error=None,
   """Writes __main__'s docstring to stderr with some help text.
 
   Args:
-    shorthelp: bool, if True, prints only flags from this module,
+    shorthelp: bool, if True, prints only flags from the main module,
         rather than all flags.
     writeto_stdout: bool, if True, writes help message to stdout,
         rather than to stderr.
