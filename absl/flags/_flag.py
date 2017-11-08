@@ -47,11 +47,10 @@ class Flag(object):
     .serializer - an ArgumentSerializer object;
     .allow_override - the flag may be redefined without raising an error, and
                       newly defined flag overrides the old one.
-    .allow_override_cpp - the flag may be redefined in C++ without raising an
-                          error, value "transferred" to C++, and the flag is
-                          replaced by the C++ flag after init;
-    .allow_hide_cpp - the flag may be redefined despite hiding a C++ flag with
-                      the same name;
+    .allow_override_cpp - use the flag from C++ if available; the flag
+                          definition is replaced by the C++ flag after init;
+    .allow_hide_cpp - use the Python flag despite having a C++ flag with
+                      the same name (ignore the C++ flag);
     .using_default_value - the flag value has not been set by user;
     .allow_overwrite - the flag may be parsed more than once without raising
                        an error, the last set value will be used;
@@ -100,7 +99,7 @@ class Flag(object):
     self.using_default_value = True
     self._value = None
     self.validators = []
-    if allow_hide_cpp and allow_override_cpp:
+    if self.allow_hide_cpp and self.allow_override_cpp:
       raise _exceptions.Error(
           "Can't have both allow_hide_cpp (means use Python flag) and "
           'allow_override_cpp (means use C++ flag after InitGoogle)')
