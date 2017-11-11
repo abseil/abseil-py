@@ -178,8 +178,8 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
   try:
     _internal_declare_key_flags([flag_name], flag_values=flag_values)
   except KeyError:
-    raise ValueError(
-        'Key flag --%s needs to be defined in Python' % flag_name)
+    raise ValueError('Flag --%s is undefined. To set a flag as a key flag '
+                     'first define it in Python.' % flag_name)
 
 
 def adopt_module_key_flags(module, flag_values=_flagvalues.FLAGS):

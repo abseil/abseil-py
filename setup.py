@@ -35,7 +35,9 @@ if py_version < ('2', '7') or py_version[0] == '3' and py_version < ('3', '4'):
 setuptools.setup(
     name='absl-py',
     version='0.1.4',
-    description='Abseil Python Common Libraries',
+    description=(
+        'Abseil Python Common Libraries, '
+        'see https://github.com/abseil/abseil-py.'),
     author='The Abseil Authors',
     url='https://github.com/abseil/abseil-py',
     packages=setuptools.find_packages(exclude=[
