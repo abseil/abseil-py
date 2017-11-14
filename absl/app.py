@@ -259,6 +259,7 @@ def run(main, argv=None):
   Args:
     main: The main function to execute. It takes an single argument "argv",
         which is a list of command line arguments with parsed flags removed.
+        If it returns an integer, it is used as the process's exit code.
     argv: A non-empty list of the command line arguments including program name,
         sys.argv is used if None.
   - Parses command line flags with the flag module.
