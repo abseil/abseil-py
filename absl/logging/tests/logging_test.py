@@ -326,7 +326,6 @@ class ABSLLoggerTest(absltest.TestCase):
     mock_code_0 = mock.Mock()
     mock_code_0.co_filename = logging_file
     mock_code_0.co_name = 'LoggingLog'
-    mock_code_0.co_firstlineno = 124
     mock_frame_0.f_code = mock_code_0
     mock_frame_0.f_lineno = 125
 
@@ -335,7 +334,6 @@ class ABSLLoggerTest(absltest.TestCase):
     mock_code_1 = mock.Mock()
     mock_code_1.co_filename = 'myfile.py'
     mock_code_1.co_name = 'Method1'
-    mock_code_1.co_firstlineno = 124
     mock_frame_1.f_code = mock_code_1
     mock_frame_1.f_lineno = 125
 
@@ -344,7 +342,6 @@ class ABSLLoggerTest(absltest.TestCase):
     mock_code_2 = mock.Mock()
     mock_code_2.co_filename = 'myfile.py'
     mock_code_2.co_name = 'Method2'
-    mock_code_2.co_firstlineno = 124
     mock_frame_2.f_code = mock_code_2
     mock_frame_2.f_lineno = 125
 
@@ -353,22 +350,11 @@ class ABSLLoggerTest(absltest.TestCase):
     mock_code_3 = mock.Mock()
     mock_code_3.co_filename = 'myfile.py'
     mock_code_3.co_name = 'Method3'
-    mock_code_3.co_firstlineno = 124
     mock_frame_3.f_code = mock_code_3
     mock_frame_3.f_lineno = 125
 
-    # Set up mock frame 4 that has the same function name as frame 2.
-    mock_frame_4 = mock.Mock()
-    mock_code_4 = mock.Mock()
-    mock_code_4.co_filename = 'myfile.py'
-    mock_code_4.co_name = 'Method2'
-    mock_code_4.co_firstlineno = 248
-    mock_frame_4.f_code = mock_code_4
-    mock_frame_4.f_lineno = 249
-
     # Tie them together.
-    mock_frame_4.f_back = None
-    mock_frame_3.f_back = mock_frame_4
+    mock_frame_3.f_back = None
     mock_frame_2.f_back = mock_frame_3
     mock_frame_1.f_back = mock_frame_2
     mock_frame_0.f_back = mock_frame_1
@@ -382,7 +368,6 @@ class ABSLLoggerTest(absltest.TestCase):
 
   def tearDown(self):
     mock.patch.stopall()
-    self.logger._frames_to_skip.clear()
 
   def test_constructor_without_level(self):
     self.logger = logging.ABSLLogger('')
@@ -403,45 +388,17 @@ class ABSLLoggerTest(absltest.TestCase):
     expected_name = 'Method2'
     self.assertEqual(expected_name, self.logger.findCaller()[2])
 
-  def test_find_caller_skip_method1_and_method2(self):
-    self.set_up_mock_frames()
-    self.logger.register_frame_to_skip('myfile.py', 'Method1')
-    self.logger.register_frame_to_skip('myfile.py', 'Method2')
-    expected_name = 'Method3'
-    self.assertEqual(expected_name, self.logger.findCaller()[2])
-
   def test_find_caller_skip_method1_and_method3(self):
     self.set_up_mock_frames()
     self.logger.register_frame_to_skip('myfile.py', 'Method1')
-    # Skipping Method3 should change nothing since Method2 should be hit.
+    # Skiping Method3 should change nothing since Method2 should be hit.
     self.logger.register_frame_to_skip('myfile.py', 'Method3')
     expected_name = 'Method2'
     self.assertEqual(expected_name, self.logger.findCaller()[2])
-
-  def test_find_caller_skip_method1_and_method4(self):
-    self.set_up_mock_frames()
-    self.logger.register_frame_to_skip('myfile.py', 'Method1')
-    # Skipping frame 4's Method2 should change nothing for frame 2's Method2.
-    self.logger.register_frame_to_skip('myfile.py', 'Method2', 248)
-    expected_name = 'Method2'
-    expected_frame_lineno = 125
-    self.assertEqual(expected_name, self.logger.findCaller()[2])
-    self.assertEqual(expected_frame_lineno, self.logger.findCaller()[1])
-
-  def test_find_caller_skip_method1_method2_and_method3(self):
-    self.set_up_mock_frames()
-    self.logger.register_frame_to_skip('myfile.py', 'Method1')
-    self.logger.register_frame_to_skip('myfile.py', 'Method2', 124)
-    self.logger.register_frame_to_skip('myfile.py', 'Method3')
-    expected_name = 'Method2'
-    expected_frame_lineno = 249
-    self.assertEqual(expected_name, self.logger.findCaller()[2])
-    self.assertEqual(expected_frame_lineno, self.logger.findCaller()[1])
 
   @unittest.skipIf(six.PY2, 'stack_info is only supported in Python 3.')
   def test_find_caller_stack_info(self):
     self.set_up_mock_frames()
-    self.logger.register_frame_to_skip('myfile.py', 'Method1')
     with mock.patch.object(traceback, 'print_stack') as print_stack:
       self.assertEqual(
           ('myfile.py', 125, 'Method2', 'Stack (most recent call last):'),
@@ -499,12 +456,7 @@ class ABSLLoggerTest(absltest.TestCase):
     # This is basically just making sure that if I put something in a
     # list, it actually appears in that list.
     frame_tuple = ('file', 'method')
-    self.logger.register_frame_to_skip(*frame_tuple)
-    self.assertIn(frame_tuple, self.logger._frames_to_skip)
-
-  def test_register_frame_to_skip_with_lineno(self):
-    frame_tuple = ('file', 'method', 123)
-    self.logger.register_frame_to_skip(*frame_tuple)
+    self.logger.register_frame_to_skip(frame_tuple[0], frame_tuple[1])
     self.assertIn(frame_tuple, self.logger._frames_to_skip)
 
   def test_logger_cannot_be_disabled(self):

@@ -780,7 +780,7 @@ class ABSLLogger(logging.getLoggerClass()):
     This method skips any frames registered with the
     ABSLLogger and any methods from this file, and whatever
     method is currently being used to generate the prefix for the log
-    line.  Then it returns the file name, line number, and method name
+    line.  Then it returns the file name, line nubmer, and method name
     of the calling method.
 
     Args:
@@ -796,8 +796,6 @@ class ABSLLogger(logging.getLoggerClass()):
     while frame:
       code = frame.f_code
       if (_LOGGING_FILE_PREFIX not in code.co_filename and
-          (code.co_filename, code.co_name,
-           code.co_firstlineno) not in f_to_skip and
           (code.co_filename, code.co_name) not in f_to_skip):
         if six.PY2:
           return (code.co_filename, frame.f_lineno, code.co_name)
@@ -877,7 +875,7 @@ class ABSLLogger(logging.getLoggerClass()):
       self.callHandlers(record)
 
   @classmethod
-  def register_frame_to_skip(cls, file_name, function_name, line_number=None):
+  def register_frame_to_skip(cls, file_name, function_name):
     """Registers a function name to skip when walking the stack.
 
     The ABSLLogger sometimes skips method calls on the stack
@@ -888,14 +886,8 @@ class ABSLLogger(logging.getLoggerClass()):
     Args:
       file_name: str, the name of the file that contains the function.
       function_name: str, the name of the function to skip.
-      line_number: int, if provided, only the function with this starting line
-          number will be skipped. Otherwise, all functions with the same name
-          in the file will be skipped.
     """
-    if line_number is not None:
-      cls._frames_to_skip.add((file_name, function_name, line_number))
-    else:
-      cls._frames_to_skip.add((file_name, function_name))
+    cls._frames_to_skip.add((file_name, function_name))
 
 
 def _get_thread_id():
