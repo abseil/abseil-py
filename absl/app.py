@@ -43,6 +43,7 @@ try:
 except ImportError:
   faulthandler = None
 
+
 FLAGS = flags.FLAGS
 
 flags.DEFINE_boolean('run_with_pdb', False, 'Set to true for PDB debug mode')
@@ -198,7 +199,8 @@ def _register_and_parse_flags_with_usage(argv=None):
 
   define_help_flags()
 
-  argv = parse_flags_with_usage(sys.argv if argv is None else argv)
+  original_argv = sys.argv if argv is None else argv
+  argv = parse_flags_with_usage(original_argv)
   # Exit when told so.
   if FLAGS.only_check_args:
     sys.exit(0)
