@@ -261,6 +261,52 @@ class FlagValuesTest(absltest.TestCase):
   def test_default_gnu_getopt_value(self):
     self.assertTrue(_flagvalues.FlagValues().is_gnu_getopt())
 
+  def test_known_only_flags_in_gnustyle(self):
+
+    def run_test(argv, defined_py_flags, expected_argv):
+      fv = _flagvalues.FlagValues()
+      fv.set_gnu_getopt(True)
+      for f in defined_py_flags:
+        if f.startswith('b'):
+          _defines.DEFINE_boolean(f, False, 'help', flag_values=fv)
+        else:
+          _defines.DEFINE_string(f, 'default', 'help', flag_values=fv)
+      output_argv = fv(argv, known_only=True)
+      self.assertEqual(expected_argv, output_argv)
+
+    run_test(
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+        defined_py_flags=[],
+        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '))
+    run_test(
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+        defined_py_flags=['f1'],
+        expected_argv='0 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '))
+    run_test(
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+        defined_py_flags=['f2'],
+        expected_argv='0 --f1=v1 cmd --b1 --f3 v3 --nob2'.split(' '))
+    run_test(
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+        defined_py_flags=['b1'],
+        expected_argv='0 --f1=v1 cmd --f2 v2 --f3 v3 --nob2'.split(' '))
+    run_test(
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+        defined_py_flags=['f3'],
+        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --nob2'.split(' '))
+    run_test(
+        argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+        defined_py_flags=['b2'],
+        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3'.split(' '))
+    run_test(
+        argv='0 --f1=v1 cmd --undefok=f1 --f2 v2'.split(' '),
+        defined_py_flags=['b2'],
+        expected_argv='0 --f1=v1 cmd --f2 v2'.split(' '))
+    run_test(
+        argv='0 --f1=v1 cmd --undefok f1,f2 --f2 v2'.split(' '),
+        defined_py_flags=['b2'],
+        expected_argv='0 --f1=v1 cmd --f2 v2'.split(' '))
+
   def test_len(self):
     fv = _flagvalues.FlagValues()
     self.assertEqual(0, len(fv))
@@ -516,6 +562,12 @@ class SettingUnknownFlagTest(absltest.TestCase):
     new_flags._register_unknown_flag_setter(self.set_undef)
     new_flags.undefined_flag = 0
     self.assertEqual(self.setter_called, 1)
+
+  def test_not_raise_on_undefined_if_undefok(self):
+    new_flags = _flagvalues.FlagValues()
+    args = ['0', '--foo', '--bar=1', '--undefok=foo,bar']
+    unparsed = new_flags(args, known_only=True)
+    self.assertEqual(['0', '--foo', '--bar=1'], unparsed)
 
   def test_re_raise_undefined(self):
     def setter(unused_name, unused_val):

@@ -589,13 +589,15 @@ class FlagValues(object):
   def __iter__(self):
     return iter(self._flags())
 
-  def __call__(self, argv):
+  def __call__(self, argv, known_only=False):
     """Parses flags from argv; stores parsed flags into this FlagValues object.
 
     All unparsed arguments are returned.
 
     Args:
        argv: a tuple/list of strings.
+       known_only: bool, if True, parse and remove known flags and return rest
+           untouched.
 
     Returns:
        The list of arguments not parsed as options, including argv[0].
@@ -618,7 +620,7 @@ class FlagValues(object):
     args = self.read_flags_from_files(argv[1:], force_gnu=False)
 
     # Parse the arguments.
-    unknown_flags, unparsed_args, undefok = self._parse_args(args)
+    unknown_flags, unparsed_args, undefok = self._parse_args(args, known_only)
 
     # Handle unknown flags by raising UnrecognizedFlagError.
     # Note some users depend on us raising this particular error.
@@ -646,7 +648,7 @@ class FlagValues(object):
     """
     self.__dict__['__is_retired_flag_func'] = is_retired_flag_func
 
-  def _parse_args(self, args):
+  def _parse_args(self, args, known_only):
     """Helper function to do the main argument parsing.
 
     This function goes through args and does the bulk of the flag parsing.
@@ -655,6 +657,7 @@ class FlagValues(object):
 
     Args:
       args: [str], a list of strings with the arguments to parse.
+      known_only: parse and remove known flags, return rest in unparsed_args
 
     Returns:
       A tuple with the following:
@@ -690,6 +693,8 @@ class FlagValues(object):
           break
 
       if arg == '--':
+        if known_only:
+          unparsed_args.append(arg)
         break
 
       # At this point, arg must start with '-'.
@@ -755,6 +760,8 @@ class FlagValues(object):
       if flag:
         flag.parse(value)
         flag.using_default_value = False
+      elif known_only:
+        unparsed_args.append(arg)
       else:
         unknown_flags.append((name, arg))
 
