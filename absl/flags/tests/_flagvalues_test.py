@@ -299,13 +299,17 @@ class FlagValuesTest(absltest.TestCase):
         defined_py_flags=['b2'],
         expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3'.split(' '))
     run_test(
-        argv='0 --f1=v1 cmd --undefok=f1 --f2 v2'.split(' '),
+        argv=('0 --f1=v1 cmd --undefok=f1 --f2 v2 --b1 '
+              '--f3 v3 --nob2').split(' '),
         defined_py_flags=['b2'],
-        expected_argv='0 --f1=v1 cmd --f2 v2'.split(' '))
+        expected_argv='0 cmd --f2 v2 --b1 --f3 v3'.split(' '))
     run_test(
-        argv='0 --f1=v1 cmd --undefok f1,f2 --f2 v2'.split(' '),
+        argv=('0 --f1=v1 cmd --undefok f1,f2 --f2 v2 --b1 '
+              '--f3 v3 --nob2').split(' '),
         defined_py_flags=['b2'],
-        expected_argv='0 --f1=v1 cmd --f2 v2'.split(' '))
+        # Note v2 is preserved here, since undefok requires the flag being
+        # specified in the form of --flag=value.
+        expected_argv='0 cmd v2 --b1 --f3 v3'.split(' '))
 
   def test_len(self):
     fv = _flagvalues.FlagValues()
@@ -567,7 +571,7 @@ class SettingUnknownFlagTest(absltest.TestCase):
     new_flags = _flagvalues.FlagValues()
     args = ['0', '--foo', '--bar=1', '--undefok=foo,bar']
     unparsed = new_flags(args, known_only=True)
-    self.assertEqual(['0', '--foo', '--bar=1'], unparsed)
+    self.assertEqual(['0'], unparsed)
 
   def test_re_raise_undefined(self):
     def setter(unused_name, unused_val):
