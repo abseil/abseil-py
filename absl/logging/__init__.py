@@ -130,7 +130,6 @@ _absl_logger = None
 _absl_handler = None
 
 
-
 _CPP_NAME_TO_LEVELS = {
     'debug': '0',  # Abseil C++ has no DEBUG level, mapping it to INFO here.
     'info': '0',
