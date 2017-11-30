@@ -22,6 +22,7 @@ import getpass
 import io
 import logging as std_logging
 import os
+import re
 import socket
 import sys
 import threading
@@ -540,6 +541,29 @@ class ABSLLogPrefixTest(parameterized.TestCase):
               level_prefix, thread_id),
           logging.get_absl_log_prefix(self.record))
       time.localtime.assert_called_once_with(self.record.created)
+
+  def test_absl_prefix_regex(self):
+    self.record.created = 1226888258.0521369
+    # Use UTC so the test passes regardless of the local time zone.
+    with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
+      prefix = logging.get_absl_log_prefix(self.record)
+
+    match = re.search(logging.ABSL_LOGGING_PREFIX_REGEX, prefix)
+    self.assertTrue(match)
+
+    expect = {'severity': 'I',
+              'month': '11',
+              'day': '17',
+              'hour': '02',
+              'minute': '17',
+              'second': '38',
+              'microsecond': '052136',
+              'thread_id': str(logging._get_thread_id()),
+              'filename': 'source.py',
+              'line': '13',
+             }
+    actual = {name: match.group(name) for name in expect}
+    self.assertEqual(expect, actual)
 
   def test_critical_absl(self):
     self.record.levelno = std_logging.CRITICAL
