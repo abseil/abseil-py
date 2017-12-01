@@ -17,11 +17,12 @@
 To use this module, define a 'main' function with a single 'argv' argument and
 call app.run(main). For example:
 
-def main(argv):
-  del argv  # Unused.
+    def main(argv):
+      if len(argv) > 1:
+        raise app.UsageError('Too many command-line arguments.')
 
-if __name__ == '__main__':
-  app.run(main)
+    if __name__ == '__main__':
+      app.run(main)
 """
 
 from __future__ import absolute_import

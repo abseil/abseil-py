@@ -589,13 +589,15 @@ class FlagValues(object):
   def __iter__(self):
     return iter(self._flags())
 
-  def __call__(self, argv):
+  def __call__(self, argv, known_only=False):
     """Parses flags from argv; stores parsed flags into this FlagValues object.
 
     All unparsed arguments are returned.
 
     Args:
        argv: a tuple/list of strings.
+       known_only: bool, if True, parse and remove known flags; return the rest
+           untouched. Unknown flags specified by --undefok are not returned.
 
     Returns:
        The list of arguments not parsed as options, including argv[0].
@@ -618,14 +620,11 @@ class FlagValues(object):
     args = self.read_flags_from_files(argv[1:], force_gnu=False)
 
     # Parse the arguments.
-    unknown_flags, unparsed_args, undefok = self._parse_args(args)
+    unknown_flags, unparsed_args = self._parse_args(args, known_only)
 
     # Handle unknown flags by raising UnrecognizedFlagError.
     # Note some users depend on us raising this particular error.
     for name, value in unknown_flags:
-      if name in undefok:
-        continue
-
       suggestions = _helpers.get_flag_suggestions(name, list(self))
       raise _exceptions.UnrecognizedFlagError(
           name, value, suggestions=suggestions)
@@ -646,7 +645,7 @@ class FlagValues(object):
     """
     self.__dict__['__is_retired_flag_func'] = is_retired_flag_func
 
-  def _parse_args(self, args):
+  def _parse_args(self, args, known_only):
     """Helper function to do the main argument parsing.
 
     This function goes through args and does the bulk of the flag parsing.
@@ -655,18 +654,20 @@ class FlagValues(object):
 
     Args:
       args: [str], a list of strings with the arguments to parse.
+      known_only: bool, if True, parse and remove known flags; return the rest
+           untouched. Unknown flags specified by --undefok are not returned.
 
     Returns:
       A tuple with the following:
           unknown_flags: List of (flag name, arg) for flags we don't know about.
           unparsed_args: List of arguments we did not parse.
-          undefok: Set of flags that were given via --undefok.
 
     Raises:
        Error: Raised on any parsing error.
        ValueError: Raised on flag value parsing error.
     """
-    unknown_flags, unparsed_args, undefok = [], [], set()
+    unparsed_names_and_args = []  # A list of (flag name or None, arg).
+    undefok = set()
     retired_flag_func = self.__dict__['__is_retired_flag_func']
 
     flag_dict = self._flags()
@@ -683,13 +684,15 @@ class FlagValues(object):
 
       if not arg.startswith('-'):
         # A non-argument: default is break, GNU is skip.
-        unparsed_args.append(arg)
+        unparsed_names_and_args.append((None, arg))
         if self.is_gnu_getopt():
           continue
         else:
           break
 
       if arg == '--':
+        if known_only:
+          unparsed_names_and_args.append((None, arg))
         break
 
       # At this point, arg must start with '-'.
@@ -705,7 +708,7 @@ class FlagValues(object):
 
       if not name:
         # The argument is all dashes (including one dash).
-        unparsed_args.append(arg)
+        unparsed_names_and_args.append((None, arg))
         if self.is_gnu_getopt():
           continue
         else:
@@ -756,10 +759,26 @@ class FlagValues(object):
         flag.parse(value)
         flag.using_default_value = False
       else:
-        unknown_flags.append((name, arg))
+        unparsed_names_and_args.append((name, arg))
+
+    unknown_flags = []
+    unparsed_args = []
+    for name, arg in unparsed_names_and_args:
+      if name is None:
+        # Positional arguments.
+        unparsed_args.append(arg)
+      elif name in undefok:
+        # Remove undefok flags.
+        continue
+      else:
+        # This is an unknown flag.
+        if known_only:
+          unparsed_args.append(arg)
+        else:
+          unknown_flags.append((name, arg))
 
     unparsed_args.extend(list(args))
-    return unknown_flags, unparsed_args, undefok
+    return unknown_flags, unparsed_args
 
   def is_parsed(self):
     """Returns whether flags were parsed."""
