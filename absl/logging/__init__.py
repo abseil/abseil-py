@@ -26,7 +26,7 @@ Simple usage:
     logging.set_verbosity(logging.DEBUG)
     logging.log(logging.DEBUG, 'This will be printed')
 
-    logging.warn('Worrying Stuff')
+    logging.warning('Worrying Stuff')
     logging.error('Alarming Stuff')
     logging.fatal('AAAAHHHHH!!!!')  # Process exits.
 
@@ -96,8 +96,8 @@ FLAGS = flags.FLAGS
 # Logging levels.
 FATAL = converter.ABSL_FATAL
 ERROR = converter.ABSL_ERROR
-WARN = converter.ABSL_WARN
-WARNING = converter.ABSL_WARN
+WARNING = converter.ABSL_WARNING
+WARN = converter.ABSL_WARNING  # Deprecated name.
 INFO = converter.ABSL_INFO
 DEBUG = converter.ABSL_DEBUG
 
@@ -141,7 +141,7 @@ _CPP_NAME_TO_LEVELS = {
 
 _CPP_LEVEL_TO_NAMES = {
     '0': 'info',
-    '1': 'warn',
+    '1': 'warning',
     '2': 'error',
     '3': 'fatal',
 }
@@ -203,11 +203,13 @@ class _StderrthresholdFlag(flags.Flag):
       v = _CPP_LEVEL_TO_NAMES[v]  # Normalize to strings.
     elif v.lower() in _CPP_NAME_TO_LEVELS:
       v = v.lower()
+      if v == 'warn':
+        v = 'warning'  # Use 'warning' as the canonical name.
       cpp_value = int(_CPP_NAME_TO_LEVELS[v])
     else:
       raise ValueError(
           '--stderrthreshold must be one of (case-insensitive) '
-          "'debug', 'info', 'warn', 'warning', 'error', 'fatal', "
+          "'debug', 'info', 'warning', 'error', 'fatal', "
           "or '0', '1', '2', '3', not '%s'" % v)
 
     self._value = v
@@ -234,13 +236,13 @@ flags.DEFINE_flag(_VerbosityFlag(
     short_name='v', allow_hide_cpp=True))
 flags.DEFINE_flag(_StderrthresholdFlag(
     'stderrthreshold', 'fatal',
-    'log messages at this level, or more severe, to stderr in'
-    ' addition to the logfile.  Possible values are '
-    "'debug', 'info', 'warn', 'error', and 'fatal'.  "
+    'log messages at this level, or more severe, to stderr in '
+    'addition to the logfile.  Possible values are '
+    "'debug', 'info', 'warning', 'error', and 'fatal'.  "
     'Obsoletes --alsologtostderr. Using --alsologtostderr '
     'cancels the effect of this flag. Please also note that '
-    'this flag is subject to --verbosity and requires logfile'
-    ' not be stderr.', allow_hide_cpp=True))
+    'this flag is subject to --verbosity and requires logfile '
+    'not be stderr.', allow_hide_cpp=True))
 flags.DEFINE_boolean('showprefixforinfo', True,
                      'If False, do not prepend prefix to info messages '
                      'when it\'s logged to stderr, '
@@ -262,7 +264,7 @@ def set_verbosity(v):
   Args:
     v: int|str, the verbosity level as an integer or string. Legal string values
         are those that can be coerced to an integer as well as case-insensitive
-        'debug', 'info', 'warn', 'error', and 'fatal'.
+        'debug', 'info', 'warning', 'error', and 'fatal'.
   """
   try:
     new_level = int(v)
@@ -276,8 +278,8 @@ def set_stderrthreshold(s):
 
   Args:
     s: str|int, valid strings values are case-insensitive 'debug',
-        'info', 'warn', 'error', and 'fatal'; valid integer values are
-        logging.DEBUG|INFO|WARN|ERROR|FATAL.
+        'info', 'warning', 'error', and 'fatal'; valid integer values are
+        logging.DEBUG|INFO|WARNING|ERROR|FATAL.
 
   Raises:
       ValueError: Raised when s is an invalid value.
@@ -290,7 +292,7 @@ def set_stderrthreshold(s):
     raise ValueError(
         'set_stderrthreshold only accepts integer absl logging level '
         'from -3 to 1, or case-insensitive string values '
-        "'debug', 'info', 'warn', 'error', and 'fatal'. "
+        "'debug', 'info', 'warning', 'error', and 'fatal'. "
         'But found "{}" ({}).'.format(s, type(s)))
 
 
@@ -306,10 +308,10 @@ def error(msg, *args, **kwargs):
 
 def warning(msg, *args, **kwargs):
   """Logs a warning message."""
-  log(WARN, msg, *args, **kwargs)
+  log(WARNING, msg, *args, **kwargs)
 
 
-warn = warning
+warn = warning  # Deprecated function.
 
 
 def info(msg, *args, **kwargs):
@@ -390,7 +392,7 @@ def log(level, msg, *args, **kwargs):
 
   Args:
     level: int, the absl logging level at which to log the message
-        (logging.DEBUG|INFO|WARN|ERROR|FATAL). While some C++ verbose logging
+        (logging.DEBUG|INFO|WARNING|ERROR|FATAL). While some C++ verbose logging
         level constants are also supported, callers should prefer explicit
         logging.vlog() calls for such purpose.
 
@@ -440,9 +442,12 @@ def level_info():
   return get_verbosity() >= INFO
 
 
-def level_warn():
+def level_warning():
   """Returns True if warning logging is turned on."""
-  return get_verbosity() >= WARN
+  return get_verbosity() >= WARNING
+
+
+level_warn = level_warning  # Deprecated function.
 
 
 def level_error():

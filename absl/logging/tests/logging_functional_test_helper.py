@@ -66,10 +66,10 @@ def _test_do_logging():
 
   logging.vlog(-1, 'This line is VLOG level -1')
   logging.log(-1, 'This line is log level -1')
-  logging.warn('Worrying Stuff')
+  logging.warning('Worrying Stuff')
   for i in xrange(1, 5):
-    logging.log_first_n(logging.WARN, 'Warn first %d of %d', 2, i, 2)
-    logging.log_every_n(logging.WARN, 'Warn %d (every %d)', 3, i, 3)
+    logging.log_first_n(logging.WARNING, 'Warn first %d of %d', 2, i, 2)
+    logging.log_every_n(logging.WARNING, 'Warn %d (every %d)', 3, i, 3)
 
   logging.vlog(-2, 'This line is VLOG level -2')
   logging.log(-2, 'This line is log level -2')
@@ -216,14 +216,15 @@ def _test_stderrthreshold():
   def log_things():
     logging.debug('FLAGS.stderrthreshold=%s, debug log', FLAGS.stderrthreshold)
     logging.info('FLAGS.stderrthreshold=%s, info log', FLAGS.stderrthreshold)
-    logging.warn('FLAGS.stderrthreshold=%s, warn log', FLAGS.stderrthreshold)
+    logging.warning('FLAGS.stderrthreshold=%s, warning log',
+                    FLAGS.stderrthreshold)
     logging.error('FLAGS.stderrthreshold=%s, error log', FLAGS.stderrthreshold)
 
   FLAGS.stderrthreshold = 'debug'
   log_things()
   FLAGS.stderrthreshold = 'info'
   log_things()
-  FLAGS.stderrthreshold = 'warn'
+  FLAGS.stderrthreshold = 'warning'
   log_things()
   FLAGS.stderrthreshold = 'error'
   log_things()
@@ -233,7 +234,7 @@ def _test_std_logging():
   """Tests logs from std logging."""
   std_logging.debug('std debug log')
   std_logging.info('std info log')
-  std_logging.warn('std warn log')
+  std_logging.warning('std warning log')
   std_logging.error('std error log')
 
 
