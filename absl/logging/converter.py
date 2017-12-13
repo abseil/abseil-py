@@ -22,14 +22,14 @@ logging level schemes:
 
 Here is a handy ascii chart for easy mental mapping.
 
-  LEVEL     | cpp |  absl  | standard |
-  ----------+-----+--------+----------+
-  DEBUG     |  0  |    1   |    10    |
-  INFO      |  0  |    0   |    20    |
-  WARN(ING) |  1  |   -1   |    30    |
-  ERROR     |  2  |   -2   |    40    |
-  CRITICAL  |  3  |   -3   |    50    |
-  FATAL     |  3  |   -3   |    50    |
+  LEVEL    | cpp |  absl  | standard |
+  ---------+-----+--------+----------+
+  DEBUG    |  0  |    1   |    10    |
+  INFO     |  0  |    0   |    20    |
+  WARNING  |  1  |   -1   |    30    |
+  ERROR    |  2  |   -2   |    40    |
+  CRITICAL |  3  |   -3   |    50    |
+  FATAL    |  3  |   -3   |    50    |
 
 Note: standard logging CRITICAL is mapped to absl/cpp FATAL.
 However, only CRITICAL logs from the absl logger (or absl.logging.fatal) will
@@ -56,26 +56,32 @@ STANDARD_INFO = logging.INFO
 STANDARD_DEBUG = logging.DEBUG
 
 # These levels are also used to define the constants
-# FATAL, ERROR, WARN, WARNING, INFO, and DEBUG in the
+# FATAL, ERROR, WARNING, INFO, and DEBUG in the
 # absl.logging module.
 ABSL_FATAL = -3
 ABSL_ERROR = -2
-ABSL_WARN = -1
+ABSL_WARNING = -1
+ABSL_WARN = -1  # Deprecated name.
 ABSL_INFO = 0
 ABSL_DEBUG = 1
 
 ABSL_LEVELS = {ABSL_FATAL: 'FATAL',
                ABSL_ERROR: 'ERROR',
-               ABSL_WARN: 'WARN',
+               ABSL_WARNING: 'WARNING',
                ABSL_INFO: 'INFO',
                ABSL_DEBUG: 'DEBUG'}
 
 # Inverts the ABSL_LEVELS dictionary
-ABSL_NAMES = dict((v, k) for (k, v) in ABSL_LEVELS.items())
+ABSL_NAMES = {'FATAL': ABSL_FATAL,
+              'ERROR': ABSL_ERROR,
+              'WARNING': ABSL_WARNING,
+              'WARN': ABSL_WARNING,  # Deprecated name.
+              'INFO': ABSL_INFO,
+              'DEBUG': ABSL_DEBUG}
 
 ABSL_TO_STANDARD = {ABSL_FATAL: STANDARD_CRITICAL,
                     ABSL_ERROR: STANDARD_ERROR,
-                    ABSL_WARN: STANDARD_WARNING,
+                    ABSL_WARNING: STANDARD_WARNING,
                     ABSL_INFO: STANDARD_INFO,
                     ABSL_DEBUG: STANDARD_DEBUG}
 
@@ -155,14 +161,11 @@ def string_to_standard(level):
   """Converts a string level to standard logging level value.
 
   Args:
-    level: str, case-insensitive 'debug', 'info', 'warn', 'error', 'fatal'.
+    level: str, case-insensitive 'debug', 'info', 'warning', 'error', 'fatal'.
 
   Returns:
     The corresponding integer level for use in standard logging.
   """
-  # Also support warning as an alias to warn.
-  if level.upper() == 'WARNING':
-    level = 'WARN'
   return absl_to_standard(ABSL_NAMES.get(level.upper()))
 
 
@@ -190,7 +193,7 @@ def standard_to_absl(level):
   elif level < STANDARD_WARNING:
     return ABSL_INFO
   elif level < STANDARD_ERROR:
-    return ABSL_WARN
+    return ABSL_WARNING
   elif level < STANDARD_CRITICAL:
     return ABSL_ERROR
   else:

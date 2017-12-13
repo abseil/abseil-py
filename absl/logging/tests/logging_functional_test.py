@@ -579,13 +579,13 @@ class FunctionalTest(parameterized.TestCase):
     stderr_logs = '''\
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, debug log
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, info log
-W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, warn log
+W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, warning log
 E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=debug, error log
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=info, info log
-W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=info, warn log
+W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=info, warning log
 E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=info, error log
-W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=warn, warn log
-E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=warn, error log
+W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=warning, warning log
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=warning, error log
 E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrthreshold=error, error log
 '''
 
@@ -608,7 +608,7 @@ E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrt
     stderr_logs = '''\
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std debug log
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std info log
-W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std warn log
+W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std warning log
 E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std error log
 '''
     expected_logs = [['stderr', None, stderr_logs]]
