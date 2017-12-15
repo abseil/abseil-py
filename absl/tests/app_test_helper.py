@@ -92,7 +92,6 @@ def real_main(argv):
   else:
     print('Unexpected helper_type "{}"'.format(helper_type))
     sys.exit(1)
-  # MOE:end_strip
 
 
 def custom_main(argv):
