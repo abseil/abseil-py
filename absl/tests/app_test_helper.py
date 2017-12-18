@@ -75,7 +75,7 @@ def real_main(argv):
   # Ensure that we have a random C++ flag in flags.FLAGS; this shows
   # us that app.run() did the right thing in conjunction with C++ flags.
   helper_type = os.environ['APP_TEST_HELPER_TYPE']
-  if helper_type in ('clif', 'swig'):
+  if helper_type == 'clif':
     if 'heap_check_before_constructors' in flags.FLAGS:
       print('PASS: C++ flag present and helper_type is {}'.format(helper_type))
       sys.exit(0)
@@ -92,7 +92,6 @@ def real_main(argv):
   else:
     print('Unexpected helper_type "{}"'.format(helper_type))
     sys.exit(1)
-  # MOE:end_strip
 
 
 def custom_main(argv):
