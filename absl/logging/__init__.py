@@ -79,6 +79,7 @@ import struct
 import sys
 import time
 import traceback
+import warnings
 
 from absl import flags
 from absl.logging import converter
@@ -311,7 +312,15 @@ def warning(msg, *args, **kwargs):
   log(WARNING, msg, *args, **kwargs)
 
 
-warn = warning  # Deprecated function.
+if six.PY2:
+  warn = warning  # Deprecated function.
+else:
+
+  def warn(msg, *args, **kwargs):
+    """Deprecated, use 'warning' instead."""
+    warnings.warn("The 'warn' function is deprecated, use 'warning' instead",
+                  DeprecationWarning, 2)
+    log(WARNING, msg, *args, **kwargs)
 
 
 def info(msg, *args, **kwargs):
@@ -830,6 +839,9 @@ class ABSLLogger(logging.getLoggerClass()):
 
   def warn(self, msg, *args, **kwargs):
     """Logs 'msg % args' with severity 'WARN'."""
+    if six.PY3:
+      warnings.warn("The 'warn' method is deprecated, use 'warning' instead",
+                    DeprecationWarning, 2)
     self.log(logging.WARN, msg, *args, **kwargs)
 
   def warning(self, msg, *args, **kwargs):
