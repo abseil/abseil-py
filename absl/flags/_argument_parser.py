@@ -277,7 +277,7 @@ class BooleanParser(ArgumentParser):
 
   def parse(self, argument):
     """See base class."""
-    if isinstance(argument, str):
+    if isinstance(argument, six.string_types):
       if argument.lower() in ('true', 't', '1'):
         return True
       elif argument.lower() in ('false', 'f', '0'):
