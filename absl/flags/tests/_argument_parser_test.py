@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Additional tests for flag argument parsers.
 
 Most of the argument parsers are covered in the flags_test.py.
@@ -23,6 +22,8 @@ from __future__ import print_function
 
 from absl.flags import _argument_parser
 from absl.testing import absltest
+
+import six
 
 
 class ArgumentParserTest(absltest.TestCase):
@@ -41,6 +42,25 @@ class ArgumentParserTest(absltest.TestCase):
       # In PY3, it does not accept bytes.
       with self.assertRaises(TypeError):
         parser.parse(b'')
+
+
+class BooleanParserTest(absltest.TestCase):
+
+  def setUp(self):
+    self.parser = _argument_parser.BooleanParser()
+
+  def test_parse_bytes(self):
+    if six.PY2:
+      self.assertTrue(self.parser.parse(b'true'))
+    else:
+      with self.assertRaises(ValueError):
+        self.parser.parse(b'true')
+
+  def test_parse_str(self):
+    self.assertTrue(self.parser.parse('true'))
+
+  def test_parse_unicode(self):
+    self.assertTrue(self.parser.parse(u'true'))
 
 
 class FloatParserTest(absltest.TestCase):

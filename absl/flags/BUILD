@@ -103,6 +103,7 @@ py_test(
     deps = [
         ":_argument_parser",
         "//absl/testing:absltest",
+        "@six_archive//:six",
     ],
 )
 
