@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import functools
 import getpass
 import io
 import logging as std_logging
@@ -803,6 +804,67 @@ class LoggingTest(absltest.TestCase):
   def test_get_absl_handler(self):
     self.assertIsInstance(
         logging.get_absl_handler(), logging.ABSLHandler)
+
+
+@mock.patch.object(logging.ABSLLogger, 'register_frame_to_skip')
+class LogSkipPrefixTest(absltest.TestCase):
+  """Tests for logging.skip_log_prefix."""
+
+  def _log_some_info(self):
+    """Logging helper function for LogSkipPrefixTest."""
+    logging.info('info')
+
+  def _log_nested_outer(self):
+    """Nested logging helper functions for LogSkipPrefixTest."""
+    def _log_nested_inner():
+      logging.info('info nested')
+    return _log_nested_inner
+
+  def test_skip_log_prefix_with_name(self, mock_skip_register):
+    retval = logging.skip_log_prefix('_log_some_info')
+    mock_skip_register.assert_called_once_with(__file__, '_log_some_info', None)
+    self.assertEqual(retval, '_log_some_info')
+
+  def test_skip_log_prefix_with_func(self, mock_skip_register):
+    retval = logging.skip_log_prefix(self._log_some_info)
+    mock_skip_register.assert_called_once_with(
+        __file__, '_log_some_info', mock.ANY)
+    self.assertEqual(retval, self._log_some_info)
+
+  def test_skip_log_prefix_with_functools_partial(self, mock_skip_register):
+    partial_input = functools.partial(self._log_some_info)
+    with self.assertRaises(ValueError):
+      _ = logging.skip_log_prefix(partial_input)
+    mock_skip_register.assert_not_called()
+
+  def test_skip_log_prefix_with_lambda(self, mock_skip_register):
+    lambda_input = lambda _: self._log_some_info()
+    retval = logging.skip_log_prefix(lambda_input)
+    mock_skip_register.assert_called_once_with(__file__, '<lambda>', mock.ANY)
+    self.assertEqual(retval, lambda_input)
+
+  def test_skip_log_prefix_with_bad_input(self, mock_skip_register):
+    dict_input = {1: 2, 2: 3}
+    with self.assertRaises(TypeError):
+      _ = logging.skip_log_prefix(dict_input)
+    mock_skip_register.assert_not_called()
+
+  def test_skip_log_prefix_with_nested_func(self, mock_skip_register):
+    nested_input = self._log_nested_outer()
+    retval = logging.skip_log_prefix(nested_input)
+    mock_skip_register.assert_called_once_with(
+        __file__, '_log_nested_inner', mock.ANY)
+    self.assertEqual(retval, nested_input)
+
+  def test_skip_log_prefix_decorator(self, mock_skip_register):
+
+    @logging.skip_log_prefix
+    def _log_decorated():
+      logging.info('decorated')
+
+    del _log_decorated
+    mock_skip_register.assert_called_once_with(
+        __file__, '_log_decorated', mock.ANY)
 
 
 if __name__ == '__main__':
