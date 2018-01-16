@@ -280,8 +280,7 @@ class FunctionalTest(parameterized.TestCase):
 
   def _get_helper(self):
     return _bazelize_command.get_executable_path(
-        os.path.join(os.path.dirname(__file__),
-                     'logging_functional_test_helper'))
+        'absl/logging/tests/logging_functional_test_helper')
   def _get_logs(self,
                 verbosity,
                 include_info_prefix=True):

@@ -36,8 +36,7 @@ class TestShardingTest(absltest.TestCase):
   """
 
   def setUp(self):
-    self._test_path = os.path.join(
-        os.path.dirname(__file__), 'absltest_sharding_test_helper')
+    self._test_name = 'absl/testing/tests/absltest_sharding_test_helper'
     self._shard_file = None
 
   def tearDown(self):
@@ -69,7 +68,7 @@ class TestShardingTest(absltest.TestCase):
         os.unlink(shard_file)
 
     proc = subprocess.Popen(
-        args=[_bazelize_command.get_executable_path(self._test_path)],
+        args=[_bazelize_command.get_executable_path(self._test_name)],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

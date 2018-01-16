@@ -133,9 +133,7 @@ class FunctionalTests(absltest.TestCase):
     env['APP_TEST_HELPER_TYPE'] = self.helper_type
     if env_overrides:
       env.update(env_overrides)
-    helper = os.path.join(
-        os.path.dirname(__file__),
-        'app_test_helper_{}'.format(self.helper_type))
+    helper = 'absl/tests/app_test_helper_{}'.format(self.helper_type)
     process = subprocess.Popen(
         [_bazelize_command.get_executable_path(helper)] + list(arguments),
         stdout=subprocess.PIPE,
