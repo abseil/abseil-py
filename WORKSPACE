@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-workspace(name = "org_abseil_py")
+workspace(name = "io_abseil_py")
 
 new_http_archive(
     name = "six_archive",
