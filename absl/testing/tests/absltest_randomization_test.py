@@ -37,8 +37,7 @@ class TestOrderRandomizationTest(parameterized.TestCase):
   """
 
   def setUp(self):
-    self._test_path = os.path.join(
-        os.path.dirname(__file__), 'absltest_randomization_testcase')
+    self._test_name = 'absl/testing/tests/absltest_randomization_testcase'
 
   def _run_test(self, extra_argv, extra_env):
     """Runs the py_test binary in a subprocess, with the given args or env.
@@ -58,7 +57,7 @@ class TestOrderRandomizationTest(parameterized.TestCase):
       env.update(extra_env)
 
     command = (
-        [_bazelize_command.get_executable_path(self._test_path)] + extra_argv)
+        [_bazelize_command.get_executable_path(self._test_name)] + extra_argv)
     proc = subprocess.Popen(
         args=command,
         env=env,

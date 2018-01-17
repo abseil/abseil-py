@@ -216,7 +216,8 @@ def get_flag_suggestions(attempt, longopt_list):
   # This also handles the case where the flag is spelled right but ambiguous.
   distances = [(_damerau_levenshtein(attempt, option[0:len(attempt)]), option)
                for option in option_names]
-  distances.sort(key=lambda t: t[0])
+  # t[0] is distance, and sorting by t[1] allows us to have stable output.
+  distances.sort()
 
   least_errors, _ = distances[0]
   # Don't suggest excessively bad matches.

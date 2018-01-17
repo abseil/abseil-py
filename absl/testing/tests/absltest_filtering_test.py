@@ -33,8 +33,7 @@ class TestFilteringTest(absltest.TestCase):
   """
 
   def setUp(self):
-    self._test_path = os.path.join(
-        os.path.dirname(__file__), 'absltest_filtering_test_helper')
+    self._test_name = 'absl/testing/tests/absltest_filtering_test_helper'
 
   def _run_filtered(self, test_filter):
     """Runs the py_test binary in a subprocess.
@@ -54,7 +53,7 @@ class TestFilteringTest(absltest.TestCase):
       env['TESTBRIDGE_TEST_ONLY'] = test_filter
 
     proc = subprocess.Popen(
-        args=[_bazelize_command.get_executable_path(self._test_path)],
+        args=[_bazelize_command.get_executable_path(self._test_name)],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

@@ -693,8 +693,8 @@ class XmlReporterFixtureTest(absltest.TestCase):
     os.close(xml_fhandle)
 
     try:
-      prog = os.path.join(os.path.dirname(__file__), 'xml_reporter_helper_test')
-      args = [_bazelize_command.get_executable_path(prog),
+      binary_name = 'absl/testing/tests/xml_reporter_helper_test'
+      args = [_bazelize_command.get_executable_path(binary_name),
               flag, '--xml_output_file=%s' % xml_fname]
       ret = subprocess.call(args)
       self.assertNotEqual(ret, 0)
@@ -710,8 +710,8 @@ class XmlReporterFixtureTest(absltest.TestCase):
     os.close(xml_fhandle)
 
     try:
-      prog = os.path.join(os.path.dirname(__file__), 'xml_reporter_helper_test')
-      args = [_bazelize_command.get_executable_path(prog),
+      binary_name = 'absl/testing/tests/xml_reporter_helper_test'
+      args = [_bazelize_command.get_executable_path(binary_name),
               flag, '--xml_output_file=%s' % xml_fname]
       ret = subprocess.call(args)
       self.assertNotEqual(ret, 0)

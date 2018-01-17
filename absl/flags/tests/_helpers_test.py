@@ -74,6 +74,13 @@ class FlagSuggestionTest(absltest.TestCase):
     suggestions = _helpers.get_flag_suggestions('asdfasdgasdfa', self.longopts)
     self.assertEqual([], suggestions)
 
+  def test_suggestions_are_sorted(self):
+    sorted_flags = sorted(['aab', 'aac', 'aad'])
+    misspelt_flag = 'aaa'
+    suggestions = _helpers.get_flag_suggestions(misspelt_flag,
+                                                reversed(sorted_flags))
+    self.assertEqual(sorted_flags, suggestions)
+
 
 class GetCallingModuleTest(absltest.TestCase):
   """Test whether we correctly determine the module which defines the flag."""
