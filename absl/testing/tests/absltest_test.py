@@ -41,7 +41,7 @@ class TestCaseTest(absltest.TestCase):
   longMessage = True
 
   def run_helper(self, test_id, args, env_overrides, expect_success):
-    helper = os.path.join(os.path.dirname(__file__), 'absltest_test_helper')
+    helper = 'absl/testing/tests/absltest_test_helper'
     env = os.environ.copy()
     for key, value in six.iteritems(env_overrides):
       if value is None:

@@ -56,6 +56,7 @@ py_library(
     srcs = ["_bazelize_command.py"],
     srcs_version = "PY2AND3",
     visibility = ["//:__subpackages__"],
+    deps = ["//absl/flags"],
 )
 
 py_test(
