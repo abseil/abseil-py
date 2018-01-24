@@ -31,6 +31,14 @@ class MyOwnClass(object):
   pass
 
 
+def dummy_decorator(method):
+
+  def decorated(*args, **kwargs):
+    return method(*args, **kwargs)
+
+  return decorated
+
+
 def dict_decorator(key, value):
   """Sample implementation of a chained decorator.
 
@@ -285,15 +293,43 @@ class ParameterizedTestsTest(absltest.TestCase):
     def test_add(self, arg1, arg2, arg3):
       self.assertEqual(arg1 + arg2, arg3)
 
-  class OtherDecorator(parameterized.TestCase):
+  class OtherDecoratorUnnamed(parameterized.TestCase):
 
-    @unittest.skip('wraps _ParameterizedTestIter')
+    @dummy_decorator
     @parameterized.parameters((1), (2))
     def test_other_then_parameterized(self, arg1):
       pass
 
     @parameterized.parameters((1), (2))
-    @unittest.skip('is wrapped by _ParameterizedTestIter')
+    @dummy_decorator
+    def test_parameterized_then_other(self, arg1):
+      pass
+
+  class OtherDecoratorNamed(parameterized.TestCase):
+
+    @dummy_decorator
+    @parameterized.named_parameters(('a', 1), ('b', 2))
+    def test_other_then_parameterized(self, arg1):
+      pass
+
+    @parameterized.named_parameters(('a', 1), ('b', 2))
+    @dummy_decorator
+    def test_parameterized_then_other(self, arg1):
+      pass
+
+  class OtherDecoratorNamedWithDict(parameterized.TestCase):
+
+    @dummy_decorator
+    @parameterized.named_parameters(
+        {'testcase_name': 'a', 'arg1': 1},
+        {'testcase_name': 'b', 'arg1': 2})
+    def test_other_then_parameterized(self, arg1):
+      pass
+
+    @parameterized.named_parameters(
+        {'testcase_name': 'a', 'arg1': 1},
+        {'testcase_name': 'b', 'arg1': 2})
+    @dummy_decorator
     def test_parameterized_then_other(self, arg1):
       pass
 
@@ -717,14 +753,53 @@ class ParameterizedTestsTest(absltest.TestCase):
 
       del SubclassWithClassDecorator
 
-  def test_other_decorator_ordering(self):
-    ts = unittest.makeSuite(self.OtherDecorator)
+  def test_other_decorator_ordering_unnamed(self):
+    ts = unittest.makeSuite(self.OtherDecoratorUnnamed)
     res = unittest.TestResult()
     ts.run(res)
     # Two for when the parameterized tests call the skip wrapper.
     # One for when the skip wrapper is called first and doesn't iterate.
     self.assertEqual(3, res.testsRun)
-    self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
+    self.assertFalse(res.wasSuccessful())
+    self.assertLen(res.failures, 0)
+    # One error from test_other_then_parameterized.
+    self.assertLen(res.errors, 1)
+
+  def test_other_decorator_ordering_named(self):
+    ts = unittest.makeSuite(self.OtherDecoratorNamed)
+    # Verify it generates the test method names from the original test method.
+    for test in ts:  # There is only one test.
+      ts_attributes = dir(test)
+      self.assertIn('test_parameterized_then_other_a', ts_attributes)
+      self.assertIn('test_parameterized_then_other_b', ts_attributes)
+
+    res = unittest.TestResult()
+    ts.run(res)
+    # Two for when the parameterized tests call the skip wrapper.
+    # One for when the skip wrapper is called first and doesn't iterate.
+    self.assertEqual(3, res.testsRun)
+    self.assertFalse(res.wasSuccessful())
+    self.assertLen(res.failures, 0)
+    # One error from test_other_then_parameterized.
+    self.assertLen(res.errors, 1)
+
+  def test_other_decorator_ordering_named_with_dict(self):
+    ts = unittest.makeSuite(self.OtherDecoratorNamedWithDict)
+    # Verify it generates the test method names from the original test method.
+    for test in ts:  # There is only one test.
+      ts_attributes = dir(test)
+      self.assertIn('test_parameterized_then_other_a', ts_attributes)
+      self.assertIn('test_parameterized_then_other_b', ts_attributes)
+
+    res = unittest.TestResult()
+    ts.run(res)
+    # Two for when the parameterized tests call the skip wrapper.
+    # One for when the skip wrapper is called first and doesn't iterate.
+    self.assertEqual(3, res.testsRun)
+    self.assertFalse(res.wasSuccessful())
+    self.assertLen(res.failures, 0)
+    # One error from test_other_then_parameterized.
+    self.assertLen(res.errors, 1)
 
   def test_no_test_error_empty_parameters(self):
     with self.assertRaises(parameterized.NoTestsError):

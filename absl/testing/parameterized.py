@@ -197,7 +197,7 @@ def _format_parameter_list(testcase_params):
 class _ParameterizedTestIter(object):
   """Callable and iterable class for producing new test cases."""
 
-  def __init__(self, test_method, testcases, naming_type):
+  def __init__(self, test_method, testcases, naming_type, original_name=None):
     """Returns concrete test functions for a test and a list of parameters.
 
     The naming_type is used to determine the name of the concrete
@@ -207,13 +207,21 @@ class _ParameterizedTestIter(object):
 
     Args:
       test_method: The decorated test method.
-      testcases: (list of tuple/dict) A list of parameter
-                 tuples/dicts for individual test invocations.
+      testcases: (list of tuple/dict) A list of parameter tuples/dicts for
+          individual test invocations.
       naming_type: The test naming type, either _NAMED or _ARGUMENT_REPR.
+      original_name: The original test method name. When decorated on a test
+          method, None is passed to __init__ and test_method.__name__ is used.
+          Note test_method.__name__ might be different than the original defined
+          test method because of the use of other decorators. A more accurate
+          value is set by TestGeneratorMetaclass.__new__ later.
     """
     self._test_method = test_method
     self.testcases = testcases
     self._naming_type = naming_type
+    if original_name is None:
+      original_name = test_method.__name__
+    self._original_name = original_name
     self.__name__ = _ParameterizedTestIter.__name__
 
   def __call__(self, *args, **kwargs):
@@ -260,13 +268,14 @@ class _ParameterizedTestIter(object):
           raise RuntimeError(
               'Named tests must be passed a dict or non-string iterable.')
 
+        test_method_name = self._original_name
         # Support PEP-8 underscore style for test naming if used.
-        if (bound_param_test.__name__.startswith('test_')
+        if (test_method_name.startswith('test_')
             and testcase_name
             and not testcase_name.startswith('_')):
-          bound_param_test.__name__ += '_'
+          test_method_name += '_'
 
-        bound_param_test.__name__ += str(testcase_name)
+        bound_param_test.__name__ = test_method_name + str(testcase_name)
       elif naming_type is _ARGUMENT_REPR:
         # If it's a generator, convert it to a tuple and treat them as
         # parameters.
@@ -308,7 +317,7 @@ def _modify_class(class_object, testcases, naming_type):
       methods = {}
       _update_class_dict_for_param_test_case(
           methods, test_method_ids, name,
-          _ParameterizedTestIter(obj, testcases, naming_type))
+          _ParameterizedTestIter(obj, testcases, naming_type, name))
       for name, meth in six.iteritems(methods):
         setattr(class_object, name, meth)
 
@@ -414,6 +423,13 @@ class TestGeneratorMetaclass(type):
     for name, obj in six.iteritems(dct.copy()):
       if (name.startswith(unittest.TestLoader.testMethodPrefix) and
           _non_string_or_bytes_iterable(obj)):
+        if isinstance(obj, _ParameterizedTestIter):
+          # Update the original test method name so it's more accurate.
+          # The mismatch might happen when another decorator is used inside
+          # the parameterized decrators, and the inner decorator doesn't
+          # preserve its __name__.
+          # `obj` might be a generator, not _ParameterizedTestIter.
+          obj._original_name = name
         iterator = iter(obj)
         dct.pop(name)
         _update_class_dict_for_param_test_case(
