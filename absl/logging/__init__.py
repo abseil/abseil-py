@@ -775,6 +775,12 @@ class ABSLHandler(logging.Handler):
     super(ABSLHandler, self).close()
     self._current_handler.close()
 
+  def handle(self, record):
+    rv = self.filter(record)
+    if rv:
+      return self._current_handler.handle(record)
+    return rv
+
   @property
   def python_handler(self):
     return self._python_handler
