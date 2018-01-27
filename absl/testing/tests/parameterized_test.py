@@ -637,7 +637,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEndsWith(ts[0].id(), '.test_mixed_something_interesting')
 
   def test_duplicate_named_test_fails(self):
-    with self.assertRaises(AssertionError):
+    with self.assertRaises(parameterized.DuplicateTestNameError):
 
       class _(parameterized.TestCase):
 
@@ -649,7 +649,7 @@ class ParameterizedTestsTest(absltest.TestCase):
           pass
 
   def test_duplicate_dict_named_test_fails(self):
-    with self.assertRaises(AssertionError):
+    with self.assertRaises(parameterized.DuplicateTestNameError):
 
       class _(parameterized.TestCase):
 
@@ -661,7 +661,7 @@ class ParameterizedTestsTest(absltest.TestCase):
           pass
 
   def test_duplicate_mixed_named_test_fails(self):
-    with self.assertRaises(AssertionError):
+    with self.assertRaises(parameterized.DuplicateTestNameError):
 
       class _(parameterized.TestCase):
 
