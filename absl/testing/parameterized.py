@@ -174,6 +174,18 @@ class NoTestsError(Exception):
   """Raised when parameterized decorators do not generate any tests."""
 
 
+class DuplicateTestNameError(Exception):
+  """Raised when a parameterized test has the same test name multiple times."""
+
+  def __init__(self, test_class_name, new_test_name, original_test_name):
+    super(DuplicateTestNameError, self).__init__(
+        'Duplicate parameterized test name in {}: generated test name {!r} '
+        '(generated from {!r}) already exists. Consider using '
+        'named_parameters() to give your tests unique names and/or renaming '
+        'the conflicting test method.'.format(
+            test_class_name, new_test_name, original_test_name))
+
+
 def _clean_repr(obj):
   return _ADDR_RE.sub(r'<\1>', repr(obj))
 
@@ -316,7 +328,7 @@ def _modify_class(class_object, testcases, naming_type):
       delattr(class_object, name)
       methods = {}
       _update_class_dict_for_param_test_case(
-          methods, test_method_ids, name,
+          class_object.__name__, methods, test_method_ids, name,
           _ParameterizedTestIter(obj, testcases, naming_type, name))
       for name, meth in six.iteritems(methods):
         setattr(class_object, name, meth)
@@ -433,7 +445,7 @@ class TestGeneratorMetaclass(type):
         iterator = iter(obj)
         dct.pop(name)
         _update_class_dict_for_param_test_case(
-            dct, test_method_ids, name, iterator)
+            class_name, dct, test_method_ids, name, iterator)
     # If the base class is a subclass of parameterized.TestCase, inherit its
     # _test_method_ids too.
     for base in bases:
@@ -453,14 +465,18 @@ class TestGeneratorMetaclass(type):
 
 
 def _update_class_dict_for_param_test_case(
-    dct, test_method_ids, name, iterator):
+    test_class_name, dct, test_method_ids, name, iterator):
   """Adds individual test cases to a dictionary.
 
   Args:
+    test_class_name: The name of the class tests are added to.
     dct: The target dictionary.
     test_method_ids: The dictionary for mapping names to test IDs.
     name: The original name of the test case.
     iterator: The iterator generating the individual test cases.
+
+  Raises:
+    DuplicateTestNameError: Raised when a test name occurs multiple times.
   """
   for idx, func in enumerate(iterator):
     assert callable(func), 'Test generators must yield callables, got %r' % (
@@ -471,8 +487,10 @@ def _update_class_dict_for_param_test_case(
     else:
       original_name = name
       new_name = '%s%d' % (original_name, idx)
-    assert new_name not in dct, (
-        'Name of parameterized test case "%s" not unique' % (new_name,))
+
+    if new_name in dct:
+      raise DuplicateTestNameError(test_class_name, new_name, original_name)
+
     dct[new_name] = func
     test_method_id = original_name + getattr(func, '__x_extra_id__', '')
     assert test_method_id not in test_method_ids.values(), (
