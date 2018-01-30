@@ -849,7 +849,9 @@ class ABSLLogger(logging.getLoggerClass()):
       (filename, lineno, methodname[, sinfo]) of the calling method.
     """
     f_to_skip = ABSLLogger._frames_to_skip
-    frame = logging.currentframe()
+    # Use sys._getframe(2) instead of logging.currentframe(), it's slightly
+    # faster because there is one less frame to traverse.
+    frame = sys._getframe(2)  # pylint: disable=protected-access
 
     while frame:
       code = frame.f_code

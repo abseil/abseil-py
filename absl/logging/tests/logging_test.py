@@ -375,8 +375,8 @@ class ABSLLoggerTest(absltest.TestCase):
     mock_frame_1.f_back = mock_frame_2
     mock_frame_0.f_back = mock_frame_1
 
-    mock.patch.object(std_logging, 'currentframe').start()
-    std_logging.currentframe.return_value = mock_frame_0
+    mock.patch.object(sys, '_getframe').start()
+    sys._getframe.return_value = mock_frame_0
 
   def setUp(self):
     self.message = 'Hello Nurse'
