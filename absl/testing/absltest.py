@@ -413,46 +413,47 @@ class TestCase(unittest.TestCase):
         common, expected_seq, actual_seq), msg)
 
   def assertItemsEqual(self, expected_seq, actual_seq, msg=None):
-    """An unordered sequence specific comparison.
+    """Deprecated, please use assertCountEqual instead.
 
-    Equivalent to assertCountEqual(). This method is a compatibility layer
-    for Python 3k, since 2to3 does not convert assertItemsEqual() calls into
-    assertCountEqual() calls.
+    This is equivalent to assertCountEqual in Python 3. An implementation of
+    assertCountEqual is also provided by absltest.TestCase for Python 2.
 
     Args:
       expected_seq: A sequence containing elements we are expecting.
       actual_seq: The sequence that we are testing.
       msg: The message to be printed if the test fails.
     """
-
-    if not hasattr(super(TestCase, self), 'assertItemsEqual'):
+    if six.PY3:
       # The assertItemsEqual method was renamed assertCountEqual in Python 3.2
       super(TestCase, self).assertCountEqual(expected_seq, actual_seq, msg)
-      return
+    else:
+      super(TestCase, self).assertItemsEqual(expected_seq, actual_seq, msg)
 
-    super(TestCase, self).assertItemsEqual(expected_seq, actual_seq, msg)
+  # Only override assertCountEqual in Python 2 to avoid unnecessary calls.
+  if six.PY2:
 
-  def assertCountEqual(self, expected_seq, actual_seq, msg=None):
-    """An unordered sequence specific comparison.
+    def assertCountEqual(self, expected_seq, actual_seq, msg=None):
+      """An unordered sequence specific comparison.
 
-    It asserts that actual_seq and expected_seq have the same element counts.
-    Equivalent to::
+      It asserts that actual_seq and expected_seq have the same element counts.
+      Equivalent to::
 
-        self.assertEqual(Counter(iter(actual_seq)),
-                         Counter(iter(expected_seq)))
+          self.assertEqual(Counter(iter(actual_seq)),
+                           Counter(iter(expected_seq)))
 
-    Asserts that each element has the same count in both sequences.
-    Example:
-        - [0, 1, 1] and [1, 0, 1] compare equal.
-        - [0, 0, 1] and [0, 1] compare unequal.
+      Asserts that each element has the same count in both sequences.
+      Example:
+          - [0, 1, 1] and [1, 0, 1] compare equal.
+          - [0, 0, 1] and [0, 1] compare unequal.
 
-    Args:
-      expected_seq: A sequence containing elements we are expecting.
-      actual_seq: The sequence that we are testing.
-      msg: The message to be printed if the test fails.
+      Args:
+        expected_seq: A sequence containing elements we are expecting.
+        actual_seq: The sequence that we are testing.
+        msg: The message to be printed if the test fails.
 
-    """
-    self.assertItemsEqual(expected_seq, actual_seq, msg)
+      """
+      # Only call super's method to avoid potential infinite recursions.
+      super(TestCase, self).assertItemsEqual(expected_seq, actual_seq, msg)
 
   def assertSameElements(self, expected_seq, actual_seq, msg=None):
     """Asserts that two sequences have the same elements (in any order).

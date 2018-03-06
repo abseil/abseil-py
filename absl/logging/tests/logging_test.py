@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import contextlib
 import functools
 import getpass
 import io
@@ -26,6 +27,7 @@ import os
 import re
 import socket
 import sys
+import tempfile
 import threading
 import time
 import traceback
@@ -865,6 +867,42 @@ class LogSkipPrefixTest(absltest.TestCase):
     del _log_decorated
     mock_skip_register.assert_called_once_with(
         __file__, '_log_decorated', mock.ANY)
+
+
+@contextlib.contextmanager
+def override_python_handler_stream(stream):
+  handler = logging.get_absl_handler().python_handler
+  old_stream = handler.stream
+  handler.stream = stream
+  try:
+    yield
+  finally:
+    handler.stream = old_stream
+
+
+class GetLogFileNameTest(parameterized.TestCase):
+
+  @parameterized.named_parameters(
+      ('err', sys.stderr),
+      ('out', sys.stdout),
+  )
+  def test_get_log_file_name_py_std(self, stream):
+    with override_python_handler_stream(stream):
+      self.assertEqual('', logging.get_log_file_name())
+
+  def test_get_log_file_name_py_no_name(self):
+
+    class FakeFile(object):
+      pass
+
+    with override_python_handler_stream(FakeFile()):
+      self.assertEqual('', logging.get_log_file_name())
+
+  def test_get_log_file_name_py_file(self):
+    _, filename = tempfile.mkstemp(dir=FLAGS.test_tmpdir)
+    with open(filename, 'a') as stream:
+      with override_python_handler_stream(stream):
+        self.assertEqual(filename, logging.get_log_file_name())
 
 
 if __name__ == '__main__':
