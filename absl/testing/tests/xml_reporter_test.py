@@ -76,12 +76,19 @@ OUTPUT_STRING = '\n'.join([
     '</testsuite>',
     '</testsuites>'])
 
-MESSAGE = r"""
-  <%s message="invalid&#x20;literal&#x20;for&#x20;int\(\)&#x20;with&#x20;base&#x20;10:&#x20;(&apos;)?a(&apos;)?" type="{}"><!\[CDATA\[Traceback \(most recent call last\):
+FAILURE_MESSAGE = r"""
+  <failure message="e" type="{}"><!\[CDATA\[Traceback \(most recent call last\):
   File ".*xml_reporter_test\.py", line \d+, in get_sample_failure
+    raise AssertionError\(\'e\'\)
+AssertionError: e
+\]\]></failure>""".format(xml_escaped_exception_type(AssertionError))
+
+ERROR_MESSAGE = r"""
+  <error message="invalid&#x20;literal&#x20;for&#x20;int\(\)&#x20;with&#x20;base&#x20;10:&#x20;(&apos;)?a(&apos;)?" type="{}"><!\[CDATA\[Traceback \(most recent call last\):
+  File ".*xml_reporter_test\.py", line \d+, in get_sample_error
     int\('a'\)
 ValueError: invalid literal for int\(\) with base 10: '?a'?
-\]\]></%s>""".format(xml_escaped_exception_type(ValueError))
+\]\]></error>""".format(xml_escaped_exception_type(ValueError))
 
 UNICODE_MESSAGE = r"""
   <%s message="{0}" type="{1}"><!\[CDATA\[Traceback \(most recent call last\):
@@ -109,8 +116,6 @@ UNEXPECTED_SUCCESS_MESSAGE = '\n'.join([
     r'__main__.MockTest.unexpectedly_passing_test should have failed, '
     r'but passed.\]\]></error>'])
 
-FAILURE_MESSAGE = MESSAGE % ('failure', 'failure')
-ERROR_MESSAGE = MESSAGE % ('error', 'error')
 UNICODE_ERROR_MESSAGE = UNICODE_MESSAGE % ('error', 'error')
 NEWLINE_ERROR_MESSAGE = NEWLINE_MESSAGE % ('error', 'error')
 
@@ -138,7 +143,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
   def _simulate_error_test(self, test, result):
     result.startTest(test)
-    result.addError(test, self.get_sample_failure())
+    result.addError(test, self.get_sample_error())
     result.stopTest(test)
 
   def _simulate_failing_test(self, test, result):
@@ -177,10 +182,17 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'message': ''}
     self._assert_match(expected_re, self.xml_stream.getvalue())
 
-  def get_sample_failure(self):
+  def get_sample_error(self):
     try:
       int('a')
     except ValueError:
+      error_values = sys.exc_info()
+      return error_values
+
+  def get_sample_failure(self):
+    try:
+      raise AssertionError('e')
+    except AssertionError:
       error_values = sys.exc_info()
       return error_values
 
@@ -238,7 +250,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     test = MockTest('__main__.MockTest.failing_test')
     result.startTest(test)
-    result.addError(test, self.get_sample_failure())
+    result.addError(test, self.get_sample_error())
     result.stopTest(test)
     result.printErrors()
     xml = self.xml_stream.getvalue()
@@ -270,7 +282,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.startTest(test)
     result.addFailure(test, self.get_sample_failure())
     # This could happen in tearDown
-    result.addError(test, self.get_sample_failure())
+    result.addError(test, self.get_sample_error())
     result.stopTest(test)
     result.printErrors()
     xml = self.xml_stream.getvalue()
@@ -301,7 +313,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     test = MockTest('__main__.MockTest.failing_test')
     result.startTest(test)
-    result.addError(test, self.get_sample_failure())
+    result.addError(test, self.get_sample_error())
     result.addFailure(test, self.get_sample_failure())
     result.stopTest(test)
     result.printErrors()
