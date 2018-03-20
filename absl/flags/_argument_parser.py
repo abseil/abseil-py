@@ -282,14 +282,18 @@ class BooleanParser(ArgumentParser):
         return True
       elif argument.lower() in ('false', 'f', '0'):
         return False
+      else:
+        raise ValueError('Non-boolean argument to boolean flag', argument)
     elif isinstance(argument, six.integer_types):
       # Only allow bool or integer 0, 1.
       # Note that float 1.0 == True, 0.0 == False.
       bool_value = bool(argument)
       if argument == bool_value:
         return bool_value
+      else:
+        raise ValueError('Non-boolean argument to boolean flag', argument)
 
-    raise ValueError('Non-boolean argument to boolean flag', argument)
+    raise TypeError('Non-boolean argument to boolean flag', argument)
 
   def flag_type(self):
     """See base class."""

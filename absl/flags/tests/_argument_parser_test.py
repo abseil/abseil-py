@@ -53,7 +53,7 @@ class BooleanParserTest(absltest.TestCase):
     if six.PY2:
       self.assertTrue(self.parser.parse(b'true'))
     else:
-      with self.assertRaises(ValueError):
+      with self.assertRaises(TypeError):
         self.parser.parse(b'true')
 
   def test_parse_str(self):
@@ -61,6 +61,24 @@ class BooleanParserTest(absltest.TestCase):
 
   def test_parse_unicode(self):
     self.assertTrue(self.parser.parse(u'true'))
+
+  def test_parse_wrong_type(self):
+    with self.assertRaises(TypeError):
+      self.parser.parse(1.234)
+
+  def test_parse_str_false(self):
+    self.assertFalse(self.parser.parse('false'))
+
+  def test_parse_integer(self):
+    self.assertTrue(self.parser.parse(1))
+
+  def test_parse_invalid_integer(self):
+    with self.assertRaises(ValueError):
+      self.parser.parse(-1)
+
+  def test_parse_invalid_str(self):
+    with self.assertRaises(ValueError):
+      self.parser.parse('nottrue')
 
 
 class FloatParserTest(absltest.TestCase):
