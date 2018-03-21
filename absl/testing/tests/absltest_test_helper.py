@@ -47,42 +47,28 @@ class HelperTest(absltest.TestCase):
       self.assertTrue(os.access(FLAGS.test_tmpdir, os.W_OK))
     elif FLAGS.test_id == 2:
       self.assertEqual(FLAGS.test_random_seed, 321)
-      self._assert_directories_equal(
+      self.assertEqual(
           FLAGS.test_srcdir,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
-      self._assert_directories_equal(
+      self.assertEqual(
           FLAGS.test_tmpdir,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
     elif FLAGS.test_id == 3:
       self.assertEqual(FLAGS.test_random_seed, 123)
-      self._assert_directories_equal(
+      self.assertEqual(
           FLAGS.test_srcdir,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
-      self._assert_directories_equal(
+      self.assertEqual(
           FLAGS.test_tmpdir,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
     elif FLAGS.test_id == 4:
       self.assertEqual(FLAGS.test_random_seed, 221)
-      self._assert_directories_equal(
+      self.assertEqual(
           FLAGS.test_srcdir,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
-      self._assert_directories_equal(
+      self.assertEqual(
           FLAGS.test_tmpdir,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
-
-  def _assert_directories_equal(self, expected, actual):
-    if os.name == 'nt':
-      # Bazel on Windows has a bug where backslashes passed to subprocess are
-      # unnecessarily unescaped. This is the workaround before a new Bazel
-      # release that includes the fix is available.
-      # See https://github.com/bazelbuild/bazel/issues/4001.
-      if expected == actual:
-        return
-      if expected == actual.replace('\\', '\\\\'):
-        return
-      raise AssertionError('{} != {}', expected, actual)
-    else:
-      self.assertEqual(expected, actual)
 
   @unittest.expectedFailure
   def test_expected_failure(self):
