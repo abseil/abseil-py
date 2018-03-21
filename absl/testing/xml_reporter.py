@@ -126,6 +126,12 @@ class _TestCaseResult(object):
       full_class_name = match.group(2)
     else:
       class_name = unittest.util.strclass(test.__class__)
+      if six.PY3 and isinstance(test, unittest.case._SubTest):
+        # subtest is introduced in Python3
+        # If the test case is a _SubTest, the real TestCase instance is
+        # available as _SubTest.test_case.
+        class_name = unittest.util.strclass(test.test_case.__class__)
+
       if test_desc.startswith(class_name + '.'):
         # In a typical unittest.TestCase scenario, test.id() returns with
         # a class name formatted using unittest.util.strclass.
@@ -193,6 +199,12 @@ class _TestSuiteResult(object):
       # _ErrorHolder is a special case created by unittest for class / module
       # level functions.
       suite_name = test_case_result.full_class_name.rsplit('.')[-1]
+    if six.PY3 and isinstance(test_case_result.test, unittest.case._SubTest):
+      # subTest is introduced in Python3.
+      # If the test case is a _SubTest, the real TestCase instance is
+      # available as _SubTest.test_case.
+      suite_name = type(test_case_result.test.test_case).__name__
+
     self._setup_test_suite(suite_name)
     self.suites[suite_name].append(test_case_result)
     for error in test_case_result.errors:
@@ -389,6 +401,20 @@ class _TextAndXMLTestResult(unittest.TextTestResult):
                      'Test case %s should have failed, but passed.'
                      % (test_name))
     self.add_pending_test_case_result(test, error_summary=error_summary)
+
+  def addSubTest(self, test, subtest, err):  # pylint: disable=invalid-name
+    if six.PY3:
+      super(_TextAndXMLTestResult, self).addSubTest(test, subtest, err)
+      if err is not None:
+        if issubclass(err[0], test.failureException):
+          error_summary = ('failure', err[0], err[1],
+                           self._exc_info_to_string(err))
+        else:
+          error_summary = ('error', err[0], err[1],
+                           self._exc_info_to_string(err))
+      else:
+        error_summary = None
+      self.add_pending_test_case_result(subtest, error_summary=error_summary)
 
   def printErrors(self):
     super(_TextAndXMLTestResult, self).printErrors()
