@@ -123,6 +123,61 @@ class TestCaseTest(absltest.TestCase):
         },
         expect_success=True)
 
+  def test_xml_output_file_from_xml_output_file_env(self):
+    xml_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    xml_output_file_env = os.path.join(xml_dir, 'xml_output_file.xml')
+    random_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    self.run_helper(
+        6,
+        [],
+        {'XML_OUTPUT_FILE': xml_output_file_env,
+         'RUNNING_UNDER_TEST_DAEMON': '1',
+         'TEST_XMLOUTPUTDIR': random_dir,
+         'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': xml_output_file_env,
+        },
+        expect_success=True)
+
+  def test_xml_output_file_from_daemon(self):
+    tmpdir = os.path.join(tempfile.mkdtemp(dir=FLAGS.test_tmpdir), 'sub_dir')
+    random_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    self.run_helper(
+        6,
+        ['--test_tmpdir', tmpdir],
+        {'XML_OUTPUT_FILE': None,
+         'RUNNING_UNDER_TEST_DAEMON': '1',
+         'TEST_XMLOUTPUTDIR': random_dir,
+         'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': os.path.join(
+             os.path.dirname(tmpdir), 'test_detail.xml'),
+        },
+        expect_success=True)
+
+  def test_xml_output_file_from_test_xmloutputdir_env(self):
+    xml_output_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    self.run_helper(
+        6,
+        [],
+        {'XML_OUTPUT_FILE': None,
+         'RUNNING_UNDER_TEST_DAEMON': None,
+         'TEST_XMLOUTPUTDIR': xml_output_dir,
+         'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': os.path.join(
+             xml_output_dir, 'absltest_test_helper.xml'),
+        },
+        expect_success=True)
+
+  def test_xml_output_file_from_flag(self):
+    random_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    flag_file = os.path.join(
+        tempfile.mkdtemp(dir=FLAGS.test_tmpdir), 'output.xml')
+    self.run_helper(
+        6,
+        ['--xml_output_file', flag_file],
+        {'XML_OUTPUT_FILE': os.path.join(random_dir, 'output.xml'),
+         'RUNNING_UNDER_TEST_DAEMON': '1',
+         'TEST_XMLOUTPUTDIR': random_dir,
+         'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': flag_file,
+        },
+        expect_success=True)
+
   def test_assert_in(self):
     animals = {'monkey': 'banana', 'cow': 'grass', 'seal': 'fish'}
 
@@ -148,7 +203,7 @@ class TestCaseTest(absltest.TestCase):
 
   def test_expected_failure_success(self):
     _, stderr = self.run_helper(5, ['--', '-v'], {}, expect_success=False)
-    self.assertIn('\nFAILED (unexpected successes=1)', stderr)
+    self.assertRegexpMatches(stderr, r'FAILED \(.*unexpected successes=1\)')
 
   def test_assert_equal(self):
     self.assertListEqual([], [])

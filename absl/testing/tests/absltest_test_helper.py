@@ -69,6 +69,9 @@ class HelperTest(absltest.TestCase):
       self.assertEqual(
           FLAGS.test_tmpdir,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
+    else:
+      raise unittest.SkipTest(
+          'Not asked to run: --test_id={}'.format(FLAGS.test_id))
 
   @unittest.expectedFailure
   def test_expected_failure(self):
@@ -76,6 +79,15 @@ class HelperTest(absltest.TestCase):
       self.assertEqual(1, 1)  # Expected failure, got success.
     else:
       self.assertEqual(1, 2)  # The expected failure.
+
+  def test_xml_env_vars(self):
+    if FLAGS.test_id == 6:
+      self.assertEqual(
+          FLAGS.xml_output_file,
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE'])
+    else:
+      raise unittest.SkipTest(
+          'Not asked to run: --test_id={}'.format(FLAGS.test_id))
 
 
 if __name__ == '__main__':
