@@ -182,6 +182,63 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'message': ''}
     self._assert_match(expected_re, self.xml_stream.getvalue())
 
+  @unittest.skipIf(six.PY2, 'subtest is introduced in python3')
+  def test_with_passing_subtest(self):
+    start_time = 0
+    end_time = 2
+    result = self._make_result((start_time, end_time))
+
+    test = MockTest('__main__.MockTest.passing_test')
+    subtest = unittest.case._SubTest(test, 'msg', None)
+    result.startTest(test)
+    result.addSubTest(test, subtest, None)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'test_name': r'passing_test&#x20;\[msg\]',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': ''}
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
+  @unittest.skipIf(six.PY2, 'subtest is introduced in python3')
+  def test_with_passing_subtest_with_dots_in_parameter_name(self):
+    start_time = 0
+    end_time = 2
+    result = self._make_result((start_time, end_time))
+
+    test = MockTest('__main__.MockTest.passing_test')
+    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})
+    result.startTest(test)
+    result.addSubTest(test, subtest, None)
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'test_name':
+            r'passing_test&#x20;\[msg\]&#x20;\(case=&apos;a.b.c&apos;\)',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': ''}
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
   def get_sample_error(self):
     try:
       int('a')
@@ -243,6 +300,34 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'message': FAILURE_MESSAGE}
     self._assert_match(expected_re, self.xml_stream.getvalue())
 
+  @unittest.skipIf(six.PY2, 'subtest is introduced in python3')
+  def test_with_failing_subtest(self):
+    start_time = 10
+    end_time = 20
+    result = self._make_result((start_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    subtest = unittest.case._SubTest(test, 'msg', None)
+    result.startTest(test)
+    result.addSubTest(test, subtest, self.get_sample_failure())
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 1,
+        'errors': 0,
+        'run_time': run_time,
+        'test_name': r'failing_test&#x20;\[msg\]',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': FAILURE_MESSAGE}
+    self._assert_match(expected_re, self.xml_stream.getvalue())
+
   def test_with_error_test(self):
     start_time = 100
     end_time = 200
@@ -271,6 +356,34 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': ERROR_MESSAGE}
     self._assert_match(expected_re, xml)
+
+  @unittest.skipIf(six.PY2, 'subtest is introduced in python3')
+  def test_with_error_subtest(self):
+    start_time = 10
+    end_time = 20
+    result = self._make_result((start_time, end_time))
+
+    test = MockTest('__main__.MockTest.error_test')
+    subtest = unittest.case._SubTest(test, 'msg', None)
+    result.startTest(test)
+    result.addSubTest(test, subtest, self.get_sample_error())
+    result.stopTestRun()
+    result.printErrors()
+
+    run_time = end_time - start_time
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 1,
+        'run_time': run_time,
+        'test_name': r'error_test&#x20;\[msg\]',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': ERROR_MESSAGE}
+    self._assert_match(expected_re, self.xml_stream.getvalue())
 
   def test_with_fail_and_error_test(self):
     """Tests a failure and subsequent error within a single result."""
