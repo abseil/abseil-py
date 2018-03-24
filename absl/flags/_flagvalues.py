@@ -822,35 +822,46 @@ class FlagValues(object):
     Returns:
       str, formatted help message.
     """
-    helplist = []
-
     flags_by_module = self.flags_by_module_dict()
     if flags_by_module:
       modules = sorted(flags_by_module)
-
       # Print the help for the main module first, if possible.
       main_module = sys.argv[0]
       if main_module in modules:
         modules.remove(main_module)
         modules = [main_module] + modules
-
-      for module in modules:
-        self._render_our_module_flags(module, helplist, prefix)
-      if include_special_flags:
-        self._render_module_flags(
-            'absl.flags',
-            _helpers.SPECIAL_FLAGS._flags().values(),  # pylint: disable=protected-access
-            helplist,
-            prefix)
+      return self._get_help_for_modules(modules, prefix, include_special_flags)
     else:
+      output_lines = []
       # Just print one long list of flags.
       values = six.itervalues(self._flags())
       if include_special_flags:
         values = itertools.chain(
             values, six.itervalues(_helpers.SPECIAL_FLAGS._flags()))  # pylint: disable=protected-access
-      self._render_flag_list(values, helplist, prefix)
+      self._render_flag_list(values, output_lines, prefix)
+      return '\n'.join(output_lines)
 
-    return '\n'.join(helplist)
+  def _get_help_for_modules(self, modules, prefix, include_special_flags):
+    """Returns the help string for a list of modules.
+
+    Private to absl.flags package.
+
+    Args:
+      modules: List[str], a list of modules to get the help string for.
+      prefix: str, a string that is prepended to each generated help line.
+      include_special_flags: bool, whether to include description of
+        _SPECIAL_FLAGS, i.e. --flagfile and --undefok.
+    """
+    output_lines = []
+    for module in modules:
+      self._render_our_module_flags(module, output_lines, prefix)
+    if include_special_flags:
+      self._render_module_flags(
+          'absl.flags',
+          six.itervalues(_helpers.SPECIAL_FLAGS._flags()),  # pylint: disable=protected-access
+          output_lines,
+          prefix)
+    return '\n'.join(output_lines)
 
   def _render_module_flags(self, module, flags, output_lines, prefix=''):
     """Returns a help string for a given module."""
