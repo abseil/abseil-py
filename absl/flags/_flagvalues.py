@@ -1074,9 +1074,9 @@ class FlagValues(object):
       argv: [str], a list of strings, usually sys.argv[1:], which may contain
           one or more flagfile directives of the form --flagfile="./filename".
           Note that the name of the program (sys.argv[0]) should be omitted.
-      force_gnu: bool, if False, --flagfile parsing obeys normal flag semantics.
-          If True, --flagfile parsing instead follows gnu_getopt semantics.
-          *** WARNING *** force_gnu=False may become the future default!
+      force_gnu: bool, if False, --flagfile parsing obeys the
+          FLAGS.is_gnu_getopt() value. If True, ignore the value and always
+          follow gnu_getopt semantics.
 
     Returns:
       A new list which has the original list combined with what we read
