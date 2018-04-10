@@ -43,5 +43,13 @@ set -u
 
 trap 'deactivate' EXIT
 
+# When running macOS <= 10.12, pip 9.0.3 is required to connect to PyPI.
+# So we need to manually use the latest pip to install `six`,
+# then install absl-py. See:
+# https://mail.python.org/pipermail/distutils-sig/2018-April/032114.html
+pip install --upgrade pip
+pip --version
+pip install six
+
 python setup.py install
 python smoke_tests/smoke_test.py --echo smoke 2>&1 |grep 'echo is smoke.'
