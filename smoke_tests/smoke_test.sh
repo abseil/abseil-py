@@ -52,4 +52,5 @@ pip --version
 pip install six
 
 python setup.py install
-python smoke_tests/smoke_test.py --echo smoke 2>&1 |grep 'echo is smoke.'
+python smoke_tests/sample_app.py --echo smoke 2>&1 |grep 'echo is smoke.'
+python smoke_tests/sample_test.py 2>&1 | grep 'msg_for_test'
