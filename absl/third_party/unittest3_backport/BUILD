@@ -32,9 +32,9 @@ py_library(
 )
 
 py_test(
-    name = "unittest3_backport_test",
+    name = "tests/unittest3_backport_test",
     size = "small",
-    srcs = ["test/unittest3_backport_test.py"],
+    srcs = ["tests/unittest3_backport_test.py"],
     srcs_version = "PY2AND3",
     deps = [
         "//absl/testing:absltest",
