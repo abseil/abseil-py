@@ -38,9 +38,6 @@ flags.DEFINE_integer(
     'usage_error_exitcode', None, 'The exitcode if app.UsageError if raised.')
 
 
-called_main_function_name = None
-
-
 class MyException(Exception):
   pass
 
@@ -95,16 +92,12 @@ def real_main(argv):
 
 
 def custom_main(argv):
-  global called_main_function_name
-  called_main_function_name = 'custom_main'
-
+  print('Function called: custom_main.')
   real_main(argv)
 
 
 def main(argv):
-  global called_main_function_name
-  called_main_function_name = 'main'
-
+  print('Function called: main.')
   real_main(argv)
 
 
@@ -124,8 +117,4 @@ if __name__ == '__main__':
   app.install_exception_handler(MyExceptionHandler('second'))
   app.run(main=main_func, argv=custom_argv)
 
-  if main_func:
-    if called_main_function_name != 'custom_main':
-      print('called_main_function_name should be custom_main, found %s.',
-            called_main_function_name)
-      sys.exit(1)
+  sys.exit('This is not reachable.')
