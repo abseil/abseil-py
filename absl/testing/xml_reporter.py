@@ -26,6 +26,7 @@ import traceback
 import unittest
 from xml.sax import saxutils
 
+from absl.third_party import unittest3_backport
 import six
 
 
@@ -254,7 +255,7 @@ class _TestSuiteResult(object):
     self.error_counts[suite_name] = 0
 
 
-class _TextAndXMLTestResult(unittest.TextTestResult):
+class _TextAndXMLTestResult(unittest3_backport.TextTestResult):
   """Private TestResult class that produces both formatted text results and XML.
 
   Used by TextAndXMLTestRunner.
@@ -403,18 +404,17 @@ class _TextAndXMLTestResult(unittest.TextTestResult):
     self.add_pending_test_case_result(test, error_summary=error_summary)
 
   def addSubTest(self, test, subtest, err):  # pylint: disable=invalid-name
-    if six.PY3:
-      super(_TextAndXMLTestResult, self).addSubTest(test, subtest, err)
-      if err is not None:
-        if issubclass(err[0], test.failureException):
-          error_summary = ('failure', err[0], err[1],
-                           self._exc_info_to_string(err))
-        else:
-          error_summary = ('error', err[0], err[1],
-                           self._exc_info_to_string(err))
+    super(_TextAndXMLTestResult, self).addSubTest(test, subtest, err)
+    if err is not None:
+      if issubclass(err[0], test.failureException):
+        error_summary = ('failure', err[0], err[1],
+                         self._exc_info_to_string(err))
       else:
-        error_summary = None
-      self.add_pending_test_case_result(subtest, error_summary=error_summary)
+        error_summary = ('error', err[0], err[1],
+                         self._exc_info_to_string(err))
+    else:
+      error_summary = None
+    self.add_pending_test_case_result(subtest, error_summary=error_summary)
 
   def printErrors(self):
     super(_TextAndXMLTestResult, self).printErrors()

@@ -50,6 +50,7 @@ from absl import app
 from absl import flags
 from absl import logging
 from absl.testing import xml_reporter
+from absl.third_party import unittest3_backport
 import six
 from six.moves import urllib
 from six.moves import xrange  # pylint: disable=redefined-builtin
@@ -191,7 +192,7 @@ def _monkey_patch_test_result_for_unexpected_passes():
 _monkey_patch_test_result_for_unexpected_passes()
 
 
-class TestCase(unittest.TestCase):
+class TestCase(unittest3_backport.TestCase):
   """Extension of unittest.TestCase providing more powerful assertions."""
 
   maxDiff = 80 * 20

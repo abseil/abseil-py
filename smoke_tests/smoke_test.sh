@@ -47,9 +47,10 @@ trap 'deactivate' EXIT
 # So we need to manually use the latest pip to install `six`,
 # then install absl-py. See:
 # https://mail.python.org/pipermail/distutils-sig/2018-April/032114.html
-pip install --upgrade pip
+curl https://bootstrap.pypa.io/get-pip.py | python
 pip --version
 pip install six
 
 python setup.py install
-python smoke_tests/smoke_test.py --echo smoke 2>&1 |grep 'echo is smoke.'
+python smoke_tests/sample_app.py --echo smoke 2>&1 |grep 'echo is smoke.'
+python smoke_tests/sample_test.py 2>&1 | grep 'msg_for_test'
