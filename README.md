@@ -40,7 +40,7 @@ bazel test absl/...
 
 ### Example Code
 
-Please refer to [smoke_tests/smoke_test.py](smoke_tests/smoke_test.py) as an
+Please refer to [smoke_tests/sample_app.py](smoke_tests/sample_app.py) as an
 example to get started.
 
 ## Documentation
