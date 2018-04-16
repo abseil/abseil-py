@@ -58,5 +58,14 @@ def get_executable_path(py_binary_name):
         'Cannot locate executable path for {}, MANIFEST file: {}.'.format(
             py_binary_name, manifest_file))
   else:
-    root_directory = __file__[:-len('absl/testing/_bazelize_command.py')]
+    # NOTE: __file__ may be .py or .pyc, depending on how the module was
+    # loaded and executed.
+    path = __file__
+
+    # Use the package name to find the root directory: every dot is
+    # a directory, plus one for ourselves.
+    for _ in range(__name__.count('.') + 1):
+      path = os.path.dirname(path)
+
+    root_directory = path
     return os.path.join(root_directory, py_binary_name)

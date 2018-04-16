@@ -13,6 +13,7 @@ py_library(
         "//absl:app",
         "//absl/flags",
         "//absl/logging",
+        "//absl/third_party/unittest3_backport",
         "@six_archive//:six",
     ],
 )
@@ -47,7 +48,10 @@ py_library(
     srcs = ["xml_reporter.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
-    deps = ["@six_archive//:six"],
+    deps = [
+        "//absl/third_party/unittest3_backport",
+        "@six_archive//:six",
+    ],
 )
 
 py_library(

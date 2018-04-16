@@ -968,7 +968,7 @@ class ABSLLogger(logging.getLoggerClass()):
 
     The ABSLLogger sometimes skips method calls on the stack
     to make the log messages meaningful in their appropriate context.
-    This method registers a function from a particluar file as one
+    This method registers a function from a particular file as one
     which should be skipped.
 
     Args:
