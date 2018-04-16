@@ -47,7 +47,7 @@ trap 'deactivate' EXIT
 # So we need to manually use the latest pip to install `six`,
 # then install absl-py. See:
 # https://mail.python.org/pipermail/distutils-sig/2018-April/032114.html
-pip install --upgrade pip
+curl https://bootstrap.pypa.io/get-pip.py | python
 pip --version
 pip install six
 
