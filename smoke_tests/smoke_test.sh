@@ -30,7 +30,10 @@ ABSL_PYTHON=$1
 ABSL_VIRTUALENV=$2
 TMP_DIR=$(mktemp -d)
 trap "{ rm -rf ${TMP_DIR}; }" EXIT
-${ABSL_VIRTUALENV} --no-site-packages -p ${ABSL_PYTHON} ${TMP_DIR}
+# Do not bootstrap pip/setuptools, they are manually installed with get-pip.py
+# inside the virtualenv.
+${ABSL_VIRTUALENV} --no-site-packages --no-pip --no-setuptools --no-wheel \
+    -p ${ABSL_PYTHON} ${TMP_DIR}
 
 # Temporarily disable unbound variable errors to activate virtualenv.
 set +u
