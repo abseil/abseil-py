@@ -178,7 +178,7 @@ class FunctionalTests(absltest.TestCase):
   def test_custom_main(self):
     self.run_helper(
         True,
-        env_overrides={'APP_TEST_USE_CUSTOM_MAIN': '1'},
+        env_overrides={'APP_TEST_CUSTOM_MAIN_FUNC': 'custom_main'},
         expected_stdout_substring='Function called: custom_main.')
 
   def test_custom_argv(self):
