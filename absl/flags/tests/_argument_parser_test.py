@@ -22,7 +22,6 @@ from __future__ import print_function
 
 from absl.flags import _argument_parser
 from absl.testing import absltest
-
 import six
 
 

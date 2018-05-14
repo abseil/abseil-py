@@ -72,6 +72,7 @@ py_test(
     deps = [
         ":_bazelize_command",
         ":absltest",
+        ":parameterized",
         "//absl/logging",
     ],
 )
