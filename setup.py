@@ -34,7 +34,7 @@ if py_version < ('2', '7') or py_version[0] == '3' and py_version < ('3', '4'):
 
 setuptools.setup(
     name='absl-py',
-    version='0.2.0',
+    version='0.2.1',
     description=(
         'Abseil Python Common Libraries, '
         'see https://github.com/abseil/abseil-py.'),
