@@ -102,19 +102,16 @@ def main(argv):
 
 
 if __name__ == '__main__':
-  use_custom_main = os.environ.get('APP_TEST_USE_CUSTOM_MAIN', False)
-  if use_custom_main:
-    main_func = custom_main
-  else:
-    main_func = main
+  kwargs = {'main': main}
+  main_function_name = os.environ.get('APP_TEST_CUSTOM_MAIN_FUNC', None)
+  if main_function_name:
+    kwargs['main'] = globals()[main_function_name]
   custom_argv = os.environ.get('APP_TEST_CUSTOM_ARGV', None)
   if custom_argv:
-    custom_argv = custom_argv.split(' ')
-  else:
-    custom_argv = None
+    kwargs['argv'] = custom_argv.split(' ')
 
   app.install_exception_handler(MyExceptionHandler('first'))
   app.install_exception_handler(MyExceptionHandler('second'))
-  app.run(main=main_func, argv=custom_argv)
+  app.run(**kwargs)
 
   sys.exit('This is not reachable.')

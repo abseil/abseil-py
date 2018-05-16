@@ -200,7 +200,7 @@ def _register_and_parse_flags_with_usage(argv=None):
   define_help_flags()
 
   original_argv = sys.argv if argv is None else argv
-  argv = parse_flags_with_usage(original_argv)
+  args_to_main = parse_flags_with_usage(original_argv)
   # Exit when told so.
   if FLAGS.only_check_args:
     sys.exit(0)
@@ -210,7 +210,7 @@ def _register_and_parse_flags_with_usage(argv=None):
     FLAGS.verbosity = 0
   _register_and_parse_flags_with_usage.done = True
 
-  return argv
+  return args_to_main
 
 _register_and_parse_flags_with_usage.done = False
 
@@ -269,9 +269,9 @@ def run(main, argv=None):
   - If main() raises a UsageError, prints usage and the error message.
   """
   try:
-    argv = _run_init(sys.argv if argv is None else argv)
+    args = _run_init(sys.argv if argv is None else argv)
     try:
-      _run_main(main, argv)
+      _run_main(main, args)
     except UsageError as error:
       usage(shorthelp=True, detailed_error=error, exitcode=error.exitcode)
     except:
@@ -291,7 +291,7 @@ def _run_init(argv):
   command_name.make_process_name_useful()
   # Set up absl logging handler.
   logging.use_absl_handler()
-  argv = _register_and_parse_flags_with_usage(argv=argv)
+  args = _register_and_parse_flags_with_usage(argv=argv)
   if faulthandler:
     try:
       faulthandler.enable()
@@ -300,7 +300,7 @@ def _run_init(argv):
       # Disabled faulthandler is a low-impact error.
       pass
   _run_init.done = True
-  return argv
+  return args
 
 
 _run_init.done = False
