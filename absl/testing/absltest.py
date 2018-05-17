@@ -434,15 +434,21 @@ class TestCase(unittest3_backport.TestCase):
   if six.PY2:
 
     def assertCountEqual(self, expected_seq, actual_seq, msg=None):
-      """An unordered sequence specific comparison.
+      """Tests two sequences have the same elements regardless of order.
 
-      It asserts that actual_seq and expected_seq have the same element counts.
-      Equivalent to::
+      It tests that the first sequence contains the same elements as the
+      second, regardless of their order. When they don't, an error message
+      listing the differences between the sequences will be generated.
 
-          self.assertEqual(Counter(iter(actual_seq)),
-                           Counter(iter(expected_seq)))
+      Duplicate elements are not ignored when comparing first and second.
+      It verifies whether each element has the same count in both sequences.
+      Equivalent to:
 
-      Asserts that each element has the same count in both sequences.
+          self.assertEqual(Counter(list(expected_seq)),
+                           Counter(list(actual_seq)))
+
+      but works with sequences of unhashable objects as well.
+
       Example:
           - [0, 1, 1] and [1, 0, 1] compare equal.
           - [0, 0, 1] and [0, 1] compare unequal.
