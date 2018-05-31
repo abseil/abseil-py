@@ -339,7 +339,7 @@ def usage(shorthelp=False, writeto_stdout=False, detailed_error=None,
   if shorthelp:
     flag_str = FLAGS.main_module_help()
   else:
-    flag_str = str(FLAGS)
+    flag_str = FLAGS.get_help()
   try:
     stdfile.write(doc)
     if flag_str:
