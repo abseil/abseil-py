@@ -36,6 +36,8 @@ flags.DEFINE_boolean(
     'raise_usage_error', False, 'Raise app.UsageError from main.')
 flags.DEFINE_integer(
     'usage_error_exitcode', None, 'The exitcode if app.UsageError if raised.')
+flags.DEFINE_string(
+    'str_flag_with_unicode_args', u'thumb:\U0001F44D', u'smile:\U0001F604')
 
 
 class MyException(Exception):

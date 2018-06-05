@@ -18,9 +18,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import codecs
 import contextlib
-import io
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -38,7 +39,10 @@ import six
 
 FLAGS = flags.FLAGS
 
-mock_stdio_type = io.BytesIO if bytes is str else io.StringIO
+# six.StringIO best reflects the normal behavior of stdout for both py2 and 3.
+mock_stdio_type = six.StringIO
+
+_newline_regex = re.compile('(\r\n)|\r')
 
 
 @contextlib.contextmanager
@@ -47,6 +51,10 @@ def patch_main_module_docstring(docstring):
   sys.modules['__main__'].__doc__ = docstring
   yield
   sys.modules['__main__'].__doc__ = old_doc
+
+
+def _normalize_newlines(s):
+  return re.sub('(\r\n)|\r', '\n', s)
 
 
 class UnitTests(absltest.TestCase):
@@ -83,11 +91,21 @@ class UnitTests(absltest.TestCase):
     self.assertIn('BAZBAZ', mock_stderr.getvalue())
 
   def test_usage_exitcode(self):
-    try:
-      app.usage(exitcode=2)
-      self.fail('app.usage(exitcode=1) should raise SystemExit')
-    except SystemExit as e:
-      self.assertEqual(2, e.code)
+
+    # The test environment may not have the correct output encoding,
+    # and we can't really change it once we've started the test,
+    # so we have to replace it with one that understands unicode.
+    if six.PY2:
+      stderr = codecs.getwriter('utf8')(sys.stderr)
+    else:
+      stderr = sys.stderr
+
+    with mock.patch.object(sys, 'stderr', new=stderr):
+      try:
+        app.usage(exitcode=2)
+        self.fail('app.usage(exitcode=1) should raise SystemExit')
+      except SystemExit as e:
+        self.assertEqual(2, e.code)
 
   def test_usage_expands_docstring(self):
     with patch_main_module_docstring('Name: %s, %%s'):
@@ -131,26 +149,39 @@ class FunctionalTests(absltest.TestCase):
                  env_overrides=None):
     env = os.environ.copy()
     env['APP_TEST_HELPER_TYPE'] = self.helper_type
+    env['PYTHONIOENCODING'] = 'utf8'
     if env_overrides:
       env.update(env_overrides)
     helper = 'absl/tests/app_test_helper_{}'.format(self.helper_type)
     process = subprocess.Popen(
         [_bazelize_command.get_executable_path(helper)] + list(arguments),
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE, env=env, universal_newlines=True)
+        stderr=subprocess.PIPE, env=env, universal_newlines=False)
     stdout, stderr = process.communicate()
+    # In Python 2, we can't control the encoding used by universal_newline
+    # mode, which can cause UnicodeDecodeErrors when subprocess tries to
+    # conver the bytes to unicode, so we have to decode it manually.
+    stdout = _normalize_newlines(stdout.decode('utf8'))
+    stderr = _normalize_newlines(stderr.decode('utf8'))
 
-    message = 'returncode: {}\nstdout: {}\nstderr: {}'.format(
-        process.returncode, stdout, stderr)
+    message = (u'Command: {command}\n'
+               'Exit Code: {exitcode}\n'
+               '===== stdout =====\n{stdout}'
+               '===== stderr =====\n{stderr}'
+               '=================='.format(
+                   command=' '.join([helper] + list(arguments)),
+                   exitcode=process.returncode,
+                   stdout=stdout or '<no output>\n',
+                   stderr=stderr or '<no output>\n'))
     if expect_success:
       self.assertEqual(0, process.returncode, msg=message)
     else:
       self.assertNotEqual(0, process.returncode, msg=message)
 
     if expected_stdout_substring:
-      self.assertIn(expected_stdout_substring, stdout)
+      self.assertIn(expected_stdout_substring, stdout, message)
     if expected_stderr_substring:
-      self.assertIn(expected_stderr_substring, stderr)
+      self.assertIn(expected_stderr_substring, stderr, message)
 
     return process.returncode, stdout, stderr
 
@@ -161,12 +192,23 @@ class FunctionalTests(absltest.TestCase):
         expected_stdout_substring=app_test_helper.__doc__)
     self.assertNotIn('--', stderr)
 
-  def test_helpfull(self):
+  def test_helpfull_basic(self):
     self.run_helper(
         False,
         arguments=['--helpfull'],
         # --logtostderr is from absl.logging module.
         expected_stdout_substring='--[no]logtostderr')
+
+  def test_helpfull_unicode_flag_help(self):
+    _, stdout, _ = self.run_helper(
+        False,
+        arguments=['--helpfull'],
+        expected_stdout_substring='str_flag_with_unicode_args')
+
+    self.assertIn(u'smile:\U0001F604', stdout)
+    # Default values get repr'd, which causes unicode strings to incorrectly
+    # render with their escaped values.
+    self.assertIn(repr(u'thumb:\U0001F44D'), stdout)
 
   def test_helpshort(self):
     _, _, stderr = self.run_helper(
