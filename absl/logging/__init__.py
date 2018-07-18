@@ -78,6 +78,7 @@ import socket
 import struct
 import sys
 import time
+import timeit
 import traceback
 import warnings
 
@@ -371,6 +372,53 @@ def log_every_n(level, msg, n, *args):
   """
   count = _get_next_log_count_per_token(get_absl_logger().findCaller())
   log_if(level, msg, not (count % n), *args)
+
+
+# Keeps track of the last log time of the given token.
+# Note: must be a dict since set/get is atomic in CPython.
+# Note: entries are never released as their number is expected to be low.
+_log_timer_per_token = {}
+
+
+def _seconds_have_elapsed(token, num_seconds):
+  """Tests if 'num_seconds' have passed since 'token' was requested.
+
+  Not strictly thread-safe - may log with the wrong frequency if called
+  concurrently from multiple threads. Accuracy depends on resolution of
+  'timeit.default_timer()'.
+
+  Always returns True on the first call for a given 'token'.
+
+  Args:
+    token: The token for which to look up the count.
+    num_seconds: The number of seconds to test for.
+
+  Returns:
+    Whether it has been >= 'num_seconds' since 'token' was last requested.
+  """
+  now = timeit.default_timer()
+  then = _log_timer_per_token.get(token, None)
+  if then is None or (now - then) >= num_seconds:
+    _log_timer_per_token[token] = now
+    return True
+  else:
+    return False
+
+
+def log_every_n_seconds(level, msg, n_seconds, *args):
+  """Logs 'msg % args' at level 'level' iff 'n_seconds' elapsed since last call.
+
+  Logs the first call, logs subsequent calls if 'n' seconds have elapsed since
+  the last logging call from the same call site (file + line). Not thread-safe.
+
+  Args:
+    level: int, the absl logging level at which to log.
+    msg: str, the message to be logged.
+    n_seconds: float or int, seconds which should elapse before logging again.
+    *args: The args to be substitued into the msg.
+  """
+  should_log = _seconds_have_elapsed(get_absl_logger().findCaller(), n_seconds)
+  log_if(level, msg, should_log, *args)
 
 
 def log_first_n(level, msg, n, *args):

@@ -59,6 +59,11 @@ I1231 23:59:59.000000 12345 logging_functional_test_helper.py:65] This line is l
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:70] Interesting Stuff\0
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:71] Interesting Stuff with Arguments: 42
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:73] Interesting Stuff with Dictionary
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] This should appear 5 times.
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] This should appear 5 times.
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] This should appear 5 times.
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] This should appear 5 times.
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] This should appear 5 times.
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:76] Info first 1 of 2
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:77] Info 1 (every 3)
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:76] Info first 2 of 2
@@ -71,6 +76,11 @@ This line is log level 0
 Interesting Stuff\0
 Interesting Stuff with Arguments: 42
 Interesting Stuff with Dictionary
+This should appear 5 times.
+This should appear 5 times.
+This should appear 5 times.
+This should appear 5 times.
+This should appear 5 times.
 Info first 1 of 2
 Info 1 (every 3)
 Info first 2 of 2
