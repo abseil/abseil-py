@@ -910,11 +910,17 @@ class ABSLLogger(logging.getLoggerClass()):
     ABSLLogger and any methods from this file, and whatever
     method is currently being used to generate the prefix for the log
     line.  Then it returns the file name, line number, and method name
-    of the calling method.
+    of the calling method.  An optional fourth item may be returned,
+    callers who only need things from the first three are advised to
+    always slice or index the result rather than using direct unpacking
+    assignment.
 
     Args:
-      stack_info: bool, when using Python 3 and True, include the stack trace as
-          the fourth item returned instead of None.
+      stack_info: bool, when True, include the stack trace as a fourth item
+          returned.  On Python 3 there are always four items returned - the
+          fourth will be None when this is False.  On Python 2 the stdlib
+          base class API only returns three items.  We do the same when this
+          new parameter is unspecified or False for compatibility.
 
     Returns:
       (filename, lineno, methodname[, sinfo]) of the calling method.
@@ -930,16 +936,15 @@ class ABSLLogger(logging.getLoggerClass()):
           (code.co_filename, code.co_name,
            code.co_firstlineno) not in f_to_skip and
           (code.co_filename, code.co_name) not in f_to_skip):
-        if six.PY2:
+        if six.PY2 and not stack_info:
           return (code.co_filename, frame.f_lineno, code.co_name)
         else:
           sinfo = None
           if stack_info:
             out = io.StringIO()
-            out.write('Stack (most recent call last):\n')
+            out.write(u'Stack (most recent call last):\n')
             traceback.print_stack(frame, file=out)
-            sinfo = out.getvalue().rstrip('\n')
-            out.close()
+            sinfo = out.getvalue().rstrip(u'\n')
           return (code.co_filename, frame.f_lineno, code.co_name, sinfo)
       frame = frame.f_back
 
