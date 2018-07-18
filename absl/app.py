@@ -29,6 +29,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import errno
 import os
 import pdb
@@ -270,6 +271,9 @@ def run(main, argv=None):
   """
   try:
     args = _run_init(sys.argv if argv is None else argv)
+    while _init_callbacks:
+      callback = _init_callbacks.popleft()
+      callback()
     try:
       _run_main(main, args)
     except UsageError as error:
@@ -282,6 +286,32 @@ def run(main, argv=None):
   except Exception as e:
     _call_exception_handlers(e)
     raise
+
+# Callbacks which have been deferred until after _run_init has been called.
+_init_callbacks = collections.deque()
+
+
+def call_after_init(callback):
+  """Calls the given callback only once ABSL has finished initialization.
+
+  If ABSL has already finished initialization when `call_after_init` is
+  called then the callback is executed immediately, otherwise `callback` is
+  stored to be executed after `app.run` has finished initializing (aka. just
+  before the main function is called).
+
+  If called after `app.run`, this is equivalent to calling `callback()` in the
+  caller thread. If called before `app.run`, callbacks are run sequentially (in
+  an undefined order) in the same thread as `app.run`.
+
+  Args:
+    callback: a callable to be called once ABSL has finished initialization.
+      This may be immediate if initialization has already finished. It
+      takes no arguments and returns nothing.
+  """
+  if _run_init.done:
+    callback()
+  else:
+    _init_callbacks.append(callback)
 
 
 def _run_init(argv):
