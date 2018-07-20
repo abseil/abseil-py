@@ -60,6 +60,13 @@ FLAGS = flags.FLAGS
 
 _TEXT_OR_BINARY_TYPES = (six.text_type, six.binary_type)
 
+if six.PY3:
+  from unittest import mock  # pylint: disable=unused-import
+else:
+  try:
+    import mock
+  except ImportError:
+    mock = None
 
 # Many of the methods in this module have names like assertSameElements.
 # This kind of name does not comply with PEP8 style,
