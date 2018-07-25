@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Helper script used by app_unittest.sh."""
+"""Helper script used by app_test.py."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -38,6 +38,8 @@ flags.DEFINE_integer(
     'usage_error_exitcode', None, 'The exitcode if app.UsageError if raised.')
 flags.DEFINE_string(
     'str_flag_with_unicode_args', u'thumb:\U0001F44D', u'smile:\U0001F604')
+flags.DEFINE_boolean('print_init_callbacks', False,
+                     'print init callbacks and exit')
 
 
 class MyException(Exception):
@@ -71,6 +73,12 @@ def real_main(argv):
     faulthandler._sigsegv()  # pylint: disable=protected-access
     sys.exit(1)  # Should not reach here.
 
+  if FLAGS.print_init_callbacks:
+    app.call_after_init(lambda: _callback_results.append('during real_main'))
+    for value in _callback_results:
+      print('callback: {}'.format(value))
+    sys.exit(0)
+
   # Ensure that we have a random C++ flag in flags.FLAGS; this shows
   # us that app.run() did the right thing in conjunction with C++ flags.
   helper_type = os.environ['APP_TEST_HELPER_TYPE']
@@ -103,6 +111,9 @@ def main(argv):
   real_main(argv)
 
 
+# Holds results from callbacks triggered by `app.run_after_init`.
+_callback_results = []
+
 if __name__ == '__main__':
   kwargs = {'main': main}
   main_function_name = os.environ.get('APP_TEST_CUSTOM_MAIN_FUNC', None)
@@ -112,6 +123,7 @@ if __name__ == '__main__':
   if custom_argv:
     kwargs['argv'] = custom_argv.split(' ')
 
+  app.call_after_init(lambda: _callback_results.append('before app.run'))
   app.install_exception_handler(MyExceptionHandler('first'))
   app.install_exception_handler(MyExceptionHandler('second'))
   app.run(**kwargs)

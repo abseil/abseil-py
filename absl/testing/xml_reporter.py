@@ -273,7 +273,7 @@ class _TextAndXMLTestResult(unittest3_backport.TextTestResult):
     self.time_getter = time_getter
 
     # This lock guards any mutations on pending_test_case_results.
-    self._pending_test_case_results_lock = threading.Lock()
+    self._pending_test_case_results_lock = threading.RLock()
 
   def startTest(self, test):
     self.start_time = self.time_getter()

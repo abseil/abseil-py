@@ -78,6 +78,7 @@ import socket
 import struct
 import sys
 import time
+import timeit
 import traceback
 import warnings
 
@@ -371,6 +372,53 @@ def log_every_n(level, msg, n, *args):
   """
   count = _get_next_log_count_per_token(get_absl_logger().findCaller())
   log_if(level, msg, not (count % n), *args)
+
+
+# Keeps track of the last log time of the given token.
+# Note: must be a dict since set/get is atomic in CPython.
+# Note: entries are never released as their number is expected to be low.
+_log_timer_per_token = {}
+
+
+def _seconds_have_elapsed(token, num_seconds):
+  """Tests if 'num_seconds' have passed since 'token' was requested.
+
+  Not strictly thread-safe - may log with the wrong frequency if called
+  concurrently from multiple threads. Accuracy depends on resolution of
+  'timeit.default_timer()'.
+
+  Always returns True on the first call for a given 'token'.
+
+  Args:
+    token: The token for which to look up the count.
+    num_seconds: The number of seconds to test for.
+
+  Returns:
+    Whether it has been >= 'num_seconds' since 'token' was last requested.
+  """
+  now = timeit.default_timer()
+  then = _log_timer_per_token.get(token, None)
+  if then is None or (now - then) >= num_seconds:
+    _log_timer_per_token[token] = now
+    return True
+  else:
+    return False
+
+
+def log_every_n_seconds(level, msg, n_seconds, *args):
+  """Logs 'msg % args' at level 'level' iff 'n_seconds' elapsed since last call.
+
+  Logs the first call, logs subsequent calls if 'n' seconds have elapsed since
+  the last logging call from the same call site (file + line). Not thread-safe.
+
+  Args:
+    level: int, the absl logging level at which to log.
+    msg: str, the message to be logged.
+    n_seconds: float or int, seconds which should elapse before logging again.
+    *args: The args to be substitued into the msg.
+  """
+  should_log = _seconds_have_elapsed(get_absl_logger().findCaller(), n_seconds)
+  log_if(level, msg, should_log, *args)
 
 
 def log_first_n(level, msg, n, *args):
@@ -862,11 +910,17 @@ class ABSLLogger(logging.getLoggerClass()):
     ABSLLogger and any methods from this file, and whatever
     method is currently being used to generate the prefix for the log
     line.  Then it returns the file name, line number, and method name
-    of the calling method.
+    of the calling method.  An optional fourth item may be returned,
+    callers who only need things from the first three are advised to
+    always slice or index the result rather than using direct unpacking
+    assignment.
 
     Args:
-      stack_info: bool, when using Python 3 and True, include the stack trace as
-          the fourth item returned instead of None.
+      stack_info: bool, when True, include the stack trace as a fourth item
+          returned.  On Python 3 there are always four items returned - the
+          fourth will be None when this is False.  On Python 2 the stdlib
+          base class API only returns three items.  We do the same when this
+          new parameter is unspecified or False for compatibility.
 
     Returns:
       (filename, lineno, methodname[, sinfo]) of the calling method.
@@ -882,16 +936,15 @@ class ABSLLogger(logging.getLoggerClass()):
           (code.co_filename, code.co_name,
            code.co_firstlineno) not in f_to_skip and
           (code.co_filename, code.co_name) not in f_to_skip):
-        if six.PY2:
+        if six.PY2 and not stack_info:
           return (code.co_filename, frame.f_lineno, code.co_name)
         else:
           sinfo = None
           if stack_info:
             out = io.StringIO()
-            out.write('Stack (most recent call last):\n')
+            out.write(u'Stack (most recent call last):\n')
             traceback.print_stack(frame, file=out)
-            sinfo = out.getvalue().rstrip('\n')
-            out.close()
+            sinfo = out.getvalue().rstrip(u'\n')
           return (code.co_filename, frame.f_lineno, code.co_name, sinfo)
       frame = frame.f_back
 

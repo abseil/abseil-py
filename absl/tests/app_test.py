@@ -287,7 +287,7 @@ class FunctionalTests(absltest.TestCase):
         expected_stderr_substring=app_test_helper.__doc__)
     self.assertEqual(88, exitcode)
 
-  def test_exeption_handler(self):
+  def test_exception_handler(self):
     exception_handler_messages = (
         'MyExceptionHandler: first\nMyExceptionHandler: second\n')
     self.run_helper(
@@ -295,9 +295,15 @@ class FunctionalTests(absltest.TestCase):
         arguments=['--raise_exception'],
         expected_stdout_substring=exception_handler_messages)
 
-  def test_exeption_handler_not_called(self):
+  def test_exception_handler_not_called(self):
     _, _, stdout = self.run_helper(True)
     self.assertNotIn('MyExceptionHandler', stdout)
+
+  def test_print_init_callbacks(self):
+    _, stdout, _ = self.run_helper(
+        expect_success=True, arguments=['--print_init_callbacks'])
+    self.assertIn('before app.run', stdout)
+    self.assertIn('during real_main', stdout)
 
 
 if __name__ == '__main__':

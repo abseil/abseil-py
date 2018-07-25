@@ -442,7 +442,6 @@ class ABSLLoggerTest(absltest.TestCase):
     self.assertEqual(expected_name, self.logger.findCaller()[2])
     self.assertEqual(expected_frame_lineno, self.logger.findCaller()[1])
 
-  @unittest.skipIf(six.PY2, 'stack_info is only supported in Python 3.')
   def test_find_caller_stack_info(self):
     self.set_up_mock_frames()
     self.logger.register_frame_to_skip('myfile.py', 'Method1')
@@ -451,6 +450,13 @@ class ABSLLoggerTest(absltest.TestCase):
           ('myfile.py', 125, 'Method2', 'Stack (most recent call last):'),
           self.logger.findCaller(stack_info=True))
     print_stack.assert_called_once()
+
+  @unittest.skipIf(six.PY3, 'Testing Python 2 specific behavior.')
+  def test_find_caller_python2(self):
+    """Ensure that we only return three items for base class compatibility."""
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method1')
+    self.assertEqual(('myfile.py', 125, 'Method2'), self.logger.findCaller())
 
   def test_critical(self):
     with mock.patch.object(self.logger, 'log'):

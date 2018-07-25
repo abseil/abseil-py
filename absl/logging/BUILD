@@ -81,6 +81,7 @@ py_binary(
         ":logging",
         "//absl:app",
         "//absl/flags",
+        "@mock_archive//:mock",
         "@six_archive//:six",
     ],
 )

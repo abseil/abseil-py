@@ -23,10 +23,12 @@ import os
 import sys
 import threading
 import time
+import timeit
 
 from absl import app
 from absl import flags
 from absl import logging
+import mock
 from six.moves import xrange  # pylint: disable=redefined-builtin
 
 FLAGS = flags.FLAGS
@@ -59,6 +61,13 @@ def _test_do_logging():
   logging.info('Interesting Stuff with Arguments: %d', 42)
   logging.info('%(a)s Stuff with %(b)s',
                {'a': 'Interesting', 'b': 'Dictionary'})
+
+  with mock.patch.object(timeit, 'default_timer') as mock_timer:
+    mock_timer.return_value = 0
+    while timeit.default_timer() < 9:
+      logging.log_every_n_seconds(logging.INFO, 'This should appear 5 times.',
+                                  2)
+      mock_timer.return_value = mock_timer() + .2
 
   for i in xrange(1, 5):
     logging.log_first_n(logging.INFO, 'Info first %d of %d', 2, i, 2)

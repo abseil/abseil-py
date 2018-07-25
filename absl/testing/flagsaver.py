@@ -20,6 +20,8 @@ for a given use case.
 Here are examples of each method.  They all call do_stuff() while FLAGS.someflag
 is temporarily set to 'foo'.
 
+  from absl.testing import flagsaver
+
   # Use a decorator which can optionally override flags via arguments.
   @flagsaver.flagsaver(someflag='foo')
   def some_func():
