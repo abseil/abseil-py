@@ -189,6 +189,7 @@ py_test(
         ":parameterized",
         ":xml_reporter",
         "//absl/logging",
+        "//absl/third_party/unittest3_backport",
         "@mock_archive//:mock",
         "@six_archive//:six",
     ],

@@ -32,6 +32,7 @@ from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
 from absl.testing import xml_reporter
+from absl.third_party import unittest3_backport
 import mock
 import six
 
@@ -789,6 +790,29 @@ class TextAndXMLTestResultTest(absltest.TestCase):
            'are missing. List of missing tests: %s' % (
                total_num_tests, len(tests_not_in_xml), tests_not_in_xml))
     self.assertEqual([], tests_not_in_xml, msg)
+
+  def test_add_failure_during_stop_test(self):
+    """Tests an addFailure() call from within a stopTest() call stack."""
+    result = self._make_result((0, 2))
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTest(test)
+
+    # Replace parent stopTest method from unittest3_backport.TextTestResult with
+    # a version that calls self.addFailure().
+    with mock.patch.object(
+        unittest3_backport.TextTestResult,
+        'stopTest',
+        side_effect=lambda t: result.addFailure(t, self.get_sample_failure())):
+      # Run stopTest in a separate thread since we are looking to verify that
+      # it does not deadlock, and would otherwise prevent the test from
+      # completing.
+      stop_test_thread = threading.Thread(target=result.stopTest, args=(test,))
+      stop_test_thread.daemon = True
+      stop_test_thread.start()
+
+    stop_test_thread.join(10.0)
+    self.assertFalse(stop_test_thread.is_alive(),
+                     'result.stopTest(test) call failed to complete')
 
 
 class XMLTest(absltest.TestCase):
