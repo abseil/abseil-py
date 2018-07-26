@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import os
 import re
 import string
@@ -1223,6 +1224,10 @@ test case
     self.assertSameStructure(['a'], ['a'])
     self.assertSameStructure({}, {})
     self.assertSameStructure({'one': 1}, {'one': 1})
+    self.assertSameStructure(collections.defaultdict(None, {'one': 1}),
+                             {'one': 1})
+    self.assertSameStructure({'one': 1},
+                             collections.defaultdict(None, {'one': 1}))
     # int and long should always be treated as the same type.
     if PY_VERSION_2:
       self.assertSameStructure({long(3): 3}, {3: long(3)})
@@ -1241,6 +1246,13 @@ test case
         AssertionError,
         r"a is a <(type|class) 'int'> but b is a <(type|class) 'float'>",
         self.assertSameStructure, 2, 2.0)
+
+    self.assertRaisesRegexp(
+        AssertionError,
+        r"a is a <(type|class) 'collections.OrderedDict'> but b is a "
+        "<(type|class) 'collections.defaultdict'>",
+        self.assertSameStructure, collections.OrderedDict({}),
+        collections.defaultdict(None, {}))
 
     # Different scalar values
     self.assertRaisesWithLiteralMatch(

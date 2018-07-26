@@ -1223,10 +1223,15 @@ def _sorted_list_difference(expected, actual):
 
 def _walk_structure_for_problems(a, b, aname, bname, problem_list):
   """The recursive comparison behind assertSameStructure."""
-  if type(a) != type(b) and not (  # pylint: disable=unidiomatic-typecheck
-      isinstance(a, six.integer_types) and isinstance(b, six.integer_types)):
+  # pylint: disable=unidiomatic-typecheck
+  if type(a) != type(b) and not (
+      isinstance(a, six.integer_types) and
+      isinstance(b, six.integer_types)) and not (
+          (type(a) == collections.defaultdict and type(b) == dict) or
+          (type(a) == dict and type(b) == collections.defaultdict)):
     # We do not distinguish between int and long types as 99.99% of Python 2
     # code should never care.  They collapse into a single type in Python 3.
+    # pylint: enable=unidiomatic-typecheck
     problem_list.append('%s is a %r but %s is a %r' %
                         (aname, type(a), bname, type(b)))
     # If they have different types there's no point continuing
