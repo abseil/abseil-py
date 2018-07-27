@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import os
 import re
 import string
@@ -1223,6 +1224,10 @@ test case
     self.assertSameStructure(['a'], ['a'])
     self.assertSameStructure({}, {})
     self.assertSameStructure({'one': 1}, {'one': 1})
+    self.assertSameStructure(collections.defaultdict(None, {'one': 1}),
+                             {'one': 1})
+    self.assertSameStructure(collections.OrderedDict({'one': 1}),
+                             collections.defaultdict(None, {'one': 1}))
     # int and long should always be treated as the same type.
     if PY_VERSION_2:
       self.assertSameStructure({long(3): 3}, {3: long(3)})
@@ -1241,6 +1246,11 @@ test case
         AssertionError,
         r"a is a <(type|class) 'int'> but b is a <(type|class) 'float'>",
         self.assertSameStructure, 2, 2.0)
+
+    self.assertRaisesRegexp(
+        AssertionError,
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'dict'>",
+        self.assertSameStructure, [], {})
 
     # Different scalar values
     self.assertRaisesWithLiteralMatch(
@@ -1302,6 +1312,23 @@ test case
         AssertionError,
         'a[0] is 1 but b[0] is 3; a[1] is 2 but b[1] is 4',
         self.assertSameStructure, [1, 2], [3, 4])
+
+  def test_same_structure_mapping_unchanged(self):
+    default_a = collections.defaultdict(lambda: 'BAD MODIFICATION', {})
+    dict_b = {'one': 'z'}
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r"a lacks ['one'] but b has it with value 'z'",
+        self.assertSameStructure, default_a, dict_b)
+    self.assertEmpty(default_a)
+
+    dict_a = {'one': 'z'}
+    default_b = collections.defaultdict(lambda: 'BAD MODIFICATION', {})
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r"a has ['one'] with value 'z' but it's missing in b",
+        self.assertSameStructure, dict_a, default_b)
+    self.assertEmpty(default_b)
 
   def test_assert_json_equal_same(self):
     self.assertJsonEqual('{"success": true}', '{"success": true}')
