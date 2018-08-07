@@ -730,7 +730,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
   def test_concurrent_add_and_delete_pending_test_case_result(self):
     """Make sure adding/deleting pending test case results are thread safe."""
-    result = xml_reporter._TextAndXMLTestResult(None, None, None, 0, None)
+    result = xml_reporter._TextAndXMLTestResult(None, self.stream, None, 0,
+                                                None)
     def add_and_delete_pending_test_case_result(test_name):
       test = MockTest(test_name)
       result.addSuccess(test)

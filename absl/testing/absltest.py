@@ -49,6 +49,7 @@ except ImportError:
 from absl import app
 from absl import flags
 from absl import logging
+from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
 from absl.third_party import unittest3_backport
 import six
@@ -1695,6 +1696,8 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     if kwargs.get('testRunner') is None:
       kwargs['testRunner'] = xml_test_runner_class
     kwargs['testRunner'].set_default_xml_stream(xml_output)
+  elif kwargs.get('testRunner') is None:
+    kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
 
   # Make sure tmpdir exists.
   if not os.path.isdir(FLAGS.test_tmpdir):
