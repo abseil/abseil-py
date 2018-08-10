@@ -1104,8 +1104,8 @@ class TestCase(unittest3_backport.TestCase):
     the location within the structures where the first difference is found.
     This may be helpful when comparing large structures.
 
-    Mixed Mapping types are supported, but the order of the keys will not be
-    considered in the comparison.
+    Mixed Set types are supported. Mixed Mapping types are supported, but the
+    order of the keys will not be considered in the comparison.
 
     Args:
       a: The first structure to compare.
@@ -1225,13 +1225,24 @@ def _sorted_list_difference(expected, actual):
   return missing, unexpected
 
 
+def _are_both_of_integer_type(a, b):
+  return isinstance(a, six.integer_types) and isinstance(b, six.integer_types)
+
+
+def _are_both_of_set_type(a, b):
+  return isinstance(a, collections.Set) and isinstance(b, collections.Set)
+
+
+def _are_both_of_mapping_type(a, b):
+  return isinstance(a, collections.Mapping) and isinstance(
+      b, collections.Mapping)
+
+
 def _walk_structure_for_problems(a, b, aname, bname, problem_list):
   """The recursive comparison behind assertSameStructure."""
   if type(a) != type(b) and not (  # pylint: disable=unidiomatic-typecheck
-      isinstance(a, six.integer_types) and
-      isinstance(b, six.integer_types)) and not (
-          isinstance(a, collections.Mapping) and
-          isinstance(b, collections.Mapping)):
+      _are_both_of_integer_type(a, b) or _are_both_of_set_type(a, b) or
+      _are_both_of_mapping_type(a, b)):
     # We do not distinguish between int and long types as 99.99% of Python 2
     # code should never care.  They collapse into a single type in Python 3.
     problem_list.append('%s is a %r but %s is a %r' %
@@ -1239,9 +1250,18 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
     # If they have different types there's no point continuing
     return
 
+  if isinstance(a, collections.Set):
+    for k in a:
+      if k not in b:
+        problem_list.append(
+            '%s has %r but %s does not' % (aname, k, bname))
+    for k in b:
+      if k not in a:
+        problem_list.append('%s lacks %r but %s has it' % (aname, k, bname))
+
   # NOTE: a or b could be a defaultdict, so we must take care that the traversal
   # doesn't modify the data.
-  if isinstance(a, collections.Mapping):
+  elif isinstance(a, collections.Mapping):
     for k in a:
       if k in b:
         _walk_structure_for_problems(
