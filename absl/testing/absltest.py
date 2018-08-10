@@ -200,6 +200,26 @@ def _monkey_patch_test_result_for_unexpected_passes():
 _monkey_patch_test_result_for_unexpected_passes()
 
 
+def _open(filepath, mode, _open_func=open):
+  """Opens a file.
+
+  Like open(), but compatible with Python 2 and 3. Also ensures that we can open
+  real files even if tests stub out open().
+
+  Args:
+    filepath: A filepath.
+    mode: A mode.
+    _open_func: A built-in open() function.
+
+  Returns:
+    The opened file object.
+  """
+  if sys.version_info.major == 2:
+    return _open_func(filepath, mode)
+  else:
+    return _open_func(filepath, mode, encoding='utf-8')
+
+
 class TestCase(unittest3_backport.TestCase):
   """Extension of unittest.TestCase providing more powerful assertions."""
 
@@ -1668,7 +1688,7 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     FLAGS.xml_output_file = get_default_xml_output_filename()
   xml_output_file = FLAGS.xml_output_file
 
-  xml_output = None
+  xml_buffer = None
   if xml_output_file:
     xml_output_dir = os.path.dirname(xml_output_file)
     if xml_output_dir and not os.path.isdir(xml_output_dir):
@@ -1678,10 +1698,11 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
         # File exists error can occur with concurrent tests
         if e.errno != errno.EEXIST:
           raise
-    if sys.version_info.major == 2:
-      xml_output = open(xml_output_file, 'w')
-    else:
-      xml_output = open(xml_output_file, 'w', encoding='utf-8')
+    # Fail early if we can't write to the XML output file. This is so that we
+    # don't waste people's time running tests that will just fail anyways.
+    with _open(xml_output_file, 'w'):
+      pass
+
     # We can reuse testRunner if it supports XML output (e. g. by inheriting
     # from xml_reporter.TextAndXMLTestRunner). Otherwise we need to use
     # xml_reporter.TextAndXMLTestRunner.
@@ -1695,7 +1716,11 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
       kwargs['testRunner'] = xml_test_runner_class
     if kwargs.get('testRunner') is None:
       kwargs['testRunner'] = xml_test_runner_class
-    kwargs['testRunner'].set_default_xml_stream(xml_output)
+    # Use an in-memory buffer (not backed by the actual file) to store the XML
+    # report, because some tools modify the file (e.g., create a placeholder
+    # with partial information, in case the test process crashes).
+    xml_buffer = six.StringIO()
+    kwargs['testRunner'].set_default_xml_stream(xml_buffer)
   elif kwargs.get('testRunner') is None:
     kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
 
@@ -1716,8 +1741,12 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     test_program = unittest.TestProgram(*args, **kwargs)
     return test_program.result
   finally:
-    if xml_output:
-      xml_output.close()
+    if xml_buffer:
+      try:
+        with _open(xml_output_file, 'w') as f:
+          f.write(xml_buffer.getvalue())
+      finally:
+        xml_buffer.close()
 
 
 def run_tests(argv, args, kwargs):
