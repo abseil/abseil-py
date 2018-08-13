@@ -1220,6 +1220,8 @@ test case
     self.assertSameStructure('hello', 'hello', msg='This Should not fail')
     self.assertSameStructure(set(), set())
     self.assertSameStructure(set([1, 2]), set([1, 2]))
+    self.assertSameStructure(set(), frozenset())
+    self.assertSameStructure(set([1, 2]), frozenset([1, 2]))
     self.assertSameStructure([], [])
     self.assertSameStructure(['a'], ['a'])
     self.assertSameStructure({}, {})
@@ -1252,6 +1254,16 @@ test case
         r"a is a <(type|class) 'list'> but b is a <(type|class) 'dict'>",
         self.assertSameStructure, [], {})
 
+    self.assertRaisesRegexp(
+        AssertionError,
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'set'>",
+        self.assertSameStructure, [], set())
+
+    self.assertRaisesRegexp(
+        AssertionError,
+        r"a is a <(type|class) 'dict'> but b is a <(type|class) 'set'>",
+        self.assertSameStructure, {}, set())
+
     # Different scalar values
     self.assertRaisesWithLiteralMatch(
         AssertionError, 'a is 0 but b is 1',
@@ -1260,10 +1272,23 @@ test case
         AssertionError, "a is 'hello' but b is 'goodbye' : This was expected",
         self.assertSameStructure, 'hello', 'goodbye', msg='This was expected')
 
-    # Different sets are treated without structure
-    self.assertRaisesRegexp(
-        AssertionError, r'AA is (set\(\[1\]\)|\{1\}) but BB is set\((\[\])?\)',
-        self.assertSameStructure, set([1]), set(), aname='AA', bname='BB')
+    # Different sets
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r'AA has 2 but BB does not',
+        self.assertSameStructure,
+        set([1, 2]),
+        set([1]),
+        aname='AA',
+        bname='BB')
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r'AA lacks 2 but BB has it',
+        self.assertSameStructure,
+        set([1]),
+        set([1, 2]),
+        aname='AA',
+        bname='BB')
 
     # Different lists
     self.assertRaisesWithLiteralMatch(
