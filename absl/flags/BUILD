@@ -23,6 +23,7 @@ py_library(
     name = "argparse_flags",
     srcs = ["argparse_flags.py"],
     srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
     deps = [":flags"],
 )
 
