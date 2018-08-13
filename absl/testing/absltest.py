@@ -1698,7 +1698,7 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
         # File exists error can occur with concurrent tests
         if e.errno != errno.EEXIST:
           raise
-    if sys.version_info.major == 2:
+    if six.PY2:
       xml_output = open(xml_output_file, 'w')
     else:
       xml_output = open(xml_output_file, 'w', encoding='utf-8')
