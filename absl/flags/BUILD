@@ -20,6 +20,13 @@ py_library(
 )
 
 py_library(
+    name = "argparse_flags",
+    srcs = ["argparse_flags.py"],
+    srcs_version = "PY2AND3",
+    deps = [":flags"],
+)
+
+py_library(
     name = "_argument_parser",
     srcs = ["_argument_parser.py"],
     srcs_version = "PY2AND3",
@@ -160,6 +167,36 @@ py_test(
         ":_flagvalues",
         ":_validators",
         "//absl/testing:absltest",
+    ],
+)
+
+py_test(
+    name = "tests/argparse_flags_test",
+    size = "small",
+    srcs = ["tests/argparse_flags_test.py"],
+    data = [":tests/argparse_flags_test_helper"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":argparse_flags",
+        ":flags",
+        "//absl/logging",
+        "//absl/testing:_bazelize_command",
+        "//absl/testing:absltest",
+        "//absl/testing:parameterized",
+        "@mock_archive//:mock",
+        "@six_archive//:six",
+    ],
+)
+
+py_binary(
+    name = "tests/argparse_flags_test_helper",
+    testonly = 1,
+    srcs = ["tests/argparse_flags_test_helper.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":argparse_flags",
+        ":flags",
+        "//absl:app",
     ],
 )
 
