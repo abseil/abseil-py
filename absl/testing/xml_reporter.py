@@ -25,8 +25,8 @@ import time
 import traceback
 import unittest
 from xml.sax import saxutils
+from absl.testing import _pretty_print_reporter
 
-from absl.third_party import unittest3_backport
 import six
 
 
@@ -255,7 +255,7 @@ class _TestSuiteResult(object):
     self.error_counts[suite_name] = 0
 
 
-class _TextAndXMLTestResult(unittest3_backport.TextTestResult):
+class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
   """Private TestResult class that produces both formatted text results and XML.
 
   Used by TextAndXMLTestRunner.
