@@ -111,6 +111,24 @@ def main(argv):
   real_main(argv)
 
 
+flags_parser_argv_sentinel = object()
+
+
+def flags_parser_main(argv):
+  print('Function called: main_with_flags_parser.')
+  if argv is not flags_parser_argv_sentinel:
+    sys.exit(
+        'FAILED: main function should be called with the return value of '
+        'flags_parser, but found: {}'.format(argv))
+
+
+def flags_parser(argv):
+  print('Function called: flags_parser.')
+  if os.environ.get('APP_TEST_FLAGS_PARSER_PARSE_FLAGS', None):
+    FLAGS(argv)
+  return flags_parser_argv_sentinel
+
+
 # Holds results from callbacks triggered by `app.run_after_init`.
 _callback_results = []
 
@@ -122,6 +140,8 @@ if __name__ == '__main__':
   custom_argv = os.environ.get('APP_TEST_CUSTOM_ARGV', None)
   if custom_argv:
     kwargs['argv'] = custom_argv.split(' ')
+  if os.environ.get('APP_TEST_USE_CUSTOM_PARSER', None):
+    kwargs['flags_parser'] = flags_parser
 
   app.call_after_init(lambda: _callback_results.append('before app.run'))
   app.install_exception_handler(MyExceptionHandler('first'))

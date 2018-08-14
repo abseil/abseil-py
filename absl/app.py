@@ -179,7 +179,10 @@ def define_help_flags():
     _define_help_flags_called = True
 
 
-def _register_and_parse_flags_with_usage(argv=None):
+def _register_and_parse_flags_with_usage(
+    argv=None,
+    flags_parser=parse_flags_with_usage,
+):
   """Registers help flags, parses arguments and shows usage if appropriate.
 
   This also calls sys.exit(0) if flag --only_check_args is True.
@@ -187,12 +190,18 @@ def _register_and_parse_flags_with_usage(argv=None):
   Args:
     argv: [str], a non-empty list of the command line arguments including
         program name, sys.argv is used if None.
+    flags_parser: Callable[[List[Text]], Any], the function used to parse flags.
+        The return value of this function is passed to `main` untouched.
+        It must guarantee FLAGS is parsed after this function is called.
 
   Returns:
+    The return value of `flags_parser`. When using the default `flags_parser`,
+    it returns the following:
     [str], a non-empty list of remaining command line arguments after parsing
     flags, including program name.
 
   Raises:
+    Error: Raised when flags_parser is called, but FLAGS is not parsed.
     SystemError: Raised when it's called more than once.
   """
   if _register_and_parse_flags_with_usage.done:
@@ -201,7 +210,10 @@ def _register_and_parse_flags_with_usage(argv=None):
   define_help_flags()
 
   original_argv = sys.argv if argv is None else argv
-  args_to_main = parse_flags_with_usage(original_argv)
+  args_to_main = flags_parser(original_argv)
+  if not FLAGS.is_parsed():
+    raise Error('FLAGS must be parsed after flags_parser is called.')
+
   # Exit when told so.
   if FLAGS.only_check_args:
     sys.exit(0)
@@ -255,7 +267,11 @@ def _call_exception_handlers(exception):
         pass
 
 
-def run(main, argv=None):
+def run(
+    main,
+    argv=None,
+    flags_parser=parse_flags_with_usage,
+):
   """Begins executing the program.
 
   Args:
@@ -264,13 +280,19 @@ def run(main, argv=None):
         If it returns an integer, it is used as the process's exit code.
     argv: A non-empty list of the command line arguments including program name,
         sys.argv is used if None.
+    flags_parser: Callable[[List[Text]], Any], the function used to parse flags.
+        The return value of this function is passed to `main` untouched.
+        It must guarantee FLAGS is parsed after this function is called.
   - Parses command line flags with the flag module.
   - If there are any errors, prints usage().
   - Calls main() with the remaining arguments.
   - If main() raises a UsageError, prints usage and the error message.
   """
   try:
-    args = _run_init(sys.argv if argv is None else argv)
+    args = _run_init(
+        sys.argv if argv is None else argv,
+        flags_parser,
+    )
     while _init_callbacks:
       callback = _init_callbacks.popleft()
       callback()
@@ -314,14 +336,20 @@ def call_after_init(callback):
     _init_callbacks.append(callback)
 
 
-def _run_init(argv):
+def _run_init(
+    argv,
+    flags_parser,
+):
   """Does one-time initialization and re-parses flags on rerun."""
   if _run_init.done:
-    return parse_flags_with_usage(argv)
+    return flags_parser(argv)
   command_name.make_process_name_useful()
   # Set up absl logging handler.
   logging.use_absl_handler()
-  args = _register_and_parse_flags_with_usage(argv=argv)
+  args = _register_and_parse_flags_with_usage(
+      argv=argv,
+      flags_parser=flags_parser,
+  )
   if faulthandler:
     try:
       faulthandler.enable()
