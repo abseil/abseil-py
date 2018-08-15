@@ -415,6 +415,8 @@ class FlagValues(object):
       raise _exceptions.Error('Flag name must be a string')
     if not name:
       raise _exceptions.Error('Flag name cannot be empty')
+    if ' ' in name:
+      raise _exceptions.Error('Flag name cannot contain a space')
     self._check_method_name_conflicts(name, flag)
     if name in fl and not flag.allow_override and not fl[name].allow_override:
       module, module_name = _helpers.get_calling_module_object_and_name()
