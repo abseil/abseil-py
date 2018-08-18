@@ -567,7 +567,11 @@ def find_log_dir_and_names(program_name=None, log_dir=None):
 
   try:
     username = getpass.getuser()
+<<<<<<< HEAD
   except:
+=======
+  except KeyError:
+>>>>>>> Use uid instead when username not found.
     # This can happen, e.g. when running under docker w/o passwd file.
     username = str(os.getuid())
   hostname = socket.gethostname()

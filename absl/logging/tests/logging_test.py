@@ -708,6 +708,25 @@ class LoggingTest(absltest.TestCase):
       self.assertEqual((log_dir, prefix, py_program_name),
                        logging.find_log_dir_and_names())
 
+  def test_find_log_dir_and_names_wo_username(self):
+    uid = 100
+    host = 'test_host'
+    log_dir = 'here'
+    program_name = 'prog1'
+    with mock.patch.object(getpass, 'getuser'), \
+        mock.patch.object(os, 'getuid'), \
+        mock.patch.object(logging, 'find_log_dir') as mock_find_log_dir, \
+        mock.patch.object(socket, 'gethostname') as mock_gethostname:
+      getpass.getuser.side_effect = KeyError()
+      os.getuid.return_value = uid
+      mock_gethostname.return_value = host
+      mock_find_log_dir.return_value = log_dir
+
+      prefix = '%s.%s.%s.log' % (program_name, host, uid)
+      self.assertEqual((log_dir, prefix, program_name),
+                       logging.find_log_dir_and_names(
+                           program_name=program_name, log_dir=log_dir))
+
   def test_errors_in_logging(self):
     with mock.patch.object(sys, 'stderr', new=_StreamIO()) as stderr:
       logging.info('not enough args: %s %s', 'foo')  # pylint: disable=logging-too-few-args
