@@ -565,7 +565,11 @@ def find_log_dir_and_names(program_name=None, log_dir=None):
 
   actual_log_dir = find_log_dir(log_dir=log_dir)
 
-  username = getpass.getuser()
+  try:
+    username = getpass.getuser()
+  except:
+    # This can happen, e.g. when running under docker w/o passwd file.
+    username = str(os.getuid())
   hostname = socket.gethostname()
   file_prefix = '%s.%s.%s.log' % (program_name, hostname, username)
 
