@@ -708,6 +708,36 @@ class LoggingTest(absltest.TestCase):
       self.assertEqual((log_dir, prefix, py_program_name),
                        logging.find_log_dir_and_names())
 
+  def test_find_log_dir_and_names_wo_username(self):
+    # Windows doesn't have os.getuid at all
+    if hasattr(os, 'getuid'):
+      mock_getuid = mock.patch.object(os, 'getuid')
+      uid = 100
+      logged_uid = '100'
+    else:
+      # The function doesn't exist, but our test code still tries to mock
+      # it, so just use a fake thing.
+      mock_getuid = _mock_windows_os_getuid()
+      uid = -1
+      logged_uid = 'unknown'
+
+    host = 'test_host'
+    log_dir = 'here'
+    program_name = 'prog1'
+    with mock.patch.object(getpass, 'getuser'), \
+        mock_getuid as getuid, \
+        mock.patch.object(logging, 'find_log_dir') as mock_find_log_dir, \
+        mock.patch.object(socket, 'gethostname') as mock_gethostname:
+      getpass.getuser.side_effect = KeyError()
+      getuid.return_value = uid
+      mock_gethostname.return_value = host
+      mock_find_log_dir.return_value = log_dir
+
+      prefix = '%s.%s.%s.log' % (program_name, host, logged_uid)
+      self.assertEqual((log_dir, prefix, program_name),
+                       logging.find_log_dir_and_names(
+                           program_name=program_name, log_dir=log_dir))
+
   def test_errors_in_logging(self):
     with mock.patch.object(sys, 'stderr', new=_StreamIO()) as stderr:
       logging.info('not enough args: %s %s', 'foo')  # pylint: disable=logging-too-few-args
@@ -909,6 +939,11 @@ class GetLogFileNameTest(parameterized.TestCase):
     with open(filename, 'a') as stream:
       with override_python_handler_stream(stream):
         self.assertEqual(filename, logging.get_log_file_name())
+
+
+@contextlib.contextmanager
+def _mock_windows_os_getuid():
+  yield mock.MagicMock()
 
 
 if __name__ == '__main__':
