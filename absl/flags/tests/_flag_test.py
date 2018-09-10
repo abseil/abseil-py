@@ -21,7 +21,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl._enum_module import enum
 from absl.flags import _argument_parser
+from absl.flags import _exceptions
 from absl.flags import _flag
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -87,6 +89,45 @@ class EnumFlagTest(parameterized.TestCase):
   def test_empty_values(self):
     with self.assertRaises(ValueError):
       _flag.EnumFlag('fruit', None, 'help', [])
+
+
+class Fruit(enum.Enum):
+  APPLE = 1
+  ORANGE = 2
+
+
+class EmptyEnum(enum.Enum):
+  pass
+
+
+class EnumClassFlagTest(parameterized.TestCase):
+
+  @parameterized.parameters(
+      ('', '<APPLE|ORANGE>: (no help available)'),
+      ('Type of fruit.', '<APPLE|ORANGE>: Type of fruit.'))
+  def test_help_text(self, helptext_input, helptext_output):
+    f = _flag.EnumClassFlag('fruit', None, helptext_input, Fruit)
+    self.assertEqual(helptext_output, f.help)
+
+  def test_requires_enum(self):
+    with self.assertRaises(TypeError):
+      _flag.EnumClassFlag('fruit', None, 'help', ['apple', 'orange'])
+
+  def test_requires_non_empty_enum_class(self):
+    with self.assertRaises(ValueError):
+      _flag.EnumClassFlag('empty', None, 'help', EmptyEnum)
+
+  def test_accepts_literal_default(self):
+    f = _flag.EnumClassFlag('fruit', Fruit.APPLE, 'A sample enum flag.', Fruit)
+    self.assertEqual(Fruit.APPLE, f.value)
+
+  def test_accepts_string_default(self):
+    f = _flag.EnumClassFlag('fruit', 'ORANGE', 'A sample enum flag.', Fruit)
+    self.assertEqual(Fruit.ORANGE, f.value)
+
+  def test_default_value_does_not_exist(self):
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      _flag.EnumClassFlag('fruit', 'BANANA', 'help', Fruit)
 
 
 if __name__ == '__main__':

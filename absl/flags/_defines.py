@@ -321,6 +321,9 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
     module_name=None, **args):
   """Registers a flag whose value can be any string from enum_values.
 
+  Instead of a string enum, prefer `DEFINE_enum_class`, which allows
+  defining enums from an `enum.Enum` class.
+
   Args:
     name: str, the flag name.
     default: str|None, the default value of the flag.
@@ -334,6 +337,26 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
     **args: dict, the extra keyword args that are passed to Flag __init__.
   """
   DEFINE_flag(_flag.EnumFlag(name, default, help, enum_values, **args),
+              flag_values, module_name)
+
+
+def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
+    name, default, enum_class, help, flag_values=_flagvalues.FLAGS,
+    module_name=None, **args):
+  """Registers a flag whose value can be the name of enum members.
+
+  Args:
+    name: str, the flag name.
+    default: Enum|str|None, the default value of the flag.
+    enum_class: class, the Enum class with all the possible values for the flag.
+    help: str, the help message.
+    flag_values: FlagValues, the FlagValues instance with which the flag will
+        be registered. This should almost never need to be overridden.
+    module_name: str, the name of the Python module declaring this flag.
+        If not provided, it will be computed using the stack trace of this call.
+    **args: dict, the extra keyword args that are passed to Flag __init__.
+  """
+  DEFINE_flag(_flag.EnumClassFlag(name, default, help, enum_class, **args),
               flag_values, module_name)
 
 

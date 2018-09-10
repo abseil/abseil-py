@@ -108,6 +108,7 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":_argument_parser",
+        "//absl:_enum_module",
         "//absl/testing:absltest",
         "@six_archive//:six",
     ],
@@ -119,7 +120,9 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":_argument_parser",
+        ":_exceptions",
         ":_flag",
+        "//absl:_enum_module",
         "//absl/testing:absltest",
         "//absl/testing:parameterized",
     ],
@@ -222,6 +225,7 @@ py_test(
         ":_helpers",
         ":flags",
         ":tests/module_bar",
+        "//absl:_enum_module",
         "//absl/testing:absltest",
         "@six_archive//:six",
     ],
@@ -252,6 +256,7 @@ py_test(
         ":tests/module_bar",
         ":tests/module_baz",
         ":tests/module_foo",
+        "//absl:_enum_module",
         "//absl/testing:absltest",
         "@six_archive//:six",
     ],
