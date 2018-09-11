@@ -34,3 +34,14 @@ new_http_archive(
     strip_prefix = "mock-1.0.1",
     build_file = "third_party/mock.BUILD",
 )
+
+new_http_archive(
+    # NOTE: The name here is used in _enum_module.py to find the sys.path entry.
+    name = "enum34_archive",
+    urls = [
+        "https://mirror.bazel.build/pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz",
+        "https://pypi.python.org/packages/bf/3e/31d502c25302814a7c2f1d3959d2a3b3f78e509002ba91aea64993936876/enum34-1.1.6.tar.gz"
+        ],
+    sha256 = "8ad8c4783bf61ded74527bffb48ed9b54166685e4230386a9ed9b1279e2df5b1",
+    build_file = "third_party/enum34.BUILD"
+)

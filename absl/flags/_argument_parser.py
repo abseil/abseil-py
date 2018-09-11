@@ -351,6 +351,57 @@ class EnumParser(ArgumentParser):
     return 'string enum'
 
 
+class EnumClassParser(ArgumentParser):
+  """Parser of an Enum class member."""
+
+  def __init__(self, enum_class):
+    """Initializes EnumParser.
+
+    Args:
+      enum_class: class, the Enum class with all possible flag values.
+
+    Raises:
+      TypeError: When enum_class is not a subclass of Enum.
+      ValueError: When enum_class is empty.
+    """
+    # Users must have an Enum class defined before using EnumClass flag.
+    # Therefore this dependency is guaranteed.
+    import enum
+
+    if not issubclass(enum_class, enum.Enum):
+      raise TypeError('{} is not a subclass of Enum.'.format(enum_class))
+    if not enum_class.__members__:
+      raise ValueError('enum_class cannot be empty, but "{}" is empty.'
+                       .format(enum_class))
+
+    super(EnumClassParser, self).__init__()
+    self.enum_class = enum_class
+
+  def parse(self, argument):
+    """Determines validity of argument and returns the correct element of enum.
+
+    Args:
+      argument: str or Enum class member, the supplied flag value.
+
+    Returns:
+      The first matching Enum class member in Enum class.
+
+    Raises:
+      ValueError: Raised when argument didn't match anything in enum.
+    """
+    if isinstance(argument, self.enum_class):
+      return argument
+    if argument not in self.enum_class.__members__:
+      raise ValueError('value should be one of <%s>' %
+                       '|'.join(self.enum_class.__members__.keys()))
+    else:
+      return self.enum_class[argument]
+
+  def flag_type(self):
+    """See base class."""
+    return 'enum class'
+
+
 class ListSerializer(ArgumentSerializer):
 
   def __init__(self, list_sep):

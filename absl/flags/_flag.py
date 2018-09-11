@@ -312,6 +312,25 @@ class EnumFlag(Flag):
     return elements
 
 
+class EnumClassFlag(Flag):
+  """Basic enum flag; its value is an enum class's member."""
+
+  def __init__(self, name, default, help, enum_class,  # pylint: disable=redefined-builtin
+               short_name=None, **args):
+    p = _argument_parser.EnumClassParser(enum_class)
+    g = _argument_parser.ArgumentSerializer()
+    super(EnumClassFlag, self).__init__(
+        p, g, name, default, help, short_name, **args)
+    self.help = '<%s>: %s' % ('|'.join(enum_class.__members__), self.help)
+
+  def _extra_xml_dom_elements(self, doc):
+    elements = []
+    for enum_value in self.parser.enum_class.__members__.keys():
+      elements.append(_helpers.create_xml_dom_element(
+          doc, 'enum_value', enum_value))
+    return elements
+
+
 class MultiFlag(Flag):
   """A flag that can appear multiple time on the command-line.
 

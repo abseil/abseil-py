@@ -27,6 +27,7 @@ import tempfile
 import unittest
 
 from absl import flags
+from absl._enum_module import enum
 from absl.flags import _exceptions
 from absl.flags import _helpers
 from absl.flags.tests import module_bar
@@ -65,6 +66,16 @@ class FlagDictToArgsTest(absltest.TestCase):
             '--party', '--monday=party', '--score=42',
             '--loadthatstuff=42,hello,goodbye'),
         flags.flag_dict_to_args(arg_dict))
+
+
+class Fruit(enum.Enum):
+  apple = 1
+  orange = 2
+  APPLE = 3
+
+
+class EmptyEnum(enum.Enum):
+  pass
 
 
 class FlagsUnitTest(absltest.TestCase):
@@ -1090,6 +1101,59 @@ class FlagsUnitTest(absltest.TestCase):
     fv = flags.FlagValues()
     with self.assertRaises(ValueError):
       flags.DEFINE_enum('fruit', None, [], 'help', flag_values=fv)
+
+  def test_define_enum_class_flag(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertIsNone(fv.fruit)
+
+  def test_parse_enum_class_flag(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
+
+    argv = ('./program', '--fruit=apple')
+    argv = fv(argv)
+    self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(fv['fruit'].present, 1)
+    self.assertEqual(fv['fruit'].value, Fruit.apple)
+    fv.unparse_flags()
+    argv = ('./program', '--fruit=APPLE')
+    argv = fv(argv)
+    self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
+    self.assertEqual(argv[0], './program', 'program name not preserved')
+    self.assertEqual(fv['fruit'].present, 1)
+    self.assertEqual(fv['fruit'].value, Fruit.APPLE)
+    fv.unparse_flags()
+
+  def test_enum_class_flag_help_message(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
+
+    helpstr = fv.main_module_help()
+    expected_help = '\n%s:\n  --fruit: <apple|orange|APPLE>: ?' % sys.argv[0]
+
+    self.assertEqual(helpstr, expected_help)
+
+  def test_enum_class_flag_with_wrong_default_value_type(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      flags.DEFINE_enum_class('fruit', 1, Fruit, 'help',
+                              flag_values=fv)
+
+  def test_enum_class_flag_requires_enum_class(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(TypeError):
+      flags.DEFINE_enum_class('fruit', None, ['apple', 'orange'], 'help',
+                              flag_values=fv)
+
+  def test_enum_class_flag_requires_non_empty_enum_class(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_enum_class('empty', None, EmptyEnum, 'help',
+                              flag_values=fv)
 
 
 class MultiNumericalFlagsTest(absltest.TestCase):

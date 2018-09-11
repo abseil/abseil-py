@@ -22,6 +22,16 @@ py_library(
 )
 
 py_library(
+    name = "_enum_module",
+    srcs = ["_enum_module.py"],
+    visibility = ["//absl:__subpackages__"],
+    deps = [
+        "@enum34_archive//:enum",
+        "@six_archive//:six",
+    ],
+)
+
+py_library(
     name = "tests/app_test_helper",
     testonly = 1,
     srcs = ["tests/app_test_helper.py"],
