@@ -26,6 +26,7 @@ import xml.dom.minidom
 import xml.sax.saxutils
 
 from absl import flags
+from absl._enum_module import enum
 from absl.flags import _helpers
 from absl.flags.tests import module_bar
 from absl.testing import absltest
@@ -206,6 +207,27 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <type>string enum</type>\n'
         '  <enum_value>stable</enum_value>\n'
         '  <enum_value>experimental</enum_value>\n'
+        '</flag>\n')
+    self._check_flag_help_in_xml('cc_version', 'tool', expected_output)
+
+  def test_flag_help_in_xml_enum_class(self):
+    class Version(enum.Enum):
+      STABLE = 0
+      EXPERIMENTAL = 1
+
+    flags.DEFINE_enum_class('cc_version', 'STABLE', Version,
+                            'Compiler version to use.', flag_values=self.fv)
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>cc_version</name>\n'
+        '  <meaning>&lt;STABLE|EXPERIMENTAL&gt;: '
+        'Compiler version to use.</meaning>\n'
+        '  <default>Version.STABLE</default>\n'
+        '  <current>Version.STABLE</current>\n'
+        '  <type>enum class</type>\n'
+        '  <enum_value>STABLE</enum_value>\n'
+        '  <enum_value>EXPERIMENTAL</enum_value>\n'
         '</flag>\n')
     self._check_flag_help_in_xml('cc_version', 'tool', expected_output)
 
