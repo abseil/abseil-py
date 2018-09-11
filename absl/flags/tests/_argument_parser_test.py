@@ -20,6 +20,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl._enum_module import enum
 from absl.flags import _argument_parser
 from absl.testing import absltest
 import six
@@ -122,6 +123,39 @@ class EnumParserTest(absltest.TestCase):
     parser = _argument_parser.EnumParser(['apple', 'banana'])
     with self.assertRaises(ValueError):
       parser.parse('orange')
+
+
+class Fruit(enum.Enum):
+  APPLE = 1
+  BANANA = 2
+
+
+class EmptyEnum(enum.Enum):
+  pass
+
+
+class EnumClassParserTest(absltest.TestCase):
+
+  def test_requires_enum(self):
+    with self.assertRaises(TypeError):
+      _argument_parser.EnumClassParser(['apple', 'banana'])
+
+  def test_requires_non_empty_enum_class(self):
+    with self.assertRaises(ValueError):
+      _argument_parser.EnumClassParser(EmptyEnum)
+
+  def test_parse_string(self):
+    parser = _argument_parser.EnumClassParser(Fruit)
+    self.assertEqual(Fruit.APPLE, parser.parse('APPLE'))
+
+  def test_parse_literal(self):
+    parser = _argument_parser.EnumClassParser(Fruit)
+    self.assertEqual(Fruit.APPLE, parser.parse(Fruit.APPLE))
+
+  def test_parse_not_found(self):
+    parser = _argument_parser.EnumClassParser(Fruit)
+    with self.assertRaises(ValueError):
+      parser.parse('ORANGE')
 
 
 class HelperFunctionsTest(absltest.TestCase):
