@@ -21,9 +21,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import copy
-import pickle
-
 from absl._enum_module import enum
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
@@ -69,24 +66,6 @@ class FlagTest(absltest.TestCase):
     self.assertEqual('apple', self.flag.value)
     self.flag._set_default('orange')
     self.assertEqual('apple', self.flag.value)
-
-  def test_pickle(self):
-    with self.assertRaisesRegexp(TypeError, "can't pickle Flag objects"):
-      pickle.dumps(self.flag)
-
-  def test_copy(self):
-    self.flag.value = 'orange'
-
-    with self.assertRaisesRegexp(
-        TypeError, 'Flag does not support shallow copies'):
-      copy.copy(self.flag)
-
-    flag2 = copy.deepcopy(self.flag)
-    self.assertEqual(flag2.value, 'orange')
-
-    flag2.value = 'mango'
-    self.assertEqual(flag2.value, 'mango')
-    self.assertEqual(self.flag.value, 'orange')
 
 
 class BooleanFlagTest(parameterized.TestCase):

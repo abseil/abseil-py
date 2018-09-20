@@ -18,8 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import copy
-import pickle
 import types
 import unittest
 
@@ -342,27 +340,6 @@ class FlagValuesTest(absltest.TestCase):
         'bool', False, 'help', short_name='b', flag_values=fv)
     self.assertEqual(3, len(fv))
     self.assertTrue(fv)
-
-  def test_pickle(self):
-    fv = _flagvalues.FlagValues()
-    with self.assertRaisesRegexp(TypeError, "can't pickle FlagValues"):
-      pickle.dumps(fv)
-
-  def test_copy(self):
-    fv = _flagvalues.FlagValues()
-    _defines.DEFINE_integer('answer', 0, 'help', flag_values=fv)
-    fv(['', '--answer=1'])
-
-    with self.assertRaisesRegexp(
-        TypeError, 'FlagValues does not support shallow copies'):
-      copy.copy(fv)
-
-    fv2 = copy.deepcopy(fv)
-    self.assertEqual(fv2.answer, 1)
-
-    fv2.answer = 42
-    self.assertEqual(fv2.answer, 42)
-    self.assertEqual(fv.answer, 1)
 
   def test_conflicting_flags(self):
     fv = _flagvalues.FlagValues()
