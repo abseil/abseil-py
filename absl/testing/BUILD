@@ -51,6 +51,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":_pretty_print_reporter",
+        "//absl/third_party/unittest3_backport",
         "@six_archive//:six",
     ],
 )

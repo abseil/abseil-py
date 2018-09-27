@@ -26,6 +26,7 @@ import traceback
 import unittest
 from xml.sax import saxutils
 from absl.testing import _pretty_print_reporter
+from absl.third_party import unittest3_backport
 
 import six
 
@@ -127,12 +128,11 @@ class _TestCaseResult(object):
       full_class_name = match.group(2)
     else:
       class_name = unittest.util.strclass(test.__class__)
-      if six.PY3 and isinstance(test, unittest.case._SubTest):
-        # subtest is introduced in Python3
+      if ((six.PY3 and isinstance(test, unittest.case._SubTest)) or
+          (six.PY2 and isinstance(test, unittest3_backport.case._SubTest))):
         # If the test case is a _SubTest, the real TestCase instance is
         # available as _SubTest.test_case.
         class_name = unittest.util.strclass(test.test_case.__class__)
-
       if test_desc.startswith(class_name + '.'):
         # In a typical unittest.TestCase scenario, test.id() returns with
         # a class name formatted using unittest.util.strclass.
@@ -200,8 +200,10 @@ class _TestSuiteResult(object):
       # _ErrorHolder is a special case created by unittest for class / module
       # level functions.
       suite_name = test_case_result.full_class_name.rsplit('.')[-1]
-    if six.PY3 and isinstance(test_case_result.test, unittest.case._SubTest):
-      # subTest is introduced in Python3.
+    if ((six.PY3 and
+         isinstance(test_case_result.test, unittest.case._SubTest)) or
+        (six.PY2 and
+         isinstance(test_case_result.test, unittest3_backport.case._SubTest))):
       # If the test case is a _SubTest, the real TestCase instance is
       # available as _SubTest.test_case.
       suite_name = type(test_case_result.test.test_case).__name__

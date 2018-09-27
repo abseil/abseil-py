@@ -183,14 +183,16 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'message': ''}
     self._assert_match(expected_re, self.xml_stream.getvalue())
 
-  @unittest.skipIf(six.PY2, 'subtest is introduced in python3')
   def test_with_passing_subtest(self):
     start_time = 0
     end_time = 2
     result = self._make_result((start_time, end_time))
 
     test = MockTest('__main__.MockTest.passing_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)
+    if six.PY3:
+      subtest = unittest.case._SubTest(test, 'msg', None)
+    else:
+      subtest = unittest3_backport.case._SubTest(test, 'msg', None)
     result.startTest(test)
     result.addSubTest(test, subtest, None)
     result.stopTestRun()
@@ -211,14 +213,21 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'message': ''}
     self._assert_match(expected_re, self.xml_stream.getvalue())
 
-  @unittest.skipIf(six.PY2, 'subtest is introduced in python3')
   def test_with_passing_subtest_with_dots_in_parameter_name(self):
     start_time = 0
     end_time = 2
     result = self._make_result((start_time, end_time))
 
     test = MockTest('__main__.MockTest.passing_test')
-    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})
+    if six.PY3:
+      subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})
+    else:
+      # In Python 3 subTest uses a ChainMap to hold the parameters, but ChainMap
+      # does not exist in Python 2, so a list of dict is used to simulate the
+      # behavior of a ChainMap. This is why a list is provided as a parameter
+      # here.
+      subtest = unittest3_backport.case._SubTest(test, 'msg',
+                                                 [{'case': 'a.b.c'}])
     result.startTest(test)
     result.addSubTest(test, subtest, None)
     result.stopTestRun()
@@ -301,14 +310,16 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'message': FAILURE_MESSAGE}
     self._assert_match(expected_re, self.xml_stream.getvalue())
 
-  @unittest.skipIf(six.PY2, 'subtest is introduced in python3')
   def test_with_failing_subtest(self):
     start_time = 10
     end_time = 20
     result = self._make_result((start_time, end_time))
 
     test = MockTest('__main__.MockTest.failing_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)
+    if six.PY3:
+      subtest = unittest.case._SubTest(test, 'msg', None)
+    else:
+      subtest = unittest3_backport.case._SubTest(test, 'msg', None)
     result.startTest(test)
     result.addSubTest(test, subtest, self.get_sample_failure())
     result.stopTestRun()
@@ -358,14 +369,16 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'message': ERROR_MESSAGE}
     self._assert_match(expected_re, xml)
 
-  @unittest.skipIf(six.PY2, 'subtest is introduced in python3')
   def test_with_error_subtest(self):
     start_time = 10
     end_time = 20
     result = self._make_result((start_time, end_time))
 
     test = MockTest('__main__.MockTest.error_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)
+    if six.PY3:
+      subtest = unittest.case._SubTest(test, 'msg', None)
+    else:
+      subtest = unittest3_backport.case._SubTest(test, 'msg', None)
     result.startTest(test)
     result.addSubTest(test, subtest, self.get_sample_error())
     result.stopTestRun()
