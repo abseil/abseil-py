@@ -52,6 +52,7 @@ setuptools.setup(
     ]),
     install_requires=[
         'six',
+        "enum34; python_version<='3.4'"
     ],
     license='Apache 2.0',
     classifiers=[

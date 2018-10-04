@@ -11,6 +11,7 @@ py_library(
     deps = [
         ":_pretty_print_reporter",
         ":xml_reporter",
+        "//absl:_enum_module",
         "//absl:app",
         "//absl/flags",
         "//absl/logging",

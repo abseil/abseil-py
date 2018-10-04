@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import io
 import os
 import re
 import string
@@ -38,8 +39,7 @@ PY_VERSION_2 = sys.version_info[0] == 2
 FLAGS = flags.FLAGS
 
 
-class TestCaseTest(absltest.TestCase):
-  longMessage = True
+class HelperMixin(object):
 
   def run_helper(self, test_id, args, env_overrides, expect_success):
     helper = 'absl/testing/tests/absltest_test_helper'
@@ -67,6 +67,14 @@ class TestCaseTest(absltest.TestCase):
           'Expected failure, but succeeded with '
           'stdout:\n{}\nstderr:\n{}\n'.format(stdout, stderr))
     return stdout, stderr
+
+
+class TestCaseTest(absltest.TestCase, HelperMixin):
+  longMessage = True
+
+  def run_helper(self, test_id, args, env_overrides, expect_success):
+    return super(TestCaseTest, self).run_helper(test_id, args + ['HelperTest'],
+                                                env_overrides, expect_success)
 
   def test_flags_no_env_var_no_flags(self):
     self.run_helper(
@@ -1922,6 +1930,166 @@ class GetCommandStringTest(parameterized.TestCase):
       self, command, expected_non_windows, expected_windows):
     expected = expected_windows if os.name == 'nt' else expected_non_windows
     self.assertEqual(expected, absltest.get_command_string(command))
+
+
+class TempFileTest(absltest.TestCase, HelperMixin):
+
+  def assert_dir_exists(self, temp_dir):
+    path = temp_dir.full_path
+    self.assertTrue(os.path.exists(path), 'Dir {} does not exist'.format(path))
+    self.assertTrue(os.path.isdir(path),
+                    'Path {} exists, but is not a directory'.format(path))
+
+  def assert_file_exists(self, temp_file, expected_content=b''):
+    path = temp_file.full_path
+    self.assertTrue(os.path.exists(path), 'File {} does not exist'.format(path))
+    self.assertTrue(os.path.isfile(path),
+                    'Path {} exists, but is not a file'.format(path))
+
+    mode = 'rb' if isinstance(expected_content, bytes) else 'rt'
+    with io.open(path, mode) as fp:
+      actual = fp.read()
+    self.assertEqual(expected_content, actual)
+
+  def run_tempfile_helper(self, cleanup, expected_paths):
+    tmpdir = self.create_tempdir('helper-test-temp-dir')
+    env = {
+        'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP': cleanup,
+        'TEST_TMPDIR': tmpdir.full_path,
+        }
+    stdout, stderr = self.run_helper(0, ['TempFileHelperTest'], env,
+                                     expect_success=False)
+    output = ('\n=== Helper output ===\n'
+              '----- stdout -----\n{}\n'
+              '----- end stdout -----\n'
+              '----- stderr -----\n{}\n'
+              '----- end stderr -----\n'
+              '===== end helper output =====').format(stdout, stderr)
+    self.assertIn('test_failure', stderr, output)
+
+    # Adjust paths to match on Windows
+    expected_paths = {path.replace('/', os.sep) for path in expected_paths}
+
+    actual = {
+        os.path.relpath(f, tmpdir.full_path)
+        for f in _listdir_recursive(tmpdir.full_path)
+        if f != tmpdir.full_path
+    }
+    self.assertEqual(expected_paths, actual, output)
+
+  def test_unnamed(self):
+    td = self.create_tempdir()
+    self.assert_dir_exists(td)
+
+    tdf = td.create_file()
+    self.assert_file_exists(tdf)
+
+    tdd = td.mkdir()
+    self.assert_dir_exists(tdd)
+
+    tf = self.create_tempfile()
+    self.assert_file_exists(tf)
+
+  def test_named(self):
+    td = self.create_tempdir('d')
+    self.assert_dir_exists(td)
+
+    tdf = td.create_file('df')
+    self.assert_file_exists(tdf)
+
+    tdd = td.mkdir('dd')
+    self.assert_dir_exists(tdd)
+
+    tf = self.create_tempfile('f')
+    self.assert_file_exists(tf)
+
+  def test_nested_paths(self):
+    td = self.create_tempdir('d1/d2')
+    self.assert_dir_exists(td)
+
+    tdf = td.create_file('df1/df2')
+    self.assert_file_exists(tdf)
+
+    tdd = td.mkdir('dd1/dd2')
+    self.assert_dir_exists(tdd)
+
+    tf = self.create_tempfile('f1/f2')
+    self.assert_file_exists(tf)
+
+  def test_tempdir_create_file(self):
+    td = self.create_tempdir()
+    td.create_file(content='text')
+
+  def test_tempfile_text(self):
+    tf = self.create_tempfile(content='text')
+    self.assert_file_exists(tf, 'text')
+    self.assertEqual('text', tf.read_text())
+
+    with tf.open_text() as fp:
+      self.assertEqual('text', fp.read())
+
+    with tf.open_text('w') as fp:
+      fp.write(u'text-from-open-write')
+    self.assertEqual('text-from-open-write', tf.read_text())
+
+    tf.write_text('text-from-write-text')
+    self.assertEqual('text-from-write-text', tf.read_text())
+
+  def test_tempfile_bytes(self):
+    tf = self.create_tempfile(content=b'\x00\x01\x02')
+    self.assert_file_exists(tf, b'\x00\x01\x02')
+    self.assertEqual(b'\x00\x01\x02', tf.read_bytes())
+
+    with tf.open_bytes() as fp:
+      self.assertEqual(b'\x00\x01\x02', fp.read())
+
+    with tf.open_bytes('wb') as fp:
+      fp.write(b'\x03')
+    self.assertEqual(b'\x03', tf.read_bytes())
+
+    tf.write_bytes(b'\x04')
+    self.assertEqual(b'\x04', tf.read_bytes())
+
+  def test_tempdir_same_name(self):
+    """Make sure the same directory name can be used."""
+    td1 = self.create_tempdir('foo')
+    td2 = self.create_tempdir('foo')
+    self.assert_dir_exists(td1)
+    self.assert_dir_exists(td2)
+
+  def test_tempfile_cleanup_success(self):
+    expected = {
+        'TempFileHelperTest',
+        'TempFileHelperTest/test_failure',
+        'TempFileHelperTest/test_failure/failure',
+        'TempFileHelperTest/test_success',
+    }
+    self.run_tempfile_helper('SUCCESS', expected)
+
+  def test_tempfile_cleanup_always(self):
+    expected = {
+        'TempFileHelperTest',
+        'TempFileHelperTest/test_failure',
+        'TempFileHelperTest/test_success',
+    }
+    self.run_tempfile_helper('ALWAYS', expected)
+
+  def test_tempfile_cleanup_off(self):
+    expected = {
+        'TempFileHelperTest',
+        'TempFileHelperTest/test_failure',
+        'TempFileHelperTest/test_failure/failure',
+        'TempFileHelperTest/test_success',
+        'TempFileHelperTest/test_success/success',
+    }
+    self.run_tempfile_helper('OFF', expected)
+
+
+def _listdir_recursive(path):
+  for dirname, _, filenames in os.walk(path):
+    yield dirname
+    for filename in filenames:
+      yield os.path.join(dirname, filename)
 
 
 if __name__ == '__main__':
