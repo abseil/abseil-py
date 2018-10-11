@@ -33,7 +33,7 @@ To run Abseil tests, you can clone the git repo and run
 [bazel](https://bazel.build/):
 
 ```bash
-git clone git@github.com:abseil/abseil-py.git
+git clone https://github.com/abseil/abseil-py.git
 cd abseil-py
 bazel test absl/...
 ```

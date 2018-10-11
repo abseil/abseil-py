@@ -4,7 +4,9 @@ exports_files(["LICENSE"])
 
 py_library(
     name = "app",
-    srcs = ["app.py"],
+    srcs = [
+        "app.py",
+    ],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
@@ -21,14 +23,29 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
+# NOTE: Because of how Bazel's Python support works, its possible (quite likely,
+# actually) to be running Python 3 without this config setting being matched,
+# so be careful about assuming or requiring it to match for a target to
+# correctly work under Python 3.
+config_setting(
+    name = "py3_mode",
+    values = {"force_python": "PY3"},
+    visibility = [":__subpackages__"],
+)
+
 py_library(
     name = "_enum_module",
     srcs = ["_enum_module.py"],
     visibility = ["//absl:__subpackages__"],
     deps = [
-        "@enum34_archive//:enum",
         "@six_archive//:six",
-    ],
+    ] + select({
+        # In some Python 3 environments, despite the _enum_module import path
+        # tricks, the enum backport still ends up on sys.path before the
+        # stdlib, which more-or-less breaks Python
+        ":py3_mode": [],
+        "//conditions:default": ["@enum34_archive//:enum"],
+    }),
 )
 
 py_library(
