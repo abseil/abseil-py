@@ -90,5 +90,17 @@ class HelperTest(absltest.TestCase):
           'Not asked to run: --test_id={}'.format(FLAGS.test_id))
 
 
+class TempFileHelperTest(absltest.TestCase):
+  tempfile_cleanup = absltest.TempFileCleanup[os.environ.get(
+      'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP', 'SUCCESS')]
+
+  def test_failure(self):
+    self.create_tempfile('failure')
+    self.fail('expected failure')
+
+  def test_success(self):
+    self.create_tempfile('success')
+
+
 if __name__ == '__main__':
   absltest.main()

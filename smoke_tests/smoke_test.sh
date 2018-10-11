@@ -53,6 +53,11 @@ trap 'deactivate' EXIT
 curl https://bootstrap.pypa.io/get-pip.py | python
 pip --version
 pip install six
+# For some reason, the setup.py install command on Mac with Python 3.4 fails to
+# install enum34 due to a TLS error. Installing it explicitly beforehand works.
+# enum34 isn't needed for >= 3.5, but installing it in other versions won't
+# cause problems.
+pip install enum34
 
 python setup.py install
 python smoke_tests/sample_app.py --echo smoke 2>&1 |grep 'echo is smoke.'

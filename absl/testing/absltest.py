@@ -23,16 +23,19 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import contextlib
 import difflib
 import errno
 import getpass
 import inspect
+import io
 import itertools
 import json
 import os
 import random
 import re
 import shlex
+import shutil
 import signal
 import subprocess
 import sys
@@ -49,6 +52,7 @@ except ImportError:
 from absl import app
 from absl import flags
 from absl import logging
+from absl._enum_module import enum
 from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
 from absl.third_party import unittest3_backport
@@ -57,17 +61,38 @@ from six.moves import urllib
 from six.moves import xrange  # pylint: disable=redefined-builtin
 
 
-FLAGS = flags.FLAGS
-
-_TEXT_OR_BINARY_TYPES = (six.text_type, six.binary_type)
+# Make typing an optional import to avoid it being a required dependency
+# in Python 2. Type checkers will still understand the imports.
+try:
+  # pylint: disable=unused-import
+  from typing import AnyStr, Callable, Text, Optional, ContextManager, TextIO, BinaryIO, Union, Type, Tuple, Any
+  # pylint: enable=unused-import
+except ImportError:
+  pass
 
 if six.PY3:
   from unittest import mock  # pylint: disable=unused-import
 else:
   try:
-    import mock
+    import mock  # type: ignore
   except ImportError:
     mock = None
+
+FLAGS = flags.FLAGS
+
+_TEXT_OR_BINARY_TYPES = (six.text_type, six.binary_type)
+
+
+class TempFileCleanup(enum.Enum):
+  # Always cleanup temp files when the test completes.
+  ALWAYS = 'always'
+  # Only cleanup temp file if the test passes. This allows easier inspection
+  # of tempfile contents on test failure. FLAGS.test_tempdir determines
+  # where tempfiles are created.
+  SUCCESS = 'success'
+  # Never cleanup temp files.
+  OFF = 'never'
+
 
 # Many of the methods in this module have names like assertSameElements.
 # This kind of name does not comply with PEP8 style,
@@ -175,6 +200,7 @@ def _monkey_patch_test_result_for_unexpected_passes():
   """Workaround for <http://bugs.python.org/issue20165>."""
 
   def wasSuccessful(self):
+    # type: () -> bool
     """Tells whether or not this result was a success.
 
     Any unexpected pass is to be counted as a non-success.
@@ -188,10 +214,10 @@ def _monkey_patch_test_result_for_unexpected_passes():
     return (len(self.failures) == len(self.errors) ==
             len(self.unexpectedSuccesses) == 0)
 
-  test_result = unittest.result.TestResult()
-  test_result.addUnexpectedSuccess('test')
+  test_result = unittest.TestResult()
+  test_result.addUnexpectedSuccess(unittest.FunctionTestCase(lambda: None))
   if test_result.wasSuccessful():  # The bug is present.
-    unittest.result.TestResult.wasSuccessful = wasSuccessful
+    unittest.TestResult.wasSuccessful = wasSuccessful
     if test_result.wasSuccessful():  # Warn the user if our hot-fix failed.
       sys.stderr.write('unittest.result.TestResult monkey patch to report'
                        ' unexpected passes as failures did not work.\n')
@@ -220,10 +246,356 @@ def _open(filepath, mode, _open_func=open):
     return _open_func(filepath, mode, encoding='utf-8')
 
 
+class _TempDir(object):
+  """Represents a tempfile for tests.
+
+  Creation of this class is internal. Using its public methods is OK.
+  """
+
+  def __init__(self, path):
+    # type: (Text) -> None
+    """Module-private: do not instantiate outside module."""
+    self._path = path
+
+  @property
+  def full_path(self):
+    # type: () -> Text
+    """The path, as a string, for the file."""
+    return self._path
+
+  def create_file(self, file_path=None, content=None, mode='w', encoding='utf8',
+                  errors='strict'):
+    # type: (Optional[Text], Optional[AnyStr], Text, Text, Text) -> _TempFile
+    """Create a file in the directory.
+
+    Args:
+      file_path: Optional file path for the temp file. If not given, a unique
+        file name will be generated and used. Slashes are allowed in the name;
+        any missing intermediate directories will be created. NOTE: This path
+        is the path that will be cleaned up, including any directories in the
+        path, e.g., 'foo/bar/baz.txt' will `rm -r foo`
+      content: Optional string or bytes to initially write to the file. If not
+        specified, then an empty file is created.
+      mode: Mode string to use when writing content. Only used if `content` is
+        non-empty.
+      encoding: Encoding to use when writing string content. Only used if
+        `content` is text.
+      errors: How to handle text to bytes encoding errors. Only used if
+        `content` is text.
+
+    Returns:
+      A _TempFile representing the created file.
+    """
+    tf, _ = _TempFile._create(self._path, file_path, content, mode, encoding,
+                              errors)
+    return tf
+
+  def mkdir(self, dir_path=None):
+    # type: (Optional[Text]) -> _TempDir
+    """Create a directory in the directory.
+
+    Args:
+      dir_path: Optional path to the directory to create. If not given,
+        a unique name will be generated and used.
+
+    Returns:
+      A _TempDir representing the created directory.
+    """
+    if dir_path:
+      path = os.path.join(self._path, dir_path)
+    else:
+      path = tempfile.mkdtemp(dir=self._path)
+
+    # Note: there's no need to clear the directory since the containing
+    # dir was cleared by the tempdir() function.
+    _makedirs_exist_ok(path)
+    return _TempDir(path)
+
+
+class _TempFile(object):
+  """Represents a tempfile for tests.
+
+  Creation of this class is internal. Using its public methods is OK.
+  """
+
+  def __init__(self, path):
+    # type: (Text) -> None
+    """Private: use _create instead."""
+    self._path = path
+
+  # pylint: disable=line-too-long
+  @classmethod
+  def _create(cls, base_path, file_path, content, mode, encoding, errors):
+    # type: (Text, Optional[Text], AnyStr, Text, Text, Text) -> Tuple[_TempFile, Text]
+    # pylint: enable=line-too-long
+    """Module-private: create a tempfile instance."""
+    if file_path:
+      cleanup_path = os.path.join(base_path, _get_first_part(file_path))
+      path = os.path.join(base_path, file_path)
+      _makedirs_exist_ok(os.path.dirname(path))
+    else:
+      _makedirs_exist_ok(base_path)
+      fd, path = tempfile.mkstemp(dir=str(base_path))
+      os.close(fd)
+      cleanup_path = path
+
+    tf = cls(path)
+
+    if content:
+      if isinstance(content, six.text_type):
+        tf.write_text(content, mode=mode, encoding=encoding, errors=errors)
+      else:
+        tf.write_bytes(content, mode)
+
+    else:
+      tf.write_bytes(b'')
+
+    return tf, cleanup_path
+
+  @property
+  def full_path(self):
+    # type: () -> Text
+    """The path, as a string, for the file."""
+    return self._path
+
+  def read_text(self, encoding='utf8', errors='strict'):
+    # type: (Text, Text) -> Text
+    """Return the contents of the file as text."""
+    with self.open_text(encoding=encoding, errors=errors) as fp:
+      return fp.read()
+
+  def read_bytes(self):
+    # type: () -> bytes
+    """Return the content of the file as bytes."""
+    with self.open_bytes() as fp:
+      return fp.read()
+
+  def write_text(self, text, mode='w', encoding='utf8', errors='strict'):
+    # type: (Text, Text, Text, Text) -> None
+    """Write text to the file.
+
+    Args:
+      text: Text to write. In Python 2, it can be bytes, which will be
+        decoded using the `encoding` arg (this is as an aid for code that
+        is 2 and 3 compatible).
+      mode: The mode to open the file for writing.
+      encoding: The encoding to use when writing the text to the file.
+      errors: The error handling strategy to use when converting text to bytes.
+    """
+    if six.PY2 and isinstance(text, bytes):
+      text = text.decode(encoding, errors)
+    with self.open_text(mode, encoding=encoding, errors=errors) as fp:
+      fp.write(text)
+
+  def write_bytes(self, data, mode='wb'):
+    # type: (bytes, Text) -> None
+    """Write bytes to the file.
+
+    Args:
+      data: bytes to write.
+      mode: Mode to open the file for writing. The "b" flag is implicit if
+        not already present. It must not have the "t" flag.
+    """
+    with self.open_bytes(mode) as fp:
+      fp.write(data)
+
+  def open_text(self, mode='rt', encoding='utf8', errors='strict'):
+    # type: (Text, Text, Text) -> ContextManager[TextIO]
+    """Return a context manager for opening the file in text mode.
+
+    Args:
+      mode: The mode to open the file in. The "t" flag is implicit if not
+        already present. It must not have the "b" flag.
+      encoding: The encoding to use when opening the file.
+      errors: How to handle decoding errors.
+
+    Returns:
+      Context manager that yields an open file.
+
+    Raises:
+      ValueError: if invalid inputs are provided.
+    """
+    if 'b' in mode:
+      raise ValueError('Invalid mode {!r}: "b" flag not allowed when opening '
+                       'file in text mode'.format(mode))
+    if 't' not in mode:
+      mode += 't'
+    return self._open(mode, encoding, errors)
+
+  def open_bytes(self, mode='rb'):
+    # type: (Text) -> ContextManager[BinaryIO]
+    """Return a context manager for opening the file in binary mode.
+
+    Args:
+      mode: The mode to open the file in. The "b" mode is implicit if not
+        already present. It must not have the "t" flag.
+
+    Returns:
+      Context manager that yields an open file.
+
+    Raises:
+      ValueError: if invalid inputs are provided.
+    """
+    if 't' in mode:
+      raise ValueError('Invalid mode {!r}: "t" flag not allowed when opening '
+                       'file in binary mode'.format(mode))
+    if 'b' not in mode:
+      mode += 'b'
+    return self._open(mode, encoding=None, errors=None)
+
+  @contextlib.contextmanager
+  def _open(self, mode, encoding='utf8', errors='strict'):
+    # type: (Text, Text, Text) -> Union[TextIO, BinaryIO]
+    with io.open(
+        self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
+      yield fp
+
+
 class TestCase(unittest3_backport.TestCase):
-  """Extension of unittest.TestCase providing more powerful assertions."""
+  """Extension of unittest.TestCase providing more power."""
+
+  # When to cleanup files/directories created by our `tempfile()` and
+  # `tempdir()` methods after each test case completes. This does *not* affect
+  # e.g., files created outside of those methods, e.g., using the stdlib
+  # tempfile module. This can be overridden at the class level, instance level,
+  # or with the `cleanup` arg of `tempfile()` and `tempdir()`. See
+  # `TempFileCleanup` for details on the different values.
+  tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup
 
   maxDiff = 80 * 20
+
+  def __init__(self, *args, **kwargs):
+    super(TestCase, self).__init__(*args, **kwargs)
+    # This is to work around missing type stubs in unittest.pyi
+    self._testMethodName = getattr(self, '_testMethodName')  # type: str
+
+  def create_tempdir(self, name=None, cleanup=None):
+    # type: (Optional[Text], Optional[TempFileCleanup]) -> _TempDir
+    """Create a temporary directory specific to the test.
+
+    NOTE: The directory and its contents will be recursively cleared before
+    creation. This ensures that there is no pre-existing state.
+
+    This creates a named directory on disk that is isolated to this test, and
+    will be properly cleaned up by the test. This avoids several pitfalls of
+    creating temporary directories for test purposes, as well as makes it easier
+    to setup directories and verify their contents.
+
+    See also: `tempfile()` for creating temporary directories.
+
+    Args:
+      name: Optional name of the directory. If not given, a unique
+        name will be generated and used.
+      cleanup: Optional cleanup policy on when/if to remove the directory (and
+        all its contents) at the end of the test. If None, then uses
+        `self.tempfile_cleanup`.
+
+    Returns:
+      A _TempDir representing the created directory.
+    """
+    test_path = self._get_tempdir_path_test()
+
+    if name:
+      path = os.path.join(test_path, name)
+      cleanup_path = os.path.join(test_path, _get_first_part(name))
+    else:
+      _makedirs_exist_ok(test_path)
+      path = tempfile.mkdtemp(dir=test_path)
+      cleanup_path = path
+
+    _rmtree_ignore_errors(cleanup_path)
+    _makedirs_exist_ok(path)
+
+    self._maybe_add_temp_path_cleanup(cleanup_path, cleanup)
+
+    return _TempDir(path)
+
+  # pylint: disable=line-too-long
+  def create_tempfile(self, file_path=None, content=None, mode='w',
+                      encoding='utf8', errors='strict', cleanup=None):
+    # type: (Optional[Text], Optional[AnyStr], Text, Text, Text, Optional[TempFileCleanup]) -> _TempFile
+    # pylint: enable=line-too-long
+    """Create a temporary file specific to the test.
+
+    This creates a named file on disk that is isolated to this test, and will
+    be properly cleaned up by the test. This avoids several pitfalls of
+    creating temporary files for test purposes, as well as makes it easier
+    to setup files, their data, read them back, and inspect them when
+    a test fails.
+
+    NOTE: This will zero-out the file. This ensures there is no pre-existing
+    state.
+
+    See also: `tempdir()` for creating temporary directories.
+
+    Args:
+      file_path: Optional file path for the temp file. If not given, a unique
+        file name will be generated and used. Slashes are allowed in the name;
+        any missing intermediate directories will be created. NOTE: This path is
+        the path that will be cleaned up, including any directories in the path,
+        e.g., 'foo/bar/baz.txt' will `rm -r foo`.
+      content: Optional string or
+        bytes to initially write to the file. If not
+        specified, then an empty file is created.
+      mode: Mode string to use when writing content. Only used if `content` is
+        non-empty.
+      encoding: Encoding to use when writing string content. Only used if
+        `content` is text.
+      errors: How to handle text to bytes encoding errors. Only used if
+        `content` is text.
+      cleanup: Optional cleanup policy on when/if to remove the directory (and
+        all its contents) at the end of the test. If None, then uses
+        `self.tempfile_cleanup`.
+
+    Returns:
+      A _TempFile representing the created file.
+    """
+    test_path = self._get_tempdir_path_test()
+    tf, cleanup_path = _TempFile._create(test_path, file_path, content=content,
+                                         mode=mode, encoding=encoding,
+                                         errors=errors)
+    self._maybe_add_temp_path_cleanup(cleanup_path, cleanup)
+    return tf
+
+  @classmethod
+  def _get_tempdir_path_cls(cls):
+    # type: () -> Text
+    return os.path.join(FLAGS.test_tmpdir, _get_qualname(cls))
+
+  def _get_tempdir_path_test(self):
+    # type: () -> Text
+    return os.path.join(self._get_tempdir_path_cls(), self._testMethodName)
+
+  def _get_tempfile_cleanup(self, override):
+    # type: (Optional[TempFileCleanup]) -> TempFileCleanup
+    if override is not None:
+      return override
+    return self.tempfile_cleanup
+
+  def _maybe_add_temp_path_cleanup(self, path, cleanup):
+    # type: (Text, Optional[TempFileCleanup]) -> None
+    cleanup = self._get_tempfile_cleanup(cleanup)
+    if cleanup == TempFileCleanup.OFF:
+      return
+    elif cleanup == TempFileCleanup.ALWAYS:
+      self.addCleanup(_rmtree_ignore_errors, path)
+    elif cleanup == TempFileCleanup.SUCCESS:
+      self._internal_cleanup_on_success(_rmtree_ignore_errors, path)
+    else:
+      raise AssertionError('Unexpected cleanup value: {}'.format(cleanup))
+
+  def _internal_cleanup_on_success(self, function, *args, **kwargs):
+    def _call_cleaner_on_success(*args, **kwargs):
+      if not self._ran_and_passed():
+        return
+      function(*args, **kwargs)
+    self.addCleanup(_call_cleaner_on_success, *args, **kwargs)
+
+  def _ran_and_passed(self):
+    outcome = self._outcome
+    result = self.defaultTestResult()
+    self._feedErrorsToResult(result, outcome.errors)
+    return result.wasSuccessful()
 
   def shortDescription(self):
     """Formats both the test method name and the first line of its docstring.
@@ -1179,8 +1551,9 @@ class TestCase(unittest3_backport.TestCase):
                              aname='first', bname='second', msg=msg)
 
   def _getAssertEqualityFunc(self, first, second):
+    # type: (Any, Any) -> Callable[..., None]
     try:
-      return super(TestCase, self)._getAssertEqualityFunc(first, second)
+      return super(TestCase, self)._getAssertEqualityFunc(first, second)  # pytype: disable=attribute-error
     except AttributeError:
       # This is a workaround if unittest.TestCase.__init__ was never run.
       # It usually means that somebody created a subclass just for the
@@ -1189,11 +1562,19 @@ class TestCase(unittest3_backport.TestCase):
       test_method = getattr(self, '_testMethodName', 'assertTrue')
       super(TestCase, self).__init__(test_method)
 
-    return super(TestCase, self)._getAssertEqualityFunc(first, second)
+    return super(TestCase, self)._getAssertEqualityFunc(first, second)  # pytype: disable=attribute-error
 
   def fail(self, msg=None, prefix=None):
     """Fail immediately with the given message, optionally prefixed."""
     return super(TestCase, self).fail(self._formatMessage(prefix, msg))
+
+  # This is just an impromptu stub definition because the stdlib pyi files
+  # don't yet have this method in unittest.TestCase
+  def _formatMessage(self, msg, standardMsg):
+    # type: (Optional[Text], Text) -> Text
+    # pylint: disable=useless-super-delegation
+    return super(TestCase, self)._formatMessage(msg, standardMsg)  # pytype: disable=attribute-error
+    # pylint: enable=useless-super-delegation
 
 
 def _sorted_list_difference(expected, actual):
@@ -1398,7 +1779,7 @@ class _TestProgramManualRun(unittest.TestProgram):
   def runTests(self, do_run=False):
     """Runs the tests."""
     if do_run:
-      unittest.TestProgram.runTests(self)
+      unittest.TestProgram.runTests(self)  # pytype: disable=attribute-error
 
 
 def print_python_version():
@@ -1430,7 +1811,7 @@ def _is_in_app_main():
   """Returns True iff app.run is active."""
   f = sys._getframe().f_back  # pylint: disable=protected-access
   while f:
-    if f.f_code == six.get_function_code(app.run):
+    if f.f_code == six.get_function_code(app.run):  # pytype: disable=wrong-arg-types
       return True
     f = f.f_back
   return False
@@ -1788,3 +2169,39 @@ def run_tests(argv, args, kwargs):
   result = _run_and_get_tests_result(
       argv, args, kwargs, xml_reporter.TextAndXMLTestRunner)
   sys.exit(not result.wasSuccessful())
+
+
+def _get_qualname(cls):
+  # type: (Type) -> Text
+  if six.PY3:
+    name = cls.__qualname__
+  else:
+    name = '{}.{}'.format(cls.__module__, cls.__name__)
+  return name.replace('__main__.', '')
+
+
+def _rmtree_ignore_errors(path):
+  # type: (Text) -> None
+  if os.path.isfile(path):
+    os.unlink(path)
+  else:
+    shutil.rmtree(path, ignore_errors=True)
+
+
+def _makedirs_exist_ok(dir_name):
+  # type: (Text) -> None
+  if six.PY3:
+    os.makedirs(dir_name, exist_ok=True)  # pylint: disable=unexpected-keyword-arg
+  else:
+    # Python 2 doesn't have the exist_ok arg, so we roll it ourselves
+    try:
+      os.makedirs(dir_name)
+    except OSError as e:
+      if e.errno != errno.EEXIST:
+        raise
+
+
+def _get_first_part(path):
+  # type: (Text) -> Text
+  parts = path.split(os.sep, 1)
+  return parts[0]
