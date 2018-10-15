@@ -454,11 +454,11 @@ class _TempFile(object):
 class TestCase(unittest3_backport.TestCase):
   """Extension of unittest.TestCase providing more power."""
 
-  # When to cleanup files/directories created by our `tempfile()` and
-  # `tempdir()` methods after each test case completes. This does *not* affect
-  # e.g., files created outside of those methods, e.g., using the stdlib
+  # When to cleanup files/directories created by our `create_tempfile()` and
+  # `create_tempdir()` methods after each test case completes. This does *not*
+  # affect e.g., files created outside of those methods, e.g., using the stdlib
   # tempfile module. This can be overridden at the class level, instance level,
-  # or with the `cleanup` arg of `tempfile()` and `tempdir()`. See
+  # or with the `cleanup` arg of `create_tempfile()` and `create_tempdir()`. See
   # `TempFileCleanup` for details on the different values.
   tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup
 
@@ -481,7 +481,7 @@ class TestCase(unittest3_backport.TestCase):
     creating temporary directories for test purposes, as well as makes it easier
     to setup directories and verify their contents.
 
-    See also: `tempfile()` for creating temporary directories.
+    See also: `create_tempfile()` for creating temporary directories.
 
     Args:
       name: Optional name of the directory. If not given, a unique
@@ -526,7 +526,7 @@ class TestCase(unittest3_backport.TestCase):
     NOTE: This will zero-out the file. This ensures there is no pre-existing
     state.
 
-    See also: `tempdir()` for creating temporary directories.
+    See also: `create_tempdir()` for creating temporary directories.
 
     Args:
       file_path: Optional file path for the temp file. If not given, a unique
