@@ -481,7 +481,7 @@ class TestCase(unittest3_backport.TestCase):
     creating temporary directories for test purposes, as well as makes it easier
     to setup directories and verify their contents.
 
-    See also: `create_tempfile()` for creating temporary directories.
+    See also: `create_tempfile()` for creating temporary files.
 
     Args:
       name: Optional name of the directory. If not given, a unique
