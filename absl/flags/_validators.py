@@ -340,9 +340,8 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
       app.run()
 
   Because validation happens at app.run() we want to ensure required-ness
-  is enforced at that time.  However, you generally do not want to force
-  users who import your code to have additional required flags for their
-  own binaries or tests.
+  is enforced at that time. You generally do not want to force users who import
+  your code to have additional required flags for their own binaries or tests.
 
   Args:
     flag_name: str, name of the flag
