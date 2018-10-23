@@ -957,6 +957,18 @@ class TestCase(unittest3_backport.TestCase):
     self.assertTrue(minv <= value, msg)
     self.assertTrue(maxv >= value, msg)
 
+  # Backport these names so that Py2 code can be written in Py3 style.
+  if six.PY2:
+
+    def assertRegex(self, *args, **kwargs):
+      return self.assertRegexpMatches(*args, **kwargs)
+
+    def assertRaisesRegex(self, *args, **kwargs):
+      return self.assertRaisesRegexp(*args, **kwargs)
+
+    def assertNotRegex(self, *args, **kwargs):
+      return self.assertNotRegexpMatches(*args, **kwargs)
+
   def assertRegexMatch(self, actual_str, regexes, message=None):
     r"""Asserts that at least one regex in regexes matches str.
 

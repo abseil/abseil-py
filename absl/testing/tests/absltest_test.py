@@ -603,6 +603,12 @@ Missing entries:
     self.assertRaises(AssertionError, self.assertNotEndsWith, 'foobar',
                       'foobar')
 
+  def test_assert_regex_backports(self):
+    self.assertRegex('regex', 'regex')
+    self.assertNotRegex('not-regex', 'no-match')
+    with self.assertRaisesRegex(ValueError, 'pattern'):
+      raise ValueError('pattern')
+
   def test_assert_regex_match_matches(self):
     self.assertRegexMatch('str', ['str'])
 
