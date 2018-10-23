@@ -515,8 +515,8 @@ class MarkFlagAsRequiredTest(absltest.TestCase):
     argv = ('./program',)
     expected = (
         r'flag --string_flag=None: Flag --string_flag must be specified\.')
-    self.assertRaisesRegexp(_exceptions.IllegalFlagValueError,
-                            expected, self.flag_values, argv)
+    with self.assertRaisesRegex(_exceptions.IllegalFlagValueError, expected):
+      self.flag_values(argv)
 
   def test_catch_setting_none_after_program_start(self):
     _defines.DEFINE_string(
@@ -562,8 +562,8 @@ class MarkFlagsAsRequiredTest(absltest.TestCase):
     argv = ('./program', '--string_flag_1=value_1')
     expected = (
         r'flag --string_flag_2=None: Flag --string_flag_2 must be specified\.')
-    self.assertRaisesRegexp(_exceptions.IllegalFlagValueError,
-                            expected, self.flag_values, argv)
+    with self.assertRaisesRegex(_exceptions.IllegalFlagValueError, expected):
+      self.flag_values(argv)
 
   def test_catch_setting_none_after_program_start(self):
     _defines.DEFINE_string(

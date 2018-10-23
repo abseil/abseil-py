@@ -212,7 +212,7 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
 
   def test_expected_failure_success(self):
     _, stderr = self.run_helper(5, ['--', '-v'], {}, expect_success=False)
-    self.assertRegexpMatches(stderr, r'FAILED \(.*unexpected successes=1\)')
+    self.assertRegex(stderr, r'FAILED \(.*unexpected successes=1\)')
 
   def test_assert_equal(self):
     self.assertListEqual([], [])
@@ -357,15 +357,15 @@ Missing entries:
       err_str = str(e)
       self.assertStartsWith(err_str,
                             "{'a': A, b: B, c: C} != {'a': A, d: D, e: E}\n")
-      self.assertRegexpMatches(err_str,
-                               r'(?ms).*^Unexpected, but present entries:\s+'
-                               r'^(d: D$\s+^e: E|e: E$\s+^d: D)$')
-      self.assertRegexpMatches(err_str,
-                               r'(?ms).*^repr\(\) of differing entries:\s+'
-                               r'^.a.: A != A$', err_str)
-      self.assertRegexpMatches(err_str,
-                               r'(?ms).*^Missing entries:\s+'
-                               r'^(b: B$\s+^c: C|c: C$\s+^b: B)$')
+      self.assertRegex(
+          err_str, r'(?ms).*^Unexpected, but present entries:\s+'
+          r'^(d: D$\s+^e: E|e: E$\s+^d: D)$')
+      self.assertRegex(
+          err_str, r'(?ms).*^repr\(\) of differing entries:\s+'
+          r'^.a.: A != A$', err_str)
+      self.assertRegex(
+          err_str, r'(?ms).*^Missing entries:\s+'
+          r'^(b: B$\s+^c: C|c: C$\s+^b: B)$')
     else:
       self.fail('Expecting AssertionError')
 
@@ -386,7 +386,7 @@ Missing entries:
       # prefix or a absltest_test prefix, so strip that for comparison.
       error_msg = re.sub(
           r'( at 0x[^>]+)|__main__\.|absltest_test\.', '', str(e))
-      self.assertRegexpMatches(error_msg, """(?m)\
+      self.assertRegex(error_msg, """(?m)\
 {<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>} != \
 {<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>}
 Unexpected, but present entries:
@@ -519,13 +519,13 @@ Missing entries:
                       set(actual))
     self.assertRaises(AssertionError, self.assertContainsSubset, {'a': 1}, [])
 
-    self.assertRaisesRegexp(AssertionError, 'Missing elements',
-                            self.assertContainsSubset, {1, 2, 3},
-                            {1, 2})
-    self.assertRaisesRegexp(
+    with self.assertRaisesRegex(AssertionError, 'Missing elements'):
+      self.assertContainsSubset({1, 2, 3}, {1, 2})
+
+    with self.assertRaisesRegex(
         AssertionError,
-        re.compile('Missing elements .* Custom message', re.DOTALL),
-        self.assertContainsSubset, {1, 2}, {1}, 'Custom message')
+        re.compile('Missing elements .* Custom message', re.DOTALL)):
+      self.assertContainsSubset({1, 2}, {1}, 'Custom message')
 
   def test_assert_no_common_elements(self):
     actual = ('a', 'b', 'c')
@@ -533,10 +533,10 @@ Missing entries:
     self.assertNoCommonElements(('d', 'e'), actual)
     self.assertNoCommonElements({'d', 'e'}, actual)
 
-    self.assertRaisesRegexp(
+    with self.assertRaisesRegex(
         AssertionError,
-        re.compile('Common elements .* Custom message', re.DOTALL),
-        self.assertNoCommonElements, {1, 2}, {1}, 'Custom message')
+        re.compile('Common elements .* Custom message', re.DOTALL)):
+      self.assertNoCommonElements({1, 2}, {1}, 'Custom message')
 
     with self.assertRaises(AssertionError):
       self.assertNoCommonElements(['a'], actual)
@@ -621,18 +621,13 @@ Missing entries:
   def test_assert_regex_match_empty_list_fails(self):
     expected_re = re.compile(r'No regexes specified\.', re.MULTILINE)
 
-    self.assertRaisesRegexp(
-        AssertionError,
-        expected_re,
-        self.assertRegexMatch,
-        'str',
-        regexes=[])
+    with self.assertRaisesRegex(AssertionError, expected_re):
+      self.assertRegexMatch('str', regexes=[])
 
   def test_assert_regex_match_bad_arguments(self):
-    self.assertRaisesRegexp(
-        AssertionError,
-        'regexes is string or bytes;.*',
-        self.assertRegexMatch, '1.*2', '1 2')
+    with self.assertRaisesRegex(AssertionError,
+                                'regexes is string or bytes;.*'):
+      self.assertRegexMatch('1.*2', '1 2')
 
   def test_assert_regex_match_unicode_vs_bytes(self):
     """Ensure proper utf-8 encoding or decoding happens automatically."""
@@ -646,9 +641,8 @@ Missing entries:
     self.assertRegexMatch(b'foo str', [b'str'])
 
   def test_assert_regex_match_all_the_same_type(self):
-    self.assertRaisesRegexp(
-        AssertionError, 'regexes .* same type',
-        self.assertRegexMatch, 'foo str', [b'str', u'foo'])
+    with self.assertRaisesRegex(AssertionError, 'regexes .* same type'):
+      self.assertRegexMatch('foo str', [b'str', u'foo'])
 
   def test_assert_command_fails_stderr(self):
     tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
@@ -673,22 +667,15 @@ Missing entries:
     expected_re = re.compile('The following command succeeded while expected to'
                              ' fail:.* This is a useful message', re.DOTALL)
 
-    self.assertRaisesRegexp(
-        AssertionError,
-        expected_re,
-        self.assertCommandFails,
-        [u'true'], [''], msg=msg
-    )
+    with self.assertRaisesRegex(AssertionError, expected_re):
+      self.assertCommandFails([u'true'], [''], msg=msg)
 
   def test_assert_command_succeeds_stderr(self):
     expected_re = re.compile('No such file or directory')
     tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
 
-    self.assertRaisesRegexp(
-        AssertionError,
-        expected_re,
-        self.assertCommandSucceeds,
-        ['cat', os.path.join(tmpdir, 'file.txt')])
+    with self.assertRaisesRegex(AssertionError, expected_re):
+      self.assertCommandSucceeds(['cat', os.path.join(tmpdir, 'file.txt')])
 
   def test_assert_command_succeeds_with_matching_unicode_regexes(self):
     self.assertCommandSucceeds(['echo', 'SUCCESS'], regexes=[u'SUCCESS'])
@@ -701,12 +688,8 @@ Missing entries:
                              re.DOTALL)
     msg = 'This is a useful message'
 
-    self.assertRaisesRegexp(
-        AssertionError,
-        expected_re,
-        self.assertCommandSucceeds,
-        ['echo', 'FAIL'],
-        regexes=['SUCCESS'], msg=msg)
+    with self.assertRaisesRegex(AssertionError, expected_re):
+      self.assertCommandSucceeds(['echo', 'FAIL'], regexes=['SUCCESS'], msg=msg)
 
   def test_assert_command_succeeds_with_list_of_string(self):
     self.assertCommandSucceeds(['true'])
@@ -929,12 +912,12 @@ test case
     self.assertRaises(AssertionError, self.assertBetween, -1e10000, -1e10, 0)
 
   def test_assert_raises_with_predicate_match_no_raise(self):
-    with self.assertRaisesRegexp(AssertionError, '^Exception not raised$'):
+    with self.assertRaisesRegex(AssertionError, '^Exception not raised$'):
       self.assertRaisesWithPredicateMatch(Exception,
                                           lambda e: True,
                                           lambda: 1)  # don't raise
 
-    with self.assertRaisesRegexp(AssertionError, '^Exception not raised$'):
+    with self.assertRaisesRegex(AssertionError, '^Exception not raised$'):
       with self.assertRaisesWithPredicateMatch(Exception, lambda e: True):
         pass  # don't raise
 
@@ -954,12 +937,12 @@ test case
   def test_assert_raises_with_predicate_match_predicate_fails(self):
     def _raise_value_error():
       raise ValueError
-    with self.assertRaisesRegexp(AssertionError, ' does not match predicate '):
+    with self.assertRaisesRegex(AssertionError, ' does not match predicate '):
       self.assertRaisesWithPredicateMatch(ValueError,
                                           lambda e: False,
                                           _raise_value_error)
 
-    with self.assertRaisesRegexp(AssertionError, ' does not match predicate '):
+    with self.assertRaisesRegex(AssertionError, ' does not match predicate '):
       with self.assertRaisesWithPredicateMatch(ValueError, lambda e: False):
         raise ValueError
 
@@ -1250,33 +1233,33 @@ test case
 
   def test_same_structure_different(self):
     # Different type
-    self.assertRaisesRegexp(
+    with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'int'> but b is a <(type|class) 'str'>",
-        self.assertSameStructure, 0, 'hello')
-    self.assertRaisesRegexp(
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'str'>"):
+      self.assertSameStructure(0, 'hello')
+    with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'int'> but b is a <(type|class) 'list'>",
-        self.assertSameStructure, 0, [])
-    self.assertRaisesRegexp(
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'list'>"):
+      self.assertSameStructure(0, [])
+    with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'int'> but b is a <(type|class) 'float'>",
-        self.assertSameStructure, 2, 2.0)
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'float'>"):
+      self.assertSameStructure(2, 2.0)
 
-    self.assertRaisesRegexp(
+    with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'list'> but b is a <(type|class) 'dict'>",
-        self.assertSameStructure, [], {})
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'dict'>"):
+      self.assertSameStructure([], {})
 
-    self.assertRaisesRegexp(
+    with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'list'> but b is a <(type|class) 'set'>",
-        self.assertSameStructure, [], set())
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'set'>"):
+      self.assertSameStructure([], set())
 
-    self.assertRaisesRegexp(
+    with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'dict'> but b is a <(type|class) 'set'>",
-        self.assertSameStructure, {}, set())
+        r"a is a <(type|class) 'dict'> but b is a <(type|class) 'set'>"):
+      self.assertSameStructure({}, set())
 
     # Different scalar values
     self.assertRaisesWithLiteralMatch(
@@ -1338,12 +1321,12 @@ test case
         AssertionError,
         'a[0] is 1 but b[0] is 3; a[1] is 2 but b[1] is 4',
         self.assertSameStructure, [1, 2], [3, 4])
-    self.assertRaisesRegexp(
+    with self.assertRaisesRegex(
         AssertionError,
         re.compile(r"^a\[0] is 'a' but b\[0] is 'A'; .*"
-                   r"a\[18] is 's' but b\[18] is 'S'; \.\.\.$"),
-        self.assertSameStructure,
-        list(string.ascii_lowercase), list(string.ascii_uppercase))
+                   r"a\[18] is 's' but b\[18] is 'S'; \.\.\.$")):
+      self.assertSameStructure(
+          list(string.ascii_lowercase), list(string.ascii_uppercase))
 
     # Verify same behavior with self.maxDiff = None
     self.maxDiff = None
@@ -1439,7 +1422,7 @@ class GetCommandStderrTestCase(absltest.TestCase):
             ['cat', os.path.join(tmpdir, 'file.txt')])[1])
     if not PY_VERSION_2:
       stderr = stderr.decode('utf-8')
-    self.assertRegexpMatches(stderr, 'No such file or directory')
+    self.assertRegex(stderr, 'No such file or directory')
 
 
 class EqualityAssertionTest(absltest.TestCase):
@@ -1625,11 +1608,10 @@ class AssertSequenceStartsWithTest(absltest.TestCase):
     self.assertSequenceStartsWith([[]], ([], 'foo'))
 
   def test_raise_if_empty_prefix_with_non_empty_whole(self):
-    self.assertRaisesRegexp(
-        AssertionError,
-        'Prefix length is 0 but whole length is %d: %s' % (
-            len(self.a), r"\[5, 'foo', \{'c': 'd'\}, None\]"),
-        self.assertSequenceStartsWith, [], self.a)
+    with self.assertRaisesRegex(
+        AssertionError, 'Prefix length is 0 but whole length is %d: %s' % (len(
+            self.a), r"\[5, 'foo', \{'c': 'd'\}, None\]")):
+      self.assertSequenceStartsWith([], self.a)
 
   def test_single_element_prefix(self):
     self.assertSequenceStartsWith([5], self.a)
@@ -1649,20 +1631,19 @@ class AssertSequenceStartsWithTest(absltest.TestCase):
   def test_whole_not_asequence(self):
     msg = (r'For whole: len\(5\) is not supported, it appears to be type: '
            '<(type|class) \'int\'>')
-    self.assertRaisesRegexp(AssertionError, msg,
-                            self.assertSequenceStartsWith, self.a, 5)
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertSequenceStartsWith(self.a, 5)
 
   def test_raise_if_sequence_does_not_start_with_prefix(self):
     msg = (r"prefix: \['foo', \{'c': 'd'\}\] not found at start of whole: "
            r"\[5, 'foo', \{'c': 'd'\}, None\].")
-    self.assertRaisesRegexp(
-        AssertionError, msg, self.assertSequenceStartsWith, ['foo', {'c': 'd'}],
-        self.a)
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertSequenceStartsWith(['foo', {'c': 'd'}], self.a)
 
   def test_raise_if_types_ar_not_supported(self):
-    self.assertRaisesRegexp(
-        TypeError, 'unhashable type', self.assertSequenceStartsWith,
-        {'a': 1, 2: 'b'}, {'a': 1, 2: 'b', 'c': '3'})
+    with self.assertRaisesRegex(TypeError, 'unhashable type'):
+      self.assertSequenceStartsWith({'a': 1, 2: 'b'},
+                                    {'a': 1, 2: 'b', 'c': '3'})
 
 
 class TestAssertEmpty(absltest.TestCase):
@@ -1670,8 +1651,8 @@ class TestAssertEmpty(absltest.TestCase):
 
   def test_raises_if_not_asized_object(self):
     msg = "Expected a Sized object, got: 'int'"
-    self.assertRaisesRegexp(
-        AssertionError, msg, self.assertEmpty, 1)
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertEmpty(1)
 
   def test_calls_len_not_bool(self):
 
@@ -1713,13 +1694,13 @@ class TestAssertEmpty(absltest.TestCase):
     ]
     regexp = r'.* has length of 1\.$'
     for container in not_empty_containers:
-      self.assertRaisesRegexp(
-          AssertionError, regexp, self.assertEmpty, container)
+      with self.assertRaisesRegex(AssertionError, regexp):
+        self.assertEmpty(container)
 
   def test_user_message_added_to_default(self):
     msg = 'This is a useful message'
     whole_msg = re.escape('[1] has length of 1. : This is a useful message')
-    with self.assertRaisesRegexp(AssertionError, whole_msg):
+    with self.assertRaisesRegex(AssertionError, whole_msg):
       self.assertEmpty([1], msg=msg)
 
 
@@ -1728,8 +1709,8 @@ class TestAssertNotEmpty(absltest.TestCase):
 
   def test_raises_if_not_asized_object(self):
     msg = "Expected a Sized object, got: 'int'"
-    self.assertRaisesRegexp(
-        AssertionError, msg, self.assertNotEmpty, 1)
+    with self.assertRaisesRegex(AssertionError, msg):
+      self.assertNotEmpty(1)
 
   def test_calls_len_not_bool(self):
 
@@ -1771,13 +1752,13 @@ class TestAssertNotEmpty(absltest.TestCase):
     ]
     regexp = r'.* has length of 0\.$'
     for container in empty_containers:
-      self.assertRaisesRegexp(
-          AssertionError, regexp, self.assertNotEmpty, container)
+      with self.assertRaisesRegex(AssertionError, regexp):
+        self.assertNotEmpty(container)
 
   def test_user_message_added_to_default(self):
     msg = 'This is a useful message'
     whole_msg = re.escape('[] has length of 0. : This is a useful message')
-    with self.assertRaisesRegexp(AssertionError, whole_msg):
+    with self.assertRaisesRegex(AssertionError, whole_msg):
       self.assertNotEmpty([], msg=msg)
 
 
@@ -1786,7 +1767,7 @@ class TestAssertLen(absltest.TestCase):
 
   def test_raises_if_not_asized_object(self):
     msg = "Expected a Sized object, got: 'int'"
-    with self.assertRaisesRegexp(AssertionError, msg):
+    with self.assertRaisesRegex(AssertionError, msg):
       self.assertLen(1, 1)
 
   def test_passes_when_expected_len(self):
@@ -1816,14 +1797,14 @@ class TestAssertLen(absltest.TestCase):
     ]
     for container in containers:
       regexp = r'.* has length of %d, expected 100\.$' % len(container)
-      with self.assertRaisesRegexp(AssertionError, regexp):
+      with self.assertRaisesRegex(AssertionError, regexp):
         self.assertLen(container, 100)
 
   def test_user_message_added_to_default(self):
     msg = 'This is a useful message'
     whole_msg = (
         r'\[1\] has length of 1, expected 100. : This is a useful message')
-    with self.assertRaisesRegexp(AssertionError, whole_msg):
+    with self.assertRaisesRegex(AssertionError, whole_msg):
       self.assertLen([1], 100, msg)
 
 
@@ -1885,7 +1866,7 @@ class TestLoaderTest(absltest.TestCase):
     self.assertEquals(1, suite.countTestCases())
 
   def testInvalid(self):
-    with self.assertRaisesRegexp(TypeError, 'TestSuspiciousMethod'):
+    with self.assertRaisesRegex(TypeError, 'TestSuspiciousMethod'):
       self.loader.loadTestsFromTestCase(TestLoaderTest.Invalid)
 
 
