@@ -1184,6 +1184,24 @@ class MultiNumericalFlagsTest(absltest.TestCase):
         expected_floats, FLAGS.get_flag_value('m_float', None)):
       self.assertAlmostEqual(expected, actual)
 
+  def test_mutli_numerical_with_tuples(self):
+      """Test multi_int and multi_float flags when fields are defined as a tuple."""
+
+      int_defaults = (77, 88)
+      flags.DEFINE_multi_integer('m_int_tuple', int_defaults,
+                                 'integer option that can occur multiple times',
+                                 short_name='mi_tuple')
+      self.assertListEqual(FLAGS.get_flag_value('m_int_tuple', None), [77, 88])
+
+      dict_with_float_keys = {2.2: 'hello', 3: 'happy'}
+      float_defaults = dict_with_float_keys.keys()
+      flags.DEFINE_multi_float('m_float_tuple', float_defaults,
+                               'float option that can occur multiple times',
+                               short_name='mf_tuple')
+      for (expected, actual) in zip(
+          float_defaults, FLAGS.get_flag_value('m_float_tuple', None)):
+        self.assertAlmostEqual(expected, actual)
+
   def test_single_value_default(self):
     """Test multi_int and multi_float flags with a single default value."""
     int_default = 77

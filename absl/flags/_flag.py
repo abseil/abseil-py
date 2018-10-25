@@ -22,6 +22,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
+import six
 import functools
 
 from absl.flags import _argument_parser
@@ -368,6 +370,9 @@ class MultiFlag(Flag):
     self.present += len(new_values)
 
   def _parse(self, arguments):
+    if isinstance(arguments, collections.Iterable) and not isinstance(arguments, six.string_types):
+      arguments = list(arguments)
+
     if not isinstance(arguments, list):
       # Default value may be a list of values.  Most other arguments
       # will not be, so convert them into a single-item list to make
