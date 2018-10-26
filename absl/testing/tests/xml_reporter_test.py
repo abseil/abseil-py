@@ -134,7 +134,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
                                               'foo', 0, timer)
 
   def _assert_match(self, regex, output):
-    self.assertRegexpMatches(output, regex)
+    self.assertRegex(output, regex)
 
   def _assert_valid_xml(self, xml_output):
     try:

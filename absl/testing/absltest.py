@@ -957,11 +957,23 @@ class TestCase(unittest3_backport.TestCase):
     self.assertTrue(minv <= value, msg)
     self.assertTrue(maxv >= value, msg)
 
+  # Backport these names so that Py2 code can be written in Py3 style.
+  if six.PY2:
+
+    def assertRegex(self, *args, **kwargs):
+      return self.assertRegexpMatches(*args, **kwargs)
+
+    def assertRaisesRegex(self, *args, **kwargs):
+      return self.assertRaisesRegexp(*args, **kwargs)
+
+    def assertNotRegex(self, *args, **kwargs):
+      return self.assertNotRegexpMatches(*args, **kwargs)
+
   def assertRegexMatch(self, actual_str, regexes, message=None):
     r"""Asserts that at least one regex in regexes matches str.
 
-    If possible you should use assertRegexpMatches, which is a simpler
-    version of this method. assertRegexpMatches takes a single regular
+    If possible you should use `assertRegex`, which is a simpler
+    version of this method. `assertRegex` takes a single regular
     expression (a string or re compiled object) instead of a list.
 
     Notes:
@@ -990,7 +1002,7 @@ class TestCase(unittest3_backport.TestCase):
       message:  The message to be printed if the test fails.
     """
     if isinstance(regexes, _TEXT_OR_BINARY_TYPES):
-      self.fail('regexes is string or bytes; use assertRegexpMatches instead.',
+      self.fail('regexes is string or bytes; use assertRegex instead.',
                 message)
     if not regexes:
       self.fail('No regexes specified.', message)
@@ -1160,7 +1172,7 @@ class TestCase(unittest3_backport.TestCase):
                                    callable_obj=None, *args, **kwargs):
     """Asserts that the message in a raised exception equals the given string.
 
-    Unlike assertRaisesRegexp, this method takes a literal string, not
+    Unlike assertRaisesRegex, this method takes a literal string, not
     a regular expression.
 
     with self.assertRaisesWithLiteralMatch(ExType, 'message'):
