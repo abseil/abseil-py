@@ -718,7 +718,7 @@ class FlagsUnitTest(absltest.TestCase):
       flags.DEFINE_boolean('run', 0, 'runhelp', short_name='q')
 
     # Duplicate short flag detection
-    with self.assertRaisesRegexp(
+    with self.assertRaisesRegex(
         flags.DuplicateFlagError,
         r"The flag 'z' is defined twice\. .*First from.*, Second from"):
       flags.DEFINE_boolean('zoom1', 0, 'runhelp z1', short_name='z')
@@ -726,7 +726,7 @@ class FlagsUnitTest(absltest.TestCase):
       raise AssertionError('duplicate short flag detection failed')
 
     # Duplicate mixed flag detection
-    with self.assertRaisesRegexp(
+    with self.assertRaisesRegex(
         flags.DuplicateFlagError,
         r"The flag 's' is defined twice\. .*First from.*, Second from"):
       flags.DEFINE_boolean('short1', 0, 'runhelp s1', short_name='s')
@@ -739,8 +739,8 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_boolean(flagnames[0], False, 'Flag about to be repeated.',
                          flag_values=original_flags)
     duplicate_flags = module_foo.duplicate_flags(flagnames)
-    with self.assertRaisesRegexp(flags.DuplicateFlagError,
-                                 'flags_test.*module_foo'):
+    with self.assertRaisesRegex(flags.DuplicateFlagError,
+                                'flags_test.*module_foo'):
       original_flags.append_flag_values(duplicate_flags)
 
     # Make sure allow_override works
@@ -1220,12 +1220,12 @@ class MultiNumericalFlagsTest(absltest.TestCase):
     """Test multi_int and multi_float flags with non-parseable values."""
 
     # Test non-parseable defaults.
-    self.assertRaisesRegexp(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r"flag --m_int2=abc: invalid literal for int\(\) with base 10: 'abc'",
         flags.DEFINE_multi_integer, 'm_int2', ['abc'], 'desc')
 
-    self.assertRaisesRegexp(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_float2=abc: '
         r'(invalid literal for float\(\)|could not convert string to float): '
@@ -1236,7 +1236,7 @@ class MultiNumericalFlagsTest(absltest.TestCase):
     flags.DEFINE_multi_integer('m_int2', '77',
                                'integer option that can occur multiple times')
     argv = ('./program', '--m_int2=def')
-    self.assertRaisesRegexp(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r"flag --m_int2=def: invalid literal for int\(\) with base 10: 'def'",
         FLAGS, argv)
@@ -1244,7 +1244,7 @@ class MultiNumericalFlagsTest(absltest.TestCase):
     flags.DEFINE_multi_float('m_float2', 2.2,
                              'float option that can occur multiple times')
     argv = ('./program', '--m_float2=def')
-    self.assertRaisesRegexp(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_float2=def: '
         r'(invalid literal for float\(\)|could not convert string to float): '
@@ -1295,7 +1295,7 @@ class MultiEnumFlagsTest(absltest.TestCase):
                             short_name='me3',
                             case_sensitive=True)
     argv = ('./program', '--m_enum3=bar', '--me3=fOo')
-    self.assertRaisesRegexp(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_enum3=invalid: value should be one of <FOO|BAR|BAZ|WHOOSH>',
         FLAGS, argv)
@@ -1304,13 +1304,13 @@ class MultiEnumFlagsTest(absltest.TestCase):
     """Test multi_enum with invalid values."""
 
     # Test defaults that are not in the permitted list of enums.
-    self.assertRaisesRegexp(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_enum=INVALID: value should be one of <FOO|BAR|BAZ>',
         flags.DEFINE_multi_enum, 'm_enum', ['INVALID'],
         ['FOO', 'BAR', 'BAZ'], 'desc')
 
-    self.assertRaisesRegexp(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_enum=1234: value should be one of <FOO|BAR|BAZ>',
         flags.DEFINE_multi_enum, 'm_enum2', [1234],
@@ -1321,7 +1321,7 @@ class MultiEnumFlagsTest(absltest.TestCase):
                             ['FOO', 'BAR', 'BAZ'],
                             'enum option that can occur multiple times')
     argv = ('./program', '--m_enum4=INVALID')
-    self.assertRaisesRegexp(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_enum4=invalid: value should be one of <FOO|BAR|BAZ>',
         FLAGS, argv)
