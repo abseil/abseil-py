@@ -819,7 +819,7 @@ class FlagValues(object):
     Args:
       prefix: str, per-line output prefix.
       include_special_flags: bool, whether to include description of
-        _SPECIAL_FLAGS, i.e. --flagfile and --undefok.
+        SPECIAL_FLAGS, i.e. --flagfile and --undefok.
 
     Returns:
       str, formatted help message.
@@ -852,7 +852,7 @@ class FlagValues(object):
       modules: List[str], a list of modules to get the help string for.
       prefix: str, a string that is prepended to each generated help line.
       include_special_flags: bool, whether to include description of
-        _SPECIAL_FLAGS, i.e. --flagfile and --undefok.
+        SPECIAL_FLAGS, i.e. --flagfile and --undefok.
     """
     output_lines = []
     for module in modules:

@@ -168,7 +168,7 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
   """
   if flag_name in _helpers.SPECIAL_FLAGS:
     # Take care of the special flags, e.g., --flagfile, --undefok.
-    # These flags are defined in _SPECIAL_FLAGS, and are treated
+    # These flags are defined in SPECIAL_FLAGS, and are treated
     # specially during flag parsing, taking precedence over the
     # user-defined flags.
     _internal_declare_key_flags([flag_name],
