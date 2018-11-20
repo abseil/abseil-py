@@ -22,6 +22,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import copy
 import itertools
 import logging
 import os
@@ -634,6 +635,18 @@ class FlagValues(object):
     self.mark_as_parsed()
     self._assert_all_validators()
     return [program_name] + unparsed_args
+
+  def __getstate__(self):
+    raise TypeError("can't pickle FlagValues")
+
+  def __copy__(self):
+    raise TypeError('FlagValues does not support shallow copies. '
+                    'Use absl.testing.flagsaver or copy.deepcopy instead.')
+
+  def __deepcopy__(self, memo):
+    result = object.__new__(type(self))
+    result.__dict__.update(copy.deepcopy(self.__dict__, memo))
+    return result
 
   def _set_is_retired_flag_func(self, is_retired_flag_func):
     """Sets a function for checking retired flags.
