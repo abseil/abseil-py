@@ -1037,6 +1037,9 @@ class FlagValues(object):
     EVERYTHING except whitespace lines and comments (lines starting
     with '#' or '//').
     """
+    # For consistency with the cpp version, ignore empty values.
+    if not filename:
+      return []
     if parsed_file_stack is None:
       parsed_file_stack = []
     # We do a little safety check for reparsing a file we've already encountered
