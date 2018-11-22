@@ -331,7 +331,7 @@ class EnumClassFlag(Flag):
   def __init__(self, name, default, help, enum_class,  # pylint: disable=redefined-builtin
                short_name=None, **args):
     p = _argument_parser.EnumClassParser(enum_class)
-    g = _argument_parser.ArgumentSerializer()
+    g = _argument_parser.EnumClassSerializer()
     super(EnumClassFlag, self).__init__(
         p, g, name, default, help, short_name, **args)
     self.help = '<%s>: %s' % ('|'.join(enum_class.__members__), self.help)

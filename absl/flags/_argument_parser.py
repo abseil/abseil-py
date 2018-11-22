@@ -435,6 +435,14 @@ class CsvListSerializer(ArgumentSerializer):
     return _helpers.str_or_unicode(serialized_value)
 
 
+class EnumClassSerializer(ArgumentSerializer):
+  """Class for generating string representations of an enum class flag value."""
+
+  def serialize(self, value):
+    """Returns a serialized string of the Enum class value."""
+    return _helpers.str_or_unicode(value.name)
+
+
 class BaseListParser(ArgumentParser):
   """Base class for a parser of lists of strings.
 
