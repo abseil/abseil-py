@@ -247,7 +247,7 @@ def _open(filepath, mode, _open_func=open):
 
 
 class _TempDir(object):
-  """Represents a tempfile for tests.
+  """Represents a temporary directory for tests.
 
   Creation of this class is internal. Using its public methods is OK.
   """
@@ -260,7 +260,7 @@ class _TempDir(object):
   @property
   def full_path(self):
     # type: () -> Text
-    """The path, as a string, for the file."""
+    """The path, as a string, for the directory."""
     return self._path
 
   def create_file(self, file_path=None, content=None, mode='w', encoding='utf8',
