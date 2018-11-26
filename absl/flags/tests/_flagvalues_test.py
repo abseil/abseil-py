@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import copy
 import pickle
 import types
@@ -525,6 +526,33 @@ absl.flags.tests.module_foo:
         flag_name3, None, description, flag_values=flag_values)
     self.assertEqual(
         sorted([flag_name1, flag_name2, flag_name3]), dir(flag_values))
+
+  def test_flags_into_string_deterministic(self):
+    flag_values = _flagvalues.FlagValues()
+    _defines.DEFINE_string(
+        'fa', 'x', '', flag_values=flag_values, module_name='mb')
+    _defines.DEFINE_string(
+        'fb', 'x', '', flag_values=flag_values, module_name='mb')
+    _defines.DEFINE_string(
+        'fc', 'x', '', flag_values=flag_values, module_name='ma')
+    _defines.DEFINE_string(
+        'fd', 'x', '', flag_values=flag_values, module_name='ma')
+
+    expected = ('--fc=x\n'
+                '--fd=x\n'
+                '--fa=x\n'
+                '--fb=x\n')
+
+    flags_by_module_items = sorted(
+        flag_values.flags_by_module_dict().items(), reverse=True)
+    for _, module_flags in flags_by_module_items:
+      module_flags.sort(reverse=True)
+
+    flag_values.__dict__['__flags_by_module'] = collections.OrderedDict(
+        flags_by_module_items)
+
+    actual = flag_values.flags_into_string()
+    self.assertEqual(expected, actual)
 
 
 class FlagValuesLoggingTest(absltest.TestCase):

@@ -1178,11 +1178,15 @@ class FlagValues(object):
 
     Returns:
       str, the string with the flags assignments from this FlagValues object.
+      The flags are ordered by (module_name, flag_name).
     """
+    module_flags = sorted(self.flags_by_module_dict().items())
     s = ''
-    for flag in self._flags().values():
-      if flag.value is not None:
-        s += flag.serialize() + '\n'
+    for unused_module_name, flags in module_flags:
+      flags = sorted(flags, key=lambda f: f.name)
+      for flag in flags:
+        if flag.value is not None:
+          s += flag.serialize() + '\n'
     return s
 
   def append_flags_into_file(self, filename):
