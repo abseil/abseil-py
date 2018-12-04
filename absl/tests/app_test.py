@@ -306,5 +306,37 @@ class FunctionalTests(absltest.TestCase):
     self.assertIn('during real_main', stdout)
 
 
+class FlagValuesExternalizationTest(absltest.TestCase):
+  """Test to make sure FLAGS can be serialized out and parsed back in."""
+
+  @flagsaver.flagsaver
+  def test_nohelp_doesnt_show_help(self):
+    with self.assertRaisesWithPredicateMatch(SystemExit,
+                                             lambda e: e.code == 1):
+      app.run(
+          len,
+          argv=[
+              './program', '--nohelp', '--helpshort=false', '--helpfull=0',
+              '--helpxml=f'
+          ])
+
+  @flagsaver.flagsaver
+  def test_serialize_roundtrip(self):
+    # Use the global 'FLAGS' as the source, to ensure all the framework defined
+    # flags will go through the round trip process.
+    flags.DEFINE_string('testflag', 'testval', 'help', flag_values=FLAGS)
+
+    new_flag_values = flags.FlagValues()
+    new_flag_values.append_flag_values(FLAGS)
+
+    FLAGS.testflag = 'roundtrip_me'
+    argv = ['binary_name'] + FLAGS.flags_into_string().splitlines()
+
+    self.assertNotEqual(new_flag_values['testflag'], FLAGS.testflag)
+    new_flag_values(argv)
+    self.assertEqual(new_flag_values.testflag, FLAGS.testflag)
+    del FLAGS.testflag
+
+
 if __name__ == '__main__':
   absltest.main()

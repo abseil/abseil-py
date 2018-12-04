@@ -223,7 +223,7 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <name>cc_version</name>\n'
         '  <meaning>&lt;STABLE|EXPERIMENTAL&gt;: '
         'Compiler version to use.</meaning>\n'
-        '  <default>Version.STABLE</default>\n'
+        '  <default>STABLE</default>\n'
         '  <current>Version.STABLE</current>\n'
         '  <type>enum class</type>\n'
         '  <enum_value>STABLE</enum_value>\n'

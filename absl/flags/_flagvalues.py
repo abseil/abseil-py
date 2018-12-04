@@ -22,6 +22,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import copy
 import itertools
 import logging
 import os
@@ -635,6 +636,18 @@ class FlagValues(object):
     self._assert_all_validators()
     return [program_name] + unparsed_args
 
+  def __getstate__(self):
+    raise TypeError("can't pickle FlagValues")
+
+  def __copy__(self):
+    raise TypeError('FlagValues does not support shallow copies. '
+                    'Use absl.testing.flagsaver or copy.deepcopy instead.')
+
+  def __deepcopy__(self, memo):
+    result = object.__new__(type(self))
+    result.__dict__.update(copy.deepcopy(self.__dict__, memo))
+    return result
+
   def _set_is_retired_flag_func(self, is_retired_flag_func):
     """Sets a function for checking retired flags.
 
@@ -819,7 +832,7 @@ class FlagValues(object):
     Args:
       prefix: str, per-line output prefix.
       include_special_flags: bool, whether to include description of
-        _SPECIAL_FLAGS, i.e. --flagfile and --undefok.
+        SPECIAL_FLAGS, i.e. --flagfile and --undefok.
 
     Returns:
       str, formatted help message.
@@ -852,7 +865,7 @@ class FlagValues(object):
       modules: List[str], a list of modules to get the help string for.
       prefix: str, a string that is prepended to each generated help line.
       include_special_flags: bool, whether to include description of
-        _SPECIAL_FLAGS, i.e. --flagfile and --undefok.
+        SPECIAL_FLAGS, i.e. --flagfile and --undefok.
     """
     output_lines = []
     for module in modules:
@@ -1024,6 +1037,9 @@ class FlagValues(object):
     EVERYTHING except whitespace lines and comments (lines starting
     with '#' or '//').
     """
+    # For consistency with the cpp version, ignore empty values.
+    if not filename:
+      return []
     if parsed_file_stack is None:
       parsed_file_stack = []
     # We do a little safety check for reparsing a file we've already encountered
@@ -1162,11 +1178,15 @@ class FlagValues(object):
 
     Returns:
       str, the string with the flags assignments from this FlagValues object.
+      The flags are ordered by (module_name, flag_name).
     """
+    module_flags = sorted(self.flags_by_module_dict().items())
     s = ''
-    for flag in self._flags().values():
-      if flag.value is not None:
-        s += flag.serialize() + '\n'
+    for unused_module_name, flags in module_flags:
+      flags = sorted(flags, key=lambda f: f.name)
+      for flag in flags:
+        if flag.value is not None:
+          s += flag.serialize() + '\n'
     return s
 
   def append_flags_into_file(self, filename):
