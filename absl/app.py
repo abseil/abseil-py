@@ -103,7 +103,7 @@ class HelpFlag(flags.BooleanFlag):
         short_name=self.SHORT_NAME, allow_hide_cpp=True)
 
   def parse(self, arg):
-    if arg:
+    if self._parse(arg):
       usage(shorthelp=True, writeto_stdout=True)
       # Advertise --helpfull on stdout, since usage() was on stdout.
       print()
@@ -125,7 +125,7 @@ class HelpfullFlag(flags.BooleanFlag):
         'helpfull', False, 'show full help', allow_hide_cpp=True)
 
   def parse(self, arg):
-    if arg:
+    if self._parse(arg):
       usage(writeto_stdout=True)
       sys.exit(1)
 
@@ -139,7 +139,7 @@ class HelpXMLFlag(flags.BooleanFlag):
         allow_hide_cpp=True)
 
   def parse(self, arg):
-    if arg:
+    if self._parse(arg):
       flags.FLAGS.write_help_in_xml_format(sys.stdout)
       sys.exit(1)
 

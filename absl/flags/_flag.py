@@ -22,6 +22,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import copy
 import functools
 
 from absl.flags import _argument_parser
@@ -124,6 +125,18 @@ class Flag(object):
     if isinstance(other, Flag):
       return id(self) < id(other)
     return NotImplemented
+
+  def __getstate__(self):
+    raise TypeError("can't pickle Flag objects")
+
+  def __copy__(self):
+    raise TypeError('%s does not support shallow copies. '
+                    'Use copy.deepcopy instead.' % type(self).__name__)
+
+  def __deepcopy__(self, memo):
+    result = object.__new__(type(self))
+    result.__dict__ = copy.deepcopy(self.__dict__, memo)
+    return result
 
   def _get_parsed_value_as_string(self, value):
     """Returns parsed flag value as string."""
@@ -318,7 +331,7 @@ class EnumClassFlag(Flag):
   def __init__(self, name, default, help, enum_class,  # pylint: disable=redefined-builtin
                short_name=None, **args):
     p = _argument_parser.EnumClassParser(enum_class)
-    g = _argument_parser.ArgumentSerializer()
+    g = _argument_parser.EnumClassSerializer()
     super(EnumClassFlag, self).__init__(
         p, g, name, default, help, short_name, **args)
     self.help = '<%s>: %s' % ('|'.join(enum_class.__members__), self.help)
