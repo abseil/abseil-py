@@ -536,6 +536,37 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
   DEFINE_multi(parser, serializer, name, default, help, flag_values, **args)
 
 
+def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
+    name,
+    default,
+    enum_class,
+    help,
+    flag_values=_flagvalues.FLAGS,
+    module_name=None,
+    **args):
+  """Registers a flag whose value can be a list of enum members.
+
+  Use the flag on the command line multiple times to place multiple
+  enum values into the list.
+
+  Args:
+    name: str, the flag name.
+    default: [Enum]|Enum|[str]|str|None, the default value of the flag. A string
+        or a list of strings will be converted to the equivalent Enum objects.
+    enum_class: class, the Enum class with all the possible values for the flag.
+        help: str, the help message.
+    flag_values: FlagValues, the FlagValues instance with which the flag will be
+      registered. This should almost never need to be overridden.
+    module_name: A string, the name of the Python module declaring this flag. If
+      not provided, it will be computed using the stack trace of this call.
+    **args: Dictionary with extra keyword args that are passed to the Flag
+      __init__.
+  """
+  DEFINE_flag(
+      _flag.MultiEnumClassFlag(name, default, help, enum_class),
+      flag_values, module_name, **args)
+
+
 def DEFINE_alias(name, original_name, flag_values=_flagvalues.FLAGS,  # pylint: disable=invalid-name
                  module_name=None):
   """Defines an alias flag for an existing one.

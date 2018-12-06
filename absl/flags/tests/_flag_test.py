@@ -151,5 +151,50 @@ class EnumClassFlagTest(parameterized.TestCase):
       _flag.EnumClassFlag('fruit', 'BANANA', 'help', Fruit)
 
 
+class MultiEnumClassFlagTest(parameterized.TestCase):
+
+  @parameterized.named_parameters(
+      ('NoHelpSupplied', '', '<APPLE|ORANGE>: (no help available);\n    '
+       'repeat this option to specify a list of values'),
+      ('WithHelpSupplied', 'Type of fruit.',
+       '<APPLE|ORANGE>: Type of fruit.;\n    '
+       'repeat this option to specify a list of values'))
+  def test_help_text(self, helptext_input, helptext_output):
+    f = _flag.MultiEnumClassFlag('fruit', None, helptext_input, Fruit)
+    self.assertEqual(helptext_output, f.help)
+
+  def test_requires_enum(self):
+    with self.assertRaises(TypeError):
+      _flag.MultiEnumClassFlag('fruit', None, 'help', ['apple', 'orange'])
+
+  def test_requires_non_empty_enum_class(self):
+    with self.assertRaises(ValueError):
+      _flag.MultiEnumClassFlag('empty', None, 'help', EmptyEnum)
+
+  def test_accepts_literal_default(self):
+    f = _flag.MultiEnumClassFlag('fruit', Fruit.APPLE, 'A sample enum flag.',
+                                 Fruit)
+    self.assertListEqual([Fruit.APPLE], f.value)
+
+  def test_accepts_list_of_literal_default(self):
+    f = _flag.MultiEnumClassFlag('fruit', [Fruit.APPLE, Fruit.ORANGE],
+                                 'A sample enum flag.', Fruit)
+    self.assertListEqual([Fruit.APPLE, Fruit.ORANGE], f.value)
+
+  def test_accepts_string_default(self):
+    f = _flag.MultiEnumClassFlag('fruit', 'ORANGE', 'A sample enum flag.',
+                                 Fruit)
+    self.assertListEqual([Fruit.ORANGE], f.value)
+
+  def test_accepts_list_of_string_default(self):
+    f = _flag.MultiEnumClassFlag('fruit', ['ORANGE', 'APPLE'],
+                                 'A sample enum flag.', Fruit)
+    self.assertListEqual([Fruit.ORANGE, Fruit.APPLE], f.value)
+
+  def test_default_value_does_not_exist(self):
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      _flag.MultiEnumClassFlag('fruit', 'BANANA', 'help', Fruit)
+
+
 if __name__ == '__main__':
   absltest.main()

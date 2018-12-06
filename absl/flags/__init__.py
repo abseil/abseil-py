@@ -71,6 +71,7 @@ DEFINE_multi_string = _defines.DEFINE_multi_string
 DEFINE_multi_integer = _defines.DEFINE_multi_integer
 DEFINE_multi_float = _defines.DEFINE_multi_float
 DEFINE_multi_enum = _defines.DEFINE_multi_enum
+DEFINE_multi_enum_class = _defines.DEFINE_multi_enum_class
 DEFINE_alias = _defines.DEFINE_alias
 # pylint: enable=invalid-name
 
@@ -109,6 +110,7 @@ BooleanFlag = _flag.BooleanFlag
 EnumFlag = _flag.EnumFlag
 EnumClassFlag = _flag.EnumClassFlag
 MultiFlag = _flag.MultiFlag
+MultiEnumClassFlag = _flag.MultiEnumClassFlag
 FlagValues = _flagvalues.FlagValues
 ArgumentParser = _argument_parser.ArgumentParser
 BooleanParser = _argument_parser.BooleanParser
