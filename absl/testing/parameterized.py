@@ -49,8 +49,9 @@ original test name (which is modified internally) and the arguments
 for the specific invocation, which are part of the string returned by
 the shortDescription() method on test cases.
 
-The id method of the test, used internally by the unittest framework,
-is also modified to show the arguments. To make sure that test names
+The id method of the test, used internally by the unittest framework, is also
+modified to show the arguments (but note that the name reported by `id()`
+doesn't match the actual test name, see below). To make sure that test names
 stay the same across several invocations, object representations like
 
   >>> class Foo(object):
@@ -58,9 +59,14 @@ stay the same across several invocations, object representations like
   >>> repr(Foo())
   '<__main__.Foo object at 0x23d8610>'
 
-are turned into '<__main__.Foo>'. For even more descriptive names,
-especially in test logs, you can use the named_parameters decorator. In
-this case, only tuples or dicts are supported. For tuples, the first parameters
+are turned into '<__main__.Foo>'. When selecting a subset of test cases to run
+on the command-line, the test cases contain an index suffix for each argument
+in the order they were passed to `parameters()` (eg. testAddition0,
+testAddition1, etc.) This naming scheme is subject to change; for more reliable
+and stable names, especially in test logs, use `named_parameters()` instead.
+
+Tests using `named_parameters()` are similar to `parameters()`, except only
+tuples or dicts of args are supported. For tuples, the first parameter arg
 has to be a string (or an object that returns an apt name when converted via
 str()). For dicts, a value for the key 'testcase_name' must be present and must
 be a string (or an object that returns an apt name when converted via str()):

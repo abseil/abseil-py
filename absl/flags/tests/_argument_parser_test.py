@@ -157,6 +157,15 @@ class EnumClassParserTest(absltest.TestCase):
     with self.assertRaises(ValueError):
       parser.parse('ORANGE')
 
+  def test_serialize_parse(self):
+    serializer = _argument_parser.EnumClassSerializer()
+    val1 = Fruit.BANANA
+    parser = _argument_parser.EnumClassParser(Fruit)
+    serialized = serializer.serialize(val1)
+    self.assertEqual(serialized, 'BANANA')
+    val2 = parser.parse(serialized)
+    self.assertEqual(val1, val2)
+
 
 class HelperFunctionsTest(absltest.TestCase):
 
