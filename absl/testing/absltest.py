@@ -44,7 +44,11 @@ import textwrap
 import unittest
 
 try:
+  # The faulthandler module isn't always available, and pytype doesn't
+  # understand that we're catching ImportError, so suppress the error.
+  # pytype: disable=import-error
   import faulthandler
+  # pytype: enable=import-error
 except ImportError:
   # We use faulthandler if it is available.
   faulthandler = None
@@ -65,10 +69,21 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 # in Python 2. Type checkers will still understand the imports.
 try:
   # pylint: disable=unused-import
+  import typing
   from typing import AnyStr, Callable, Text, Optional, ContextManager, TextIO, BinaryIO, Union, Type, Tuple, Any
   # pylint: enable=unused-import
 except ImportError:
   pass
+else:
+  # Use an if-type-checking block to prevent leakage of type-checking only
+  # symbols. We don't want people relying on these at runtime.
+  if typing.TYPE_CHECKING:
+    if six.PY2:
+      _OutcomeType = unittest3_backport.case._Outcome
+    else:
+      import unittest.case
+      _OutcomeType = unittest.case._Outcome  # pytype: disable=module-attr
+
 
 if six.PY3:
   from unittest import mock  # pylint: disable=unused-import
@@ -77,6 +92,7 @@ else:
     import mock  # type: ignore
   except ImportError:
     mock = None
+
 
 FLAGS = flags.FLAGS
 
@@ -468,6 +484,7 @@ class TestCase(unittest3_backport.TestCase):
     super(TestCase, self).__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
     self._testMethodName = getattr(self, '_testMethodName')  # type: str
+    self._outcome = getattr(self, '_outcome')  # type: Optional[_OutcomeType]
 
   def create_tempdir(self, name=None, cleanup=None):
     # type: (Optional[Text], Optional[TempFileCleanup]) -> _TempDir
@@ -594,7 +611,7 @@ class TestCase(unittest3_backport.TestCase):
   def _ran_and_passed(self):
     outcome = self._outcome
     result = self.defaultTestResult()
-    self._feedErrorsToResult(result, outcome.errors)
+    self._feedErrorsToResult(result, outcome.errors)  # pytype: disable=attribute-error
     return result.wasSuccessful()
 
   def shortDescription(self):
@@ -751,7 +768,7 @@ class TestCase(unittest3_backport.TestCase):
       self.fail('Expected a Sized object, got: '
                 '{!r}'.format(type(container).__name__), msg)
     if len(container) != expected_len:
-      container_repr = unittest.util.safe_repr(container)
+      container_repr = unittest.util.safe_repr(container)  # pytype: disable=module-attr
       self.fail('{} has length of {}, expected {}.'.format(
           container_repr, len(container), expected_len), msg)
 
@@ -1441,7 +1458,7 @@ class TestCase(unittest3_backport.TestCase):
     missing = []
     different = []
 
-    safe_repr = unittest.util.safe_repr
+    safe_repr = unittest.util.safe_repr  # pytype: disable=module-attr
 
     def Repr(dikt):
       """Deterministic repr for dict."""
@@ -1848,7 +1865,7 @@ def _register_sigterm_with_faulthandler():
     # faulthandler.register is not avaiable on Windows.
     # faulthandler.enable() is already called by app.run.
     try:
-      faulthandler.register(signal.SIGTERM, chain=True)
+      faulthandler.register(signal.SIGTERM, chain=True)  # pytype: disable=module-attr
     except Exception as e:  # pylint: disable=broad-except
       sys.stderr.write('faulthandler.register(SIGTERM) failed '
                        '%r; ignoring.\n' % e)
