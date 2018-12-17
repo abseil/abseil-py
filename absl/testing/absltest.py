@@ -483,7 +483,6 @@ class TestCase(unittest3_backport.TestCase):
   def __init__(self, *args, **kwargs):
     super(TestCase, self).__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
-    self._testMethodName = getattr(self, '_testMethodName')  # type: str
     self._outcome = getattr(self, '_outcome')  # type: Optional[_OutcomeType]
 
   def create_tempdir(self, name=None, cleanup=None):
@@ -1582,7 +1581,7 @@ class TestCase(unittest3_backport.TestCase):
   def _getAssertEqualityFunc(self, first, second):
     # type: (Any, Any) -> Callable[..., None]
     try:
-      return super(TestCase, self)._getAssertEqualityFunc(first, second)  # pytype: disable=attribute-error
+      return super(TestCase, self)._getAssertEqualityFunc(first, second)
     except AttributeError:
       # This is a workaround if unittest.TestCase.__init__ was never run.
       # It usually means that somebody created a subclass just for the
@@ -1591,19 +1590,11 @@ class TestCase(unittest3_backport.TestCase):
       test_method = getattr(self, '_testMethodName', 'assertTrue')
       super(TestCase, self).__init__(test_method)
 
-    return super(TestCase, self)._getAssertEqualityFunc(first, second)  # pytype: disable=attribute-error
+    return super(TestCase, self)._getAssertEqualityFunc(first, second)
 
   def fail(self, msg=None, prefix=None):
     """Fail immediately with the given message, optionally prefixed."""
     return super(TestCase, self).fail(self._formatMessage(prefix, msg))
-
-  # This is just an impromptu stub definition because the stdlib pyi files
-  # don't yet have this method in unittest.TestCase
-  def _formatMessage(self, msg, standardMsg):
-    # type: (Optional[Text], Text) -> Text
-    # pylint: disable=useless-super-delegation
-    return super(TestCase, self)._formatMessage(msg, standardMsg)  # pytype: disable=attribute-error
-    # pylint: enable=useless-super-delegation
 
 
 def _sorted_list_difference(expected, actual):
@@ -1808,7 +1799,7 @@ class _TestProgramManualRun(unittest.TestProgram):
   def runTests(self, do_run=False):
     """Runs the tests."""
     if do_run:
-      unittest.TestProgram.runTests(self)  # pytype: disable=attribute-error
+      unittest.TestProgram.runTests(self)
 
 
 def print_python_version():
