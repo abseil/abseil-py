@@ -22,12 +22,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import copy
 import functools
 
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
 from absl.flags import _helpers
+import six
 
 
 @functools.total_ordering
@@ -358,8 +360,8 @@ class MultiFlag(Flag):
   See the __doc__ for Flag for most behavior of this class.  Only
   differences in behavior are described here:
 
-    * The default value may be either a single value or a list of values.
-      A single value is interpreted as the [value] singleton list.
+    * The default value may be either a single value or an iterable of values.
+      A single value is transformed into a single-item list of that value.
 
     * The value of the flag is always a list, even if the option was
       only supplied once, and even if the default value is a single
@@ -386,6 +388,10 @@ class MultiFlag(Flag):
     self.present += len(new_values)
 
   def _parse(self, arguments):
+    if (isinstance(arguments, collections.Iterable) and
+        not isinstance(arguments, six.string_types)):
+      arguments = list(arguments)
+
     if not isinstance(arguments, list):
       # Default value may be a list of values.  Most other arguments
       # will not be, so convert them into a single-item list to make

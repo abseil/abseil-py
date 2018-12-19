@@ -420,7 +420,11 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
     parser: ArgumentParser, used to parse the flag arguments.
     serializer: ArgumentSerializer, the flag serializer instance.
     name: str, the flag name.
-    default: list|str|None, the default value of the flag.
+    default: Union[Iterable[T], Text, None], the default value of the flag.
+        If the value is text, it will be parsed as if it was provided from
+        the command line. If the value is a non-string iterable, it will be
+        iterated over to create a shallow copy of the values. If it is None,
+        it is left as-is.
     help: str, the help message.
     flag_values: FlagValues, the FlagValues instance with which the flag will
         be registered. This should almost never need to be overridden.
@@ -445,7 +449,8 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: [str]|str|None, the default value of the flag.
+    default: Union[Iterable[Text], Text, None], the default value of the flag;
+        see `DEFINE_multi`.
     help: str, the help message.
     flag_values: FlagValues, the FlagValues instance with which the flag will
         be registered. This should almost never need to be overridden.
@@ -469,7 +474,8 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: [int]|str|None, the default value of the flag.
+    default: Union[Iterable[int], Text, None], the default value of the flag;
+        see `DEFINE_multi`.
     help: str, the help message.
     lower_bound: int, min values of the flag.
     upper_bound: int, max values of the flag.
@@ -495,7 +501,8 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: [float]|str|None, the default value of the flag.
+    default: Union[Iterable[float], Text, None], the default value of the flag;
+        see `DEFINE_multi`.
     help: str, the help message.
     lower_bound: float, min values of the flag.
     upper_bound: float, max values of the flag.
@@ -521,7 +528,8 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: [str]|str|None, the default value of the flag.
+    default: Union[Iterable[Text], Text, None], the default value of the flag;
+        see `DEFINE_multi`.
     enum_values: [str], a non-empty list of strings with the possible values for
         the flag.
     help: str, the help message.
@@ -551,8 +559,12 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
 
   Args:
     name: str, the flag name.
-    default: [Enum]|Enum|[str]|str|None, the default value of the flag. A string
-        or a list of strings will be converted to the equivalent Enum objects.
+    default: Union[Iterable[Enum], Iterable[Text], Enum, Text, None], the
+        default value of the flag; see
+        `DEFINE_multi`; only differences are documented here. If the value is
+        a single Enum, it is treated as a single-item list of that Enum value.
+        If it is an iterable, text values within the iterable will be converted
+        to the equivalent Enum objects.
     enum_class: class, the Enum class with all the possible values for the flag.
         help: str, the help message.
     flag_values: FlagValues, the FlagValues instance with which the flag will be
