@@ -384,16 +384,19 @@ def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
 
 def mark_flags_as_mutual_exclusive(flag_names, required=False,
                                    flag_values=_flagvalues.FLAGS):
-  """Ensures that only one flag among flag_names is set.
+  """Ensures that only one flag among flag_names is not None.
 
-  Important note: validator will pass for any non-None value, such as False,
-  0 (zero), '' (empty string) and so on. For multi flags, this means that the
-  default needs to be None not [].
+  Important note: This validator checks if flag values are None, and it does not
+  distinguish between default and explicit values. Therefore, this validator
+  does not make sense when applied to flags with default values other than None,
+  including other false values (e.g. False, 0, '', []). That includes multi
+  flags with a default value of [] instead of None.
 
   Args:
     flag_names: [str], names of the flags.
-    required: bool, if set, exactly one of the flags must be set.
-        Otherwise, it is also valid for none of the flags to be set.
+    required: bool. If true, exactly one of the flags must have a value other
+        than None. Otherwise, at most one of the flags can have a value other
+        than None, and it is valid for all of the flags to be None.
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
         are defined.
   """
