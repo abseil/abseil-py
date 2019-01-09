@@ -362,6 +362,49 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '</flag>\n')
     self._check_flag_help_in_xml('flavours', 'tool', expected_output)
 
+  def test_flag_help_in_xml_multi_enum_class_singleton_default(self):
+    class Fruit(enum.Enum):
+      ORANGE = 0
+      BANANA = 1
+
+    flags.DEFINE_multi_enum_class('fruit', ['ORANGE'],
+                                  Fruit,
+                                  'The fruit flag.', flag_values=self.fv)
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>fruit</name>\n'
+        '  <meaning>&lt;ORANGE|BANANA&gt;: The fruit flag.;\n'
+        '    repeat this option to specify a list of values</meaning>\n'
+        '  <default>ORANGE</default>\n'
+        '  <current>ORANGE</current>\n'
+        '  <type>multi enum class</type>\n'
+        '  <enum_value>ORANGE</enum_value>\n'
+        '  <enum_value>BANANA</enum_value>\n'
+        '</flag>\n')
+    self._check_flag_help_in_xml('fruit', 'tool', expected_output)
+
+  def test_flag_help_in_xml_multi_enum_class_list_default(self):
+    class Fruit(enum.Enum):
+      ORANGE = 0
+      BANANA = 1
+
+    flags.DEFINE_multi_enum_class('fruit', ['ORANGE', 'BANANA'],
+                                  Fruit,
+                                  'The fruit flag.', flag_values=self.fv)
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>fruit</name>\n'
+        '  <meaning>&lt;ORANGE|BANANA&gt;: The fruit flag.;\n'
+        '    repeat this option to specify a list of values</meaning>\n'
+        '  <default>ORANGE,BANANA</default>\n'
+        '  <current>ORANGE,BANANA</current>\n'
+        '  <type>multi enum class</type>\n'
+        '  <enum_value>ORANGE</enum_value>\n'
+        '  <enum_value>BANANA</enum_value>\n'
+        '</flag>\n')
+    self._check_flag_help_in_xml('fruit', 'tool', expected_output)
 
 # The next EXPECTED_HELP_XML_* constants are parts of a template for
 # the expected XML output from WriteHelpInXMLFormatTest below.  When

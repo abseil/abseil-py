@@ -44,7 +44,11 @@ import textwrap
 import unittest
 
 try:
+  # The faulthandler module isn't always available, and pytype doesn't
+  # understand that we're catching ImportError, so suppress the error.
+  # pytype: disable=import-error
   import faulthandler
+  # pytype: enable=import-error
 except ImportError:
   # We use faulthandler if it is available.
   faulthandler = None
@@ -65,10 +69,24 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 # in Python 2. Type checkers will still understand the imports.
 try:
   # pylint: disable=unused-import
-  from typing import AnyStr, Callable, Text, Optional, ContextManager, TextIO, BinaryIO, Union, Type, Tuple, Any
+  import typing
+  from typing import AnyStr, Callable, Text, Optional, ContextManager, TextIO, BinaryIO, Union, Type, Tuple, Any, MutableSequence, Sequence, Mapping, MutableMapping, IO, List
   # pylint: enable=unused-import
 except ImportError:
   pass
+else:
+  # Use an if-type-checking block to prevent leakage of type-checking only
+  # symbols. We don't want people relying on these at runtime.
+  if typing.TYPE_CHECKING:
+    # Unbounded TypeVar for general usage
+    _T = typing.TypeVar('_T')
+
+    if six.PY2:
+      _OutcomeType = unittest3_backport.case._Outcome
+    else:
+      import unittest.case
+      _OutcomeType = unittest.case._Outcome  # pytype: disable=module-attr
+
 
 if six.PY3:
   from unittest import mock  # pylint: disable=unused-import
@@ -77,6 +95,7 @@ else:
     import mock  # type: ignore
   except ImportError:
     mock = None
+
 
 FLAGS = flags.FLAGS
 
@@ -101,6 +120,7 @@ class TempFileCleanup(enum.Enum):
 
 
 def _get_default_test_random_seed():
+  # type: () -> int
   random_seed = 301
   value = os.environ.get('TEST_RANDOM_SEED', '')
   try:
@@ -111,11 +131,13 @@ def _get_default_test_random_seed():
 
 
 def get_default_test_srcdir():
+  # type: () -> Text
   """Returns default test source dir."""
   return os.environ.get('TEST_SRCDIR', '')
 
 
 def get_default_test_tmpdir():
+  # type: () -> Text
   """Returns default test temp dir."""
   tmpdir = os.environ.get('TEST_TMPDIR', '')
   if not tmpdir:
@@ -125,6 +147,7 @@ def get_default_test_tmpdir():
 
 
 def _get_default_randomize_ordering_seed():
+  # type: () -> int
   """Returns default seed to use for randomizing test order.
 
   This function first checks the --test_randomize_ordering_seed flag, and then
@@ -197,6 +220,7 @@ flags.DEFINE_string('xml_output_file', '',
 # unexpected pass as a as a "successful result".  For details, see
 # http://bugs.python.org/issue20165
 def _monkey_patch_test_result_for_unexpected_passes():
+  # type: () -> None
   """Workaround for <http://bugs.python.org/issue20165>."""
 
   def wasSuccessful(self):
@@ -227,6 +251,7 @@ _monkey_patch_test_result_for_unexpected_passes()
 
 
 def _open(filepath, mode, _open_func=open):
+  # type: (Text, Text, Callable[..., IO]) -> IO
   """Opens a file.
 
   Like open(), but compatible with Python 2 and 3. Also ensures that we can open
@@ -467,7 +492,7 @@ class TestCase(unittest3_backport.TestCase):
   def __init__(self, *args, **kwargs):
     super(TestCase, self).__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
-    self._testMethodName = getattr(self, '_testMethodName')  # type: str
+    self._outcome = getattr(self, '_outcome')  # type: Optional[_OutcomeType]
 
   def create_tempdir(self, name=None, cleanup=None):
     # type: (Optional[Text], Optional[TempFileCleanup]) -> _TempDir
@@ -585,6 +610,7 @@ class TestCase(unittest3_backport.TestCase):
       raise AssertionError('Unexpected cleanup value: {}'.format(cleanup))
 
   def _internal_cleanup_on_success(self, function, *args, **kwargs):
+    # type: (Callable[..., object], Any, Any) -> None
     def _call_cleaner_on_success(*args, **kwargs):
       if not self._ran_and_passed():
         return
@@ -592,12 +618,14 @@ class TestCase(unittest3_backport.TestCase):
     self.addCleanup(_call_cleaner_on_success, *args, **kwargs)
 
   def _ran_and_passed(self):
+    # type: () -> bool
     outcome = self._outcome
     result = self.defaultTestResult()
-    self._feedErrorsToResult(result, outcome.errors)
+    self._feedErrorsToResult(result, outcome.errors)  # pytype: disable=attribute-error
     return result.wasSuccessful()
 
   def shortDescription(self):
+    # type: () -> Text
     """Formats both the test method name and the first line of its docstring.
 
     If no docstring is given, only returns the method name.
@@ -751,7 +779,7 @@ class TestCase(unittest3_backport.TestCase):
       self.fail('Expected a Sized object, got: '
                 '{!r}'.format(type(container).__name__), msg)
     if len(container) != expected_len:
-      container_repr = unittest.util.safe_repr(container)
+      container_repr = unittest.util.safe_repr(container)  # pytype: disable=module-attr
       self.fail('{} has length of {}, expected {}.'.format(
           container_repr, len(container), expected_len), msg)
 
@@ -1441,7 +1469,7 @@ class TestCase(unittest3_backport.TestCase):
     missing = []
     different = []
 
-    safe_repr = unittest.util.safe_repr
+    safe_repr = unittest.util.safe_repr  # pytype: disable=module-attr
 
     def Repr(dikt):
       """Deterministic repr for dict."""
@@ -1565,7 +1593,7 @@ class TestCase(unittest3_backport.TestCase):
   def _getAssertEqualityFunc(self, first, second):
     # type: (Any, Any) -> Callable[..., None]
     try:
-      return super(TestCase, self)._getAssertEqualityFunc(first, second)  # pytype: disable=attribute-error
+      return super(TestCase, self)._getAssertEqualityFunc(first, second)
     except AttributeError:
       # This is a workaround if unittest.TestCase.__init__ was never run.
       # It usually means that somebody created a subclass just for the
@@ -1574,22 +1602,15 @@ class TestCase(unittest3_backport.TestCase):
       test_method = getattr(self, '_testMethodName', 'assertTrue')
       super(TestCase, self).__init__(test_method)
 
-    return super(TestCase, self)._getAssertEqualityFunc(first, second)  # pytype: disable=attribute-error
+    return super(TestCase, self)._getAssertEqualityFunc(first, second)
 
   def fail(self, msg=None, prefix=None):
     """Fail immediately with the given message, optionally prefixed."""
     return super(TestCase, self).fail(self._formatMessage(prefix, msg))
 
-  # This is just an impromptu stub definition because the stdlib pyi files
-  # don't yet have this method in unittest.TestCase
-  def _formatMessage(self, msg, standardMsg):
-    # type: (Optional[Text], Text) -> Text
-    # pylint: disable=useless-super-delegation
-    return super(TestCase, self)._formatMessage(msg, standardMsg)  # pytype: disable=attribute-error
-    # pylint: enable=useless-super-delegation
-
 
 def _sorted_list_difference(expected, actual):
+  # type: (List[_T], List[_T]) -> Tuple[List[_T], List[_T]]
   """Finds elements in only one or the other of two, sorted input lists.
 
   Returns a two-element tuple of lists.  The first list contains those
@@ -1639,14 +1660,17 @@ def _sorted_list_difference(expected, actual):
 
 
 def _are_both_of_integer_type(a, b):
+  # type: (object, object) -> bool
   return isinstance(a, six.integer_types) and isinstance(b, six.integer_types)
 
 
 def _are_both_of_set_type(a, b):
+  # type: (object, object) -> bool
   return isinstance(a, collections.Set) and isinstance(b, collections.Set)
 
 
 def _are_both_of_mapping_type(a, b):
+  # type: (object, object) -> bool
   return isinstance(a, collections.Mapping) and isinstance(
       b, collections.Mapping)
 
@@ -1767,6 +1791,7 @@ def get_command_stderr(command, env=None, close_fds=True):
 
 
 def _quote_long_string(s):
+  # type: (Union[Text, bytes, bytearray]) -> Text
   """Quotes a potentially multi-line string to make the start and end obvious.
 
   Args:
@@ -1791,10 +1816,11 @@ class _TestProgramManualRun(unittest.TestProgram):
   def runTests(self, do_run=False):
     """Runs the tests."""
     if do_run:
-      unittest.TestProgram.runTests(self)  # pytype: disable=attribute-error
+      unittest.TestProgram.runTests(self)
 
 
 def print_python_version():
+  # type: () -> None
   # Having this in the test output logs by default helps debugging when all
   # you've got is the log and no other idea of which Python was used.
   sys.stderr.write('Running tests under Python {0[0]}.{0[1]}.{0[2]}: '
@@ -1804,6 +1830,7 @@ def print_python_version():
 
 
 def main(*args, **kwargs):
+  # type: (Text, Mapping[Text, Any]) -> None
   """Executes a set of Python unit tests.
 
   Usually this function is called without arguments, so the
@@ -1820,6 +1847,7 @@ def main(*args, **kwargs):
 
 
 def _is_in_app_main():
+  # type: () -> bool
   """Returns True iff app.run is active."""
   f = sys._getframe().f_back  # pylint: disable=protected-access
   while f:
@@ -1843,18 +1871,20 @@ class _SavedFlag(object):
 
 
 def _register_sigterm_with_faulthandler():
+  # type: () -> None
   """Have faulthandler dump stacks on SIGTERM.  Useful to diagnose timeouts."""
   if faulthandler and getattr(faulthandler, 'register', None):
     # faulthandler.register is not avaiable on Windows.
     # faulthandler.enable() is already called by app.run.
     try:
-      faulthandler.register(signal.SIGTERM, chain=True)
+      faulthandler.register(signal.SIGTERM, chain=True)  # pytype: disable=module-attr
     except Exception as e:  # pylint: disable=broad-except
       sys.stderr.write('faulthandler.register(SIGTERM) failed '
                        '%r; ignoring.\n' % e)
 
 
 def _run_in_app(function, args, kwargs):
+  # type: (Callable[..., None], Sequence[Text], Mapping[Text, Any]) -> None
   """Executes a set of Python unit tests, ensuring app.run.
 
   This is a private function, users should call absltest.main().
@@ -1935,6 +1965,7 @@ def _run_in_app(function, args, kwargs):
 
 
 def _is_suspicious_attribute(testCaseClass, name):
+  # type: (Type, Text) -> bool
   """Returns True if an attribute is a method named like a test method."""
   if name.startswith('Test') and len(name) > 4 and name[4].isupper():
     attr = getattr(testCaseClass, name)
@@ -1986,6 +2017,7 @@ class TestLoader(unittest.TestLoader):
 
 
 def get_default_xml_output_filename():
+  # type: () -> Optional[Text]
   if os.environ.get('XML_OUTPUT_FILE'):
     return os.environ['XML_OUTPUT_FILE']
   elif os.environ.get('RUNNING_UNDER_TEST_DAEMON'):
@@ -1997,6 +2029,7 @@ def get_default_xml_output_filename():
 
 
 def _setup_filtering(argv):
+  # type: (MutableSequence[Text]) -> None
   """Implements the bazel test filtering protocol.
 
   The following environment variable is used in this method:
@@ -2016,6 +2049,7 @@ def _setup_filtering(argv):
 
 
 def _setup_sharding(custom_loader=None):
+  # type: (Optional[unittest.TestLoader]) -> unittest.TestLoader
   """Implements the bazel sharding protocol.
 
   The following environment variables are used in this method:
@@ -2085,7 +2119,10 @@ def _setup_sharding(custom_loader=None):
   return base_loader
 
 
+# pylint: disable=line-too-long
 def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
+  # type: (MutableSequence[Text], Sequence[Any], MutableMapping[Text, Any], Type) -> unittest.TestResult
+  # pylint: enable=line-too-long
   """Executes a set of Python unit tests and returns the result."""
 
   # Set up test filtering if requested in environment.
@@ -2133,7 +2170,7 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     # report, because some tools modify the file (e.g., create a placeholder
     # with partial information, in case the test process crashes).
     xml_buffer = six.StringIO()
-    kwargs['testRunner'].set_default_xml_stream(xml_buffer)
+    kwargs['testRunner'].set_default_xml_stream(xml_buffer)  # pytype: disable=attribute-error
   elif kwargs.get('testRunner') is None:
     kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
 
@@ -2162,7 +2199,9 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
         xml_buffer.close()
 
 
-def run_tests(argv, args, kwargs):
+def run_tests(argv, args, kwargs):  # pylint: disable=line-too-long
+  # type: (MutableSequence[Text], Sequence[Any], MutableMapping[Text, Any]) -> None
+  # pylint: enable=line-too-long
   """Executes a set of Python unit tests.
 
   Most users should call absltest.main() instead of run_tests.

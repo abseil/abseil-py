@@ -1184,6 +1184,26 @@ class MultiNumericalFlagsTest(absltest.TestCase):
         expected_floats, FLAGS.get_flag_value('m_float', None)):
       self.assertAlmostEqual(expected, actual)
 
+  def test_multi_numerical_with_tuples(self):
+    """Verify multi_int/float accept tuples as default values."""
+    flags.DEFINE_multi_integer(
+        'm_int_tuple',
+        (77, 88),
+        'integer option that can occur multiple times',
+        short_name='mi_tuple')
+    self.assertListEqual(FLAGS.get_flag_value('m_int_tuple', None), [77, 88])
+
+    dict_with_float_keys = {2.2: 'hello', 3: 'happy'}
+    float_defaults = dict_with_float_keys.keys()
+    flags.DEFINE_multi_float(
+        'm_float_tuple',
+        float_defaults,
+        'float option that can occur multiple times',
+        short_name='mf_tuple')
+    for (expected, actual) in zip(float_defaults,
+                                  FLAGS.get_flag_value('m_float_tuple', None)):
+      self.assertAlmostEqual(expected, actual)
+
   def test_single_value_default(self):
     """Test multi_int and multi_float flags with a single default value."""
     int_default = 77
@@ -1307,6 +1327,92 @@ class MultiEnumFlagsTest(absltest.TestCase):
         flags.IllegalFlagValueError,
         r'flag --m_enum4=invalid: value should be one of <FOO|BAR|BAZ>',
         FLAGS, argv)
+
+
+class MultiEnumClassFlagsTest(absltest.TestCase):
+
+  def test_define_results_in_registered_flag_with_none(self):
+    fv = flags.FlagValues()
+    enum_defaults = None
+    flags.DEFINE_multi_enum_class('fruit',
+                                  enum_defaults, Fruit,
+                                  'Enum option that can occur multiple times',
+                                  flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertIsNone(fv.fruit)
+
+  def test_define_results_in_registered_flag_with_string(self):
+    fv = flags.FlagValues()
+    enum_defaults = 'apple'
+    flags.DEFINE_multi_enum_class('fruit',
+                                  enum_defaults, Fruit,
+                                  'Enum option that can occur multiple times',
+                                  flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertListEqual(fv.fruit, [Fruit.apple])
+
+  def test_define_results_in_registered_flag_with_enum(self):
+    fv = flags.FlagValues()
+    enum_defaults = Fruit.APPLE
+    flags.DEFINE_multi_enum_class('fruit',
+                                  enum_defaults, Fruit,
+                                  'Enum option that can occur multiple times',
+                                  flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertListEqual(fv.fruit, [Fruit.APPLE])
+
+  def test_define_results_in_registered_flag_with_string_list(self):
+    fv = flags.FlagValues()
+    enum_defaults = ['apple', 'APPLE']
+    flags.DEFINE_multi_enum_class('fruit',
+                                  enum_defaults, Fruit,
+                                  'Enum option that can occur multiple times',
+                                  flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertListEqual(fv.fruit, [Fruit.apple, Fruit.APPLE])
+
+  def test_define_results_in_registered_flag_with_enum_list(self):
+    fv = flags.FlagValues()
+    enum_defaults = [Fruit.APPLE, Fruit.orange]
+    flags.DEFINE_multi_enum_class('fruit',
+                                  enum_defaults, Fruit,
+                                  'Enum option that can occur multiple times',
+                                  flag_values=fv)
+    fv.mark_as_parsed()
+
+    self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.orange])
+
+  def test_from_command_line_returns_multiple(self):
+    fv = flags.FlagValues()
+    enum_defaults = [Fruit.APPLE]
+    flags.DEFINE_multi_enum_class('fruit',
+                                  enum_defaults, Fruit,
+                                  'Enum option that can occur multiple times',
+                                  flag_values=fv)
+    argv = ('./program', '--fruit=apple', '--fruit=orange')
+    fv(argv)
+    self.assertListEqual(fv.fruit, [Fruit.apple, Fruit.orange])
+
+  def test_bad_multi_enum_class_flags_from_definition(self):
+    with self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>'):
+      flags.DEFINE_multi_enum_class('fruit', ['INVALID'], Fruit, 'desc')
+
+  def test_bad_multi_enum_class_flags_from_commandline(self):
+    fv = flags.FlagValues()
+    enum_defaults = [Fruit.APPLE]
+    flags.DEFINE_multi_enum_class('fruit', enum_defaults, Fruit, 'desc',
+                                  flag_values=fv)
+    argv = ('./program', '--fruit=INVALID')
+    with self.assertRaisesRegex(
+        flags.IllegalFlagValueError,
+        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>'):
+      fv(argv)
 
 
 class UnicodeFlagsTest(absltest.TestCase):
