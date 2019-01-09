@@ -4,7 +4,6 @@ exports_files(["LICENSE"])
 
 py_library(
     name = "absltest",
-    testonly = 1,
     srcs = ["absltest.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
@@ -22,7 +21,6 @@ py_library(
 
 py_library(
     name = "flagsaver",
-    testonly = 1,
     srcs = ["flagsaver.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
@@ -34,7 +32,6 @@ py_library(
 
 py_library(
     name = "parameterized",
-    testonly = 1,
     srcs = ["parameterized.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
@@ -46,7 +43,6 @@ py_library(
 
 py_library(
     name = "xml_reporter",
-    testonly = 1,
     srcs = ["xml_reporter.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
