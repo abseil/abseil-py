@@ -68,6 +68,7 @@ py_library(
         ":_argument_parser",
         ":_exceptions",
         ":_helpers",
+        "@six_archive//:six",
     ],
 )
 

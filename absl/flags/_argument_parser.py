@@ -412,6 +412,16 @@ class ListSerializer(ArgumentSerializer):
     return self.list_sep.join([_helpers.str_or_unicode(x) for x in value])
 
 
+class EnumClassListSerializer(ListSerializer):
+
+  def serialize(self, value):
+    """See base class."""
+    if isinstance(value, list):
+      return self.list_sep.join(_helpers.str_or_unicode(x.name) for x in value)
+    else:
+      return _helpers.str_or_unicode(value.name)
+
+
 class CsvListSerializer(ArgumentSerializer):
 
   def __init__(self, list_sep):

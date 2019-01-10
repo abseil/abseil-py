@@ -77,6 +77,7 @@ py_test(
     data = [":tests/app_test_helper_pure_python"],
     srcs_version = "PY2AND3",
     deps = [
+        ":_enum_module",
         ":app",
         ":tests/app_test_helper",
         "//absl/flags",

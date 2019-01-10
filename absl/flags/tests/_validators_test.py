@@ -22,6 +22,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import warnings
+
+
 from absl.flags import _defines
 from absl.flags import _exceptions
 from absl.flags import _flagvalues
@@ -358,6 +361,8 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
         'multi_flag_one', None, 'multi flag one', flag_values=self.flag_values)
     _defines.DEFINE_multi_string(
         'multi_flag_two', None, 'multi flag two', flag_values=self.flag_values)
+    _defines.DEFINE_boolean(
+        'flag_not_none', False, 'false default', flag_values=self.flag_values)
 
   def _mark_flags_as_mutually_exclusive(self, flag_names, required):
     _validators.mark_flags_as_mutual_exclusive(
@@ -376,7 +381,8 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
     argv = ('./program',)
     expected = (
         'flags flag_one=None, flag_two=None: '
-        'Exactly one of (flag_one, flag_two) must be specified.')
+        'Exactly one of (flag_one, flag_two) must have a value other than '
+        'None.')
 
     self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
                                       expected, self.flag_values, argv)
@@ -411,7 +417,8 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
     argv = ('./program', '--int_flag_one=0', '--int_flag_two=0')
     expected = (
         'flags int_flag_one=0, int_flag_two=0: '
-        'At most one of (int_flag_one, int_flag_two) must be specified.')
+        'At most one of (int_flag_one, int_flag_two) must have a value other '
+        'than None.')
 
     self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
                                       expected, self.flag_values, argv)
@@ -422,7 +429,8 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
     argv = ('./program', '--flag_one=1', '--flag_two=2', '--flag_three=3')
     expected = (
         'flags flag_one=1, flag_two=2, flag_three=3: '
-        'At most one of (flag_one, flag_two, flag_three) must be specified.')
+        'At most one of (flag_one, flag_two, flag_three) must have a value '
+        'other than None.')
 
     self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
                                       expected, self.flag_values, argv)
@@ -433,7 +441,8 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
     argv = ('./program', '--flag_one=1', '--flag_two=2', '--flag_three=3')
     expected = (
         'flags flag_one=1, flag_two=2, flag_three=3: '
-        'Exactly one of (flag_one, flag_two, flag_three) must be specified.')
+        'Exactly one of (flag_one, flag_two, flag_three) must have a value '
+        'other than None.')
 
     self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
                                       expected, self.flag_values, argv)
@@ -452,7 +461,8 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
     argv = ('./program',)
     expected = (
         'flags multi_flag_one=None, multi_flag_two=None: '
-        'Exactly one of (multi_flag_one, multi_flag_two) must be specified.')
+        'Exactly one of (multi_flag_one, multi_flag_two) must have a value '
+        'other than None.')
 
     self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
                                       expected, self.flag_values, argv)
@@ -475,7 +485,8 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
     argv = ('./program', '--multi_flag_one=1', '--multi_flag_two=2')
     expected = (
         "flags multi_flag_one=['1'], multi_flag_two=['2']: "
-        "At most one of (multi_flag_one, multi_flag_two) must be specified.")
+        'At most one of (multi_flag_one, multi_flag_two) must have a value '
+        'other than None.')
 
     self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
                                       expected, self.flag_values, argv)
@@ -486,10 +497,20 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
     argv = ('./program', '--multi_flag_one=1', '--multi_flag_two=2')
     expected = (
         "flags multi_flag_one=['1'], multi_flag_two=['2']: "
-        "Exactly one of (multi_flag_one, multi_flag_two) must be specified.")
+        'Exactly one of (multi_flag_one, multi_flag_two) must have a value '
+        'other than None.')
 
     self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
                                       expected, self.flag_values, argv)
+
+  def test_flag_default_not_none_warning(self):
+    with warnings.catch_warnings(record=True) as w:
+      warnings.simplefilter('always')
+      self._mark_flags_as_mutually_exclusive(['flag_one', 'flag_not_none'],
+                                             False)
+      self.assertLen(w, 1)
+      self.assertIn('--flag_not_none has a non-None default value',
+                    str(w[0].message))
 
 
 class MarkFlagAsRequiredTest(absltest.TestCase):
@@ -514,7 +535,8 @@ class MarkFlagAsRequiredTest(absltest.TestCase):
         'string_flag', flag_values=self.flag_values)
     argv = ('./program',)
     expected = (
-        r'flag --string_flag=None: Flag --string_flag must be specified\.')
+        r'flag --string_flag=None: Flag --string_flag must have a value other '
+        r'than None\.')
     with self.assertRaisesRegex(_exceptions.IllegalFlagValueError, expected):
       self.flag_values(argv)
 
@@ -526,12 +548,24 @@ class MarkFlagAsRequiredTest(absltest.TestCase):
     argv = ('./program',)
     self.flag_values(argv)
     self.assertEqual('value', self.flag_values.string_flag)
-    expected = 'flag --string_flag=None: Flag --string_flag must be specified.'
+    expected = ('flag --string_flag=None: Flag --string_flag must have a value '
+                'other than None.')
     try:
       self.flag_values.string_flag = None
       raise AssertionError('Failed to detect non-set required flag.')
     except _exceptions.IllegalFlagValueError as e:
       self.assertEqual(expected, str(e))
+
+  def test_flag_default_not_none_warning(self):
+    _defines.DEFINE_string(
+        'flag_not_none', '', 'empty default', flag_values=self.flag_values)
+    with warnings.catch_warnings(record=True) as w:
+      warnings.simplefilter('always')
+      _validators.mark_flag_as_required(
+          'flag_not_none', flag_values=self.flag_values)
+      self.assertLen(w, 1)
+      self.assertIn('--flag_not_none has a non-None default value',
+                    str(w[0].message))
 
 
 class MarkFlagsAsRequiredTest(absltest.TestCase):
@@ -561,7 +595,8 @@ class MarkFlagsAsRequiredTest(absltest.TestCase):
         ['string_flag_1', 'string_flag_2'], flag_values=self.flag_values)
     argv = ('./program', '--string_flag_1=value_1')
     expected = (
-        r'flag --string_flag_2=None: Flag --string_flag_2 must be specified\.')
+        r'flag --string_flag_2=None: Flag --string_flag_2 must have a value '
+        r'other than None\.')
     with self.assertRaisesRegex(_exceptions.IllegalFlagValueError, expected):
       self.flag_values(argv)
 
@@ -582,13 +617,13 @@ class MarkFlagsAsRequiredTest(absltest.TestCase):
     self.flag_values(argv)
     self.assertEqual('value_1', self.flag_values.string_flag_1)
     expected = (
-        'flag --string_flag_1=None: Flag --string_flag_1 must be specified.')
+        'flag --string_flag_1=None: Flag --string_flag_1 must have a value '
+        'other than None.')
     try:
       self.flag_values.string_flag_1 = None
       raise AssertionError('Failed to detect non-set required flag.')
     except _exceptions.IllegalFlagValueError as e:
       self.assertEqual(expected, str(e))
-
 
 if __name__ == '__main__':
   absltest.main()

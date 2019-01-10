@@ -29,6 +29,7 @@ import unittest
 
 from absl import app
 from absl import flags
+from absl._enum_module import enum
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import flagsaver
@@ -326,16 +327,42 @@ class FlagValuesExternalizationTest(absltest.TestCase):
     # flags will go through the round trip process.
     flags.DEFINE_string('testflag', 'testval', 'help', flag_values=FLAGS)
 
+    flags.DEFINE_multi_enum('test_multi_enum_flag',
+                            ['x', 'y'], ['x', 'y', 'z'],
+                            'Multi enum help.',
+                            flag_values=FLAGS)
+
+    class Fruit(enum.Enum):
+      APPLE = 1
+      ORANGE = 2
+      TOMATO = 3
+    flags.DEFINE_multi_enum_class('test_multi_enum_class_flag',
+                                  ['APPLE', 'TOMATO'], Fruit,
+                                  'Fruit help.',
+                                  flag_values=FLAGS)
+
     new_flag_values = flags.FlagValues()
     new_flag_values.append_flag_values(FLAGS)
 
     FLAGS.testflag = 'roundtrip_me'
+    FLAGS.test_multi_enum_flag = ['y', 'z']
+    FLAGS.test_multi_enum_class_flag = [Fruit.ORANGE, Fruit.APPLE]
     argv = ['binary_name'] + FLAGS.flags_into_string().splitlines()
 
     self.assertNotEqual(new_flag_values['testflag'], FLAGS.testflag)
+    self.assertNotEqual(new_flag_values['test_multi_enum_flag'],
+                        FLAGS.test_multi_enum_flag)
+    self.assertNotEqual(new_flag_values['test_multi_enum_class_flag'],
+                        FLAGS.test_multi_enum_class_flag)
     new_flag_values(argv)
     self.assertEqual(new_flag_values.testflag, FLAGS.testflag)
+    self.assertEqual(new_flag_values.test_multi_enum_flag,
+                     FLAGS.test_multi_enum_flag)
+    self.assertEqual(new_flag_values.test_multi_enum_class_flag,
+                     FLAGS.test_multi_enum_class_flag)
     del FLAGS.testflag
+    del FLAGS.test_multi_enum_flag
+    del FLAGS.test_multi_enum_class_flag
 
 
 if __name__ == '__main__':
