@@ -44,6 +44,7 @@ I1231 23:59:59.000000 12345 logging_functional_test_helper.py:62] This line is V
 _PY_VLOG2_LOG_MESSAGE = """\
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:64] This line is VLOG level 2
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:64] This line is log level 2
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:64] VLOG level 1, but only if VLOG level 2 is active
 """
 
 # VLOG1 is the same as DEBUG logs.
