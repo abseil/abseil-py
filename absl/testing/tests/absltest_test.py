@@ -1221,6 +1221,8 @@ test case
     self.assertSameStructure(set([1, 2]), frozenset([1, 2]))
     self.assertSameStructure([], [])
     self.assertSameStructure(['a'], ['a'])
+    self.assertSameStructure([], ())
+    self.assertSameStructure(['a'], ('a',))
     self.assertSameStructure({}, {})
     self.assertSameStructure({'one': 1}, {'one': 1})
     self.assertSameStructure(collections.defaultdict(None, {'one': 1}),
@@ -1308,6 +1310,25 @@ test case
     self.assertRaisesWithLiteralMatch(
         AssertionError, "a['two'] is 2 but b['two'] is 3",
         self.assertSameStructure, {'one': 1, 'two': 2}, {'one': 1, 'two': 3})
+
+    # String and byte types should not be considered equivalent to other
+    # sequences
+    self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'str'>",
+        self.assertSameStructure, [], '')
+    self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'str'> but b is a <(type|class) 'tuple'>",
+        self.assertSameStructure, '', ())
+    self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'str'>",
+        self.assertSameStructure, ['a', 'b', 'c'], 'abc')
+    self.assertRaisesRegex(
+        AssertionError,
+        r"a is a <(type|class) 'str'> but b is a <(type|class) 'tuple'>",
+        self.assertSameStructure, 'abc', ('a', 'b', 'c'))
 
     # Deep key generation
     self.assertRaisesWithLiteralMatch(
