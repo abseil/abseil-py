@@ -488,6 +488,7 @@ class TestCase(unittest3_backport.TestCase):
   tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup
 
   maxDiff = 80 * 20
+  longMessage = True
 
   def __init__(self, *args, **kwargs):
     super(TestCase, self).__init__(*args, **kwargs)
