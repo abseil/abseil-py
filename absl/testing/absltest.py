@@ -488,6 +488,7 @@ class TestCase(unittest3_backport.TestCase):
   tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup
 
   maxDiff = 80 * 20
+  longMessage = True
 
   def __init__(self, *args, **kwargs):
     super(TestCase, self).__init__(*args, **kwargs)
@@ -1536,8 +1537,9 @@ class TestCase(unittest3_backport.TestCase):
     the location within the structures where the first difference is found.
     This may be helpful when comparing large structures.
 
-    Mixed Set types are supported. Mixed Mapping types are supported, but the
-    order of the keys will not be considered in the comparison.
+    Mixed Sequence and Set types are supported. Mixed Mapping types are
+    supported, but the order of the keys will not be considered in the
+    comparison.
 
     Args:
       a: The first structure to compare.
@@ -1664,6 +1666,13 @@ def _are_both_of_integer_type(a, b):
   return isinstance(a, six.integer_types) and isinstance(b, six.integer_types)
 
 
+def _are_both_of_sequence_type(a, b):
+  # type: (object, object) -> bool
+  return isinstance(a, collections.Sequence) and isinstance(
+      b, collections.Sequence) and not isinstance(
+          a, _TEXT_OR_BINARY_TYPES) and not isinstance(b, _TEXT_OR_BINARY_TYPES)
+
+
 def _are_both_of_set_type(a, b):
   # type: (object, object) -> bool
   return isinstance(a, collections.Set) and isinstance(b, collections.Set)
@@ -1678,8 +1687,8 @@ def _are_both_of_mapping_type(a, b):
 def _walk_structure_for_problems(a, b, aname, bname, problem_list):
   """The recursive comparison behind assertSameStructure."""
   if type(a) != type(b) and not (  # pylint: disable=unidiomatic-typecheck
-      _are_both_of_integer_type(a, b) or _are_both_of_set_type(a, b) or
-      _are_both_of_mapping_type(a, b)):
+      _are_both_of_integer_type(a, b) or _are_both_of_sequence_type(a, b) or
+      _are_both_of_set_type(a, b) or _are_both_of_mapping_type(a, b)):
     # We do not distinguish between int and long types as 99.99% of Python 2
     # code should never care.  They collapse into a single type in Python 3.
     problem_list.append('%s is a %r but %s is a %r' %

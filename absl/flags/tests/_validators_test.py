@@ -513,6 +513,66 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
                     str(w[0].message))
 
 
+class MarkBoolFlagsAsMutualExclusiveTest(absltest.TestCase):
+
+  def setUp(self):
+    super(MarkBoolFlagsAsMutualExclusiveTest, self).setUp()
+    self.flag_values = _flagvalues.FlagValues()
+
+    _defines.DEFINE_boolean(
+        'false_1', False, 'default false 1', flag_values=self.flag_values)
+    _defines.DEFINE_boolean(
+        'false_2', False, 'default false 2', flag_values=self.flag_values)
+    _defines.DEFINE_boolean(
+        'true_1', True, 'default true 1', flag_values=self.flag_values)
+    _defines.DEFINE_integer(
+        'non_bool', None, 'non bool', flag_values=self.flag_values)
+
+  def _mark_bool_flags_as_mutually_exclusive(self, flag_names, required):
+    _validators.mark_bool_flags_as_mutual_exclusive(
+        flag_names, required=required, flag_values=self.flag_values)
+
+  def test_no_flags_present(self):
+    self._mark_bool_flags_as_mutually_exclusive(['false_1', 'false_2'], False)
+    self.flag_values(('./program',))
+    self.assertEqual(False, self.flag_values.false_1)
+    self.assertEqual(False, self.flag_values.false_2)
+
+  def test_no_flags_present_required(self):
+    self._mark_bool_flags_as_mutually_exclusive(['false_1', 'false_2'], True)
+    argv = ('./program',)
+    expected = (
+        'flags false_1=False, false_2=False: '
+        'Exactly one of (false_1, false_2) must be True.')
+
+    self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
+                                      expected, self.flag_values, argv)
+
+  def test_no_flags_present_with_default_true_required(self):
+    self._mark_bool_flags_as_mutually_exclusive(['false_1', 'true_1'], True)
+    self.flag_values(('./program',))
+    self.assertEqual(False, self.flag_values.false_1)
+    self.assertEqual(True, self.flag_values.true_1)
+
+  def test_two_flags_true(self):
+    self._mark_bool_flags_as_mutually_exclusive(['false_1', 'false_2'], False)
+    argv = ('./program', '--false_1', '--false_2')
+    expected = (
+        'flags false_1=True, false_2=True: At most one of (false_1, false_2) '
+        'must be True.')
+
+    self.assertRaisesWithLiteralMatch(_exceptions.IllegalFlagValueError,
+                                      expected, self.flag_values, argv)
+
+  def test_non_bool_flag(self):
+    expected = ('Flag --non_bool is not Boolean, which is required for flags '
+                'used in mark_bool_flags_as_mutual_exclusive.')
+    with self.assertRaisesWithLiteralMatch(_exceptions.ValidationError,
+                                           expected):
+      self._mark_bool_flags_as_mutually_exclusive(['false_1', 'non_bool'],
+                                                  False)
+
+
 class MarkFlagAsRequiredTest(absltest.TestCase):
 
   def setUp(self):
