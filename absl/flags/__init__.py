@@ -84,6 +84,7 @@ multi_flags_validator = _validators.multi_flags_validator
 mark_flag_as_required = _validators.mark_flag_as_required
 mark_flags_as_required = _validators.mark_flags_as_required
 mark_flags_as_mutual_exclusive = _validators.mark_flags_as_mutual_exclusive
+mark_bool_flags_as_mutual_exclusive = _validators.mark_bool_flags_as_mutual_exclusive
 
 
 # Key flag related functions.
