@@ -36,7 +36,7 @@ config_setting(
 py_library(
     name = "_enum_module",
     srcs = ["_enum_module.py"],
-    visibility = ["//absl:__subpackages__"],
+    visibility = [":__subpackages__"],
     deps = [
         "@six_archive//:six",
     ] + select({
