@@ -27,16 +27,17 @@ py_library(
 # actually) to be running Python 3 without this config setting being matched,
 # so be careful about assuming or requiring it to match for a target to
 # correctly work under Python 3.
+# See: https://github.com/bazelbuild/bazel/issues/4815
 config_setting(
     name = "py3_mode",
-    values = {"force_python": "PY3"},
+    flag_values = {"@bazel_tools//tools/python:python_version": "PY3"},
     visibility = [":__subpackages__"],
 )
 
 py_library(
     name = "_enum_module",
     srcs = ["_enum_module.py"],
-    visibility = ["//absl:__subpackages__"],
+    visibility = [":__subpackages__"],
     deps = [
         "@six_archive//:six",
     ] + select({

@@ -76,6 +76,7 @@ setuptools.setup(
         '*.tests', '*.tests.*', 'tests.*', 'tests',
     ]),
     install_requires=INSTALL_REQUIRES,
+    include_package_data=True,
     license='Apache 2.0',
     classifiers=[
         'Programming Language :: Python',
