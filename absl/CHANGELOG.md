@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.7.1 (2019-03-12)
+
 ### Added
 
 *   (flags) `flags.mark_bool_flags_as_mutual_exclusive`: convenience function to
