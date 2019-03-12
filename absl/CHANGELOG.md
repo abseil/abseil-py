@@ -8,8 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
-*   `flags.mark_bool_flags_as_mutual_exclusive`: convenience function to check
-    that only one, or at most one, flag among a set of boolean flags are True.
+*   (flags) `flags.mark_bool_flags_as_mutual_exclusive`: convenience function to
+    check that only one, or at most one, flag among a set of boolean flags are
+    True.
+
+### Changed
+
+*   (bazel) Bazel 0.23+ or 0.22+ is now required for building/testing.
+    Specifically, a Bazel version that supports
+    `@bazel_tools//tools/python:python_version` for selecting the Python
+    version.
+
+### Fixed
+
+*   #94: LICENSE files are now included in sdist.
+*   #93: Change log added.
 
 ## 0.7.0 (2019-01-11)
 
