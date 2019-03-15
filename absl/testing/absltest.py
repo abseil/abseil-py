@@ -215,6 +215,8 @@ flags.DEFINE_string('test_randomize_ordering_seed', None,
 flags.DEFINE_string('xml_output_file', '',
                     'File to store XML test results')
 
+flags.declare_key_flag('pdb_post_mortem')
+
 
 # We might need to monkey-patch TestResult so that it stops considering an
 # unexpected pass as a as a "successful result".  For details, see
@@ -2182,6 +2184,18 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     kwargs['testRunner'].set_default_xml_stream(xml_buffer)  # pytype: disable=attribute-error
   elif kwargs.get('testRunner') is None:
     kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
+
+  if FLAGS.pdb_post_mortem:
+    runner = kwargs['testRunner']
+    # testRunner can be a class or an instance, which must be tested for
+    # differently.
+    # Overriding testRunner isn't uncommon, so only enable the debugging
+    # integration if the runner claims it does; we don't want to accidentally
+    # clobber something on the runner.
+    if ((isinstance(runner, type) and
+         issubclass(runner, _pretty_print_reporter.TextTestRunner)) or
+        isinstance(runner, _pretty_print_reporter.TextTestRunner)):
+      runner.run_for_debugging = True
 
   # Make sure tmpdir exists.
   if not os.path.isdir(FLAGS.test_tmpdir):

@@ -72,5 +72,24 @@ class TextTestRunner(unittest.TextTestRunner):
 
   _TEST_RESULT_CLASS = TextTestResult
 
+  # Set this to true at the class or instance level to run tests using a
+  # debug-friendly method (e.g, one that doesn't catch exceptions and interacts
+  # better with debuggers).
+  # Usually this is set using --pdb_post_mortem.
+  run_for_debugging = False
+
+  def run(self, test):
+    # type: (TestCase) -> TestResult
+    if self.run_for_debugging:
+      return self._run_debug(test)
+    else:
+      return super(TextTestRunner, self).run(test)
+
+  def _run_debug(self, test):
+    # type: (TestCase) -> TestResult
+    test.debug()
+    # Return an empty result to indicate success.
+    return self._makeResult()
+
   def _makeResult(self):
     return TextTestResult(self.stream, self.descriptions, self.verbosity)
