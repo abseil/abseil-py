@@ -215,8 +215,6 @@ flags.DEFINE_string('test_randomize_ordering_seed', None,
 flags.DEFINE_string('xml_output_file', '',
                     'File to store XML test results')
 
-flags.declare_key_flag('pdb_post_mortem')
-
 
 # We might need to monkey-patch TestResult so that it stops considering an
 # unexpected pass as a as a "successful result".  For details, see
