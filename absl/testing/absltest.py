@@ -1571,8 +1571,8 @@ class TestCase(unittest3_backport.TestCase):
     using assertSameStructure.
 
     Args:
-      first: A string contining JSON to decode and compare to second.
-      second: A string contining JSON to decode and compare to first.
+      first: A string containing JSON to decode and compare to second.
+      second: A string containing JSON to decode and compare to first.
       msg: Additional text to include in the failure message.
     """
     try:
