@@ -223,8 +223,6 @@ class _StderrthresholdFlag(flags.Flag):
     self._value = v
 
 
-
-
 flags.DEFINE_boolean('logtostderr',
                      False,
                      'Should only log to stderr?', allow_override_cpp=True)

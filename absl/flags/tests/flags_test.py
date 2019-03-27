@@ -776,7 +776,6 @@ class FlagsUnitTest(absltest.TestCase):
     except flags.DuplicateFlagError:
       raise AssertionError('allow_override did not permit a flag duplication')
 
-
     # Make sure that re-importing a module does not cause a DuplicateFlagError
     # to be raised.
     try:

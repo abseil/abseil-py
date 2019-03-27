@@ -64,7 +64,6 @@ import six
 from six.moves import urllib
 from six.moves import xrange  # pylint: disable=redefined-builtin
 
-
 # Make typing an optional import to avoid it being a required dependency
 # in Python 2. Type checkers will still understand the imports.
 try:
@@ -1958,7 +1957,6 @@ def _run_in_app(function, args, kwargs):
     argv = FLAGS(sys.argv)
     for saved_flag in six.itervalues(saved_flags):
       saved_flag.restore_flag()
-
 
     function(argv, args, kwargs)
   else:

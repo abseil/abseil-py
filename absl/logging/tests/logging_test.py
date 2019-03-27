@@ -42,7 +42,6 @@ import mock
 import six
 from six.moves import range  # pylint: disable=redefined-builtin
 
-
 FLAGS = flags.FLAGS
 
 _StreamIO = io.StringIO if six.PY3 else io.BytesIO  # pylint: disable=invalid-name
@@ -303,7 +302,6 @@ class PrefixFormatterTest(absltest.TestCase):
   def test_get_thread_id(self, mock_get_ident):
     mock_get_ident.return_value = 12345
     self.assertEqual(12345, logging._get_thread_id())
-
 
 
 class ABSLHandlerTest(absltest.TestCase):

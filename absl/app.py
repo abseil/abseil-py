@@ -67,7 +67,6 @@ flags.DEFINE_boolean('only_check_args', False,
                      allow_hide_cpp=True)
 
 
-
 # If main() exits via an abnormal exception, call into these
 # handlers before exiting.
 EXCEPTION_HANDLERS = []
