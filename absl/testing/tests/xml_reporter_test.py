@@ -838,6 +838,10 @@ class XMLTest(absltest.TestCase):
 
 class XmlReporterFixtureTest(absltest.TestCase):
 
+  def _get_helper(self):
+    binary_name = 'absl/testing/tests/xml_reporter_helper_test'
+    return _bazelize_command.get_executable_path(binary_name)
+
   def _run_test_and_get_xml(self, flag):
     """Runs xml_reporter_helper_test and returns an Element instance.
 
@@ -856,9 +860,8 @@ class XmlReporterFixtureTest(absltest.TestCase):
     os.close(xml_fhandle)
 
     try:
-      binary_name = 'absl/testing/tests/xml_reporter_helper_test'
-      args = [_bazelize_command.get_executable_path(binary_name),
-              flag, '--xml_output_file=%s' % xml_fname]
+      binary = self._get_helper()
+      args = [binary, flag, '--xml_output_file=%s' % xml_fname]
       ret = subprocess.call(args)
       self.assertNotEqual(ret, 0)
 
@@ -873,9 +876,8 @@ class XmlReporterFixtureTest(absltest.TestCase):
     os.close(xml_fhandle)
 
     try:
-      binary_name = 'absl/testing/tests/xml_reporter_helper_test'
-      args = [_bazelize_command.get_executable_path(binary_name),
-              flag, '--xml_output_file=%s' % xml_fname]
+      binary = self._get_helper()
+      args = [binary, flag, '--xml_output_file=%s' % xml_fname]
       ret = subprocess.call(args)
       self.assertNotEqual(ret, 0)
 

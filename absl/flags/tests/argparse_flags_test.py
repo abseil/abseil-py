@@ -419,11 +419,11 @@ class ArgparseWithAppRunTest(parameterized.TestCase):
     env = os.environ.copy()
     env['MAIN_FUNC'] = main_func_name
     env['FLAGS_PARSER_FUNC'] = flags_parser_func_name
-    helper = 'absl/flags/tests/argparse_flags_test_helper'
+    helper = _bazelize_command.get_executable_path(
+        'absl/flags/tests/argparse_flags_test_helper', add_version_suffix=False)
     try:
       stdout = subprocess.check_output(
-          [_bazelize_command.get_executable_path(helper)] + args, env=env,
-          universal_newlines=True)
+          [helper] + args, env=env, universal_newlines=True)
     except subprocess.CalledProcessError as e:
       error_info = ('ERROR: argparse_helper failed\n'
                     'Command: {}\n'

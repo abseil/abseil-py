@@ -153,6 +153,7 @@ class FunctionalTests(absltest.TestCase):
     env['PYTHONIOENCODING'] = 'utf8'
     if env_overrides:
       env.update(env_overrides)
+
     helper = 'absl/tests/app_test_helper_{}'.format(self.helper_type)
     process = subprocess.Popen(
         [_bazelize_command.get_executable_path(helper)] + list(arguments),
@@ -207,9 +208,14 @@ class FunctionalTests(absltest.TestCase):
         expected_stdout_substring='str_flag_with_unicode_args')
 
     self.assertIn(u'smile:\U0001F604', stdout)
-    # Default values get repr'd, which causes unicode strings to incorrectly
-    # render with their escaped values.
-    self.assertIn(repr(u'thumb:\U0001F44D'), stdout)
+
+    if six.PY2:
+      # Default values get repr'd, which causes unicode strings to incorrectly
+      # render with their escaped values.
+      self.assertIn(repr(u'thumb:\U0001F44D'), stdout)
+    else:
+      # In Python 3, the repr() of a unicode string isn't escaped.
+      self.assertIn(u'thumb:\U0001F44D', stdout)
 
   def test_helpshort(self):
     _, _, stderr = self.run_helper(

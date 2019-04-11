@@ -2,6 +2,8 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+load("//absl:build_defs.bzl", "py2py3_test_binary")
+
 py_library(
     name = "logging",
     srcs = ["__init__.py"],
@@ -72,7 +74,7 @@ py_test(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/logging_functional_test_helper",
     testonly = 1,
     srcs = ["tests/logging_functional_test_helper.py"],

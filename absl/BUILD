@@ -2,6 +2,8 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+load(":build_defs.bzl", "py2py3_test_binary")
+
 py_library(
     name = "app",
     srcs = [
@@ -34,6 +36,12 @@ config_setting(
     visibility = [":__subpackages__"],
 )
 
+config_setting(
+    name = "py2_mode",
+    flag_values = {"@bazel_tools//tools/python:python_version": "PY2"},
+    visibility = [":__subpackages__"],
+)
+
 py_library(
     name = "_enum_module",
     srcs = ["_enum_module.py"],
@@ -60,7 +68,7 @@ py_library(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/app_test_helper_pure_python",
     testonly = 1,
     srcs = ["tests/app_test_helper.py"],

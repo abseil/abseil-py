@@ -41,8 +41,11 @@ FLAGS = flags.FLAGS
 
 class HelperMixin(object):
 
-  def run_helper(self, test_id, args, env_overrides, expect_success):
+  def _get_helper_exec_path(self):
     helper = 'absl/testing/tests/absltest_test_helper'
+    return _bazelize_command.get_executable_path(helper)
+
+  def run_helper(self, test_id, args, env_overrides, expect_success):
     env = os.environ.copy()
     for key, value in six.iteritems(env_overrides):
       if value is None:
@@ -50,7 +53,8 @@ class HelperMixin(object):
           del env[key]
       else:
         env[key] = value
-    command = [_bazelize_command.get_executable_path(helper),
+
+    command = [self._get_helper_exec_path(),
                '--test_id={}'.format(test_id)] + args
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
@@ -162,6 +166,7 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
 
   def test_xml_output_file_from_test_xmloutputdir_env(self):
     xml_output_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    expected_xml_file = 'absltest_test_helper.xml'
     self.run_helper(
         6,
         [],
@@ -169,7 +174,7 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
          'RUNNING_UNDER_TEST_DAEMON': None,
          'TEST_XMLOUTPUTDIR': xml_output_dir,
          'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': os.path.join(
-             xml_output_dir, 'absltest_test_helper.xml'),
+             xml_output_dir, expected_xml_file),
         },
         expect_success=True)
 
