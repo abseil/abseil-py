@@ -35,6 +35,7 @@ py_test(
     name = "tests/unittest3_backport_test",
     size = "small",
     srcs = ["tests/unittest3_backport_test.py"],
+    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         "//absl/testing:absltest",
