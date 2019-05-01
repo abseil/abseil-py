@@ -1120,13 +1120,21 @@ test case
         except AttributeError:
           return NotImplemented
 
+    class B(A):
+      """Like A, but not hashable."""
+      __hash__ = None
+
     if PY_VERSION_2:
       self.assertTotallyOrdered(
           [None],  # None should come before everything else.
-          [1],     # Integers sort earlier.
+          [1],  # Integers sort earlier.
           [A(1, 'a')],
           [A(2, 'b')],  # 2 is after 1.
-          [A(3, 'c'), A(3, 'd')],  # The second argument is irrelevant.
+          [
+              A(3, 'c'),
+              B(3, 'd'),
+              B(3, 'e')  # The second argument is irrelevant.
+          ],
           [A(4, 'z')],
           ['foo'])  # Strings sort last.
     else:
@@ -1134,7 +1142,11 @@ test case
       self.assertTotallyOrdered(
           [A(1, 'a')],
           [A(2, 'b')],  # 2 is after 1.
-          [A(3, 'c'), A(3, 'd')],  # The second argument is irrelevant.
+          [
+              A(3, 'c'),
+              B(3, 'd'),
+              B(3, 'e')  # The second argument is irrelevant.
+          ],
           [A(4, 'z')])
 
     # Invalid.

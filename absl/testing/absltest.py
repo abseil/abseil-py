@@ -1392,10 +1392,17 @@ class TestCase(unittest3_backport.TestCase):
       self.assertFalse(a != b,
                        self._formatMessage(msg, '%r unexpectedly unequals %r' %
                                            (a, b)))
-      self.assertEqual(hash(a), hash(b), self._formatMessage(
-          msg,
-          'hash %d of %r unexpectedly not equal to hash %d of %r' %
-          (hash(a), a, hash(b), b)))
+
+      # Objects that compare equal must hash to the same value, but this only
+      # applies if both objects are hashable.
+      if (isinstance(a, collections.Hashable) and
+          isinstance(b, collections.Hashable)):
+        self.assertEqual(
+            hash(a), hash(b),
+            self._formatMessage(
+                msg, 'hash %d of %r unexpectedly not equal to hash %d of %r' %
+                (hash(a), a, hash(b), b)))
+
       self.assertFalse(a < b,
                        self._formatMessage(msg,
                                            '%r unexpectedly less than %r' %
