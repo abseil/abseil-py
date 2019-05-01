@@ -91,7 +91,6 @@ py_test(
     size = "small",
     srcs = ["tests/absltest_filtering_test.py"],
     data = [":tests/absltest_filtering_test_helper"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":_bazelize_command",
@@ -115,7 +114,6 @@ py_test(
     size = "medium",
     srcs = ["tests/absltest_randomization_test.py"],
     data = [":tests/absltest_randomization_testcase"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":_bazelize_command",
@@ -141,7 +139,6 @@ py_test(
     size = "small",
     srcs = ["tests/absltest_sharding_test.py"],
     data = [":tests/absltest_sharding_test_helper"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":_bazelize_command",
@@ -164,7 +161,6 @@ py_test(
     size = "small",
     srcs = ["tests/absltest_test.py"],
     data = [":tests/absltest_test_helper"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":_bazelize_command",
@@ -189,7 +185,6 @@ py2py3_test_binary(
 py_test(
     name = "tests/flagsaver_test",
     srcs = ["tests/flagsaver_test.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":absltest",
@@ -201,7 +196,6 @@ py_test(
 py_test(
     name = "tests/parameterized_test",
     srcs = ["tests/parameterized_test.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":absltest",
@@ -214,7 +208,6 @@ py_test(
     name = "tests/xml_reporter_test",
     srcs = ["tests/xml_reporter_test.py"],
     data = [":tests/xml_reporter_helper_test"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":_bazelize_command",

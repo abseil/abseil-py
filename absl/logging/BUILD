@@ -27,7 +27,6 @@ py_test(
     name = "tests/converter_test",
     size = "small",
     srcs = ["tests/converter_test.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":converter",
@@ -40,7 +39,6 @@ py_test(
     name = "tests/logging_test",
     size = "small",
     srcs = ["tests/logging_test.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":logging",
@@ -57,7 +55,6 @@ py_test(
     name = "tests/log_before_import_test",
     srcs = ["tests/log_before_import_test.py"],
     main = "tests/log_before_import_test.py",
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":logging",
@@ -69,7 +66,6 @@ py_test(
 py_test(
     name = "tests/verbosity_flag_test",
     srcs = ["tests/verbosity_flag_test.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":logging",
@@ -97,7 +93,6 @@ py_test(
     size = "large",
     srcs = ["tests/logging_functional_test.py"],
     data = [":tests/logging_functional_test_helper"],
-    python_version = "PY2",
     shard_count = 50,
     srcs_version = "PY2AND3",
     deps = [

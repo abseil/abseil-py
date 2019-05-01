@@ -45,7 +45,7 @@ config_setting(
 py_library(
     name = "_enum_module",
     srcs = ["_enum_module.py"],
-    visibility = ["//absl:__subpackages__"],
+    visibility = [":__subpackages__"],
     deps = [
         "@six_archive//:six",
     ] + select({
@@ -84,7 +84,6 @@ py_test(
     name = "tests/app_test",
     srcs = ["tests/app_test.py"],
     data = [":tests/app_test_helper_pure_python"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":_enum_module",
@@ -102,7 +101,6 @@ py_test(
 py_test(
     name = "tests/command_name_test",
     srcs = ["tests/command_name_test.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":command_name",
