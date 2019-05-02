@@ -97,7 +97,6 @@ py_test(
         ":absltest",
         ":parameterized",
         "//absl/logging",
-        "@six_archive//:six",
     ],
 )
 
@@ -120,7 +119,6 @@ py_test(
         ":absltest",
         ":parameterized",
         "//absl/flags",
-        "@six_archive//:six",
     ],
 )
 
@@ -144,7 +142,6 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         "//absl/flags",
-        "@six_archive//:six",
     ],
 )
 
