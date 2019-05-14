@@ -812,8 +812,13 @@ class TestCase(unittest3_backport.TestCase):
     err_list = []
     for idx, (exp_elem, act_elem) in enumerate(zip(expected_seq, actual_seq)):
       try:
+        # assertAlmostEqual should be called with at most one of `places` and
+        # `delta`. However, it's okay for assertSequenceAlmostEqual to pass
+        # both because we want the latter to fail if the former does.
+        # pytype: disable=wrong-keyword-args
         self.assertAlmostEqual(exp_elem, act_elem, places=places, msg=msg,
                                delta=delta)
+        # pytype: enable=wrong-keyword-args
       except self.failureException as err:
         err_list.append('At index {}: {}'.format(idx, err))
 
