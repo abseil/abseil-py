@@ -26,7 +26,6 @@ import string
 import subprocess
 import sys
 import tempfile
-import unittest
 
 from absl import flags
 from absl.testing import _bazelize_command
@@ -211,8 +210,12 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
     self.assertRaises(AssertionError, self.assertNotIn, 1, [1, 2, 3])
     self.assertRaises(AssertionError, self.assertNotIn, 'cow', animals)
 
-  @unittest.expectedFailure
+  @absltest.expectedFailure
   def test_expected_failure(self):
+    self.assertEqual(1, 2)  # the expected failure
+
+  @absltest.expectedFailureIf(True, 'always true')
+  def test_expected_failure_if(self):
     self.assertEqual(1, 2)  # the expected failure
 
   def test_expected_failure_success(self):

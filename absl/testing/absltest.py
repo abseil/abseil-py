@@ -95,10 +95,42 @@ else:
   except ImportError:
     mock = None
 
+# Re-export a bunch of unittest functions we support so that people don't
+# have to import unittest to get them
+# pylint: disable=invalid-name
+skip = unittest.skip
+skipIf = unittest.skipIf
+skipUnless = unittest.skipUnless
+SkipTest = unittest.SkipTest
+expectedFailure = unittest.expectedFailure
+# pylint: enable=invalid-name
+
+# End unittest re-exports
 
 FLAGS = flags.FLAGS
 
 _TEXT_OR_BINARY_TYPES = (six.text_type, six.binary_type)
+
+
+def expectedFailureIf(condition, reason):  # pylint: disable=invalid-name
+  """Expects the test to fail if the run condition is True.
+
+  Example usage:
+    @expectedFailureIf(sys.version.major == 2, "Not yet working in py2")
+    def test_foo(self):
+      ...
+
+  Args:
+    condition: bool, whether to expect failure or not.
+    reason: Text, the reason to expect failure.
+  Returns:
+    Decorator function
+  """
+  del reason  # Unused
+  if condition:
+    return unittest.expectedFailure
+  else:
+    return lambda f: f
 
 
 class TempFileCleanup(enum.Enum):
