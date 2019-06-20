@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Added
+
+*   (testing) `absltest.expectedFailureIf`: a variant of
+    `unittest.expectedFailure` that allows a condition to be given.
 
 ## 0.7.1 (2019-03-12)
 
