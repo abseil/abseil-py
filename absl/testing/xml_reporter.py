@@ -18,8 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import collections
-import datetime
 import re
 import sys
 import threading
@@ -29,6 +27,7 @@ import unittest
 from xml.sax import saxutils
 from absl.testing import _pretty_print_reporter
 from absl.third_party import unittest3_backport
+
 import six
 
 
@@ -81,35 +80,6 @@ def _escape_cdata(s):
   return s.replace(']]>', ']] >')
 
 
-def _iso8601_timestamp(timestamp):
-  """Produces an ISO8601 datetime.
-
-  Args:
-    timestamp: an Epoch based timestamp in seconds.
-
-  Returns:
-    A iso8601 format timestamp if the input is a valid timestamp, None otherwise
-  """
-  if timestamp is None or timestamp < 0:
-    return None
-  return datetime.datetime.utcfromtimestamp(timestamp).isoformat()
-
-
-def _print_xml_element_header(element, attributes, stream, indentation=''):
-  """Prints an XML header of an arbitrary element.
-
-  Args:
-    element: element name (testsuites, testsuite, testcase)
-    attributes: ordered dictionary with attributes already escaped
-    stream: output stream to write test report XML to
-    indentation: indentation added to the element header
-  """
-  stream.write('%s<%s' % (indentation, element))
-  for name in attributes:
-    if attributes[name] is not None:
-      stream.write(' %s="%s"' % (name, attributes[name]))
-  stream.write('>\n')
-
 # Copy time.time which ensures the real time is used internally.
 # This prevents bad interactions with tests that stub out time.
 _time_copy = time.time
@@ -129,7 +99,6 @@ class _TestCaseResult(object):
     name: The name of the individual test method.
     full_class_name: The full name of the test class.
     run_time: The duration (in seconds) it took to run the test.
-    start_time: Epoch relative timestamp of when test started (in seconds)
     errors: A list of error 4-tuples. Error tuple entries are
         1) a string identifier of either "failure" or "error"
         2) an exception_type
@@ -143,7 +112,6 @@ class _TestCaseResult(object):
 
   def __init__(self, test):
     self.run_time = -1
-    self.start_time = -1
     self.skip_reason = None
     self.errors = []
     self.test = test
@@ -182,9 +150,6 @@ class _TestCaseResult(object):
   def set_run_time(self, time_in_secs):
     self.run_time = time_in_secs
 
-  def set_start_time(self, time_in_secs):
-    self.start_time = time_in_secs
-
   def print_xml_summary(self, stream):
     """Prints an XML Summary of a TestCase.
 
@@ -204,15 +169,10 @@ class _TestCaseResult(object):
       status = 'notrun'
       result = 'suppressed'
 
-    test_case_attributes = collections.OrderedDict([
-        ('name', '%s' % self.name),
-        ('status', '%s' % status),
-        ('result', '%s' % result),
-        ('time', '%.1f' % self.run_time),
-        ('classname', self.full_class_name),
-        ('timestamp', _iso8601_timestamp(self.start_time)),
-    ])
-    _print_xml_element_header('testcase', test_case_attributes, stream, '  ')
+    stream.write(
+        '  <testcase name="%s" status="%s" result="%s" time="%.1f" '
+        'classname="%s">\n' % (
+            self.name, status, result, self.run_time, self.full_class_name))
     self._print_testcase_details(stream)
     stream.write('  </testcase>\n')
 
@@ -233,8 +193,6 @@ class _TestSuiteResult(object):
     self.suites = {}
     self.failure_counts = {}
     self.error_counts = {}
-    self.overall_start_time = -1
-    self.overall_end_time = -1
 
   def add_test_case_result(self, test_case_result):
     suite_name = type(test_case_result.test).__name__
@@ -263,35 +221,24 @@ class _TestSuiteResult(object):
         break
 
   def print_xml_summary(self, stream):
-    overall_test_count = sum(len(x) for x in self.suites.values())
+    overall_test_count = sum([len(x) for x in self.suites.values()])
     overall_failures = sum(self.failure_counts.values())
     overall_errors = sum(self.error_counts.values())
-    overall_attributes = collections.OrderedDict([
-        ('name', ''),
-        ('tests', '%d' % overall_test_count),
-        ('failures', '%d' % overall_failures),
-        ('errors', '%d' % overall_errors),
-        ('time', '%.1f' % (self.overall_end_time - self.overall_start_time)),
-        ('timestamp', _iso8601_timestamp(self.overall_start_time)),
-    ])
-    _print_xml_element_header('testsuites', overall_attributes, stream)
-
+    overall_time = 0
+    for tests in self.suites.values():
+      overall_time += sum([x.run_time for x in tests])
+    overall_args = (overall_test_count, overall_failures, overall_errors,
+                    overall_time)
+    stream.write('<testsuites name="" tests="%d" failures="%d" '
+                 'errors="%d" time="%.1f">\n' % overall_args)
     for suite_name in self.suites:
       suite = self.suites[suite_name]
-      suite_end_time = max(x.start_time + x.run_time for x in suite)
-      suite_start_time = min(x.start_time for x in suite)
+      suite_time = sum([x.run_time for x in suite])
       failures = self.failure_counts[suite_name]
       errors = self.error_counts[suite_name]
-      suite_attributes = collections.OrderedDict([
-          ('name', '%s' % suite_name),
-          ('tests', '%d' % len(suite)),
-          ('failures', '%d' % failures),
-          ('errors', '%d' % errors),
-          ('time', '%.1f' % (suite_end_time - suite_start_time)),
-          ('timestamp', _iso8601_timestamp(suite_start_time)),
-      ])
-      _print_xml_element_header('testsuite', suite_attributes, stream)
-
+      args = (suite_name, len(suite), failures, errors, suite_time)
+      stream.write('<testsuite name="%s" tests="%d" failures="%d" '
+                   'errors="%d" time="%.1f">\n' % args)
       for test_case_result in suite:
         test_case_result.print_xml_summary(stream)
       stream.write('</testsuite>\n')
@@ -346,16 +293,10 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
       test_id = id(test)
       run_time = self.time_getter() - self.start_time
       result.set_run_time(run_time)
-      result.set_start_time(self.start_time)
       self.suite.add_test_case_result(result)
       del self.pending_test_case_results[test_id]
 
-  def startTestRun(self):
-    self.suite.overall_start_time = self.time_getter()
-    super(_TextAndXMLTestResult, self).startTestRun()
-
   def stopTestRun(self):
-    self.suite.overall_end_time = self.time_getter()
     # All pending_test_case_results will be added to the suite and removed from
     # the pending_test_case_results dictionary. Grabing the write lock to avoid
     # results from being added during this process to avoid duplicating adds or
@@ -369,9 +310,8 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
       for test_id in self.pending_test_case_results:
         result = self.pending_test_case_results[test_id]
         if hasattr(self, 'start_time'):
-          run_time = self.suite.overall_end_time - self.start_time
+          run_time = self.time_getter() - self.start_time
           result.set_run_time(run_time)
-          result.set_start_time(self.start_time)
         self.suite.add_test_case_result(result)
       self.pending_test_case_results.clear()
 
