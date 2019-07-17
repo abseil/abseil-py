@@ -247,7 +247,7 @@ class _ParameterizedTestIter(object):
                        'without having inherited from parameterized.'
                        'TestCase. This is bad because none of '
                        'your test cases are actually being run. You may also '
-                       'be using a mock annotation before the parameterized '
+                       'be using another decorator before the parameterized '
                        'one, in which case you should reverse the order.')
 
   def __iter__(self):
