@@ -1,4 +1,4 @@
-"""Helpers for absl build rules."""
+"""Private helpers for absl build rules."""
 
 def py2py3_test_binary(name, **kwargs):
     """Create the same binary with different python versions for testing.

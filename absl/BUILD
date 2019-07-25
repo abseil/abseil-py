@@ -2,7 +2,7 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-load(":build_defs.bzl", "py2py3_test_binary")
+load(":_build_defs.bzl", "py2py3_test_binary")
 
 py_library(
     name = "app",
