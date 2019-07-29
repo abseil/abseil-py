@@ -12,6 +12,7 @@ py_library(
     deps = [
         ":_pretty_print_reporter",
         ":xml_reporter",
+        "//absl:_collections_abc",
         "//absl:_enum_module",
         "//absl:app",
         "//absl/flags",
@@ -39,6 +40,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":absltest",
+        "//absl:_collections_abc",
         "@six_archive//:six",
     ],
 )
@@ -197,6 +199,7 @@ py_test(
     deps = [
         ":absltest",
         ":parameterized",
+        "//absl:_collections_abc",
         "@six_archive//:six",
     ],
 )

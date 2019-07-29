@@ -22,10 +22,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import collections
 import copy
 import functools
 
+from absl._collections_abc import abc
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
 from absl.flags import _helpers
@@ -393,7 +393,7 @@ class MultiFlag(Flag):
     self.present += len(new_values)
 
   def _parse(self, arguments):
-    if (isinstance(arguments, collections.Iterable) and
+    if (isinstance(arguments, abc.Iterable) and
         not isinstance(arguments, six.string_types)):
       arguments = list(arguments)
 

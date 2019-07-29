@@ -18,9 +18,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import collections
 import unittest
 
+from absl._collections_abc import abc
 from absl.testing import absltest
 from absl.testing import parameterized
 import six
@@ -55,7 +55,7 @@ def dict_decorator(key, value):
   """
   def decorator(test_method):
     # If decorating result of another dict_decorator
-    if isinstance(test_method, collections.Iterable):
+    if isinstance(test_method, abc.Iterable):
       actual_tests = []
       for old_test in test_method.testcases:
         # each test is a ('test_suffix', dict) tuple

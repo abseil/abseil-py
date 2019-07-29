@@ -22,7 +22,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import collections
 import contextlib
 import difflib
 import errno
@@ -56,6 +55,7 @@ except ImportError:
 from absl import app
 from absl import flags
 from absl import logging
+from absl._collections_abc import abc
 from absl._enum_module import enum
 from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
@@ -94,6 +94,7 @@ else:
     import mock  # type: ignore
   except ImportError:
     mock = None
+
 
 # Re-export a bunch of unittest functions we support so that people don't
 # have to import unittest to get them
@@ -771,10 +772,10 @@ class TestCase(unittest3_backport.TestCase):
     """Asserts that an object has zero length.
 
     Args:
-      container: Anything that implements the collections.Sized interface.
+      container: Anything that implements the collections.abc.Sized interface.
       msg: Optional message to report on failure.
     """
-    if not isinstance(container, collections.Sized):
+    if not isinstance(container, abc.Sized):
       self.fail('Expected a Sized object, got: '
                 '{!r}'.format(type(container).__name__), msg)
 
@@ -787,10 +788,10 @@ class TestCase(unittest3_backport.TestCase):
     """Asserts that an object has non-zero length.
 
     Args:
-      container: Anything that implements the collections.Sized interface.
+      container: Anything that implements the collections.abc.Sized interface.
       msg: Optional message to report on failure.
     """
-    if not isinstance(container, collections.Sized):
+    if not isinstance(container, abc.Sized):
       self.fail('Expected a Sized object, got: '
                 '{!r}'.format(type(container).__name__), msg)
 
@@ -803,11 +804,11 @@ class TestCase(unittest3_backport.TestCase):
     """Asserts that an object has the expected length.
 
     Args:
-      container: Anything that implements the collections.Sized interface.
+      container: Anything that implements the collections.abc.Sized interface.
       expected_len: The expected length of the container.
       msg: Optional message to report on failure.
     """
-    if not isinstance(container, collections.Sized):
+    if not isinstance(container, abc.Sized):
       self.fail('Expected a Sized object, got: '
                 '{!r}'.format(type(container).__name__), msg)
     if len(container) != expected_len:
@@ -1432,8 +1433,8 @@ class TestCase(unittest3_backport.TestCase):
 
       # Objects that compare equal must hash to the same value, but this only
       # applies if both objects are hashable.
-      if (isinstance(a, collections.Hashable) and
-          isinstance(b, collections.Hashable)):
+      if (isinstance(a, abc.Hashable) and
+          isinstance(b, abc.Hashable)):
         self.assertEqual(
             hash(a), hash(b),
             self._formatMessage(
@@ -1711,20 +1712,20 @@ def _are_both_of_integer_type(a, b):
 
 def _are_both_of_sequence_type(a, b):
   # type: (object, object) -> bool
-  return isinstance(a, collections.Sequence) and isinstance(
-      b, collections.Sequence) and not isinstance(
+  return isinstance(a, abc.Sequence) and isinstance(
+      b, abc.Sequence) and not isinstance(
           a, _TEXT_OR_BINARY_TYPES) and not isinstance(b, _TEXT_OR_BINARY_TYPES)
 
 
 def _are_both_of_set_type(a, b):
   # type: (object, object) -> bool
-  return isinstance(a, collections.Set) and isinstance(b, collections.Set)
+  return isinstance(a, abc.Set) and isinstance(b, abc.Set)
 
 
 def _are_both_of_mapping_type(a, b):
   # type: (object, object) -> bool
-  return isinstance(a, collections.Mapping) and isinstance(
-      b, collections.Mapping)
+  return isinstance(a, abc.Mapping) and isinstance(
+      b, abc.Mapping)
 
 
 def _walk_structure_for_problems(a, b, aname, bname, problem_list):
@@ -1739,7 +1740,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
     # If they have different types there's no point continuing
     return
 
-  if isinstance(a, collections.Set):
+  if isinstance(a, abc.Set):
     for k in a:
       if k not in b:
         problem_list.append(
@@ -1750,7 +1751,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
 
   # NOTE: a or b could be a defaultdict, so we must take care that the traversal
   # doesn't modify the data.
-  elif isinstance(a, collections.Mapping):
+  elif isinstance(a, abc.Mapping):
     for k in a:
       if k in b:
         _walk_structure_for_problems(
@@ -1767,7 +1768,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
             (aname, k, bname, b[k]))
 
   # Strings/bytes are Sequences but we'll just do those with regular !=
-  elif (isinstance(a, collections.Sequence) and
+  elif (isinstance(a, abc.Sequence) and
         not isinstance(a, _TEXT_OR_BINARY_TYPES)):
     minlen = min(len(a), len(b))
     for i in xrange(minlen):
