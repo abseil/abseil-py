@@ -2,7 +2,7 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-load("//absl:_build_defs.bzl", "py2py3_test_binary")
+load("//absl:_build_defs.bzl", "py2py3_test_binary", "py2and3_test")
 
 py_library(
     name = "absltest",
@@ -88,7 +88,7 @@ py_library(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/absltest_filtering_test",
     size = "small",
     srcs = ["tests/absltest_filtering_test.py"],
@@ -110,7 +110,7 @@ py2py3_test_binary(
     deps = [":absltest"],
 )
 
-py_test(
+py2and3_test(
     name = "tests/absltest_randomization_test",
     size = "medium",
     srcs = ["tests/absltest_randomization_test.py"],
@@ -134,7 +134,7 @@ py2py3_test_binary(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/absltest_sharding_test",
     size = "small",
     srcs = ["tests/absltest_sharding_test.py"],
@@ -155,7 +155,7 @@ py2py3_test_binary(
     deps = [":absltest"],
 )
 
-py_test(
+py2and3_test(
     name = "tests/absltest_test",
     size = "small",
     srcs = ["tests/absltest_test.py"],
@@ -181,7 +181,7 @@ py2py3_test_binary(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/flagsaver_test",
     srcs = ["tests/flagsaver_test.py"],
     srcs_version = "PY2AND3",
@@ -192,7 +192,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/parameterized_test",
     srcs = ["tests/parameterized_test.py"],
     srcs_version = "PY2AND3",
@@ -204,7 +204,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/xml_reporter_test",
     srcs = ["tests/xml_reporter_test.py"],
     data = [":tests/xml_reporter_helper_test"],

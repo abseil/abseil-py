@@ -2,7 +2,7 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-load(":_build_defs.bzl", "py2py3_test_binary")
+load(":_build_defs.bzl", "py2py3_test_binary", "py2and3_test")
 
 py_library(
     name = "app",
@@ -87,7 +87,7 @@ py2py3_test_binary(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/app_test",
     srcs = ["tests/app_test.py"],
     data = [":tests/app_test_helper_pure_python"],
@@ -105,7 +105,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/command_name_test",
     srcs = ["tests/command_name_test.py"],
     srcs_version = "PY2AND3",

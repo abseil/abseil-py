@@ -49,3 +49,43 @@ def py2py3_test_binary(name, **kwargs):
         python_version = "PY3",
         **kwargs
     )
+
+def py2and3_test(name, **kwargs):
+    """A version of py_test that tests both Python 2 and 3.
+
+    Args:
+        name: name of the test suite. Individual ".python2" and ".python3"
+          suffixed py_tests will be created from it.
+        **kwargs: additional args to pass onto py_test.
+    """
+    python2 = name + ".python2"
+    python3 = name + ".python3"
+    main = kwargs.pop("main", name + ".py")
+    base_tags = kwargs.pop("tags", [])
+
+    native.py_test(
+        name = python2,
+        python_version = "PY2",
+        main = main,
+        tags = base_tags + ["python2"],
+        **kwargs
+    )
+
+    native.py_test(
+        name = python3,
+        python_version = "PY3",
+        main = main,
+        tags = base_tags + ["python3"],
+        **kwargs
+    )
+
+    suite_kwargs = {}
+    if kwargs.get("visibility"):
+        suite_kwargs["visibility"] = kwargs.get("visibility")
+
+    native.test_suite(
+        name = name,
+        tags = base_tags,
+        tests = [python2, python3],
+        **suite_kwargs
+    )

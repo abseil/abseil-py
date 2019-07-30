@@ -2,7 +2,7 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-load("//absl:_build_defs.bzl", "py2py3_test_binary")
+load("//absl:_build_defs.bzl", "py2py3_test_binary", "py2and3_test")
 
 py_library(
     name = "logging",
@@ -23,7 +23,7 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
-py_test(
+py2and3_test(
     name = "tests/converter_test",
     size = "small",
     srcs = ["tests/converter_test.py"],
@@ -35,7 +35,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/logging_test",
     size = "small",
     srcs = ["tests/logging_test.py"],
@@ -51,7 +51,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/log_before_import_test",
     srcs = ["tests/log_before_import_test.py"],
     main = "tests/log_before_import_test.py",
@@ -63,7 +63,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/verbosity_flag_test",
     srcs = ["tests/verbosity_flag_test.py"],
     srcs_version = "PY2AND3",
@@ -88,7 +88,7 @@ py2py3_test_binary(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/logging_functional_test",
     size = "large",
     srcs = ["tests/logging_functional_test.py"],
