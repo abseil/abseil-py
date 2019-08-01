@@ -471,6 +471,12 @@ def log(level, msg, *args, **kwargs):
       level = converter.ABSL_FATAL
     standard_level = converter.absl_to_standard(level)
 
+  # Match standard logging's behavior. Before use_absl_handler() and
+  # logging is configured, there is no handler attached on _absl_logger nor
+  # logging.root. So logs go no where.
+  if not logging.root.handlers:
+    logging.basicConfig()
+
   _absl_logger.log(standard_level, msg, *args, **kwargs)
 
 
@@ -1109,14 +1115,27 @@ def use_python_logging(quiet=False):
     info('Restoring pure python logging')
 
 
+_attempted_to_remove_stderr_stream_handlers = False
+
+
 def use_absl_handler():
-  """Uses the ABSL logging handler for logging if not yet configured.
+  """Uses the ABSL logging handler for logging.
 
-  The absl handler is already attached to root if there are no other handlers
-  attached when importing this module.
-
-  Otherwise, this method is called in app.run() so absl handler is used.
+  This method is called in app.run() so the absl handler is used in absl apps.
   """
+  global _attempted_to_remove_stderr_stream_handlers
+  if not _attempted_to_remove_stderr_stream_handlers:
+    # The absl handler logs to stderr by default. To prevent double logging to
+    # stderr, the following code tries its best to remove other handlers that
+    # emit to stderr. Those handlers are most commonly added when
+    # logging.info/debug is called before calling use_absl_handler().
+    handlers = [
+        h for h in logging.root.handlers
+        if isinstance(h, logging.StreamHandler) and h.stream == sys.stderr]
+    for h in handlers:
+      logging.root.removeHandler(h)
+    _attempted_to_remove_stderr_stream_handlers = True
+
   absl_handler = get_absl_handler()
   if absl_handler not in logging.root.handlers:
     logging.root.addHandler(absl_handler)
@@ -1138,25 +1157,5 @@ def _initialize():
   python_logging_formatter = PythonFormatter()
   _absl_handler = ABSLHandler(python_logging_formatter)
 
-  # The absl handler logs to stderr by default. To prevent double logging to
-  # stderr, the following code tries its best to remove other handlers that emit
-  # to stderr. Those handlers are most commonly added when logging.info/debug is
-  # called before importing this module.
-  handlers = [
-      h for h in logging.root.handlers
-      if isinstance(h, logging.StreamHandler) and h.stream == sys.stderr]
-  for h in handlers:
-    logging.root.removeHandler(h)
 
-  # The absl handler will always be attached to root, not the absl logger.
-  if not logging.root.handlers:
-    # Attach the absl handler at import time when there are no other handlers.
-    # Otherwise it means users have explicitly configured logging, and the absl
-    # handler will only be attached later in app.run(). For App Engine apps,
-    # the absl handler is not used.
-    logging.root.addHandler(_absl_handler)
-
-
-# Initialize absl logger.
-# Must be called after logging flags in this module are defined.
 _initialize()

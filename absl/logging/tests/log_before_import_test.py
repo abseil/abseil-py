@@ -19,15 +19,14 @@ from __future__ import division
 from __future__ import print_function
 
 import io
+import os
 import re
+import sys
+import tempfile
 
 from absl import logging
 from absl.testing import absltest
 import mock
-
-# We do this before our library imports in order to catch any Python stderr
-# output they may generate.  We don't want them to; capture and check.
-fake_stderr_type = io.BytesIO if bytes is str else io.StringIO
 
 logging.get_verbosity()  # Access --verbosity before flag parsing.
 # Access --logtostderr before flag parsing.
@@ -38,8 +37,18 @@ class Error(Exception):
   pass
 
 
-# Pre-initialization (aka "import" / __main__ time) test.  Checked below.
-with mock.patch('sys.stderr', new=fake_stderr_type()) as pre_init_mock_stderr:
+# Use os.dup/os.dup2 to redirect the stderr fd for capturing standard error
+# of logging at import-time.
+# We cannot mock sys.stderr because on the first log call, a default log
+# handler writing to the mock sys.stderr is registered, and it will never be
+# removed and subsequent logs go to the mock in addition to the real stder.
+stderr_capture_file_fd, stderr_capture_file_name = tempfile.mkstemp()
+original_stderr_fd = os.dup(sys.stderr.fileno())
+os.dup2(stderr_capture_file_fd, sys.stderr.fileno())
+
+# Pre-initialization (aka "import" / __main__ time) test. The output is
+# captured to the stderr_capture_file_name and verified in the test.
+try:
   # Trigger the notice to stderr once.  infos and above go to stderr.
   logging.debug('Debug message at parse time.')
   logging.info('Info message at parse time.')
@@ -49,12 +58,16 @@ with mock.patch('sys.stderr', new=fake_stderr_type()) as pre_init_mock_stderr:
     raise Error('Exception reason.')
   except Error:
     logging.exception('Exception message at parse time.')
+finally:
+  os.close(stderr_capture_file_fd)
+  os.dup2(original_stderr_fd, sys.stderr.fileno())
 
 
 class LoggingInitWarningTest(absltest.TestCase):
 
   def test_captured_pre_init_warnings(self):
-    captured_stderr = pre_init_mock_stderr.getvalue()
+    with open(stderr_capture_file_name) as stderr_capture_file:
+      captured_stderr = stderr_capture_file.read()
     self.assertNotIn('Debug message at parse time.', captured_stderr)
     self.assertNotIn('Info message at parse time.', captured_stderr)
 
@@ -68,14 +81,13 @@ class LoggingInitWarningTest(absltest.TestCase):
     # Remove the traceback so the rest of the stderr is deterministic.
     captured_stderr = traceback_re.sub('', captured_stderr)
     captured_stderr_lines = captured_stderr.splitlines()
-    self.assertLen(captured_stderr_lines, 4)
-    self.assertIn('Logging before flag parsing goes to stderr',
-                  captured_stderr_lines[0])
-    self.assertIn('Error message at parse time.', captured_stderr_lines[1])
-    self.assertIn('Warning message at parse time.', captured_stderr_lines[2])
-    self.assertIn('Exception message at parse time.', captured_stderr_lines[3])
+    self.assertLen(captured_stderr_lines, 3)
+    self.assertIn('Error message at parse time.', captured_stderr_lines[0])
+    self.assertIn('Warning message at parse time.', captured_stderr_lines[1])
+    self.assertIn('Exception message at parse time.', captured_stderr_lines[2])
 
   def test_no_more_warnings(self):
+    fake_stderr_type = io.BytesIO if bytes is str else io.StringIO
     with mock.patch('sys.stderr', new=fake_stderr_type()) as mock_stderr:
       self.assertMultiLineEqual('', mock_stderr.getvalue())
       logging.warning('Hello. hello. hello. Is there anybody out there?')
