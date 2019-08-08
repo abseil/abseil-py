@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import contextlib
 import io
 import os
 import re
@@ -37,19 +38,32 @@ class Error(Exception):
   pass
 
 
-# Use os.dup/os.dup2 to redirect the stderr fd for capturing standard error
-# of logging at import-time.
-# We cannot mock sys.stderr because on the first log call, a default log
-# handler writing to the mock sys.stderr is registered, and it will never be
-# removed and subsequent logs go to the mock in addition to the real stder.
-stderr_capture_file_fd, stderr_capture_file_name = tempfile.mkstemp()
-original_stderr_fd = os.dup(sys.stderr.fileno())
-os.dup2(stderr_capture_file_fd, sys.stderr.fileno())
+@contextlib.contextmanager
+def captured_stderr_filename():
+  """Captures stderr and writes them to a temporary file.
 
-# Pre-initialization (aka "import" / __main__ time) test. The output is
-# captured to the stderr_capture_file_name and verified in the test.
-try:
-  # Trigger the notice to stderr once.  infos and above go to stderr.
+  This uses os.dup/os.dup2 to redirect the stderr fd for capturing standard
+  error of logging at import-time. We cannot mock sys.stderr because on the
+  first log call, a default log handler writing to the mock sys.stderr is
+  registered, and it will never be removed and subsequent logs go to the mock
+  in addition to the real stder.
+
+  Yields:
+    The filename of captured stderr.
+  """
+  stderr_capture_file_fd, stderr_capture_file_name = tempfile.mkstemp()
+  original_stderr_fd = os.dup(sys.stderr.fileno())
+  os.dup2(stderr_capture_file_fd, sys.stderr.fileno())
+  try:
+    yield stderr_capture_file_name
+  finally:
+    os.close(stderr_capture_file_fd)
+    os.dup2(original_stderr_fd, sys.stderr.fileno())
+
+
+# Pre-initialization (aka "import" / __main__ time) test.
+with captured_stderr_filename() as before_set_verbosity_filename:
+  # Warnings and above go to stderr.
   logging.debug('Debug message at parse time.')
   logging.info('Info message at parse time.')
   logging.error('Error message at parse time.')
@@ -58,15 +72,21 @@ try:
     raise Error('Exception reason.')
   except Error:
     logging.exception('Exception message at parse time.')
-finally:
-  os.close(stderr_capture_file_fd)
-  os.dup2(original_stderr_fd, sys.stderr.fileno())
+
+
+logging.set_verbosity(logging.ERROR)
+with captured_stderr_filename() as after_set_verbosity_filename:
+  # Verbosity is set to ERROR, errors and above go to stderr.
+  logging.debug('Debug message at parse time.')
+  logging.info('Info message at parse time.')
+  logging.warning('Warning message at parse time.')
+  logging.error('Error message at parse time.')
 
 
 class LoggingInitWarningTest(absltest.TestCase):
 
   def test_captured_pre_init_warnings(self):
-    with open(stderr_capture_file_name) as stderr_capture_file:
+    with open(before_set_verbosity_filename) as stderr_capture_file:
       captured_stderr = stderr_capture_file.read()
     self.assertNotIn('Debug message at parse time.', captured_stderr)
     self.assertNotIn('Info message at parse time.', captured_stderr)
@@ -85,6 +105,17 @@ class LoggingInitWarningTest(absltest.TestCase):
     self.assertIn('Error message at parse time.', captured_stderr_lines[0])
     self.assertIn('Warning message at parse time.', captured_stderr_lines[1])
     self.assertIn('Exception message at parse time.', captured_stderr_lines[2])
+
+  def test_set_verbosity_pre_init(self):
+    with open(after_set_verbosity_filename) as stderr_capture_file:
+      captured_stderr = stderr_capture_file.read()
+    captured_stderr_lines = captured_stderr.splitlines()
+
+    self.assertNotIn('Debug message at parse time.', captured_stderr)
+    self.assertNotIn('Info message at parse time.', captured_stderr)
+    self.assertNotIn('Warning message at parse time.', captured_stderr)
+    self.assertLen(captured_stderr_lines, 1)
+    self.assertIn('Error message at parse time.', captured_stderr_lines[0])
 
   def test_no_more_warnings(self):
     fake_stderr_type = io.BytesIO if bytes is str else io.StringIO

@@ -186,7 +186,12 @@ class _VerbosityFlag(flags.Flag):
 
     # Also update root level when absl_handler is used.
     if _absl_handler in logging.root.handlers:
+      # Make absl logger inherit from the root logger. absl logger might have
+      # a non-NOTSET value if logging.set_verbosity() is called at import time.
+      _absl_logger.setLevel(logging.NOTSET)
       logging.root.setLevel(standard_verbosity)
+    else:
+      _absl_logger.setLevel(standard_verbosity)
 
 
 class _StderrthresholdFlag(flags.Flag):
