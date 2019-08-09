@@ -377,7 +377,7 @@ def log_every_n(level, msg, n, *args):
     level: int, the absl logging level at which to log.
     msg: str, the message to be logged.
     n: int, the number of times this should be called before it is logged.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
   """
   count = _get_next_log_count_per_token(get_absl_logger().findCaller())
   log_if(level, msg, not (count % n), *args)
@@ -424,7 +424,7 @@ def log_every_n_seconds(level, msg, n_seconds, *args):
     level: int, the absl logging level at which to log.
     msg: str, the message to be logged.
     n_seconds: float or int, seconds which should elapse before logging again.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
   """
   should_log = _seconds_have_elapsed(get_absl_logger().findCaller(), n_seconds)
   log_if(level, msg, should_log, *args)
@@ -439,7 +439,7 @@ def log_first_n(level, msg, n, *args):
     level: int, the absl logging level at which to log.
     msg: str, the message to be logged.
     n: int, the maximal number of times the message is logged.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
   """
   count = _get_next_log_count_per_token(get_absl_logger().findCaller())
   log_if(level, msg, count < n, *args)
@@ -463,7 +463,7 @@ def log(level, msg, *args, **kwargs):
         logging.vlog() calls for such purpose.
 
     msg: str, the message to be logged.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
     **kwargs: May contain exc_info to add exception traceback to message.
   """
   if level > converter.ABSL_DEBUG:
@@ -493,7 +493,7 @@ def vlog(level, msg, *args, **kwargs):
         e.g. 1, 2, 3, 4... While absl level constants are also supported,
         callers should prefer logging.log|debug|info|... calls for such purpose.
     msg: str, the message to be logged.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
     **kwargs: May contain exc_info to add exception traceback to message.
   """
   log(level, msg, *args, **kwargs)
