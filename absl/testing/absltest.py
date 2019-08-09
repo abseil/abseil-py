@@ -826,7 +826,7 @@ class TestCase(unittest3_backport.TestCase):
     in the two sequences is more than the given delta.
 
     Note that decimal places (from zero) are usually not the same as significant
-    digits (measured from the most signficant digit).
+    digits (measured from the most significant digit).
 
     If the two sequences compare equal then they will automatically compare
     almost equal.
