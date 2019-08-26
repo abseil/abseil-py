@@ -186,7 +186,12 @@ class _VerbosityFlag(flags.Flag):
 
     # Also update root level when absl_handler is used.
     if _absl_handler in logging.root.handlers:
+      # Make absl logger inherit from the root logger. absl logger might have
+      # a non-NOTSET value if logging.set_verbosity() is called at import time.
+      _absl_logger.setLevel(logging.NOTSET)
       logging.root.setLevel(standard_verbosity)
+    else:
+      _absl_logger.setLevel(standard_verbosity)
 
 
 class _StderrthresholdFlag(flags.Flag):
@@ -221,8 +226,6 @@ class _StderrthresholdFlag(flags.Flag):
           "or '0', '1', '2', '3', not '%s'" % v)
 
     self._value = v
-
-
 
 
 flags.DEFINE_boolean('logtostderr',
@@ -374,7 +377,7 @@ def log_every_n(level, msg, n, *args):
     level: int, the absl logging level at which to log.
     msg: str, the message to be logged.
     n: int, the number of times this should be called before it is logged.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
   """
   count = _get_next_log_count_per_token(get_absl_logger().findCaller())
   log_if(level, msg, not (count % n), *args)
@@ -421,7 +424,7 @@ def log_every_n_seconds(level, msg, n_seconds, *args):
     level: int, the absl logging level at which to log.
     msg: str, the message to be logged.
     n_seconds: float or int, seconds which should elapse before logging again.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
   """
   should_log = _seconds_have_elapsed(get_absl_logger().findCaller(), n_seconds)
   log_if(level, msg, should_log, *args)
@@ -436,7 +439,7 @@ def log_first_n(level, msg, n, *args):
     level: int, the absl logging level at which to log.
     msg: str, the message to be logged.
     n: int, the maximal number of times the message is logged.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
   """
   count = _get_next_log_count_per_token(get_absl_logger().findCaller())
   log_if(level, msg, count < n, *args)
@@ -460,7 +463,7 @@ def log(level, msg, *args, **kwargs):
         logging.vlog() calls for such purpose.
 
     msg: str, the message to be logged.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
     **kwargs: May contain exc_info to add exception traceback to message.
   """
   if level > converter.ABSL_DEBUG:
@@ -473,6 +476,12 @@ def log(level, msg, *args, **kwargs):
       level = converter.ABSL_FATAL
     standard_level = converter.absl_to_standard(level)
 
+  # Match standard logging's behavior. Before use_absl_handler() and
+  # logging is configured, there is no handler attached on _absl_logger nor
+  # logging.root. So logs go no where.
+  if not logging.root.handlers:
+    logging.basicConfig()
+
   _absl_logger.log(standard_level, msg, *args, **kwargs)
 
 
@@ -484,7 +493,7 @@ def vlog(level, msg, *args, **kwargs):
         e.g. 1, 2, 3, 4... While absl level constants are also supported,
         callers should prefer logging.log|debug|info|... calls for such purpose.
     msg: str, the message to be logged.
-    *args: The args to be substitued into the msg.
+    *args: The args to be substituted into the msg.
     **kwargs: May contain exc_info to add exception traceback to message.
   """
   log(level, msg, *args, **kwargs)
@@ -1111,14 +1120,27 @@ def use_python_logging(quiet=False):
     info('Restoring pure python logging')
 
 
+_attempted_to_remove_stderr_stream_handlers = False
+
+
 def use_absl_handler():
-  """Uses the ABSL logging handler for logging if not yet configured.
+  """Uses the ABSL logging handler for logging.
 
-  The absl handler is already attached to root if there are no other handlers
-  attached when importing this module.
-
-  Otherwise, this method is called in app.run() so absl handler is used.
+  This method is called in app.run() so the absl handler is used in absl apps.
   """
+  global _attempted_to_remove_stderr_stream_handlers
+  if not _attempted_to_remove_stderr_stream_handlers:
+    # The absl handler logs to stderr by default. To prevent double logging to
+    # stderr, the following code tries its best to remove other handlers that
+    # emit to stderr. Those handlers are most commonly added when
+    # logging.info/debug is called before calling use_absl_handler().
+    handlers = [
+        h for h in logging.root.handlers
+        if isinstance(h, logging.StreamHandler) and h.stream == sys.stderr]
+    for h in handlers:
+      logging.root.removeHandler(h)
+    _attempted_to_remove_stderr_stream_handlers = True
+
   absl_handler = get_absl_handler()
   if absl_handler not in logging.root.handlers:
     logging.root.addHandler(absl_handler)
@@ -1140,25 +1162,5 @@ def _initialize():
   python_logging_formatter = PythonFormatter()
   _absl_handler = ABSLHandler(python_logging_formatter)
 
-  # The absl handler logs to stderr by default. To prevent double logging to
-  # stderr, the following code tries its best to remove other handlers that emit
-  # to stderr. Those handlers are most commonly added when logging.info/debug is
-  # called before importing this module.
-  handlers = [
-      h for h in logging.root.handlers
-      if isinstance(h, logging.StreamHandler) and h.stream == sys.stderr]
-  for h in handlers:
-    logging.root.removeHandler(h)
 
-  # The absl handler will always be attached to root, not the absl logger.
-  if not logging.root.handlers:
-    # Attach the absl handler at import time when there are no other handlers.
-    # Otherwise it means users have explicitly configured logging, and the absl
-    # handler will only be attached later in app.run(). For App Engine apps,
-    # the absl handler is not used.
-    logging.root.addHandler(_absl_handler)
-
-
-# Initialize absl logger.
-# Must be called after logging flags in this module are defined.
 _initialize()

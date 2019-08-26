@@ -22,7 +22,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import collections
 import contextlib
 import difflib
 import errno
@@ -56,6 +55,7 @@ except ImportError:
 from absl import app
 from absl import flags
 from absl import logging
+from absl._collections_abc import abc
 from absl._enum_module import enum
 from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
@@ -63,7 +63,6 @@ from absl.third_party import unittest3_backport
 import six
 from six.moves import urllib
 from six.moves import xrange  # pylint: disable=redefined-builtin
-
 
 # Make typing an optional import to avoid it being a required dependency
 # in Python 2. Type checkers will still understand the imports.
@@ -97,9 +96,42 @@ else:
     mock = None
 
 
+# Re-export a bunch of unittest functions we support so that people don't
+# have to import unittest to get them
+# pylint: disable=invalid-name
+skip = unittest.skip
+skipIf = unittest.skipIf
+skipUnless = unittest.skipUnless
+SkipTest = unittest.SkipTest
+expectedFailure = unittest.expectedFailure
+# pylint: enable=invalid-name
+
+# End unittest re-exports
+
 FLAGS = flags.FLAGS
 
 _TEXT_OR_BINARY_TYPES = (six.text_type, six.binary_type)
+
+
+def expectedFailureIf(condition, reason):  # pylint: disable=invalid-name
+  """Expects the test to fail if the run condition is True.
+
+  Example usage:
+    @expectedFailureIf(sys.version.major == 2, "Not yet working in py2")
+    def test_foo(self):
+      ...
+
+  Args:
+    condition: bool, whether to expect failure or not.
+    reason: Text, the reason to expect failure.
+  Returns:
+    Decorator function
+  """
+  del reason  # Unused
+  if condition:
+    return unittest.expectedFailure
+  else:
+    return lambda f: f
 
 
 class TempFileCleanup(enum.Enum):
@@ -740,10 +772,10 @@ class TestCase(unittest3_backport.TestCase):
     """Asserts that an object has zero length.
 
     Args:
-      container: Anything that implements the collections.Sized interface.
+      container: Anything that implements the collections.abc.Sized interface.
       msg: Optional message to report on failure.
     """
-    if not isinstance(container, collections.Sized):
+    if not isinstance(container, abc.Sized):
       self.fail('Expected a Sized object, got: '
                 '{!r}'.format(type(container).__name__), msg)
 
@@ -756,10 +788,10 @@ class TestCase(unittest3_backport.TestCase):
     """Asserts that an object has non-zero length.
 
     Args:
-      container: Anything that implements the collections.Sized interface.
+      container: Anything that implements the collections.abc.Sized interface.
       msg: Optional message to report on failure.
     """
-    if not isinstance(container, collections.Sized):
+    if not isinstance(container, abc.Sized):
       self.fail('Expected a Sized object, got: '
                 '{!r}'.format(type(container).__name__), msg)
 
@@ -772,11 +804,11 @@ class TestCase(unittest3_backport.TestCase):
     """Asserts that an object has the expected length.
 
     Args:
-      container: Anything that implements the collections.Sized interface.
+      container: Anything that implements the collections.abc.Sized interface.
       expected_len: The expected length of the container.
       msg: Optional message to report on failure.
     """
-    if not isinstance(container, collections.Sized):
+    if not isinstance(container, abc.Sized):
       self.fail('Expected a Sized object, got: '
                 '{!r}'.format(type(container).__name__), msg)
     if len(container) != expected_len:
@@ -794,7 +826,7 @@ class TestCase(unittest3_backport.TestCase):
     in the two sequences is more than the given delta.
 
     Note that decimal places (from zero) are usually not the same as significant
-    digits (measured from the most signficant digit).
+    digits (measured from the most significant digit).
 
     If the two sequences compare equal then they will automatically compare
     almost equal.
@@ -813,8 +845,13 @@ class TestCase(unittest3_backport.TestCase):
     err_list = []
     for idx, (exp_elem, act_elem) in enumerate(zip(expected_seq, actual_seq)):
       try:
+        # assertAlmostEqual should be called with at most one of `places` and
+        # `delta`. However, it's okay for assertSequenceAlmostEqual to pass
+        # both because we want the latter to fail if the former does.
+        # pytype: disable=wrong-keyword-args
         self.assertAlmostEqual(exp_elem, act_elem, places=places, msg=msg,
                                delta=delta)
+        # pytype: enable=wrong-keyword-args
       except self.failureException as err:
         err_list.append('At index {}: {}'.format(idx, err))
 
@@ -1393,10 +1430,17 @@ class TestCase(unittest3_backport.TestCase):
       self.assertFalse(a != b,
                        self._formatMessage(msg, '%r unexpectedly unequals %r' %
                                            (a, b)))
-      self.assertEqual(hash(a), hash(b), self._formatMessage(
-          msg,
-          'hash %d of %r unexpectedly not equal to hash %d of %r' %
-          (hash(a), a, hash(b), b)))
+
+      # Objects that compare equal must hash to the same value, but this only
+      # applies if both objects are hashable.
+      if (isinstance(a, abc.Hashable) and
+          isinstance(b, abc.Hashable)):
+        self.assertEqual(
+            hash(a), hash(b),
+            self._formatMessage(
+                msg, 'hash %d of %r unexpectedly not equal to hash %d of %r' %
+                (hash(a), a, hash(b), b)))
+
       self.assertFalse(a < b,
                        self._formatMessage(msg,
                                            '%r unexpectedly less than %r' %
@@ -1571,8 +1615,8 @@ class TestCase(unittest3_backport.TestCase):
     using assertSameStructure.
 
     Args:
-      first: A string contining JSON to decode and compare to second.
-      second: A string contining JSON to decode and compare to first.
+      first: A string containing JSON to decode and compare to second.
+      second: A string containing JSON to decode and compare to first.
       msg: Additional text to include in the failure message.
     """
     try:
@@ -1668,20 +1712,20 @@ def _are_both_of_integer_type(a, b):
 
 def _are_both_of_sequence_type(a, b):
   # type: (object, object) -> bool
-  return isinstance(a, collections.Sequence) and isinstance(
-      b, collections.Sequence) and not isinstance(
+  return isinstance(a, abc.Sequence) and isinstance(
+      b, abc.Sequence) and not isinstance(
           a, _TEXT_OR_BINARY_TYPES) and not isinstance(b, _TEXT_OR_BINARY_TYPES)
 
 
 def _are_both_of_set_type(a, b):
   # type: (object, object) -> bool
-  return isinstance(a, collections.Set) and isinstance(b, collections.Set)
+  return isinstance(a, abc.Set) and isinstance(b, abc.Set)
 
 
 def _are_both_of_mapping_type(a, b):
   # type: (object, object) -> bool
-  return isinstance(a, collections.Mapping) and isinstance(
-      b, collections.Mapping)
+  return isinstance(a, abc.Mapping) and isinstance(
+      b, abc.Mapping)
 
 
 def _walk_structure_for_problems(a, b, aname, bname, problem_list):
@@ -1696,7 +1740,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
     # If they have different types there's no point continuing
     return
 
-  if isinstance(a, collections.Set):
+  if isinstance(a, abc.Set):
     for k in a:
       if k not in b:
         problem_list.append(
@@ -1707,7 +1751,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
 
   # NOTE: a or b could be a defaultdict, so we must take care that the traversal
   # doesn't modify the data.
-  elif isinstance(a, collections.Mapping):
+  elif isinstance(a, abc.Mapping):
     for k in a:
       if k in b:
         _walk_structure_for_problems(
@@ -1724,7 +1768,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
             (aname, k, bname, b[k]))
 
   # Strings/bytes are Sequences but we'll just do those with regular !=
-  elif (isinstance(a, collections.Sequence) and
+  elif (isinstance(a, abc.Sequence) and
         not isinstance(a, _TEXT_OR_BINARY_TYPES)):
     minlen = min(len(a), len(b))
     for i in xrange(minlen):
@@ -1959,7 +2003,6 @@ def _run_in_app(function, args, kwargs):
     for saved_flag in six.itervalues(saved_flags):
       saved_flag.restore_flag()
 
-
     function(argv, args, kwargs)
   else:
     # Send logging to stderr. Use --alsologtostderr instead of --logtostderr
@@ -2182,6 +2225,18 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     kwargs['testRunner'].set_default_xml_stream(xml_buffer)  # pytype: disable=attribute-error
   elif kwargs.get('testRunner') is None:
     kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
+
+  if FLAGS.pdb_post_mortem:
+    runner = kwargs['testRunner']
+    # testRunner can be a class or an instance, which must be tested for
+    # differently.
+    # Overriding testRunner isn't uncommon, so only enable the debugging
+    # integration if the runner claims it does; we don't want to accidentally
+    # clobber something on the runner.
+    if ((isinstance(runner, type) and
+         issubclass(runner, _pretty_print_reporter.TextTestRunner)) or
+        isinstance(runner, _pretty_print_reporter.TextTestRunner)):
+      runner.run_for_debugging = True
 
   # Make sure tmpdir exists.
   if not os.path.isdir(FLAGS.test_tmpdir):

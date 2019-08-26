@@ -22,10 +22,15 @@ import os
 
 from absl import flags
 
+try:
+  from absl.testing import _bazel_selected_py3
+except ImportError:
+  _bazel_selected_py3 = None
+
 FLAGS = flags.FLAGS
 
 
-def get_executable_path(py_binary_name):
+def get_executable_path(py_binary_name, add_version_suffix=True):
   """Returns the executable path of a py_binary.
 
   This returns the executable path of a py_binary that is in another Bazel
@@ -38,10 +43,17 @@ def get_executable_path(py_binary_name):
   Args:
     py_binary_name: string, the name of a py_binary that is in another Bazel
         target's data dependencies.
+    add_version_suffix: bool, whether to add a Python version specific suffix
+        to `py_binary_name` when locating the file.
 
   Raises:
     RuntimeError: Raised when it cannot locate the executable path.
   """
+  if add_version_suffix:
+    root, ext = os.path.splitext(py_binary_name)
+    suffix = 'py3' if _bazel_selected_py3 else 'py2'
+    py_binary_name = '{}_{}{}'.format(root, suffix, ext)
+
   if os.name == 'nt':
     py_binary_name += '.exe'
     manifest_file = os.path.join(FLAGS.test_srcdir, 'MANIFEST')

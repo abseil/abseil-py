@@ -45,8 +45,7 @@ example to get started.
 
 ## Documentation
 
-Full documentation is forthcoming on https://abseil.io. For now, please refer
-to the in-code Python docstrings.
+See the [Abseil Python Developer Guide](https://abseil.io/docs/python/).
 
 ## Future Releases
 

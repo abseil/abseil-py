@@ -2,6 +2,8 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+load("//absl:_build_defs.bzl", "py2and3_test")
+
 py_library(
     name = "flags",
     srcs = ["__init__.py"],
@@ -68,6 +70,7 @@ py_library(
         ":_argument_parser",
         ":_exceptions",
         ":_helpers",
+        "//absl:_collections_abc",
         "@six_archive//:six",
     ],
 )
@@ -103,7 +106,7 @@ py_library(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/_argument_parser_test",
     srcs = ["tests/_argument_parser_test.py"],
     srcs_version = "PY2AND3",
@@ -115,7 +118,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/_flag_test",
     srcs = ["tests/_flag_test.py"],
     srcs_version = "PY2AND3",
@@ -129,7 +132,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/_flagvalues_test",
     size = "small",
     srcs = ["tests/_flagvalues_test.py"],
@@ -148,7 +151,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/_helpers_test",
     size = "small",
     srcs = ["tests/_helpers_test.py"],
@@ -161,7 +164,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/_validators_test",
     size = "small",
     srcs = ["tests/_validators_test.py"],
@@ -175,7 +178,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/argparse_flags_test",
     size = "small",
     srcs = ["tests/argparse_flags_test.py"],
@@ -197,6 +200,7 @@ py_binary(
     name = "tests/argparse_flags_test_helper",
     testonly = 1,
     srcs = ["tests/argparse_flags_test_helper.py"],
+    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":argparse_flags",
@@ -205,7 +209,7 @@ py_binary(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/flags_formatting_test",
     size = "small",
     srcs = ["tests/flags_formatting_test.py"],
@@ -217,7 +221,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/flags_helpxml_test",
     size = "small",
     srcs = ["tests/flags_helpxml_test.py"],
@@ -232,7 +236,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/flags_numeric_bounds_test",
     size = "small",
     srcs = ["tests/flags_numeric_bounds_test.py"],
@@ -245,7 +249,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/flags_test",
     size = "small",
     srcs = ["tests/flags_test.py"],
@@ -263,7 +267,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/flags_unicode_literals_test",
     size = "small",
     srcs = ["tests/flags_unicode_literals_test.py"],

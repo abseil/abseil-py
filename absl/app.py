@@ -67,7 +67,6 @@ flags.DEFINE_boolean('only_check_args', False,
                      allow_hide_cpp=True)
 
 
-
 # If main() exits via an abnormal exception, call into these
 # handlers before exiting.
 EXCEPTION_HANDLERS = []
@@ -301,8 +300,20 @@ def run(
     except UsageError as error:
       usage(shorthelp=True, detailed_error=error, exitcode=error.exitcode)
     except:
-      if FLAGS.pdb_post_mortem:
+      exc = sys.exc_info()[1]
+      # Don't try to post-mortem debug successful SystemExits, since those
+      # mean there wasn't actually an error. In particular, the test framework
+      # raises SystemExit(False) even if all tests passed.
+      if isinstance(exc, SystemExit) and not exc.code:
+        raise
+
+      # Check the tty so that we don't hang waiting for input in an
+      # non-interactive scenario.
+      if FLAGS.pdb_post_mortem and sys.stdout.isatty():
         traceback.print_exc()
+        print()
+        print(' *** Entering post-mortem debugging ***')
+        print()
         pdb.post_mortem()
       raise
   except Exception as e:

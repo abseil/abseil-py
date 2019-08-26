@@ -328,6 +328,11 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(FLAGS.x, 0x1234567890ABCDEF1234567890ABCDEF)
     self.assertIsInstance(FLAGS.x, six.integer_types)
 
+    argv = ('./program', '--x', '0o12345')
+    argv = FLAGS(argv)
+    self.assertEqual(FLAGS.x, 0o12345)
+    self.assertEqual(type(FLAGS.x), int)
+
     # Treat 0-prefixed parameters as base-10, not base-8
     argv = ('./program', '--x', '012345')
     argv = FLAGS(argv)
@@ -770,7 +775,6 @@ class FlagsUnitTest(absltest.TestCase):
       self.assertEqual(flag.default, 1)
     except flags.DuplicateFlagError:
       raise AssertionError('allow_override did not permit a flag duplication')
-
 
     # Make sure that re-importing a module does not cause a DuplicateFlagError
     # to be raised.

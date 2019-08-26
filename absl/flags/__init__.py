@@ -152,4 +152,3 @@ DEFINE_string(
 
 # The global FlagValues instance.
 FLAGS = _flagvalues.FLAGS
-

@@ -504,13 +504,13 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
                                       expected, self.flag_values, argv)
 
   def test_flag_default_not_none_warning(self):
-    with warnings.catch_warnings(record=True) as w:
+    with warnings.catch_warnings(record=True) as caught_warnings:
       warnings.simplefilter('always')
       self._mark_flags_as_mutually_exclusive(['flag_one', 'flag_not_none'],
                                              False)
-      self.assertLen(w, 1)
-      self.assertIn('--flag_not_none has a non-None default value',
-                    str(w[0].message))
+    self.assertLen(caught_warnings, 1)
+    self.assertIn('--flag_not_none has a non-None default value',
+                  str(caught_warnings[0].message))
 
 
 class MarkBoolFlagsAsMutualExclusiveTest(absltest.TestCase):
@@ -619,13 +619,14 @@ class MarkFlagAsRequiredTest(absltest.TestCase):
   def test_flag_default_not_none_warning(self):
     _defines.DEFINE_string(
         'flag_not_none', '', 'empty default', flag_values=self.flag_values)
-    with warnings.catch_warnings(record=True) as w:
+    with warnings.catch_warnings(record=True) as caught_warnings:
       warnings.simplefilter('always')
       _validators.mark_flag_as_required(
           'flag_not_none', flag_values=self.flag_values)
-      self.assertLen(w, 1)
-      self.assertIn('--flag_not_none has a non-None default value',
-                    str(w[0].message))
+
+    self.assertLen(caught_warnings, 1)
+    self.assertIn('--flag_not_none has a non-None default value',
+                  str(caught_warnings[0].message))
 
 
 class MarkFlagsAsRequiredTest(absltest.TestCase):

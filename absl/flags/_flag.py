@@ -22,10 +22,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import collections
 import copy
 import functools
 
+from absl._collections_abc import abc
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
 from absl.flags import _helpers
@@ -189,10 +189,15 @@ class Flag(object):
     self.present = 0
 
   def serialize(self):
-    if self.value is None:
+    """Serializes the flag."""
+    return self._serialize(self.value)
+
+  def _serialize(self, value):
+    """Internal serialize function."""
+    if value is None:
       return ''
     if self.boolean:
-      if self.value:
+      if value:
         return '--%s' % self.name
       else:
         return '--no%s' % self.name
@@ -200,7 +205,7 @@ class Flag(object):
       if not self.serializer:
         raise _exceptions.Error(
             'Serializer not present for flag %s' % self.name)
-      return '--%s=%s' % (self.name, self.serializer.serialize(self.value))
+      return '--%s=%s' % (self.name, self.serializer.serialize(value))
 
   def _set_default(self, value):
     """Changes the default value (and current value too) for this Flag."""
@@ -388,7 +393,7 @@ class MultiFlag(Flag):
     self.present += len(new_values)
 
   def _parse(self, arguments):
-    if (isinstance(arguments, collections.Iterable) and
+    if (isinstance(arguments, abc.Iterable) and
         not isinstance(arguments, six.string_types)):
       arguments = list(arguments)
 
@@ -400,25 +405,19 @@ class MultiFlag(Flag):
 
     return [super(MultiFlag, self)._parse(item) for item in arguments]
 
-  def serialize(self):
+  def _serialize(self, value):
     """See base class."""
     if not self.serializer:
       raise _exceptions.Error(
           'Serializer not present for flag %s' % self.name)
-    if self.value is None:
+    if value is None:
       return ''
 
-    s = ''
+    serialized_items = [
+        super(MultiFlag, self)._serialize(value_item) for value_item in value
+    ]
 
-    multi_value = self.value
-
-    for self.value in multi_value:
-      if s: s += '\n'
-      s += Flag.serialize(self)
-
-    self.value = multi_value
-
-    return s
+    return '\n'.join(serialized_items)
 
   def flag_type(self):
     """See base class."""
