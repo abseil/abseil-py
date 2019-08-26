@@ -2,6 +2,8 @@ licenses(["notice"])  # New BSD, Python Software Foundation
 
 exports_files(["LICENSE"])
 
+load("//absl:_build_defs.bzl", "py2and3_test")
+
 py_library(
     name = "unittest3_backport",
     srcs = ["__init__.py"],
@@ -31,7 +33,7 @@ py_library(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/unittest3_backport_test",
     size = "small",
     srcs = ["tests/unittest3_backport_test.py"],

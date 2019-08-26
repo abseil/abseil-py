@@ -2,6 +2,8 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+load(":_build_defs.bzl", "py2py3_test_binary", "py2and3_test")
+
 py_library(
     name = "app",
     srcs = [
@@ -34,6 +36,12 @@ config_setting(
     visibility = [":__subpackages__"],
 )
 
+config_setting(
+    name = "py2_mode",
+    flag_values = {"@bazel_tools//tools/python:python_version": "PY2"},
+    visibility = [":__subpackages__"],
+)
+
 py_library(
     name = "_enum_module",
     srcs = ["_enum_module.py"],
@@ -50,6 +58,13 @@ py_library(
 )
 
 py_library(
+    name = "_collections_abc",
+    srcs = ["_collections_abc.py"],
+    visibility = [":__subpackages__"],
+    deps = ["@six_archive//:six"],
+)
+
+py_library(
     name = "tests/app_test_helper",
     testonly = 1,
     srcs = ["tests/app_test_helper.py"],
@@ -60,7 +75,7 @@ py_library(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/app_test_helper_pure_python",
     testonly = 1,
     srcs = ["tests/app_test_helper.py"],
@@ -72,7 +87,7 @@ py_binary(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/app_test",
     srcs = ["tests/app_test.py"],
     data = [":tests/app_test_helper_pure_python"],
@@ -90,7 +105,7 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/command_name_test",
     srcs = ["tests/command_name_test.py"],
     srcs_version = "PY2AND3",

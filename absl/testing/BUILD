@@ -2,6 +2,8 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+load("//absl:_build_defs.bzl", "py2py3_test_binary", "py2and3_test")
+
 py_library(
     name = "absltest",
     srcs = ["absltest.py"],
@@ -10,6 +12,7 @@ py_library(
     deps = [
         ":_pretty_print_reporter",
         ":xml_reporter",
+        "//absl:_collections_abc",
         "//absl:_enum_module",
         "//absl:app",
         "//absl/flags",
@@ -37,6 +40,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":absltest",
+        "//absl:_collections_abc",
         "@six_archive//:six",
     ],
 )
@@ -59,7 +63,20 @@ py_library(
     srcs = ["_bazelize_command.py"],
     srcs_version = "PY2AND3",
     visibility = ["//:__subpackages__"],
-    deps = ["//absl/flags"],
+    deps = [
+        ":_bazel_selected_py3",  # buildcleaner: keep
+        "//absl/flags",
+    ],
+)
+
+py_library(
+    name = "_bazel_selected_py3",
+    testonly = 1,
+    srcs = select({
+        "//absl:py3_mode": ["_bazel_selected_py3.py"],
+        "//absl:py2_mode": [],
+    }),
+    srcs_version = "PY2AND3",
 )
 
 py_library(
@@ -71,7 +88,7 @@ py_library(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/absltest_filtering_test",
     size = "small",
     srcs = ["tests/absltest_filtering_test.py"],
@@ -85,7 +102,7 @@ py_test(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/absltest_filtering_test_helper",
     testonly = 1,
     srcs = ["tests/absltest_filtering_test_helper.py"],
@@ -93,7 +110,7 @@ py_binary(
     deps = [":absltest"],
 )
 
-py_test(
+py2and3_test(
     name = "tests/absltest_randomization_test",
     size = "medium",
     srcs = ["tests/absltest_randomization_test.py"],
@@ -107,7 +124,7 @@ py_test(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/absltest_randomization_testcase",
     testonly = 1,
     srcs = ["tests/absltest_randomization_testcase.py"],
@@ -117,7 +134,7 @@ py_binary(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/absltest_sharding_test",
     size = "small",
     srcs = ["tests/absltest_sharding_test.py"],
@@ -130,7 +147,7 @@ py_test(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/absltest_sharding_test_helper",
     testonly = 1,
     srcs = ["tests/absltest_sharding_test_helper.py"],
@@ -138,7 +155,7 @@ py_binary(
     deps = [":absltest"],
 )
 
-py_test(
+py2and3_test(
     name = "tests/absltest_test",
     size = "small",
     srcs = ["tests/absltest_test.py"],
@@ -153,7 +170,7 @@ py_test(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/absltest_test_helper",
     testonly = 1,
     srcs = ["tests/absltest_test_helper.py"],
@@ -164,7 +181,7 @@ py_binary(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/flagsaver_test",
     srcs = ["tests/flagsaver_test.py"],
     srcs_version = "PY2AND3",
@@ -175,18 +192,19 @@ py_test(
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/parameterized_test",
     srcs = ["tests/parameterized_test.py"],
     srcs_version = "PY2AND3",
     deps = [
         ":absltest",
         ":parameterized",
+        "//absl:_collections_abc",
         "@six_archive//:six",
     ],
 )
 
-py_test(
+py2and3_test(
     name = "tests/xml_reporter_test",
     srcs = ["tests/xml_reporter_test.py"],
     data = [":tests/xml_reporter_helper_test"],
@@ -203,7 +221,7 @@ py_test(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/xml_reporter_helper_test",
     testonly = 1,
     srcs = ["tests/xml_reporter_helper_test.py"],

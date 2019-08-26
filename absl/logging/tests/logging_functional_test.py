@@ -33,9 +33,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import six
 
-
 FLAGS = flags.FLAGS
-
 
 _PY_VLOG3_LOG_MESSAGE = """\
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:62] This line is VLOG level 3
@@ -290,8 +288,9 @@ class FunctionalTest(parameterized.TestCase):
   """Functional tests using the logging_functional_test_helper script."""
 
   def _get_helper(self):
-    return _bazelize_command.get_executable_path(
-        'absl/logging/tests/logging_functional_test_helper')
+    helper_name = 'absl/logging/tests/logging_functional_test_helper'
+    return _bazelize_command.get_executable_path(helper_name)
+
   def _get_logs(self,
                 verbosity,
                 include_info_prefix=True):

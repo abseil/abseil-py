@@ -167,6 +167,7 @@ import re
 import types
 import unittest
 
+from absl._collections_abc import abc
 from absl.testing import absltest
 import six
 
@@ -197,13 +198,13 @@ def _clean_repr(obj):
 
 
 def _non_string_or_bytes_iterable(obj):
-  return (isinstance(obj, collections.Iterable) and
+  return (isinstance(obj, abc.Iterable) and
           not isinstance(obj, six.text_type) and
           not isinstance(obj, six.binary_type))
 
 
 def _format_parameter_list(testcase_params):
-  if isinstance(testcase_params, collections.Mapping):
+  if isinstance(testcase_params, abc.Mapping):
     return ', '.join('%s=%s' % (argname, _clean_repr(value))
                      for argname, value in six.iteritems(testcase_params))
   elif _non_string_or_bytes_iterable(testcase_params):
@@ -247,7 +248,7 @@ class _ParameterizedTestIter(object):
                        'without having inherited from parameterized.'
                        'TestCase. This is bad because none of '
                        'your test cases are actually being run. You may also '
-                       'be using a mock annotation before the parameterized '
+                       'be using another decorator before the parameterized '
                        'one, in which case you should reverse the order.')
 
   def __iter__(self):
@@ -258,7 +259,7 @@ class _ParameterizedTestIter(object):
     def make_bound_param_test(testcase_params):
       @functools.wraps(test_method)
       def bound_param_test(self):
-        if isinstance(testcase_params, collections.Mapping):
+        if isinstance(testcase_params, abc.Mapping):
           test_method(self, **testcase_params)
         elif _non_string_or_bytes_iterable(testcase_params):
           test_method(self, *testcase_params)
@@ -271,7 +272,7 @@ class _ParameterizedTestIter(object):
         bound_param_test.__x_use_name__ = True
 
         testcase_name = None
-        if isinstance(testcase_params, collections.Mapping):
+        if isinstance(testcase_params, abc.Mapping):
           if _NAMED_DICT_KEY not in testcase_params:
             raise RuntimeError(
                 'Dict for named tests must contain key "%s"' % _NAMED_DICT_KEY)
@@ -363,7 +364,7 @@ def _parameter_decorator(naming_type, testcases):
   if (len(testcases) == 1 and
       not isinstance(testcases[0], tuple) and
       not (naming_type == _NAMED and
-           isinstance(testcases[0], collections.Mapping))):
+           isinstance(testcases[0], abc.Mapping))):
     # Support using a single non-tuple parameter as a list of test cases.
     # Note in named parameters case, the single non-tuple parameter can't be
     # Mapping either, which means a single named parameter case.
@@ -371,7 +372,7 @@ def _parameter_decorator(naming_type, testcases):
         'Single parameter argument must be a non-string iterable')
     testcases = testcases[0]
 
-  if not isinstance(testcases, collections.Sequence):
+  if not isinstance(testcases, abc.Sequence):
     testcases = list(testcases)
   if not testcases:
     raise NoTestsError(
