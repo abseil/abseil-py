@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import unittest
 
 from absl._collections_abc import abc
@@ -389,6 +390,10 @@ class ParameterizedTestsTest(absltest.TestCase):
   class SubclassTestCase(SuperclassTestCase):
     pass
 
+  @unittest.skipIf(
+      (sys.version_info[:2] == (3, 7) and sys.version_info[2] in {0, 1, 2}),
+      'Python 3.7.0 to 3.7.2 have a bug that breaks this test, see '
+      'https://bugs.python.org/issue35767')
   def test_missing_inheritance(self):
     ts = unittest.makeSuite(self.BadAdditionParams)
     self.assertEqual(1, ts.countTestCases())
