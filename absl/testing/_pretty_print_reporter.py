@@ -37,6 +37,7 @@ class TextTestResult(unittest3_backport.TextTestResult):
       if test_id.startswith('__main__.'):
         test_id = test_id[len('__main__.'):]
       print('[%s] %s' % (tag, test_id), file=self.stream)
+      self.stream.flush()
 
   def startTest(self, test):
     super(TextTestResult, self).startTest(test)

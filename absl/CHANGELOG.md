@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Fixed
+
+*   (testing) `absl.testing`'s pretty print reporter no longer buffers
+    RUN/OK/FAILED messages.
 
 ## 0.8.0 (2019-08-26)
 
