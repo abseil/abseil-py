@@ -36,6 +36,7 @@ import re
 import shlex
 import shutil
 import signal
+import stat
 import subprocess
 import sys
 import tempfile
@@ -325,6 +326,8 @@ class _TempDir(object):
     # type: (Optional[Text], Optional[AnyStr], Text, Text, Text) -> _TempFile
     """Create a file in the directory.
 
+    NOTE: If the file already exists, it will be made writable and overwritten.
+
     Args:
       file_path: Optional file path for the temp file. If not given, a unique
         file name will be generated and used. Slashes are allowed in the name;
@@ -390,6 +393,11 @@ class _TempFile(object):
       cleanup_path = os.path.join(base_path, _get_first_part(file_path))
       path = os.path.join(base_path, file_path)
       _makedirs_exist_ok(os.path.dirname(path))
+      # The file may already exist, in which case, ensure it's writable so that
+      # it can be truncated.
+      if os.path.exists(path) and not os.access(path, os.W_OK):
+        stat_info = os.stat(path)
+        os.chmod(path, stat_info.st_mode | stat.S_IWUSR)
     else:
       _makedirs_exist_ok(base_path)
       fd, path = tempfile.mkstemp(dir=str(base_path))
@@ -583,8 +591,10 @@ class TestCase(unittest3_backport.TestCase):
 
     NOTE: This will zero-out the file. This ensures there is no pre-existing
     state.
+    NOTE: If the file already exists, it will be made writable and overwritten.
 
-    See also: `create_tempdir()` for creating temporary directories.
+    See also: `create_tempdir()` for creating temporary directories, and
+    `_TempDir.create_file` for creating files within a temporary directory.
 
     Args:
       file_path: Optional file path for the temp file. If not given, a unique

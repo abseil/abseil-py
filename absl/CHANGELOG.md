@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 *   (testing) `absl.testing`'s pretty print reporter no longer buffers
     RUN/OK/FAILED messages.
+*   (testing) `create_tempfile` will overwrite pre-existing read-only files.
 
 ## 0.8.0 (2019-08-26)
 
