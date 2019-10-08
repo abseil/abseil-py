@@ -2005,6 +2005,13 @@ class TempFileTest(absltest.TestCase, HelperMixin):
     }
     self.assertEqual(expected_paths, actual, output)
 
+  def test_create_file_pre_existing_readonly(self):
+    first = self.create_tempfile('foo', content='first')
+    os.chmod(first.full_path, 0o444)
+    second = self.create_tempfile('foo', content='second')
+    self.assertEqual('second', first.read_text())
+    self.assertEqual('second', second.read_text())
+
   def test_unnamed(self):
     td = self.create_tempdir()
     self.assert_dir_exists(td)
