@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.8.1 (2019-10-08)
+
 ### Fixed
 
 *   (testing) `absl.testing`'s pretty print reporter no longer buffers
