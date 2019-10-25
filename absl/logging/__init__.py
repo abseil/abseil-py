@@ -858,7 +858,8 @@ class PythonHandler(logging.StreamHandler):
         # Do not close the stream if it's sys.stderr|stdout. They may be
         # redirected or overridden to files, which should be managed by users
         # explicitly.
-        if self.stream not in (sys.stderr, sys.stdout) and (
+        user_managed = sys.stderr, sys.stdout, sys.__stderr__, sys.__stdout__
+        if self.stream not in user_managed and (
             not hasattr(self.stream, 'isatty') or not self.stream.isatty()):
           self.stream.close()
       except ValueError:
