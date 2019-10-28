@@ -534,6 +534,15 @@ class TestCase(unittest3_backport.TestCase):
     super(TestCase, self).__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
     self._outcome = getattr(self, '_outcome')  # type: Optional[_OutcomeType]
+    # This is re-initialized by setUp().
+    self._exit_stack = None
+
+  def setUp(self):
+    super(TestCase, self).setUp()
+    # NOTE: Only Py3 contextlib has ExitStack
+    if hasattr(contextlib, 'ExitStack'):
+      self._exit_stack = contextlib.ExitStack()
+      self.addCleanup(self._exit_stack.close)
 
   def create_tempdir(self, name=None, cleanup=None):
     # type: (Optional[Text], Optional[TempFileCleanup]) -> _TempDir
@@ -624,6 +633,32 @@ class TestCase(unittest3_backport.TestCase):
                                          errors=errors)
     self._maybe_add_temp_path_cleanup(cleanup_path, cleanup)
     return tf
+
+  def enter_context(self, manager):
+    """Returns the CM's value after registering it with the exit stack.
+
+    Entering a context pushes it onto a stack of contexts. The context is exited
+    when the test completes. Contexts are are exited in the reverse order of
+    entering. They will always be exited, regardless of test failure/success.
+    The context stack is specific to the test being run.
+
+    This is useful to eliminate per-test boilerplate when context managers
+    are used. For example, instead of decorating every test with `@mock.patch`,
+    simply do `self.foo = self.enter_context(mock.patch(...))' in `setUp()`.
+
+    NOTE: The context managers will always be exited without any error
+    information. This is an unfortunate implementation detail due to some
+    internals of how unittest runs tests.
+
+    Args:
+      manager: The context manager to enter.
+    """
+    # type: (ContextManager[_T]) -> _T
+    if not self._exit_stack:
+      raise AssertionError(
+          'self._exit_stack is not set: enter_context is Py3-only; also make '
+          'sure that AbslTest.setUp() is called.')
+    return self._exit_stack.enter_context(manager)
 
   @classmethod
   def _get_tempdir_path_cls(cls):
