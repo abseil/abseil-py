@@ -262,6 +262,20 @@ class PythonHandlerTest(absltest.TestCase):
       handler.close()
       mock_stdout.close.assert_not_called()
 
+  def test_close_original_stderr(self):
+    with mock.patch.object(sys, '__stderr__') as mock_original_stderr:
+      mock_original_stderr.isatty.return_value = False
+      handler = logging.PythonHandler(sys.__stderr__)
+      handler.close()
+      mock_original_stderr.close.assert_not_called()
+
+  def test_close_original_stdout(self):
+    with mock.patch.object(sys, '__stdout__') as mock_original_stdout:
+      mock_original_stdout.isatty.return_value = False
+      handler = logging.PythonHandler(sys.__stdout__)
+      handler.close()
+      mock_original_stdout.close.assert_not_called()
+
   def test_close_fake_file(self):
 
     class FakeFile(object):
