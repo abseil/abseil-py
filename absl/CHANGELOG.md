@@ -6,10 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-### Added
-
-*   (testing) `TestCase.enter_context`: Allows using context managers in setUp
-    and having them automatically exited when a test finishes.
+Nothing notable unreleased.
 
 ## 0.8.1 (2019-10-08)
 
