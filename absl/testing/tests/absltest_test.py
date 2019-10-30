@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import contextlib
 import io
 import os
 import re
@@ -1464,6 +1465,37 @@ class GetCommandStderrTestCase(absltest.TestCase):
     if not PY_VERSION_2:
       stderr = stderr.decode('utf-8')
     self.assertRegex(stderr, 'No such file or directory')
+
+
+@absltest.skipIf(six.PY2, 'Python 2 does not have ExitStack')
+class EnterContextTest(absltest.TestCase):
+
+  def setUp(self):
+    self.cm_state = 'unset'
+    self.cm_value = 'unset'
+
+    def assert_cm_exited():
+      self.assertEqual(self.cm_state, 'exited')
+
+    # Because cleanup functions are run in reverse order, we have to add
+    # our assert-cleanup before the exit stack registers its own cleanup.
+    # This ensures we see state after the stack cleanup runs.
+    self.addCleanup(assert_cm_exited)
+
+    super(EnterContextTest, self).setUp()
+    self.cm_value = self.enter_context(self.cm_for_test())
+
+  @contextlib.contextmanager
+  def cm_for_test(self):
+    try:
+      self.cm_state = 'yielded'
+      yield 'value'
+    finally:
+      self.cm_state = 'exited'
+
+  def test_enter_context(self):
+    self.assertEqual(self.cm_value, 'value')
+    self.assertEqual(self.cm_state, 'yielded')
 
 
 class EqualityAssertionTest(absltest.TestCase):
