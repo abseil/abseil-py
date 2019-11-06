@@ -143,19 +143,19 @@ class HelpXMLFlag(flags.BooleanFlag):
       sys.exit(1)
 
 
-def parse_flags_with_usage(args):
+def parse_flags_with_usage(args, known_only=False):
   """Tries to parse the flags, print usage, and exit if unparseable.
-
   Args:
     args: [str], a non-empty list of the command line arguments including
         program name.
-
+    known_only: bool, if True, parse and remove known flags; return the rest
+        untouched. Unknown flags specified by --undefok are not returned.     
   Returns:
     [str], a non-empty list of remaining command line arguments after parsing
     flags, including program name.
   """
   try:
-    return FLAGS(args)
+    return FLAGS(args, known_only=known_only)
   except flags.Error as error:
     sys.stderr.write('FATAL Flags parsing error: %s\n' % error)
     sys.stderr.write('Pass --helpshort or --helpfull to see help on flags.\n')
