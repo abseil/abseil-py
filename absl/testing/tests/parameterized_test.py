@@ -677,28 +677,6 @@ class ParameterizedTestsTest(absltest.TestCase):
         def test_mixed_something(self, unused_obj):
           pass
 
-  def test_named_test_with_no_name_fails(self):
-    with self.assertRaises(RuntimeError):
-
-      class _(parameterized.TestCase):
-
-        @parameterized.named_parameters(
-            (0,),
-        )
-        def test_something(self, unused_obj):
-          pass
-
-  def test_named_test_dict_with_no_name_fails(self):
-    with self.assertRaises(RuntimeError):
-
-      class _(parameterized.TestCase):
-
-        @parameterized.named_parameters(
-            {'unused_obj': 0},
-        )
-        def test_something(self, unused_obj):
-          pass
-
   def test_parameterized_test_iter_has_testcases_property(self):
     @parameterized.parameters(1, 2, 3, 4, 5, 6)
     def test_something(unused_self, unused_obj):  # pylint: disable=invalid-name
