@@ -70,7 +70,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 try:
   # pylint: disable=unused-import
   import typing
-  from typing import AnyStr, Callable, Text, Optional, ContextManager, TextIO, BinaryIO, Union, Type, Tuple, Any, MutableSequence, Sequence, Mapping, MutableMapping, IO, List
+  from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Text, TextIO, Tuple, Type, Union
   # pylint: enable=unused-import
 except ImportError:
   pass
@@ -484,7 +484,8 @@ class _TempFile(object):
                        'file in text mode'.format(mode))
     if 't' not in mode:
       mode += 't'
-    return self._open(mode, encoding, errors)
+    cm = self._open(mode, encoding, errors)  # type: ContextManager[TextIO]
+    return cm
 
   def open_bytes(self, mode='rb'):
     # type: (Text) -> ContextManager[BinaryIO]
@@ -505,11 +506,15 @@ class _TempFile(object):
                        'file in binary mode'.format(mode))
     if 'b' not in mode:
       mode += 'b'
-    return self._open(mode, encoding=None, errors=None)
+    cm = self._open(mode, encoding=None, errors=None)  # type: ContextManager[BinaryIO]
+    return cm
 
+  # TODO(b/123775699): Once pytype supports typing.Literal, use overload and
+  # Literal to express more precise return types and remove the type comments in
+  # open_text and open_bytes.
   @contextlib.contextmanager
   def _open(self, mode, encoding='utf8', errors='strict'):
-    # type: (Text, Text, Text) -> Union[TextIO, BinaryIO]
+    # type: (Text, Text, Text) -> Iterator[Union[IO[Text], IO[bytes]]]
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
       yield fp
