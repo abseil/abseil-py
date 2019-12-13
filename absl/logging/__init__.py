@@ -952,7 +952,7 @@ class ABSLLogger(logging.getLoggerClass()):
   """
   _frames_to_skip = set()
 
-  def findCaller(self, stack_info=False):
+  def findCaller(self, stack_info=False, stacklevel=1):
     """Finds the frame of the calling method on the stack.
 
     This method skips any frames registered with the
