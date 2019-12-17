@@ -6,10 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.9.0 (2019-12-17)
+
 ### Added
 
 *   (testing) `TestCase.enter_context`: Allows using context managers in setUp
     and having them automatically exited when a test finishes.
+
+### Fixed
+
+*   #126: calling `logging.debug(msg, stack_info=...)` no longer throws an
+    exception in Python 3.8.
 
 ## 0.8.1 (2019-10-08)
 
