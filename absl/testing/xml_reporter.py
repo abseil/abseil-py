@@ -91,7 +91,13 @@ def _iso8601_timestamp(timestamp):
   """
   if timestamp is None or timestamp < 0:
     return None
-  return datetime.datetime.utcfromtimestamp(timestamp).isoformat()
+  # Use utcfromtimestamp in PY2 because it doesn't have a built-in UTC object
+  if six.PY2:
+    return '%s+00:00' % datetime.datetime.utcfromtimestamp(
+        timestamp).isoformat()
+  else:
+    return datetime.datetime.fromtimestamp(
+        timestamp, tz=datetime.timezone.utc).isoformat()
 
 
 def _print_xml_element_header(element, attributes, stream, indentation=''):

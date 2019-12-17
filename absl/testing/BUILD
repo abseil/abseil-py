@@ -1,8 +1,29 @@
+load("//absl:_build_defs.bzl", "py2and3_test", "py2py3_test_binary")
+
 licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-load("//absl:_build_defs.bzl", "py2py3_test_binary", "py2and3_test")
+config_setting(
+    name = "osx",
+    constraint_values = ["//third_party/bazel_platforms/os:osx"],
+)
+
+config_setting(
+    name = "ios",
+    flag_values = {"//tools/cpp:cc_target_os": "apple"},
+)
+
+_absl_test_platform_deps = select({
+    ":osx": [],
+    ":ios": [],
+    # TODO(b/75911467): Remove after :osx works in host mode
+    "//tools/cc_target_os:platform_macos": [],
+    "//conditions:default": [
+        "//third_party/py/faulthandler",
+        "//third_party/py/readline",  # Enables arrow keys and tab-completion in (pdb).
+    ],
+})
 
 py_library(
     name = "absltest",
