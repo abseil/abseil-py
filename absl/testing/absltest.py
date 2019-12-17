@@ -70,7 +70,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 try:
   # pylint: disable=unused-import
   import typing
-  from typing import AnyStr, Callable, Text, Optional, ContextManager, TextIO, BinaryIO, Union, Type, Tuple, Any, MutableSequence, Sequence, Mapping, MutableMapping, IO, List
+  from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Text, TextIO, Tuple, Type, Union
   # pylint: enable=unused-import
 except ImportError:
   pass
@@ -207,11 +207,8 @@ def _get_default_randomize_ordering_seed():
     ValueError: Raised when the flag or env value is not one of the options
         above.
   """
-  if FLAGS.test_randomize_ordering_seed is not None:
-    randomize = FLAGS.test_randomize_ordering_seed
-  else:
-    randomize = os.environ.get('TEST_RANDOMIZE_ORDERING_SEED')
-  if randomize is None:
+  randomize = FLAGS.test_randomize_ordering_seed
+  if not randomize:
     return 0
   if randomize == 'random':
     return random.Random().randint(1, 4294967295)
@@ -239,12 +236,14 @@ flags.DEFINE_string('test_srcdir',
 flags.DEFINE_string('test_tmpdir', get_default_test_tmpdir(),
                     'Directory for temporary testing files',
                     allow_override_cpp=True)
-flags.DEFINE_string('test_randomize_ordering_seed', None,
+flags.DEFINE_string('test_randomize_ordering_seed',
+                    os.environ.get('TEST_RANDOMIZE_ORDERING_SEED', ''),
                     'If positive, use this as a seed to randomize the '
                     'execution order for test cases. If "random", pick a '
                     'random seed to use. If 0 or not set, do not randomize '
                     'test case execution order. This flag also overrides '
-                    'the TEST_RANDOMIZE_ORDERING_SEED environment variable.')
+                    'the TEST_RANDOMIZE_ORDERING_SEED environment variable.',
+                    allow_override_cpp=True)
 flags.DEFINE_string('xml_output_file', '',
                     'File to store XML test results')
 
@@ -485,7 +484,8 @@ class _TempFile(object):
                        'file in text mode'.format(mode))
     if 't' not in mode:
       mode += 't'
-    return self._open(mode, encoding, errors)
+    cm = self._open(mode, encoding, errors)  # type: ContextManager[TextIO]
+    return cm
 
   def open_bytes(self, mode='rb'):
     # type: (Text) -> ContextManager[BinaryIO]
@@ -506,11 +506,15 @@ class _TempFile(object):
                        'file in binary mode'.format(mode))
     if 'b' not in mode:
       mode += 'b'
-    return self._open(mode, encoding=None, errors=None)
+    cm = self._open(mode, encoding=None, errors=None)  # type: ContextManager[BinaryIO]
+    return cm
 
+  # TODO(b/123775699): Once pytype supports typing.Literal, use overload and
+  # Literal to express more precise return types and remove the type comments in
+  # open_text and open_bytes.
   @contextlib.contextmanager
   def _open(self, mode, encoding='utf8', errors='strict'):
-    # type: (Text, Text, Text) -> Union[TextIO, BinaryIO]
+    # type: (Text, Text, Text) -> Iterator[Union[IO[Text], IO[bytes]]]
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
       yield fp
@@ -534,6 +538,15 @@ class TestCase(unittest3_backport.TestCase):
     super(TestCase, self).__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
     self._outcome = getattr(self, '_outcome')  # type: Optional[_OutcomeType]
+    # This is re-initialized by setUp().
+    self._exit_stack = None
+
+  def setUp(self):
+    super(TestCase, self).setUp()
+    # NOTE: Only Py3 contextlib has ExitStack
+    if hasattr(contextlib, 'ExitStack'):
+      self._exit_stack = contextlib.ExitStack()
+      self.addCleanup(self._exit_stack.close)
 
   def create_tempdir(self, name=None, cleanup=None):
     # type: (Optional[Text], Optional[TempFileCleanup]) -> _TempDir
@@ -624,6 +637,32 @@ class TestCase(unittest3_backport.TestCase):
                                          errors=errors)
     self._maybe_add_temp_path_cleanup(cleanup_path, cleanup)
     return tf
+
+  def enter_context(self, manager):
+    """Returns the CM's value after registering it with the exit stack.
+
+    Entering a context pushes it onto a stack of contexts. The context is exited
+    when the test completes. Contexts are are exited in the reverse order of
+    entering. They will always be exited, regardless of test failure/success.
+    The context stack is specific to the test being run.
+
+    This is useful to eliminate per-test boilerplate when context managers
+    are used. For example, instead of decorating every test with `@mock.patch`,
+    simply do `self.foo = self.enter_context(mock.patch(...))' in `setUp()`.
+
+    NOTE: The context managers will always be exited without any error
+    information. This is an unfortunate implementation detail due to some
+    internals of how unittest runs tests.
+
+    Args:
+      manager: The context manager to enter.
+    """
+    # type: (ContextManager[_T]) -> _T
+    if not self._exit_stack:
+      raise AssertionError(
+          'self._exit_stack is not set: enter_context is Py3-only; also make '
+          'sure that AbslTest.setUp() is called.')
+    return self._exit_stack.enter_context(manager)
 
   @classmethod
   def _get_tempdir_path_cls(cls):
