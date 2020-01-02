@@ -207,7 +207,12 @@ def _get_default_randomize_ordering_seed():
     ValueError: Raised when the flag or env value is not one of the options
         above.
   """
-  randomize = FLAGS.test_randomize_ordering_seed
+  if FLAGS['test_randomize_ordering_seed'].present:
+    randomize = FLAGS.test_randomize_ordering_seed
+  elif 'TEST_RANDOMIZE_ORDERING_SEED' in os.environ:
+    randomize = os.environ['TEST_RANDOMIZE_ORDERING_SEED']
+  else:
+    randomize = ''
   if not randomize:
     return 0
   if randomize == 'random':
@@ -236,14 +241,15 @@ flags.DEFINE_string('test_srcdir',
 flags.DEFINE_string('test_tmpdir', get_default_test_tmpdir(),
                     'Directory for temporary testing files',
                     allow_override_cpp=True)
-flags.DEFINE_string('test_randomize_ordering_seed',
-                    os.environ.get('TEST_RANDOMIZE_ORDERING_SEED', ''),
-                    'If positive, use this as a seed to randomize the '
-                    'execution order for test cases. If "random", pick a '
-                    'random seed to use. If 0 or not set, do not randomize '
-                    'test case execution order. This flag also overrides '
-                    'the TEST_RANDOMIZE_ORDERING_SEED environment variable.',
-                    allow_override_cpp=True)
+flags.DEFINE_string(
+    'test_randomize_ordering_seed',
+    '',
+    'If positive, use this as a seed to randomize the '
+    'execution order for test cases. If "random", pick a '
+    'random seed to use. If 0 or not set, do not randomize '
+    'test case execution order. This flag also overrides '
+    'the TEST_RANDOMIZE_ORDERING_SEED environment variable.',
+    allow_override_cpp=True)
 flags.DEFINE_string('xml_output_file', '',
                     'File to store XML test results')
 
