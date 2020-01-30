@@ -29,6 +29,7 @@ from absl.flags import _defines
 from absl.flags import _exceptions
 from absl.flags import _flagvalues
 from absl.flags import _helpers
+from absl.flags import _validators
 from absl.flags.tests import module_foo
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -553,6 +554,15 @@ absl.flags.tests.module_foo:
 
     actual = flag_values.flags_into_string()
     self.assertEqual(expected, actual)
+
+  def test_validate_all_flags(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('name', None, '', flag_values=fv)
+    _validators.mark_flag_as_required('name', flag_values=fv)
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      fv.validate_all_flags()
+    fv.name = 'test'
+    fv.validate_all_flags()
 
 
 class FlagValuesLoggingTest(absltest.TestCase):

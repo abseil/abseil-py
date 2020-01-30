@@ -502,11 +502,17 @@ class FlagValues(object):
     fl[name].using_default_value = False
     return value
 
-  def _assert_all_validators(self):
+  def validate_all_flags(self):
+    """Verifies whether all flags pass validation.
+
+    Raises:
+      AttributeError: Raised if validators work with a non-existing flag.
+      IllegalFlagValueError: Raised if validation fails for at least one
+          validator.
+    """
     all_validators = set()
     for flag in six.itervalues(self._flags()):
-      for validator in flag.validators:
-        all_validators.add(validator)
+      all_validators.update(flag.validators)
     self._assert_validators(all_validators)
 
   def _assert_validators(self, validators):
@@ -633,7 +639,7 @@ class FlagValues(object):
           name, value, suggestions=suggestions)
 
     self.mark_as_parsed()
-    self._assert_all_validators()
+    self.validate_all_flags()
     return [program_name] + unparsed_args
 
   def __getstate__(self):

@@ -187,7 +187,7 @@ class ArgumentParser(argparse.ArgumentParser):
         del namespace.undefok
       self._inherited_absl_flags.mark_as_parsed()
       try:
-        self._inherited_absl_flags._assert_all_validators()  # pylint: disable=protected-access
+        self._inherited_absl_flags.validate_all_flags()
       except flags.IllegalFlagValueError as e:
         self.error(str(e))
 

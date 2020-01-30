@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Added
+
+*   (flags) `FLAGS.validate_all_flags`: a new method that validates all flags
+    and raises an exception if one fails.
 
 ## 0.9.0 (2019-12-17)
 
