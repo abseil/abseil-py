@@ -2103,10 +2103,10 @@ class TestLoader(unittest.TestLoader):
     super(TestLoader, self).__init__(*args, **kwds)
     seed = _get_default_randomize_ordering_seed()
     if seed:
-      self._seed = seed
-      self._random = random.Random(self._seed)
+      self._randomize_ordering_seed = seed
+      self._random = random.Random(self._randomize_ordering_seed)
     else:
-      self._seed = None
+      self._randomize_ordering_seed = None
       self._random = None
 
   def getTestCaseNames(self, testCaseClass):  # pylint:disable=invalid-name
@@ -2115,10 +2115,12 @@ class TestLoader(unittest.TestLoader):
       if _is_suspicious_attribute(testCaseClass, name):
         raise TypeError(TestLoader._ERROR_MSG % name)
     names = super(TestLoader, self).getTestCaseNames(testCaseClass)
-    if self._seed is not None:
-      logging.info('Randomizing test order with seed: %d', self._seed)
-      logging.info('To reproduce this order, re-run with '
-                   '--test_randomize_ordering_seed=%d', self._seed)
+    if self._randomize_ordering_seed is not None:
+      logging.info(
+          'Randomizing test order with seed: %d', self._randomize_ordering_seed)
+      logging.info(
+          'To reproduce this order, re-run with '
+          '--test_randomize_ordering_seed=%d', self._randomize_ordering_seed)
       self._random.shuffle(names)
     return names
 
@@ -2278,6 +2280,14 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     # with partial information, in case the test process crashes).
     xml_buffer = six.StringIO()
     kwargs['testRunner'].set_default_xml_stream(xml_buffer)  # pytype: disable=attribute-error
+
+    # If we've used a seed to randomize test case ordering, we want to record it
+    # as a top-level attribute in the `testsuites` section of the XML output.
+    randomize_ordering_seed = getattr(
+        kwargs['testLoader'], '_randomize_ordering_seed', None)
+    setter = getattr(kwargs['testRunner'], 'set_testsuites_property', None)
+    if randomize_ordering_seed and setter:
+      setter('test_randomize_ordering_seed', randomize_ordering_seed)
   elif kwargs.get('testRunner') is None:
     kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
 

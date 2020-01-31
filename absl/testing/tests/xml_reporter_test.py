@@ -951,7 +951,7 @@ class XmlReporterFixtureTest(absltest.TestCase):
       binary = self._get_helper()
       args = [binary, flag, '--xml_output_file=%s' % xml_fname]
       ret = subprocess.call(args)
-      self.assertNotEqual(ret, 0)
+      self.assertEqual(ret, 0)
 
       xml = ElementTree.parse(xml_fname).getroot()
     finally:
@@ -1000,31 +1000,6 @@ class XmlReporterFixtureTest(absltest.TestCase):
                            expected_case['failure'])
 
     return xml
-
-  def _test_for_error(self, flag, message):
-    """Run the test and look for an Error with the specified message."""
-    ret, xml = self._run_test_with_subprocess(flag)
-    self.assertNotEqual(ret, 0)
-    self.assertEqual(int(xml.attrib['errors']), 1)
-    self.assertEqual(int(xml.attrib['failures']), 0)
-    for msg in xml.iter('error'):
-      if msg.attrib['message'] == message:
-        break
-    else:
-      self.fail(msg='Did not find message: "%s" in xml\n%s' % (
-          message, ElementTree.tostring(xml)))
-
-  def _test_for_failure(self, flag, message):
-    """Run the test and look for a Failure with the specified message."""
-    ret, xml = self._run_test_with_subprocess(flag)
-    self.assertNotEqual(ret, 0)
-    self.assertEqual(int(xml.attrib['errors']), 0)
-    self.assertEqual(int(xml.attrib['failures']), 1)
-    for msg in xml.iter('failure'):
-      if msg.attrib['message'] == message:
-        break
-    else:
-      self.fail(msg='Did not find message: "%s"' % message)
 
   def test_set_up_module_error(self):
     self._run_test(
@@ -1156,6 +1131,20 @@ class XmlReporterFixtureTest(absltest.TestCase):
                  'cases': [{'name': 'test',
                             'classname': '__main__.FailableTest',
                             'failure': 'test Failed!'}]}])
+
+  def test_test_randomization_seed_logging(self):
+    # We expect the resulting XML to start as follows:
+    # <testsuites ...>
+    #  <properties>
+    #   <property name="test_randomize_ordering_seed" value="17" />
+    # ...
+    #
+    # which we validate here.
+    out = self._run_test_and_get_xml('--test_randomize_ordering_seed=17')
+    expected_attrib = {'name': 'test_randomize_ordering_seed', 'value': '17'}
+    property_attributes = [
+        prop.attrib for prop in out.findall('./properties/property')]
+    self.assertIn(expected_attrib, property_attributes)
 
 
 if __name__ == '__main__':
