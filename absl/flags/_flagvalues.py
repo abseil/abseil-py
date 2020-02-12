@@ -34,6 +34,14 @@ from absl.flags import _flag
 from absl.flags import _helpers
 import six
 
+# pylint: disable=unused-import
+try:
+  import typing
+  from typing import Text, Optional
+except ImportError:
+  typing = None
+# pylint: enable=unused-import
+
 # Add flagvalues module to disclaimed module ids.
 _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
@@ -1277,3 +1285,80 @@ class FlagValues(object):
 
 
 FLAGS = FlagValues()
+
+if typing:
+  _T = typing.TypeVar('_T')
+  _Base = typing.Generic[_T]
+else:
+  _Base = object
+
+
+class FlagHolder(_Base):
+  """Holds a defined flag.
+
+  This facilitates a cleaner api around global state. Instead of
+
+  ```
+  flags.DEFINE_integer('foo', ...)
+  flags.DEFINE_integer('bar', ...)
+  ...
+  def method():
+    # prints parsed value of 'bar' flag
+    print(flags.FLAGS.foo)
+    # runtime error due to typo or possibly bad coding style.
+    print(flags.FLAGS.baz)
+  ```
+
+  it encourages code like
+
+  ```
+  FOO_FLAG = flags.DEFINE_integer('foo', ...)
+  BAR_FLAG = flags.DEFINE_integer('bar', ...)
+  ...
+  def method():
+    print(FOO_FLAG.value)
+    print(BAR_FLAG.value)
+  ```
+
+  since the name of the flag appears only once in the source code.
+  """
+
+  def __init__(self, flag_values, name):
+    # type: (FlagValues, Text) -> None
+    self._flagvalues = flag_values
+    self._name = name
+
+  @property
+  def name(self):
+    # type: () -> Text
+    return self._name
+
+  @property
+  def value(self):
+    # type: () -> Optional[T]
+    """Returns the value of the flag.
+
+    Raises:
+      UnparsedFlagAccessError: if flag parsing has not finished.
+    """
+    return getattr(self._flagvalues, self._name)
+
+  @property
+  def non_none_value(self):
+    # type: () -> T
+    """Returns the value of the flag after checking it is not None.
+
+    Raises:
+      UnparsedFlagAccessError: if flag parsing has not finished.
+      NoneValueError: if flag had a None value.
+    """
+    value = self.value
+    if value is None:
+      raise _exceptions.NoneValueError('Flag %s is set to None' % self._name)
+    return value
+
+  @property
+  def default(self):
+    # type: () -> Optional[T]
+    """Returns the default value of the flag."""
+    return self._flagvalues[self._name].default

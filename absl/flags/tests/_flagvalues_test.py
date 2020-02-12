@@ -835,5 +835,52 @@ class UnparsedFlagAccessTest(absltest.TestCase):
       _ = fv.a_str
 
 
+class FlagHolderTest(absltest.TestCase):
+
+  def setUp(self):
+    super(FlagHolderTest, self).setUp()
+    self.fv = _flagvalues.FlagValues()
+    self.name_flag = _defines.DEFINE_string(
+        'name', 'default', 'help', flag_values=self.fv)
+
+  def parse_flags(self, *argv):
+    self.fv.unparse_flags()
+    self.fv(['binary_name'] + list(argv))
+
+  def test_name(self):
+    self.assertEqual('name', self.name_flag.name)
+
+  def test_value_before_flag_parsing(self):
+    with self.assertRaises(_exceptions.UnparsedFlagAccessError):
+      _ = self.name_flag.value
+
+  def test_value_returns_default_value_if_not_explicitly_set(self):
+    self.parse_flags()
+    self.assertEqual('default', self.name_flag.value)
+
+  def test_value_returns_explicitly_set_value(self):
+    self.parse_flags('--name=new_value')
+    self.assertEqual('new_value', self.name_flag.value)
+
+  def test_non_none_value_fails_if_value_is_none(self):
+    self.parse_flags()
+    self.fv.name = None
+    with self.assertRaises(_exceptions.NoneValueError):
+      _ = self.name_flag.non_none_value
+
+  def test_non_none_value(self):
+    self.parse_flags('--name=default')
+    self.assertEqual('default', self.name_flag.non_none_value)
+
+  def test_allow_override(self):
+    first = _defines.DEFINE_integer(
+        'int_flag', 1, 'help', flag_values=self.fv, allow_override=1)
+    second = _defines.DEFINE_integer(
+        'int_flag', 2, 'help', flag_values=self.fv, allow_override=1)
+    self.parse_flags('--int_flag=3')
+    self.assertEqual(3, first.value)
+    self.assertEqual(3, second.value)
+
+
 if __name__ == '__main__':
   absltest.main()

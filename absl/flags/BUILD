@@ -1,8 +1,8 @@
+load("//absl:_build_defs.bzl", "py2and3_test")
+
 licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
-
-load("//absl:_build_defs.bzl", "py2and3_test")
 
 py_library(
     name = "flags",

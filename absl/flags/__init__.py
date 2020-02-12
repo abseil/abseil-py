@@ -112,6 +112,7 @@ EnumFlag = _flag.EnumFlag
 EnumClassFlag = _flag.EnumClassFlag
 MultiFlag = _flag.MultiFlag
 MultiEnumClassFlag = _flag.MultiEnumClassFlag
+FlagHolder = _flagvalues.FlagHolder
 FlagValues = _flagvalues.FlagValues
 ArgumentParser = _argument_parser.ArgumentParser
 BooleanParser = _argument_parser.BooleanParser
