@@ -1335,7 +1335,7 @@ class FlagHolder(_Base):
 
   @property
   def value(self):
-    # type: () -> Optional[T]
+    # type: () -> Optional[_T]
     """Returns the value of the flag.
 
     Raises:
@@ -1344,21 +1344,7 @@ class FlagHolder(_Base):
     return getattr(self._flagvalues, self._name)
 
   @property
-  def non_none_value(self):
-    # type: () -> T
-    """Returns the value of the flag after checking it is not None.
-
-    Raises:
-      UnparsedFlagAccessError: if flag parsing has not finished.
-      NoneValueError: if flag had a None value.
-    """
-    value = self.value
-    if value is None:
-      raise _exceptions.NoneValueError('Flag %s is set to None' % self._name)
-    return value
-
-  @property
   def default(self):
-    # type: () -> Optional[T]
+    # type: () -> Optional[_T]
     """Returns the default value of the flag."""
     return self._flagvalues[self._name].default

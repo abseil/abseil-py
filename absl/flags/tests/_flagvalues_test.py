@@ -862,16 +862,6 @@ class FlagHolderTest(absltest.TestCase):
     self.parse_flags('--name=new_value')
     self.assertEqual('new_value', self.name_flag.value)
 
-  def test_non_none_value_fails_if_value_is_none(self):
-    self.parse_flags()
-    self.fv.name = None
-    with self.assertRaises(_exceptions.NoneValueError):
-      _ = self.name_flag.non_none_value
-
-  def test_non_none_value(self):
-    self.parse_flags('--name=default')
-    self.assertEqual('default', self.name_flag.non_none_value)
-
   def test_allow_override(self):
     first = _defines.DEFINE_integer(
         'int_flag', 1, 'help', flag_values=self.fv, allow_override=1)

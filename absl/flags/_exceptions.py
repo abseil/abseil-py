@@ -110,7 +110,3 @@ class ValidationError(Error):
 
 class FlagNameConflictsWithMethodError(Error):
   """Raised when a flag name conflicts with FlagValues methods."""
-
-
-class NoneValueError(Error):
-  """Raised when a flag unexpectedly has None value."""
