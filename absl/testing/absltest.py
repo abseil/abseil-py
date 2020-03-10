@@ -2242,11 +2242,15 @@ def _setup_sharding(custom_loader=None):
 
   def getShardedTestCaseNames(testCaseClass):
     filtered_names = []
-    for testcase in sorted(delegate_get_names(testCaseClass)):
+    # We need to sort the list of tests in order to determine which tests this
+    # shard is responsible for; however, it's important to preserve the order
+    # returned by the base loader, e.g. in the case of randomized test ordering.
+    ordered_names = delegate_get_names(testCaseClass)
+    for testcase in sorted(ordered_names):
       bucket = next(bucket_iterator)
       if bucket == shard_index:
         filtered_names.append(testcase)
-    return filtered_names
+    return [x for x in ordered_names if x in filtered_names]
 
   base_loader.getTestCaseNames = getShardedTestCaseNames
   return base_loader
