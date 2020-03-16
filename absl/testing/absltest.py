@@ -256,7 +256,7 @@ def _monkey_patch_test_result_for_unexpected_passes():
   """Workaround for <http://bugs.python.org/issue20165>."""
 
   def wasSuccessful(self):
-    # type: () -> bool
+    # type: (unittest.TestResult) -> bool
     """Tells whether or not this result was a success.
 
     Any unexpected pass is to be counted as a non-success.
