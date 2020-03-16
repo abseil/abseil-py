@@ -62,6 +62,15 @@ _README_PATH = os.path.join(
 with open(_README_PATH, 'rb') as fp:
   LONG_DESCRIPTION = fp.read().decode('utf-8')
 
+_all_packages = setuptools.find_packages(exclude=[
+        '*.tests', '*.tests.*', 'tests.*', 'tests',
+    ])
+_non_third_party_packages = [
+  package
+  for package in _all_packages
+  if 'third_party' not in package
+]
+
 setuptools.setup(
     name='absl-py',
     version='0.9.0',
@@ -72,9 +81,11 @@ setuptools.setup(
     long_description_content_type='text/markdown',
     author='The Abseil Authors',
     url='https://github.com/abseil/abseil-py',
-    packages=setuptools.find_packages(exclude=[
-        '*.tests', '*.tests.*', 'tests.*', 'tests',
-    ]),
+    packages=_all_packages,
+    package_data={
+      package: ["py.typed"]
+      for package in _non_third_party_packages
+    },
     install_requires=INSTALL_REQUIRES,
     include_package_data=True,
     license='Apache 2.0',
