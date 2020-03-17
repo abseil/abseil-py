@@ -256,7 +256,7 @@ def _monkey_patch_test_result_for_unexpected_passes():
   """Workaround for <http://bugs.python.org/issue20165>."""
 
   def wasSuccessful(self):
-    # type: () -> bool
+    # type: (unittest.TestResult) -> bool
     """Tells whether or not this result was a success.
 
     Any unexpected pass is to be counted as a non-success.
@@ -385,7 +385,7 @@ class _TempFile(object):
   # pylint: disable=line-too-long
   @classmethod
   def _create(cls, base_path, file_path, content, mode, encoding, errors):
-    # type: (Text, Optional[Text], AnyStr, Text, Text, Text) -> Tuple[_TempFile, Text]
+    # type: (Text, Optional[Text], Optional[AnyStr], Text, Text, Text) -> Tuple[_TempFile, Text]
     # pylint: enable=line-too-long
     """Module-private: create a tempfile instance."""
     if file_path:
@@ -514,7 +514,7 @@ class _TempFile(object):
   # open_text and open_bytes.
   @contextlib.contextmanager
   def _open(self, mode, encoding='utf8', errors='strict'):
-    # type: (Text, Text, Text) -> Iterator[Union[IO[Text], IO[bytes]]]
+    # type: (Text, Optional[Text], Optional[Text]) -> Iterator[Union[IO[Text], IO[bytes]]]
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
       yield fp
@@ -639,6 +639,7 @@ class TestCase(unittest3_backport.TestCase):
     return tf
 
   def enter_context(self, manager):
+    # type: (ContextManager[_T]) -> _T
     """Returns the CM's value after registering it with the exit stack.
 
     Entering a context pushes it onto a stack of contexts. The context is exited
@@ -657,7 +658,6 @@ class TestCase(unittest3_backport.TestCase):
     Args:
       manager: The context manager to enter.
     """
-    # type: (ContextManager[_T]) -> _T
     if not self._exit_stack:
       raise AssertionError(
           'self._exit_stack is not set: enter_context is Py3-only; also make '
