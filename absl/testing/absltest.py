@@ -385,7 +385,7 @@ class _TempFile(object):
   # pylint: disable=line-too-long
   @classmethod
   def _create(cls, base_path, file_path, content, mode, encoding, errors):
-    # type: (Text, Optional[Text], AnyStr, Text, Text, Text) -> Tuple[_TempFile, Text]
+    # type: (Text, Optional[Text], Optional[AnyStr], Text, Text, Text) -> Tuple[_TempFile, Text]
     # pylint: enable=line-too-long
     """Module-private: create a tempfile instance."""
     if file_path:
@@ -514,7 +514,7 @@ class _TempFile(object):
   # open_text and open_bytes.
   @contextlib.contextmanager
   def _open(self, mode, encoding='utf8', errors='strict'):
-    # type: (Text, Text, Text) -> Iterator[Union[IO[Text], IO[bytes]]]
+    # type: (Text, Optional[Text], Optional[Text]) -> Iterator[Union[IO[Text], IO[bytes]]]
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
       yield fp
