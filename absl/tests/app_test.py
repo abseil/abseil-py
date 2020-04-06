@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import codecs
 import contextlib
+import copy
 import os
 import re
 import subprocess
@@ -311,6 +312,14 @@ class FunctionalTests(absltest.TestCase):
         expect_success=True, arguments=['--print_init_callbacks'])
     self.assertIn('before app.run', stdout)
     self.assertIn('during real_main', stdout)
+
+
+class FlagDeepCopyTest(absltest.TestCase):
+  """Make sure absl flags are copy.deepcopy() compatible."""
+
+  def test_deepcopyable(self):
+    copy.deepcopy(FLAGS)
+    # Nothing to assert
 
 
 class FlagValuesExternalizationTest(absltest.TestCase):
