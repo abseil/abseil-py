@@ -11,7 +11,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":converter",
-        "//absl:_collections_abc",
         "//absl/flags",
         "@six_archive//:six",
     ],
