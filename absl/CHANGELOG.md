@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+*   (logging) `--logger_levels`: allows specifying the log levels of loggers.
 *   (flags) `FLAGS.validate_all_flags`: a new method that validates all flags
     and raises an exception if one fails.
 

@@ -647,6 +647,31 @@ E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std error log
         test_name='bad_exc_info',
         use_absl_log_file=True)
 
+  def test_verbosity_logger_levels_flag_ordering(self):
+    """Make sure last-specified flag wins."""
+
+    def assert_error_level_logged(stderr):
+      lines = stderr.splitlines()
+      for line in lines:
+        self.assertIn('std error log', line)
+
+    self._exec_test(
+        _verify_ok,
+        test_name='std_logging',
+        expected_logs=[('stderr', None, assert_error_level_logged)],
+        extra_args=['-v=1', '--logger_levels=:ERROR'])
+
+    def assert_debug_level_logged(stderr):
+      lines = stderr.splitlines()
+      for line in lines:
+        self.assertRegex(line, 'std (debug|info|warning|error) log')
+
+    self._exec_test(
+        _verify_ok,
+        test_name='std_logging',
+        expected_logs=[('stderr', None, assert_debug_level_logged)],
+        extra_args=['--logger_levels=:ERROR', '-v=1'])
+
   def test_none_exc_info_py_logging(self):
 
     if six.PY2:

@@ -75,6 +75,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import getpass
 import io
 import itertools
@@ -86,9 +87,11 @@ import sys
 import time
 import timeit
 import traceback
+import types
 import warnings
 
 from absl import flags
+from absl._collections_abc import abc
 from absl.logging import converter
 import six
 
@@ -174,7 +177,10 @@ class _VerbosityFlag(flags.Flag):
     self._update_logging_levels()
 
   def _update_logging_levels(self):
-    """Updates absl logging levels to the current verbosity."""
+    """Updates absl logging levels to the current verbosity.
+
+    Visibility: module-private
+    """
     if not _absl_logger:
       return
 
@@ -192,6 +198,65 @@ class _VerbosityFlag(flags.Flag):
       logging.root.setLevel(standard_verbosity)
     else:
       _absl_logger.setLevel(standard_verbosity)
+
+
+class _LoggerLevelsFlag(flags.Flag):
+  """Flag class for --logger_levels."""
+
+  def __init__(self, *args, **kwargs):
+    super(_LoggerLevelsFlag, self).__init__(
+        _LoggerLevelsParser(),
+        _LoggerLevelsSerializer(),
+        *args, **kwargs)
+
+  @property
+  def value(self):
+    # Return an immutable view because modifications won't update the loggers.
+    if six.PY3:
+      return types.MappingProxyType(self._value)
+    else:
+      # For lack of an immutable type, return a copy.
+      return self._value.copy()
+
+  @value.setter
+  def value(self, v):
+    self._value = {} if v is None else v
+    self._update_logger_levels()
+
+  def _update_logger_levels(self):
+    # Visibility: module-private.
+    # This is called by absl.app.run() during initialization.
+    for name, level in self._value.items():
+      logging.getLogger(name).setLevel(level)
+
+
+class _LoggerLevelsParser(flags.ArgumentParser):
+  """Parser for --logger_levels flag."""
+
+  def parse(self, value):
+    if isinstance(value, abc.Mapping):
+      return value
+
+    pairs = [pair.strip() for pair in value.split(',') if pair.strip()]
+
+    # Preserve the order so that serialization is deterministic.
+    levels = collections.OrderedDict()
+    for name_level in pairs:
+      name, level = name_level.split(':', 1)
+      name = name.strip()
+      level = level.strip()
+      levels[name] = level
+    return levels
+
+
+class _LoggerLevelsSerializer(object):
+  """Serializer for --logger_levels flag."""
+
+  def serialize(self, value):
+    if isinstance(value, six.string_types):
+      return value
+    return ','.join(
+        '{}:{}'.format(name, level) for name, level in value.items())
 
 
 class _StderrthresholdFlag(flags.Flag):
@@ -245,6 +310,13 @@ flags.DEFINE_flag(_VerbosityFlag(
     'supplied, the value will be changed from the default of -1 (warning) to '
     '0 (info) after flags are parsed.',
     short_name='v', allow_hide_cpp=True))
+flags.DEFINE_flag(
+    _LoggerLevelsFlag(
+        'logger_levels', None,
+        'Specify log level of loggers. The format is a CSV list of '
+        '`name:level`. Where `name` is the logger name used with '
+        '`logging.getLogger()`, and `level` is a level name  (INFO, DEBUG, '
+        'etc). e.g. `myapp.foo:INFO,other.logger:DEBUG`'))
 flags.DEFINE_flag(_StderrthresholdFlag(
     'stderrthreshold', 'fatal',
     'log messages at this level, or more severe, to stderr in '
@@ -1146,6 +1218,7 @@ def use_absl_handler():
   if absl_handler not in logging.root.handlers:
     logging.root.addHandler(absl_handler)
     FLAGS['verbosity']._update_logging_levels()  # pylint: disable=protected-access
+    FLAGS['logger_levels']._update_logger_levels()  # pylint: disable=protected-access
 
 
 def _initialize():
