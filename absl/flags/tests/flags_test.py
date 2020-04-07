@@ -67,6 +67,17 @@ class FlagDictToArgsTest(absltest.TestCase):
             '--loadthatstuff=42,hello,goodbye'),
         flags.flag_dict_to_args(arg_dict))
 
+  def test_flatten_google_flag_map_with_multi_flag(self):
+    arg_dict = {
+        'some_list': ['value1', 'value2'],
+        'some_multi_string': ['value3', 'value4'],
+    }
+    self.assertSameElements(
+        (
+            '--some_list=value1,value2', '--some_multi_string=value3',
+            '--some_multi_string=value4'),
+        flags.flag_dict_to_args(arg_dict, multi_flags={'some_multi_string'}))
+
 
 class Fruit(enum.Enum):
   apple = 1
