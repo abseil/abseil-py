@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+*   (testing) `_TempDir` and `_TempFile` now implement `__fspath__` to satisfy
+    `os.PathLike`
 *   (logging) `--logger_levels`: allows specifying the log levels of loggers.
 *   (flags) `FLAGS.validate_all_flags`: a new method that validates all flags
     and raises an exception if one fails.

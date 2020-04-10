@@ -34,6 +34,11 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import six
 
+try:
+  import pathlib
+except ImportError:  # PY2
+  pathlib = None
+
 PY_VERSION_2 = sys.version_info[0] == 2
 
 FLAGS = flags.FLAGS
@@ -2043,6 +2048,16 @@ class TempFileTest(absltest.TestCase, HelperMixin):
     second = self.create_tempfile('foo', content='second')
     self.assertEqual('second', first.read_text())
     self.assertEqual('second', second.read_text())
+
+  @absltest.skipUnless(getattr(os, 'PathLike', None), 'Testing os.PathLike')
+  def test_temp_file_path_like(self):
+    tempdir = self.create_tempdir('foo')
+    self.assertIsInstance(tempdir, os.PathLike)
+
+    tempfile_ = tempdir.create_file('bar')
+    self.assertIsInstance(tempfile_, os.PathLike)
+
+    self.assertEqual(tempfile_.read_text(), pathlib.Path(tempfile_).read_text())
 
   def test_unnamed(self):
     td = self.create_tempdir()

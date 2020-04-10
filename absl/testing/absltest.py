@@ -326,6 +326,10 @@ class _TempDir(object):
     """The path, as a string, for the directory."""
     return self._path
 
+  def __fspath__(self):
+    # type: () -> Text
+    return self.full_path
+
   def create_file(self, file_path=None, content=None, mode='w', encoding='utf8',
                   errors='strict'):
     # type: (Optional[Text], Optional[AnyStr], Text, Text, Text) -> _TempFile
@@ -427,6 +431,10 @@ class _TempFile(object):
     # type: () -> Text
     """The path, as a string, for the file."""
     return self._path
+
+  def __fspath__(self):
+    # type: () -> Text
+    return self.full_path
 
   def read_text(self, encoding='utf8', errors='strict'):
     # type: (Text, Text) -> Text
