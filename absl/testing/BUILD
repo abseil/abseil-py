@@ -56,7 +56,10 @@ py_library(
 
 py_library(
     name = "parameterized",
-    srcs = ["parameterized.py"],
+    srcs = [
+        "_parameterized_async.py",
+        "parameterized.py",
+    ],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [

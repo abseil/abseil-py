@@ -14,6 +14,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (flags) `FLAGS.validate_all_flags`: a new method that validates all flags
     and raises an exception if one fails.
 
+*   (testing) `parameterized.TestCase`: Supports async test definitions.
+
 ## 0.9.0 (2019-12-17)
 
 ### Added

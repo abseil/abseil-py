@@ -155,6 +155,24 @@ inside a tuple:
     )
     def testSumIsZero(self, arg):
       self.assertEqual(0, sum(arg))
+
+
+Async Support
+===============================
+If a test needs to call async functions, it can inherit from both
+parameterized.TestCase and another TestCase that supports async calls, such
+as [asynctest](https://github.com/Martiusweb/asynctest):
+
+  import asynctest
+
+  class AsyncExample(parameterized.TestCase, asynctest.TestCase):
+    @parameterized.parameters(
+      ('a', 1),
+      ('b', 2),
+    )
+    async def testSomeAsyncFunction(self, arg, expected):
+      actual = await someAsyncFunction(arg)
+      self.assertEqual(actual, expected)
 """
 
 from __future__ import absolute_import
@@ -170,6 +188,11 @@ import unittest
 from absl._collections_abc import abc
 from absl.testing import absltest
 import six
+
+try:
+  from absl.testing import _parameterized_async
+except (ImportError, SyntaxError):
+  _parameterized_async = None
 
 _ADDR_RE = re.compile(r'\<([a-zA-Z0-9_\-\.]+) object at 0x[a-fA-F0-9]+\>')
 _NAMED = object()
@@ -260,11 +283,11 @@ class _ParameterizedTestIter(object):
       @functools.wraps(test_method)
       def bound_param_test(self):
         if isinstance(testcase_params, abc.Mapping):
-          test_method(self, **testcase_params)
+          return test_method(self, **testcase_params)
         elif _non_string_or_bytes_iterable(testcase_params):
-          test_method(self, *testcase_params)
+          return test_method(self, *testcase_params)
         else:
-          test_method(self, testcase_params)
+          return test_method(self, testcase_params)
 
       if naming_type is _NAMED:
         # Signal the metaclass that the name of the test function is unique
@@ -322,6 +345,9 @@ class _ParameterizedTestIter(object):
           bound_param_test.__name__, _format_parameter_list(testcase_params))
       if test_method.__doc__:
         bound_param_test.__doc__ += '\n%s' % (test_method.__doc__,)
+      if (_parameterized_async and
+          _parameterized_async.iscoroutinefunction(test_method)):
+        return _parameterized_async.async_wrapped(bound_param_test)
       return bound_param_test
 
     return (make_bound_param_test(c) for c in self.testcases)
@@ -341,8 +367,8 @@ def _modify_class(class_object, testcases, naming_type):
       _update_class_dict_for_param_test_case(
           class_object.__name__, methods, test_method_ids, name,
           _ParameterizedTestIter(obj, testcases, naming_type, name))
-      for name, meth in six.iteritems(methods):
-        setattr(class_object, name, meth)
+      for meth_name, meth in six.iteritems(methods):
+        setattr(class_object, meth_name, meth)
 
 
 def _parameter_decorator(naming_type, testcases):
