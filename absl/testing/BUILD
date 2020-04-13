@@ -57,9 +57,11 @@ py_library(
 py_library(
     name = "parameterized",
     srcs = [
-        "_parameterized_async.py",
         "parameterized.py",
-    ],
+    ] + select({
+        "//absl:py2_mode": [],
+        "//absl:py3_mode": ["_parameterized_async.py"],
+    }),
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
