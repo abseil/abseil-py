@@ -89,6 +89,226 @@ class EmptyEnum(enum.Enum):
   pass
 
 
+class AliasFlagsTest(absltest.TestCase):
+
+  def setUp(self):
+    super(AliasFlagsTest, self).setUp()
+    self.flags = flags.FlagValues()
+
+  @property
+  def alias(self):
+    return self.flags['alias']
+
+  @property
+  def aliased(self):
+    return self.flags['aliased']
+
+  def define_alias(self, *args, **kwargs):
+    flags.DEFINE_alias(*args, flag_values=self.flags, **kwargs)
+
+  def define_integer(self, *args, **kwargs):
+    flags.DEFINE_integer(*args, flag_values=self.flags, **kwargs)
+
+  def define_multi_integer(self, *args, **kwargs):
+    flags.DEFINE_multi_integer(*args, flag_values=self.flags, **kwargs)
+
+  def define_string(self, *args, **kwargs):
+    flags.DEFINE_string(*args, flag_values=self.flags, **kwargs)
+
+  def assert_alias_mirrors_aliased(self, alias, aliased, ignore_due_to_bug=()):
+    # A few sanity checks to avoid false success
+    if six.PY3:
+      self.assertIn('FlagAlias', alias.__class__.__qualname__)
+    self.assertIsNot(alias, aliased)
+    self.assertNotEqual(aliased.name, alias.name)
+
+    alias_state = {}
+    aliased_state = {}
+    attrs = {
+        'allow_hide_cpp',
+        'allow_override',
+        'allow_override_cpp',
+        'allow_overwrite',
+        'allow_using_method_names',
+        'boolean',
+        'default',
+        'default_as_str',
+        'default_unparsed',
+        # TODO(rlevasseur): This should match, but a bug prevents it from being
+        # in sync.
+        # 'using_default_value',
+        'value',
+    }
+    attrs.difference_update(ignore_due_to_bug)
+
+    for attr in attrs:
+      alias_state[attr] = getattr(alias, attr)
+      aliased_state[attr] = getattr(aliased, attr)
+
+    self.assertEqual(aliased_state, alias_state, 'LHS is aliased; RHS is alias')
+
+  def test_serialize_multi(self):
+    self.define_multi_integer('aliased', [0, 1], '')
+    self.define_alias('alias', 'aliased')
+
+    actual = self.alias.serialize()
+    # TODO(rlevasseur): This should check for --alias=0\n--alias=1, but
+    # a bug causes it to serialize incorrectly.
+    self.assertEqual('--alias=[0, 1]', actual)
+
+  def test_allow_overwrite_false(self):
+    self.define_integer('aliased', None, 'help',
+                        allow_overwrite=False)
+    self.define_alias('alias', 'aliased')
+
+    with self.assertRaisesRegex(flags.IllegalFlagValueError, 'already defined'):
+      self.flags(['./program', '--alias=1', '--aliased=2'])
+
+    self.assertEqual(1, self.alias.value)
+    self.assertEqual(1, self.aliased.value)
+
+  def test_aliasing_multi_no_default(self):
+    def define_flags():
+      self.flags = flags.FlagValues()
+      self.define_multi_integer('aliased', None, 'help')
+      self.define_alias('alias', 'aliased')
+
+    with self.subTest('after defining'):
+      define_flags()
+      self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+      self.assertIsNone(self.alias.value)
+
+    with self.subTest('set alias'):
+      define_flags()
+      self.flags(['./program', '--alias=1', '--alias=2'])
+      self.assertEqual([1, 2], self.alias.value)
+      self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+
+    with self.subTest('set aliased'):
+      define_flags()
+      self.flags(['./program', '--aliased=1', '--aliased=2'])
+      self.assertEqual([1, 2], self.alias.value)
+      self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+
+    with self.subTest('not setting anything'):
+      define_flags()
+      self.flags(['./program'])
+      self.assertEqual(None, self.alias.value)
+      self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+
+  def test_aliasing_multi_with_default(self):
+    def define_flags():
+      self.flags = flags.FlagValues()
+      self.define_multi_integer('aliased', [0], 'help')
+      self.define_alias('alias', 'aliased')
+
+    with self.subTest('after defining'):
+      define_flags()
+      self.assertEqual([0], self.alias.default)
+      self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+
+    with self.subTest('set alias'):
+      define_flags()
+      self.flags(['./program', '--alias=1', '--alias=2'])
+      # TODO(rlevasseur): This should assert [1, 2], but a bug with aliases and
+      # MultiFlag causes the default to be appended to instead
+      self.assertEqual([0, 1, 2], self.alias.value)
+      self.assert_alias_mirrors_aliased(
+          self.alias, self.aliased,
+          # TODO(rlevasseur): While MultiFlag modifies its default value due to
+          # a bug, it also copies the original list before actually assigning it
+          # as the default, so then the alias and aliased flags appear to have
+          # different defaults
+          ignore_due_to_bug=['default'])
+
+      self.assertEqual(2, self.alias.present)
+      # TODO(rlevasseur): This should assert 0, but a bug with aliases and
+      # MultiFlag causes the alias to increment aliased's present counter.
+      self.assertEqual(3, self.aliased.present)
+
+    with self.subTest('set aliased'):
+      define_flags()
+      self.flags(['./program', '--aliased=1', '--aliased=2'])
+      # TODO(rlevasseur): This should assert [1, 2], but a bug with aliases and
+      # MultiFlag causes the default to be appended to instead
+      self.assertEqual([0, 1, 2], self.alias.value)
+      self.assert_alias_mirrors_aliased(
+          self.alias, self.aliased,
+          # TODO(rlevasseur): While MultiFlag modifies its default value due to
+          # a bug, it also copies the original list before actually assigning it
+          # as the default, so then the alias and aliased flags appear to have
+          # different defaults
+          ignore_due_to_bug=['default'])
+      self.assertEqual(0, self.alias.present)
+
+      # TODO(rlevasseur): This should assert 0, but a bug with aliases and
+      # MultiFlag causes the alias to increment aliased present counter.
+      self.assertEqual(3, self.aliased.present)
+
+    with self.subTest('not setting anything'):
+      define_flags()
+      self.flags(['./program'])
+      self.assertEqual([0], self.alias.value)
+      self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+      # TODO(rlevasseur): This should assert 0, but a bug with aliases and
+      # MultiFlag causes the lias to increment aliased present counter.
+      self.assertEqual(0, self.alias.present)
+      # TODO(rlevasseur): This should assert 0, but a bug with aliases and
+      # MultiFlag causes the lias to increment aliased present counter.
+      self.assertEqual(1, self.aliased.present)
+
+  def test_aliasing_regular(self):
+    def define_flags():
+      self.flags = flags.FlagValues()
+      self.define_string('aliased', '', 'help')
+      self.define_alias('alias', 'aliased')
+
+    define_flags()
+    self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+
+    self.flags(['./program', '--alias=1'])
+    self.assertEqual('1', self.alias.value)
+    self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+    self.assertEqual(1, self.alias.present)
+    self.assertEqual('--alias=1', self.alias.serialize())
+    # TODO(rlevasseur: This should be 1, but a bug causes aliases to increment
+    # it an extra time
+    self.assertEqual(2, self.aliased.present)
+
+    define_flags()
+    self.flags(['./program', '--aliased=2'])
+    self.assertEqual('2', self.alias.value)
+    self.assert_alias_mirrors_aliased(self.alias, self.aliased)
+    self.assertEqual(0, self.alias.present)
+    self.assertEqual('--alias=2', self.alias.serialize())
+    # TODO(rlevasseur): This should be 1, but a bug causes aliases to increment
+    # it an extra time
+    self.assertEqual(2, self.aliased.present)
+
+  def test_defining_alias_doesnt_affect_aliased_state_regular(self):
+    self.define_string('aliased', 'default', 'help')
+    self.define_alias('alias', 'aliased')
+
+    # TODO(rlevasseur): This should assert 0, but a bug causes aliases to
+    # increment their aliased flag's present counter upon definition.
+    self.assertEqual(1, self.aliased.present)
+    self.assertEqual(0, self.alias.present)
+
+  def test_defining_alias_doesnt_affect_aliased_state_multi(self):
+    self.define_multi_integer('aliased', [0], 'help')
+    self.define_alias('alias', 'aliased')
+
+    self.assertEqual([0], self.aliased.value)
+    self.assertEqual([0], self.aliased.default)
+    # TODO(rlevasseur): This should assert 0, but a bug causes aliases to
+    # increment their aliased flag's prsent counter upon definition.
+    self.assertEqual(1, self.aliased.present)
+
+    self.assertEqual([0], self.aliased.value)
+    self.assertEqual([0], self.aliased.default)
+    self.assertEqual(0, self.alias.present)
+
+
 class FlagsUnitTest(absltest.TestCase):
   """Flags Unit Test."""
 
