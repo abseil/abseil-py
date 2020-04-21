@@ -538,6 +538,12 @@ def _update_class_dict_for_param_test_case(
 class TestCase(six.with_metaclass(TestGeneratorMetaclass, absltest.TestCase)):
   """Base class for test cases using the parameters decorator."""
 
+  def shortDescription(self):
+    base = super(TestCase, self).shortDescription().split('\n')
+    # Replace the test id line with ours that has the params info
+    base[0] = str(self)
+    return '\n'.join(base)
+
   def __str__(self):
     return '%s (%s)' % (
         self._test_method_ids.get(self._testMethodName, self._testMethodName),

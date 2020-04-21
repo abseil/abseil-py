@@ -733,7 +733,13 @@ class TestCase(unittest3_backport.TestCase):
     Returns:
       desc: A short description of a test method.
     """
-    desc = str(self)
+    desc = self.id()
+
+    # Omit the main name so that test name can be directly copy/pasted to
+    # the command line.
+    if desc.startswith('__main__.'):
+      desc = desc[len('__main__.'):]
+
     # NOTE: super() is used here instead of directly invoking
     # unittest.TestCase.shortDescription(self), because of the
     # following line that occurs later on:

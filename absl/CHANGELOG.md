@@ -16,6 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 *   (testing) `parameterized.TestCase`: Supports async test definitions.
 
+### Changed
+
+*   (testing) Failed tests output a copy/pastable test id to make it easier
+    to copy the failing test to the command line.
+
 ## 0.9.0 (2019-12-17)
 
 ### Added
