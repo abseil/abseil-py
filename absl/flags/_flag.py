@@ -213,10 +213,15 @@ class Flag(object):
     if value is None:
       self.default = None
     else:
-      self.default = self._parse(value)
+      self.default = self._parse_from_default(value)
     self.default_as_str = self._get_parsed_value_as_string(self.default)
     if self.using_default_value:
       self.value = self.default
+
+  # This is split out so that aliases can skip regular parsing of the default
+  # value.
+  def _parse_from_default(self, value):
+    return self._parse(value)
 
   def flag_type(self):
     """Returns a str that describes the type of the flag.

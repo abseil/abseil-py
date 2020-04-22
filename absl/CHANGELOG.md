@@ -21,6 +21,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (testing) Failed tests output a copy/pastable test id to make it easier
     to copy the failing test to the command line.
 
+### Fixed
+
+*   (flags) Defining an alias no longer marks the aliased flag as always present
+    on the command line.
+*   (flags) Aliasing a multi flag no longer causes the default value to be
+    appended to.
+*   (flags) Alias default values now matched the aliased default value.
+*   (flags) Alias `present` counter now correctly reflects command line usage.
+
 ## 0.9.0 (2019-12-17)
 
 ### Added
@@ -53,8 +62,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (bazel) Tests now pass when bazel
     `--incompatible_allow_python_version_transitions=true` is set.
 *   (bazel) Both Python 2 and Python 3 versions of tests are now created. To
-    only run one major Python version, use
-    `bazel test --test_tag_filters=-python[23]` to ignore the other version.
+    only run one major Python version, use `bazel test
+    --test_tag_filters=-python[23]` to ignore the other version.
 *   (testing) `assertTotallyOrdered` no longer requires objects to implement
     `__hash__`.
 *   (testing) `absltest` now integrates better with `--pdb_post_mortem`.
@@ -63,9 +72,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
-*    #99: `absl.logging` no longer registers itself to `logging.root` at import
-     time.
-*    #108: Tests now pass with Bazel 0.28.0 on macOS.
+*   #99: `absl.logging` no longer registers itself to `logging.root` at import
+    time.
+*   #108: Tests now pass with Bazel 0.28.0 on macOS.
 
 ## 0.7.1 (2019-03-12)
 

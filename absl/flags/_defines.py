@@ -737,15 +737,20 @@ def DEFINE_alias(  # pylint: disable=invalid-name
     raise _exceptions.UnrecognizedFlagError(original_name)
   flag = flag_values[original_name]
 
-  class _Parser(_argument_parser.ArgumentParser):
-    """The parser for the alias flag calls the original flag parser."""
+  class _FlagAlias(_flag.Flag):
+    """Overrides Flag class so alias value is copy of original flag value."""
 
     def parse(self, argument):
       flag.parse(argument)
-      return flag.value
+      self.present += 1
 
-  class _FlagAlias(_flag.Flag):
-    """Overrides Flag class so alias value is copy of original flag value."""
+    def _parse_from_default(self, value):
+      # The value was already parsed by the aliased flag, so there is no
+      # need to call the parser on it a second time.
+      # Additionally, because of how MultiFlag parses and merges values,
+      # it isn't possible to delegate to the aliased flag and still get
+      # the correct values.
+      return value
 
     @property
     def value(self):
@@ -759,7 +764,7 @@ def DEFINE_alias(  # pylint: disable=invalid-name
   # If alias_name has been used, flags.DuplicatedFlag will be raised.
   return DEFINE_flag(
       _FlagAlias(
-          _Parser(),
+          flag.parser,
           flag.serializer,
           name,
           flag.default,
