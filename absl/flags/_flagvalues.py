@@ -254,7 +254,7 @@ class FlagValues(object):
         while flag_obj in flags_in_module:
           flags_in_module.remove(flag_obj)
 
-  def _get_flags_defined_by_module(self, module):
+  def get_flags_for_module(self, module):
     """Returns the list of flags defined by a module.
 
     Args:
@@ -267,8 +267,13 @@ class FlagValues(object):
     """
     if not isinstance(module, str):
       module = module.__name__
+    if module == '__main__':
+      module = sys.argv[0]
 
     return list(self.flags_by_module_dict().get(module, []))
+
+  # TODO(rlevasseur): Remove this once usages cleaned up.
+  _get_flags_defined_by_module = get_flags_for_module
 
   def get_key_flags_for_module(self, module):
     """Returns the list of key flags for a module.
@@ -283,11 +288,13 @@ class FlagValues(object):
     """
     if not isinstance(module, str):
       module = module.__name__
+    if module == '__main__':
+      module = sys.argv[0]
 
     # Any flag is a key flag for the module that defined it.  NOTE:
     # key_flags is a fresh list: we can update it without affecting the
     # internals of this FlagValues object.
-    key_flags = self._get_flags_defined_by_module(module)
+    key_flags = self.get_flags_for_module(module)
 
     # Take into account flags explicitly declared as key for a module.
     for flag in self.key_flags_by_module_dict().get(module, []):
@@ -901,7 +908,7 @@ class FlagValues(object):
 
   def _render_our_module_flags(self, module, output_lines, prefix=''):
     """Returns a help string for a given module."""
-    flags = self._get_flags_defined_by_module(module)
+    flags = self.get_flags_for_module(module)
     if flags:
       self._render_module_flags(module, flags, output_lines, prefix)
 

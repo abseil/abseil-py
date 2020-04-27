@@ -379,6 +379,18 @@ class FlagValuesTest(absltest.TestCase):
     self.assertFalse(fv['is_gnu_getopt'].value)
     self.assertIsInstance(fv.is_gnu_getopt, types.MethodType)
 
+  def test_get_flags_for_module(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('foo', None, 'help', flag_values=fv)
+    module_foo.define_flags(fv)
+    flags = fv.get_flags_for_module('__main__')
+
+    self.assertEqual({'foo'}, {flag.name for flag in flags})
+
+    flags = fv.get_flags_for_module(module_foo)
+    self.assertEqual({'tmod_foo_bool', 'tmod_foo_int', 'tmod_foo_str'},
+                     {flag.name for flag in flags})
+
   def test_get_help(self):
     fv = _flagvalues.FlagValues()
     self.assertMultiLineEqual('''\

@@ -2392,7 +2392,7 @@ class KeyFlagsTest(absltest.TestCase):
     Returns:
       A list of strings.
     """
-    return [f.name for f in flag_values._get_flags_defined_by_module(module)]
+    return [f.name for f in flag_values.get_flags_for_module(module)]
 
   def _get_names_of_key_flags(self, module, flag_values):
     """Returns the list of names of key flags for a module.
@@ -2440,7 +2440,7 @@ class KeyFlagsTest(absltest.TestCase):
       # that module, and similarly for module_bar.
       for module in [module_foo, module_bar]:
         self._assert_lists_have_same_elements(
-            flag_values._get_flags_defined_by_module(module),
+            flag_values.get_flags_for_module(module),
             flag_values.get_key_flags_for_module(module))
         # Also check that each module defined the expected flags.
         self._assert_lists_have_same_elements(
@@ -2502,7 +2502,7 @@ class KeyFlagsTest(absltest.TestCase):
     # Check that all flags defined by module_bar are key for that
     # module, and that module_bar defined the expected flags.
     self._assert_lists_have_same_elements(
-        fv._get_flags_defined_by_module(module_bar),
+        fv.get_flags_for_module(module_bar),
         fv.get_key_flags_for_module(module_bar))
     self._assert_lists_have_same_elements(
         self._get_names_of_defined_flags(module_bar, fv),

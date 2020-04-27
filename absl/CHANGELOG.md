@@ -13,13 +13,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (logging) `--logger_levels`: allows specifying the log levels of loggers.
 *   (flags) `FLAGS.validate_all_flags`: a new method that validates all flags
     and raises an exception if one fails.
-
+*   (flags) `FLAGS.get_flags_for_module`: Allows fetching the flags a module
+    defines.
 *   (testing) `parameterized.TestCase`: Supports async test definitions.
 
 ### Changed
 
-*   (testing) Failed tests output a copy/pastable test id to make it easier
-    to copy the failing test to the command line.
+*   (testing) Failed tests output a copy/pastable test id to make it easier to
+    copy the failing test to the command line.
 
 ### Fixed
 
