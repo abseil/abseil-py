@@ -16,6 +16,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (flags) `FLAGS.get_flags_for_module`: Allows fetching the flags a module
     defines.
 *   (testing) `parameterized.TestCase`: Supports async test definitions.
+*   (testing,app) Added `--pdb` flag: When true, uncaught exceptions will be
+    handled by `pdb.post_mortem`. This is an alias for `--pdb_post_mortem`.
 
 ### Changed
 
