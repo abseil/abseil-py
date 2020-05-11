@@ -1932,15 +1932,6 @@ def _quote_long_string(s):
           '----------->8\n')
 
 
-class _TestProgramManualRun(unittest.TestProgram):
-  """A TestProgram which runs the tests manually."""
-
-  def runTests(self, do_run=False):
-    """Runs the tests."""
-    if do_run:
-      unittest.TestProgram.runTests(self)
-
-
 def print_python_version():
   # type: () -> None
   # Having this in the test output logs by default helps debugging when all
