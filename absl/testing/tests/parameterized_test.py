@@ -336,21 +336,8 @@ class ParameterizedTestsTest(absltest.TestCase):
 
   class UniqueDescriptiveNamesTest(parameterized.TestCase):
 
-    class JustBeingMean(object):
-
-      def __repr__(self):
-        return '13) (2'
-
     @parameterized.parameters(13, 13)
     def test_normal(self, number):
-      del number
-
-    @parameterized.parameters(13, 13, JustBeingMean())
-    def test_double_conflict(self, number):
-      del number
-
-    @parameterized.parameters(13, JustBeingMean(), 13, 13)
-    def test_triple_conflict(self, number):
       del number
 
   class MultiGeneratorsTestCase(parameterized.TestCase):
@@ -442,11 +429,13 @@ class ParameterizedTestsTest(absltest.TestCase):
 
   def test_short_description(self):
     ts = unittest.makeSuite(self.GoodAdditionParams)
-    short_desc = list(ts)[0].shortDescription().split('\n')
-    self.assertEqual(
-        'test_addition(1, 2, 3)', short_desc[1])
-    self.assertTrue(
-        short_desc[0].startswith('test_addition(1, 2, 3)'))
+    short_desc = list(ts)[0].shortDescription()
+
+    location = unittest.util.strclass(self.GoodAdditionParams).replace(
+        '__main__.', '')
+    expected = ('{}.test_addition0 (1, 2, 3)\n'.format(location) +
+                'test_addition(1, 2, 3)')
+    self.assertEqual(expected, short_desc)
 
   def test_short_description_addresses_removed(self):
     ts = unittest.makeSuite(self.ArgumentsWithAddresses)
@@ -461,13 +450,21 @@ class ParameterizedTestsTest(absltest.TestCase):
     ts = unittest.makeSuite(self.ArgumentsWithAddresses)
     self.assertEqual(
         (unittest.util.strclass(self.ArgumentsWithAddresses) +
-         '.test_something(<object>)'),
+         '.test_something0 (<object>)'),
         list(ts)[0].id())
     ts = unittest.makeSuite(self.GoodAdditionParams)
     self.assertEqual(
         (unittest.util.strclass(self.GoodAdditionParams) +
-         '.test_addition(1, 2, 3)'),
+         '.test_addition0 (1, 2, 3)'),
         list(ts)[0].id())
+
+  def test_str(self):
+    ts = unittest.makeSuite(self.GoodAdditionParams)
+    test = list(ts)[0]
+
+    expected = 'test_addition0 (1, 2, 3) ({})'.format(
+        unittest.util.strclass(self.GoodAdditionParams))
+    self.assertEqual(expected, str(test))
 
   def test_dict_parameters(self):
     ts = unittest.makeSuite(self.DictionaryArguments)
@@ -481,23 +478,20 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEqual(4, ts.countTestCases())
     short_descs = [x.shortDescription() for x in list(ts)]
     full_class_name = unittest.util.strclass(self.NoParameterizedTests)
+    full_class_name = full_class_name.replace('__main__.', '')
     self.assertSameElements(
         [
-            'testGenerator (%s)' % (full_class_name,),
-            'test_generator (%s)' % (full_class_name,),
-            'testNormal (%s)' % (full_class_name,),
-            'test_normal (%s)' % (full_class_name,),
+            '{}.testGenerator'.format(full_class_name),
+            '{}.test_generator'.format(full_class_name),
+            '{}.testNormal'.format(full_class_name),
+            '{}.test_normal'.format(full_class_name),
         ],
         short_descs)
 
-  def test_generator_tests(self):
-    with self.assertRaises(AssertionError):
-
-      # This fails because the generated test methods share the same test id.
-      class GeneratorTests(parameterized.TestCase):
+  def test_generator_tests_disallowed(self):
+    with self.assertRaisesRegex(RuntimeError, 'generated.*without'):
+      class GeneratorTests(parameterized.TestCase):  # pylint: disable=unused-variable
         test_generator_method = (lambda self: None for _ in range(10))
-
-      del GeneratorTests
 
   def test_named_parameters_run(self):
     ts = unittest.makeSuite(self.NamedTests)
@@ -576,47 +570,20 @@ class ParameterizedTestsTest(absltest.TestCase):
   def test_named_parameters_short_description(self):
     ts = sorted(unittest.makeSuite(self.NamedTests),
                 key=lambda t: t.id())
-    short_desc = ts[0].shortDescription().split('\n')
-    self.assertEqual(
-        'test_dict_single_interesting(case=0)', short_desc[1])
-    self.assertTrue(
-        short_desc[0].startswith('test_dict_single_interesting'))
-
-    short_desc = ts[1].shortDescription().split('\n')
-    self.assertEqual(
-        'test_dict_something_boring(case=1)', short_desc[1])
-    self.assertTrue(
-        short_desc[0].startswith('test_dict_something_boring'))
-
-    short_desc = ts[2].shortDescription().split('\n')
-    self.assertEqual(
-        'test_dict_something_interesting(case=0)', short_desc[1])
-    self.assertTrue(
-        short_desc[0].startswith('test_dict_something_interesting'))
-
-    short_desc = ts[3].shortDescription().split('\n')
-    self.assertEqual(
-        'test_mixed_something_boring(1)', short_desc[1])
-    self.assertTrue(
-        short_desc[0].startswith('test_mixed_something_boring'))
-
-    short_desc = ts[4].shortDescription().split('\n')
-    self.assertEqual(
-        'test_mixed_something_interesting(case=0)', short_desc[1])
-    self.assertTrue(
-        short_desc[0].startswith('test_mixed_something_interesting'))
-
-    short_desc = ts[6].shortDescription().split('\n')
-    self.assertEqual(
-        'test_something_boring(1)', short_desc[1])
-    self.assertTrue(
-        short_desc[0].startswith('test_something_boring'))
-
-    short_desc = ts[7].shortDescription().split('\n')
-    self.assertEqual(
-        'test_something_interesting(0)', short_desc[1])
-    self.assertTrue(
-        short_desc[0].startswith('test_something_interesting'))
+    actual = {t._testMethodName: t.shortDescription() for t in ts}
+    expected = {
+        'test_dict_single_interesting': 'case=0',
+        'test_dict_something_boring': 'case=1',
+        'test_dict_something_interesting': 'case=0',
+        'test_mixed_something_boring': '1',
+        'test_mixed_something_interesting': 'case=0',
+        'test_something_boring': '1',
+        'test_something_interesting': '0',
+    }
+    for test_name, param_repr in expected.items():
+      short_desc = actual[test_name].split('\n')
+      self.assertIn(test_name, short_desc[0])
+      self.assertEqual('{}({})'.format(test_name, param_repr), short_desc[1])
 
   def test_load_tuple_named_test(self):
     loader = unittest.TestLoader()
@@ -861,19 +828,12 @@ class ParameterizedTestsTest(absltest.TestCase):
     res = RecordSuccessTestsResult()
     ts.run(res)
     self.assertTrue(res.wasSuccessful())
-    self.assertEqual(9, res.testsRun)
+    self.assertEqual(2, res.testsRun)
     test_ids = [test.id() for test in res.successful_tests]
     full_class_name = unittest.util.strclass(self.UniqueDescriptiveNamesTest)
     expected_test_ids = [
-        full_class_name + '.test_normal(13)',
-        full_class_name + '.test_normal(13) (2)',
-        full_class_name + '.test_double_conflict(13)',
-        full_class_name + '.test_double_conflict(13) (2)',
-        full_class_name + '.test_double_conflict(13) (2) (2)',
-        full_class_name + '.test_triple_conflict(13)',
-        full_class_name + '.test_triple_conflict(13) (2)',
-        full_class_name + '.test_triple_conflict(13) (2) (2)',
-        full_class_name + '.test_triple_conflict(13) (3)',
+        full_class_name + '.test_normal0 (13)',
+        full_class_name + '.test_normal1 (13)',
     ]
     self.assertTrue(test_ids)
     self.assertItemsEqual(expected_test_ids, test_ids)
@@ -892,13 +852,13 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEqual(8, res.testsRun)
     self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
 
-  def test_subclass_inherits_superclass_test_method_ids(self):
+  def test_subclass_inherits_superclass_test_params_reprs(self):
     self.assertEqual(
-        {'test_name0': "test_name('foo')", 'test_name1': "test_name('bar')"},
-        self.SuperclassTestCase._test_method_ids)
+        {'test_name0': "('foo')", 'test_name1': "('bar')"},
+        self.SuperclassTestCase._test_params_reprs)
     self.assertEqual(
-        {'test_name0': "test_name('foo')", 'test_name1': "test_name('bar')"},
-        self.SubclassTestCase._test_method_ids)
+        {'test_name0': "('foo')", 'test_name1': "('bar')"},
+        self.SubclassTestCase._test_params_reprs)
 
 
 def _decorate_with_side_effects(func, self):

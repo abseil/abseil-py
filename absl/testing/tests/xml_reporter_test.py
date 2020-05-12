@@ -135,7 +135,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
                                               'foo', 0, timer)
 
   def _assert_match(self, regex, output):
-    self.assertRegex(output, regex)
+    fail_msg = 'Expected regex:\n{}\nTo match:\n{}'.format(regex, output)
+    self.assertRegex(output, regex, fail_msg)
 
   def _assert_valid_xml(self, xml_output):
     try:
@@ -786,7 +787,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'errors': 0,
         'run_time': run_time,
         'start_time': re.escape(self._iso_timestamp(start_time),),
-        'test_name': re.escape('test_prefix(&apos;a&#x20;(b.c)&apos;)'),
+        'test_name': re.escape('test_prefix0&#x20;(&apos;a&#x20;(b.c)&apos;)'),
         'classname': classname,
         'status': 'run',
         'result': 'completed',
