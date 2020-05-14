@@ -498,7 +498,7 @@ class _TempFile(object):
                        'file in text mode'.format(mode))
     if 't' not in mode:
       mode += 't'
-    cm = self._open(mode, encoding, errors)  # type: ContextManager[TextIO]
+    cm = self._open(mode, encoding, errors)
     return cm
 
   def open_bytes(self, mode='rb'):
@@ -520,15 +520,15 @@ class _TempFile(object):
                        'file in binary mode'.format(mode))
     if 'b' not in mode:
       mode += 'b'
-    cm = self._open(mode, encoding=None, errors=None)  # type: ContextManager[BinaryIO]
+    cm = self._open(mode, encoding=None, errors=None)
     return cm
 
   # TODO(b/123775699): Once pytype supports typing.Literal, use overload and
-  # Literal to express more precise return types and remove the type comments in
-  # open_text and open_bytes.
+  # Literal to express more precise return types. The contained type is
+  # currently `Any` to avoid [bad-return-type] errors in the open_* methods.
   @contextlib.contextmanager
   def _open(self, mode, encoding='utf8', errors='strict'):
-    # type: (Text, Text, Text) -> Iterator[Union[IO[Text], IO[bytes]]]
+    # type: (Text, Text, Text) -> Iterator[Any]
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
       yield fp
@@ -543,7 +543,9 @@ class TestCase(unittest3_backport.TestCase):
   # tempfile module. This can be overridden at the class level, instance level,
   # or with the `cleanup` arg of `create_tempfile()` and `create_tempdir()`. See
   # `TempFileCleanup` for details on the different values.
-  tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup
+  # TODO(b/70517332): Remove the type comment and the disable once pytype has
+  # better support for enums.
+  tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup  # pytype: disable=annotation-type-mismatch
 
   maxDiff = 80 * 20
   longMessage = True
