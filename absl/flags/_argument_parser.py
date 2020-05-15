@@ -76,24 +76,6 @@ class _ArgumentParserCache(type):
         return type.__call__(cls, *args)
 
 
-# NOTE about Genericity and Metaclass of ArgumentParser.
-# (1) In the .py source (this file)
-#     - is not declared as Generic
-#     - has _ArgumentParserCache as a metaclass
-# (2) In the .pyi source (type stub)
-#     - is declared as Generic
-#     - doesn't have a metaclass
-# The reason we need this is due to Generic having a different metaclass
-# (for python versions <= 3.7) and a class can have only one metaclass.
-#
-# * Lack of metaclass in .pyi is not a deal breaker, since the metaclass
-#   doesn't affect any type information. Also type checkers can check the type
-#   parameters.
-# * However, not declaring ArgumentParser as Generic in the source affects
-#   runtime annotation processing. In particular this means, subclasses should
-#   inherit from `ArgumentParser` and not `ArgumentParser[SomeType]`.
-#   The corresponding DEFINE_someType method (the public API) can be annotated
-#   to return FlagHolder[SomeType].
 class ArgumentParser(six.with_metaclass(_ArgumentParserCache, object)):
   """Base class used to parse and convert arguments.
 

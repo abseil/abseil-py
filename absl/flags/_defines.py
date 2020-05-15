@@ -133,7 +133,7 @@ def DEFINE_flag(flag, flag_values=_flagvalues.FLAGS, module_name=None):  # pylin
     module, module_name = _helpers.get_calling_module_object_and_name()
   flag_values.register_flag_by_module(module_name, flag)
   flag_values.register_flag_by_module_id(id(module), flag)
-  return _flagvalues.FlagHolder(fv, flag)
+  return _flagvalues.FlagHolder(fv, flag.name)
 
 
 def _internal_declare_key_flags(flag_names,
@@ -262,7 +262,7 @@ def DEFINE_string(  # pylint: disable=invalid-name,redefined-builtin
     default,
     help,
     flag_values=_flagvalues.FLAGS,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[Text]
   """Registers a flag whose value can be any string."""
   parser = _argument_parser.ArgumentParser()
   serializer = _argument_parser.ArgumentSerializer()
@@ -275,7 +275,7 @@ def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     module_name=None,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[bool]
   """Registers a boolean flag.
 
   Such a boolean flag does not take an argument.  If a user wants to
@@ -310,7 +310,7 @@ def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[Text]
   """Registers a flag whose value must be a float.
 
   If lower_bound or upper_bound are set, then this flag must be
@@ -343,7 +343,7 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[int]
   """Registers a flag whose value must be an integer.
 
   If lower_bound, or upper_bound are set, then this flag must be
@@ -376,7 +376,7 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     module_name=None,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[Text]
   """Registers a flag whose value can be any string from enum_values.
 
   Instead of a string enum, prefer `DEFINE_enum_class`, which allows
@@ -409,7 +409,7 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     module_name=None,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[enum.Enum]
   """Registers a flag whose value can be the name of enum members.
 
   Args:
@@ -436,7 +436,7 @@ def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
     default,
     help,
     flag_values=_flagvalues.FLAGS,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[List[Text]]
   """Registers a flag whose value is a comma-separated list of strings.
 
   The flag value is parsed with a CSV parser.
@@ -464,7 +464,7 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
     help,
     comma_compat=False,
     flag_values=_flagvalues.FLAGS,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[List[Text]]
   """Registers a flag whose value is a whitespace-separated list of strings.
 
   Any whitespace can be used as a separator.
@@ -498,7 +498,7 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     module_name=None,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[List]
   """Registers a generic MultiFlag that parses its args with a given parser.
 
   Auxiliary function.  Normal users should NOT use it directly.
@@ -537,7 +537,7 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
     default,
     help,
     flag_values=_flagvalues.FLAGS,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[List[Text]]
   """Registers a flag whose value can be a list of any strings.
 
   Use the flag on the command line multiple times to place multiple
@@ -572,7 +572,7 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[List[int]]
   """Registers a flag whose value can be a list of arbitrary integers.
 
   Use the flag on the command line multiple times to place multiple
@@ -608,7 +608,7 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[List[float]]
   """Registers a flag whose value can be a list of arbitrary floats.
 
   Use the flag on the command line multiple times to place multiple
@@ -644,7 +644,7 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     case_sensitive=True,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[List[Text]]
   """Registers a flag whose value can be a list strings from enum_values.
 
   Use the flag on the command line multiple times to place multiple
@@ -681,7 +681,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     module_name=None,
-    **args):
+    **args):  # type: (...) -> _flagvalues.FlagHolder[List[enum.Enum]]
   """Registers a flag whose value can be a list of enum members.
 
   Use the flag on the command line multiple times to place multiple
@@ -715,7 +715,7 @@ def DEFINE_alias(  # pylint: disable=invalid-name
     name,
     original_name,
     flag_values=_flagvalues.FLAGS,
-    module_name=None):
+    module_name=None):  # type: (...) -> _flagvalues.FlagHolder[Any]
   """Defines an alias flag for an existing one.
 
   Args:
