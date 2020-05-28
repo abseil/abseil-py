@@ -1330,19 +1330,22 @@ class FlagHolder(_Base):
   since the name of the flag appears only once in the source code.
   """
 
-  def __init__(self, flag_values, name):
-    # type: (FlagValues, Text) -> None
+  def __init__(self, flag_values, flag):
+    """Constructs a FlagHolder instance providing typesafe access to flag."""
     self._flagvalues = flag_values
-    self._name = name
+    # We take the entire flag object, but only keep the name. Why?
+    # - We want FlagHolder[T] to be generic container
+    # - flag_values contains all flags, so has no reference to T.
+    # - typecheckers don't like to see a generic class where none of the ctor
+    #   arguments refer to the generic type.
+    self._name = flag.name
 
   @property
   def name(self):
-    # type: () -> Text
     return self._name
 
   @property
   def value(self):
-    # type: () -> Optional[_T]
     """Returns the value of the flag.
 
     Raises:
@@ -1352,6 +1355,5 @@ class FlagHolder(_Base):
 
   @property
   def default(self):
-    # type: () -> Optional[_T]
     """Returns the default value of the flag."""
     return self._flagvalues[self._name].default
