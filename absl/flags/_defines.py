@@ -133,7 +133,8 @@ def DEFINE_flag(flag, flag_values=_flagvalues.FLAGS, module_name=None):  # pylin
     module, module_name = _helpers.get_calling_module_object_and_name()
   flag_values.register_flag_by_module(module_name, flag)
   flag_values.register_flag_by_module_id(id(module), flag)
-  return _flagvalues.FlagHolder(fv, flag)
+  return _flagvalues.FlagHolder(
+      fv, flag, ensure_non_none_value=flag.default is not None)
 
 
 def _internal_declare_key_flags(flag_names,

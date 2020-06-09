@@ -18,10 +18,8 @@
 from absl.flags import _flag
 import six
 
-from typing import Text, Optional, TypeVar, Generic, Any, Dict, List
+from typing import Text, Optional, TypeVar, Generic, Any, Dict, List, Type
 
-
-_T = TypeVar('_T')
 
 # There is a lot of magic going on in FlagValues, so we just document the
 # magic methods defined and make it loose, so this doesn't get in the way of
@@ -113,14 +111,25 @@ class FlagValues:
 
 FLAGS = ...  # type: FlagValues
 
+
+_T = TypeVar('_T')  # The type of parsed default value of the flag.
+
+# We assume that default and value are guaranteed to have the same type.
 class FlagHolder(Generic[_T]):
-  def __init__(self, flag_values: FlagValues, flag: _flag.Flag[_T]) -> None: ...
+  def __init__(
+    self,
+    flag_values: FlagValues,
+    # NOTE: Use Flag instead of Flag[T] is used to work around some superficial
+    # differences between Flag and FlagHolder typing.
+    flag: _flag.Flag,
+    ensure_non_none_value: bool=False) -> None: ...
 
   @property
   def name(self) -> Text: ...
 
   @property
-  def value(self) -> Optional[_T]: ...
+  def value(self) -> _T: ...
 
   @property
-  def default(self) -> Optional[_T]: ...
+  def default(self) -> _T: ...
+
