@@ -23,6 +23,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 *   (testing) Failed tests output a copy/pastable test id to make it easier to
     copy the failing test to the command line.
+*   (testing) `@parameterized.parameters` now treats a single `abc.Mapping` as
+    a single test case, consistent with `named_parameters`. Previously the
+    `abc.Mapping` is treated as if only its keys are passed as a list of test
+    cases. If you were relying on the old inconsistent behavior, explicitly
+    convert the `abc.Mapping` to a `list`.
 
 ### Fixed
 

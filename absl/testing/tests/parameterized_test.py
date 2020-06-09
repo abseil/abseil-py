@@ -264,6 +264,12 @@ class ParameterizedTestsTest(absltest.TestCase):
     def test_strings(self, unused_1):
       pass
 
+  class SingletonDictArgument(parameterized.TestCase):
+
+    @parameterized.parameters({'op1': 1, 'op2': 2})
+    def test_something(self, op1, op2):
+      del op1, op2
+
   @parameterized.parameters(
       (1, 2, 3),
       (4, 5, 9))
@@ -698,6 +704,13 @@ class ParameterizedTestsTest(absltest.TestCase):
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(9, res.testsRun)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_singleton_dict_argument(self):
+    ts = unittest.makeSuite(self.SingletonDictArgument)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(1, res.testsRun)
     self.assertTrue(res.wasSuccessful())
 
   def test_decorated_bare_class(self):
