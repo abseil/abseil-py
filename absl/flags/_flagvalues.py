@@ -270,9 +270,6 @@ class FlagValues(object):
 
     return list(self.flags_by_module_dict().get(module, []))
 
-  # TODO(rlevasseur): Remove this once usages cleaned up.
-  _get_flags_defined_by_module = get_flags_for_module
-
   def get_key_flags_for_module(self, module):
     """Returns the list of key flags for a module.
 
