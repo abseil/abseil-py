@@ -1945,7 +1945,7 @@ def print_python_version():
 
 
 def main(*args, **kwargs):
-  # type: (Text, Mapping[Text, Any]) -> None
+  # type: (Text, Any) -> None
   """Executes a set of Python unit tests.
 
   Usually this function is called without arguments, so the
