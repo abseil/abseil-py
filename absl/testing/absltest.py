@@ -313,6 +313,10 @@ class _TempDir(object):
   """Represents a temporary directory for tests.
 
   Creation of this class is internal. Using its public methods is OK.
+
+  This class implements the `os.PathLike` interface (specifically,
+  `os.PathLike[str]`). This means, in Python 3, it can be directly passed
+  to e.g. `os.path.join()`.
   """
 
   def __init__(self, path):
@@ -323,11 +327,16 @@ class _TempDir(object):
   @property
   def full_path(self):
     # type: () -> Text
-    """The path, as a string, for the directory."""
+    """Returns the path, as a string, for the directory.
+
+    TIP: Instead of e.g. `os.path.join(temp_dir.full_path)`, you can simply
+    do `os.path.join(temp_dir)` because `__fspath__()` is implemented.
+    """
     return self._path
 
   def __fspath__(self):
     # type: () -> Text
+    """See os.PathLike."""
     return self.full_path
 
   def create_file(self, file_path=None, content=None, mode='w', encoding='utf8',
@@ -385,6 +394,10 @@ class _TempFile(object):
   """Represents a tempfile for tests.
 
   Creation of this class is internal. Using its public methods is OK.
+
+  This class implements the `os.PathLike` interface (specifically,
+  `os.PathLike[str]`). This means, in Python 3, it can be directly passed
+  to e.g. `os.path.join()`.
   """
 
   def __init__(self, path):
@@ -429,11 +442,16 @@ class _TempFile(object):
   @property
   def full_path(self):
     # type: () -> Text
-    """The path, as a string, for the file."""
+    """Returns the path, as a string, for the file.
+
+    TIP: Instead of e.g. `os.path.join(temp_file.full_path)`, you can simply
+    do `os.path.join(temp_file)` because `__fspath__()` is implemented.
+    """
     return self._path
 
   def __fspath__(self):
     # type: () -> Text
+    """See os.PathLike."""
     return self.full_path
 
   def read_text(self, encoding='utf8', errors='strict'):
@@ -574,7 +592,19 @@ class TestCase(unittest3_backport.TestCase):
     This creates a named directory on disk that is isolated to this test, and
     will be properly cleaned up by the test. This avoids several pitfalls of
     creating temporary directories for test purposes, as well as makes it easier
-    to setup directories and verify their contents.
+    to setup directories and verify their contents. For example:
+
+        def test_foo(self):
+          out_dir = self.create_tempdir()
+          out_log = out_dir.create_file('output.log')
+          expected_outputs = [
+              os.path.join(out_dir, 'data-0.txt'),
+              os.path.join(out_dir, 'data-1.txt'),
+          ]
+          code_under_test(out_dir)
+          self.assertTrue(os.path.exists(expected_paths[0]))
+          self.assertTrue(os.path.exists(expected_paths[1]))
+          self.assertEqual('foo', out_log.read_text())
 
     See also: `create_tempfile()` for creating temporary files.
 
@@ -586,7 +616,8 @@ class TestCase(unittest3_backport.TestCase):
         `self.tempfile_cleanup`.
 
     Returns:
-      A _TempDir representing the created directory.
+      A _TempDir representing the created directory; see _TempDir class docs
+      for usage.
     """
     test_path = self._get_tempdir_path_test()
 
@@ -616,7 +647,13 @@ class TestCase(unittest3_backport.TestCase):
     be properly cleaned up by the test. This avoids several pitfalls of
     creating temporary files for test purposes, as well as makes it easier
     to setup files, their data, read them back, and inspect them when
-    a test fails.
+    a test fails. For example:
+
+        def test_foo(self):
+          output = self.create_tempfile()
+          code_under_test(output)
+          self.assertGreater(os.path.getsize(output), 0)
+          self.assertEqual('foo', output.read_text())
 
     NOTE: This will zero-out the file. This ensures there is no pre-existing
     state.
@@ -645,7 +682,8 @@ class TestCase(unittest3_backport.TestCase):
         `self.tempfile_cleanup`.
 
     Returns:
-      A _TempFile representing the created file.
+      A _TempFile representing the created file; see _TempFile class docs for
+      usage.
     """
     test_path = self._get_tempdir_path_test()
     tf, cleanup_path = _TempFile._create(test_path, file_path, content=content,
