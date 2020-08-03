@@ -160,6 +160,7 @@ def DEFINE_enum_class(
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[Text] = None,
+    case_sensitive: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[_ET]]:
   ...
 
@@ -171,6 +172,7 @@ def DEFINE_enum_class(
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[Text] = None,
+    case_sensitive: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[_ET]:
   ...
 

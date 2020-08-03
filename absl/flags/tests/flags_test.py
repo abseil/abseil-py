@@ -80,6 +80,11 @@ class FlagDictToArgsTest(absltest.TestCase):
 
 
 class Fruit(enum.Enum):
+  APPLE = object()
+  ORANGE = object()
+
+
+class CaseSensitiveFruit(enum.Enum):
   apple = 1
   orange = 2
   APPLE = 3
@@ -1328,12 +1333,12 @@ class FlagsUnitTest(absltest.TestCase):
     fv = flags.FlagValues()
     flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
 
-    argv = ('./program', '--fruit=apple')
+    argv = ('./program', '--fruit=orange')
     argv = fv(argv)
     self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(fv['fruit'].present, 1)
-    self.assertEqual(fv['fruit'].value, Fruit.apple)
+    self.assertEqual(fv['fruit'].value, Fruit.ORANGE)
     fv.unparse_flags()
     argv = ('./program', '--fruit=APPLE')
     argv = fv(argv)
@@ -1348,7 +1353,7 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
 
     helpstr = fv.main_module_help()
-    expected_help = '\n%s:\n  --fruit: <apple|orange|APPLE>: ?' % sys.argv[0]
+    expected_help = '\n%s:\n  --fruit: <apple|orange>: ?' % sys.argv[0]
 
     self.assertEqual(helpstr, expected_help)
 
@@ -1566,7 +1571,7 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
                                   flag_values=fv)
     fv.mark_as_parsed()
 
-    self.assertListEqual(fv.fruit, [Fruit.apple])
+    self.assertListEqual(fv.fruit, [Fruit.APPLE])
 
   def test_define_results_in_registered_flag_with_enum(self):
     fv = flags.FlagValues()
@@ -1582,24 +1587,28 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
   def test_define_results_in_registered_flag_with_string_list(self):
     fv = flags.FlagValues()
     enum_defaults = ['apple', 'APPLE']
-    flags.DEFINE_multi_enum_class('fruit',
-                                  enum_defaults, Fruit,
-                                  'Enum option that can occur multiple times',
-                                  flag_values=fv)
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        CaseSensitiveFruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv,
+        case_sensitive=True)
     fv.mark_as_parsed()
 
-    self.assertListEqual(fv.fruit, [Fruit.apple, Fruit.APPLE])
+    self.assertListEqual(fv.fruit,
+                         [CaseSensitiveFruit.apple, CaseSensitiveFruit.APPLE])
 
   def test_define_results_in_registered_flag_with_enum_list(self):
     fv = flags.FlagValues()
-    enum_defaults = [Fruit.APPLE, Fruit.orange]
+    enum_defaults = [Fruit.APPLE, Fruit.ORANGE]
     flags.DEFINE_multi_enum_class('fruit',
                                   enum_defaults, Fruit,
                                   'Enum option that can occur multiple times',
                                   flag_values=fv)
     fv.mark_as_parsed()
 
-    self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.orange])
+    self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.ORANGE])
 
   def test_from_command_line_returns_multiple(self):
     fv = flags.FlagValues()
@@ -1608,9 +1617,9 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
                                   enum_defaults, Fruit,
                                   'Enum option that can occur multiple times',
                                   flag_values=fv)
-    argv = ('./program', '--fruit=apple', '--fruit=orange')
+    argv = ('./program', '--fruit=Apple', '--fruit=orange')
     fv(argv)
-    self.assertListEqual(fv.fruit, [Fruit.apple, Fruit.orange])
+    self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.ORANGE])
 
   def test_bad_multi_enum_class_flags_from_definition(self):
     with self.assertRaisesRegex(

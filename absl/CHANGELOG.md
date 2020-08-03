@@ -28,6 +28,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     `abc.Mapping` is treated as if only its keys are passed as a list of test
     cases. If you were relying on the old inconsistent behavior, explicitly
     convert the `abc.Mapping` to a `list`.
+*   (flags) `DEFINE_enum_class` and `DEFINE_mutlti_enum_class` accept a
+    `case_sensitive` argument. When `False` (the default), strings are mapped to
+    enum member names without case sensitivity, and member names are serialized
+    in lowercase form. Flag definitions for enums whose members include
+    duplicates when case is ignored must now explicitly pass
+    `case_sensitive=True`.
 
 ### Fixed
 

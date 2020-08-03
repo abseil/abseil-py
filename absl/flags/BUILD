@@ -114,6 +114,7 @@ py2and3_test(
         ":_argument_parser",
         "//absl:_enum_module",
         "//absl/testing:absltest",
+        "//absl/testing:parameterized",
         "@six_archive//:six",
     ],
 )

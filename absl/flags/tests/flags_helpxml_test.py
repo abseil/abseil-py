@@ -217,18 +217,17 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
 
     flags.DEFINE_enum_class('cc_version', 'STABLE', Version,
                             'Compiler version to use.', flag_values=self.fv)
-    expected_output = (
-        '<flag>\n'
-        '  <file>tool</file>\n'
-        '  <name>cc_version</name>\n'
-        '  <meaning>&lt;STABLE|EXPERIMENTAL&gt;: '
-        'Compiler version to use.</meaning>\n'
-        '  <default>STABLE</default>\n'
-        '  <current>Version.STABLE</current>\n'
-        '  <type>enum class</type>\n'
-        '  <enum_value>STABLE</enum_value>\n'
-        '  <enum_value>EXPERIMENTAL</enum_value>\n'
-        '</flag>\n')
+    expected_output = ('<flag>\n'
+                       '  <file>tool</file>\n'
+                       '  <name>cc_version</name>\n'
+                       '  <meaning>&lt;stable|experimental&gt;: '
+                       'Compiler version to use.</meaning>\n'
+                       '  <default>stable</default>\n'
+                       '  <current>Version.STABLE</current>\n'
+                       '  <type>enum class</type>\n'
+                       '  <enum_value>STABLE</enum_value>\n'
+                       '  <enum_value>EXPERIMENTAL</enum_value>\n'
+                       '</flag>\n')
     self._check_flag_help_in_xml('cc_version', 'tool', expected_output)
 
   def test_flag_help_in_xml_comma_separated_list(self):
@@ -374,10 +373,10 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '<flag>\n'
         '  <file>tool</file>\n'
         '  <name>fruit</name>\n'
-        '  <meaning>&lt;ORANGE|BANANA&gt;: The fruit flag.;\n'
+        '  <meaning>&lt;orange|banana&gt;: The fruit flag.;\n'
         '    repeat this option to specify a list of values</meaning>\n'
-        '  <default>ORANGE</default>\n'
-        '  <current>ORANGE</current>\n'
+        '  <default>orange</default>\n'
+        '  <current>orange</current>\n'
         '  <type>multi enum class</type>\n'
         '  <enum_value>ORANGE</enum_value>\n'
         '  <enum_value>BANANA</enum_value>\n'
@@ -396,10 +395,10 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '<flag>\n'
         '  <file>tool</file>\n'
         '  <name>fruit</name>\n'
-        '  <meaning>&lt;ORANGE|BANANA&gt;: The fruit flag.;\n'
+        '  <meaning>&lt;orange|banana&gt;: The fruit flag.;\n'
         '    repeat this option to specify a list of values</meaning>\n'
-        '  <default>ORANGE,BANANA</default>\n'
-        '  <current>ORANGE,BANANA</current>\n'
+        '  <default>orange,banana</default>\n'
+        '  <current>orange,banana</current>\n'
         '  <type>multi enum class</type>\n'
         '  <enum_value>ORANGE</enum_value>\n'
         '  <enum_value>BANANA</enum_value>\n'

@@ -67,16 +67,18 @@ class BooleanParser(ArgumentParser[bool]):
 
 
 class EnumParser(ArgumentParser[Text]):
-  def __init__(self, enum_values: Sequence[Text], case_sensitive: bool=True) -> None:
+  def __init__(self, enum_values: Sequence[Text], case_sensitive: bool=...) -> None:
     ...
 
 
 
 class EnumClassParser(ArgumentParser[_ET]):
 
-  def __init__(self, enum_class: Type[_ET]) -> None:
+  def __init__(self, enum_class: Type[_ET], case_sensitive: bool=...) -> None:
     ...
 
+  @property
+  def member_names(self) -> Sequence[Text]: ...
 
 
 class BaseListParser(ArgumentParser[List[Text]]):
@@ -107,7 +109,8 @@ class ListSerializer(ArgumentSerializer[List[Text]]):
 
 
 class EnumClassListSerializer(ArgumentSerializer[List[Text]]):
-  ...
+  def __init__(self, list_sep: Text, **kwargs: Any) -> None:
+    ...
 
 
 class CsvListSerializer(ArgumentSerializer[List[Any]]):

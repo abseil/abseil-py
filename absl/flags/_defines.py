@@ -410,6 +410,7 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     module_name=None,
+    case_sensitive=False,
     **args):
   """Registers a flag whose value can be the name of enum members.
 
@@ -422,14 +423,21 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
       registered. This should almost never need to be overridden.
     module_name: str, the name of the Python module declaring this flag. If not
       provided, it will be computed using the stack trace of this call.
+    case_sensitive: bool, whether to map strings to members of the enum_class
+      without considering case.
     **args: dict, the extra keyword args that are passed to Flag __init__.
 
   Returns:
     a handle to defined flag.
   """
   return DEFINE_flag(
-      _flag.EnumClassFlag(name, default, help, enum_class, **args), flag_values,
-      module_name)
+      _flag.EnumClassFlag(
+          name,
+          default,
+          help,
+          enum_class,
+          case_sensitive=case_sensitive,
+          **args), flag_values, module_name)
 
 
 def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
@@ -682,6 +690,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     help,
     flag_values=_flagvalues.FLAGS,
     module_name=None,
+    case_sensitive=False,
     **args):
   """Registers a flag whose value can be a list of enum members.
 
@@ -701,6 +710,8 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
       registered. This should almost never need to be overridden.
     module_name: A string, the name of the Python module declaring this flag. If
       not provided, it will be computed using the stack trace of this call.
+    case_sensitive: bool, whether to map strings to members of the enum_class
+      without considering case.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
@@ -708,8 +719,9 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
     a handle to defined flag.
   """
   return DEFINE_flag(
-      _flag.MultiEnumClassFlag(name, default, help, enum_class), flag_values,
-      module_name, **args)
+      _flag.MultiEnumClassFlag(
+          name, default, help, enum_class, case_sensitive=case_sensitive),
+      flag_values, module_name, **args)
 
 
 def DEFINE_alias(  # pylint: disable=invalid-name

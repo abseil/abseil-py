@@ -124,10 +124,18 @@ class EmptyEnum(enum.Enum):
 class EnumClassFlagTest(parameterized.TestCase):
 
   @parameterized.parameters(
+      ('', '<apple|orange>: (no help available)'),
+      ('Type of fruit.', '<apple|orange>: Type of fruit.'))
+  def test_help_text_case_insensitive(self, helptext_input, helptext_output):
+    f = _flag.EnumClassFlag('fruit', None, helptext_input, Fruit)
+    self.assertEqual(helptext_output, f.help)
+
+  @parameterized.parameters(
       ('', '<APPLE|ORANGE>: (no help available)'),
       ('Type of fruit.', '<APPLE|ORANGE>: Type of fruit.'))
-  def test_help_text(self, helptext_input, helptext_output):
-    f = _flag.EnumClassFlag('fruit', None, helptext_input, Fruit)
+  def test_help_text_case_sensitive(self, helptext_input, helptext_output):
+    f = _flag.EnumClassFlag(
+        'fruit', None, helptext_input, Fruit, case_sensitive=True)
     self.assertEqual(helptext_output, f.help)
 
   def test_requires_enum(self):
@@ -146,6 +154,16 @@ class EnumClassFlagTest(parameterized.TestCase):
     f = _flag.EnumClassFlag('fruit', 'ORANGE', 'A sample enum flag.', Fruit)
     self.assertEqual(Fruit.ORANGE, f.value)
 
+  def test_case_sensitive_rejects_default_with_wrong_case(self):
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      _flag.EnumClassFlag(
+          'fruit', 'oranGe', 'A sample enum flag.', Fruit, case_sensitive=True)
+
+  def test_case_insensitive_accepts_string_default(self):
+    f = _flag.EnumClassFlag(
+        'fruit', 'oranGe', 'A sample enum flag.', Fruit, case_sensitive=False)
+    self.assertEqual(Fruit.ORANGE, f.value)
+
   def test_default_value_does_not_exist(self):
     with self.assertRaises(_exceptions.IllegalFlagValueError):
       _flag.EnumClassFlag('fruit', 'BANANA', 'help', Fruit)
@@ -154,13 +172,14 @@ class EnumClassFlagTest(parameterized.TestCase):
 class MultiEnumClassFlagTest(parameterized.TestCase):
 
   @parameterized.named_parameters(
-      ('NoHelpSupplied', '', '<APPLE|ORANGE>: (no help available);\n    '
-       'repeat this option to specify a list of values'),
+      ('NoHelpSupplied', '', '<apple|orange>: (no help available);\n    '
+       'repeat this option to specify a list of values', False),
       ('WithHelpSupplied', 'Type of fruit.',
        '<APPLE|ORANGE>: Type of fruit.;\n    '
-       'repeat this option to specify a list of values'))
-  def test_help_text(self, helptext_input, helptext_output):
-    f = _flag.MultiEnumClassFlag('fruit', None, helptext_input, Fruit)
+       'repeat this option to specify a list of values', True))
+  def test_help_text(self, helptext_input, helptext_output, case_sensitive):
+    f = _flag.MultiEnumClassFlag(
+        'fruit', None, helptext_input, Fruit, case_sensitive=case_sensitive)
     self.assertEqual(helptext_output, f.help)
 
   def test_requires_enum(self):
@@ -170,6 +189,20 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
   def test_requires_non_empty_enum_class(self):
     with self.assertRaises(ValueError):
       _flag.MultiEnumClassFlag('empty', None, 'help', EmptyEnum)
+
+  def test_rejects_wrong_case_when_case_sensitive(self):
+    with self.assertRaisesRegex(_exceptions.IllegalFlagValueError,
+                                '<APPLE|ORANGE>'):
+      _flag.MultiEnumClassFlag(
+          'fruit', ['APPLE', 'Orange'],
+          'A sample enum flag.',
+          Fruit,
+          case_sensitive=True)
+
+  def test_accepts_case_insensitive(self):
+    f = _flag.MultiEnumClassFlag('fruit', ['apple', 'APPLE'],
+                                 'A sample enum flag.', Fruit)
+    self.assertListEqual([Fruit.APPLE, Fruit.APPLE], f.value)
 
   def test_accepts_literal_default(self):
     f = _flag.MultiEnumClassFlag('fruit', Fruit.APPLE, 'A sample enum flag.',
@@ -192,7 +225,8 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
     self.assertListEqual([Fruit.ORANGE, Fruit.APPLE], f.value)
 
   def test_default_value_does_not_exist(self):
-    with self.assertRaises(_exceptions.IllegalFlagValueError):
+    with self.assertRaisesRegex(_exceptions.IllegalFlagValueError,
+                                '<apple|banana>'):
       _flag.MultiEnumClassFlag('fruit', 'BANANA', 'help', Fruit)
 
 
