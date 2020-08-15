@@ -327,7 +327,8 @@ def multi_flags_validator(flag_names,
   return decorate
 
 
-def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
+def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS,
+                          only_if_main=None):
   """Ensures that flag is not None during program execution.
 
   Registers a flag validator, which will follow usual validator rules.
@@ -344,14 +345,26 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
   is enforced at that time. You generally do not want to force users who import
   your code to have additional required flags for their own binaries or tests.
 
+  Alternatively, you can pass in __name__ as the optional only_if_main arg, in
+  which case mark_flag_as_required will be a no-op when your code is imported:
+
+    flags.mark_flag_as_required('your_flag_name', only_if_main=__name__)
+
   Args:
     flag_name: str, name of the flag
     flag_values: flags.FlagValues, optional FlagValues instance where the flag
         is defined.
+    only_if_main: str, optional value of __name__ in the scope of the caller.
+        If provided, will make the call a no-op when __name__ is not '__main__',
+        to prevent requiring the flag when the caller is imported instead of
+        being run in the main scope. See
+        https://docs.python.org/3/library/__main__.html
   Raises:
     AttributeError: Raised when flag_name is not registered as a valid flag
         name.
   """
+  if only_if_main is not None and only_if_main != '__main__':
+    return
   if flag_values[flag_name].default is not None:
     warnings.warn(
         'Flag --%s has a non-None default value; therefore, '
@@ -364,7 +377,8 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
       flag_values=flag_values)
 
 
-def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
+def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS,
+                           only_if_main=None):
   """Ensures that flags are not None during program execution.
 
   Recommended usage:
@@ -373,13 +387,25 @@ def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
       flags.mark_flags_as_required(['flag1', 'flag2', 'flag3'])
       app.run()
 
+  or:
+
+    flags.mark_flags_as_required(['flag1', 'flag2', 'flag3'],
+                                 only_if_main=__name__)
+
   Args:
     flag_names: Sequence[str], names of the flags.
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
         are defined.
+    only_if_main: str, optional value of __name__ in the scope of the caller.
+        If provided, will make the call a no-op when __name__ is not '__main__',
+        to prevent requiring the flags when the caller is imported instead of
+        being run in the main scope. See
+        https://docs.python.org/3/library/__main__.html
   Raises:
     AttributeError: If any of flag name has not already been defined as a flag.
   """
+  if only_if_main is not None and only_if_main != '__main__':
+    return
   for flag_name in flag_names:
     mark_flag_as_required(flag_name, flag_values)
 
