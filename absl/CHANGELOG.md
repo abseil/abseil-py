@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.10.0 (2020-08-19)
+
 ### Added
 
 *   (testing) `_TempDir` and `_TempFile` now implement `__fspath__` to satisfy
