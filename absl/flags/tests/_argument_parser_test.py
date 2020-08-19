@@ -23,6 +23,7 @@ from __future__ import print_function
 from absl._enum_module import enum
 from absl.flags import _argument_parser
 from absl.testing import absltest
+from absl.testing import parameterized
 import six
 
 
@@ -134,7 +135,13 @@ class EmptyEnum(enum.Enum):
   pass
 
 
-class EnumClassParserTest(absltest.TestCase):
+class MixedCaseEnum(enum.Enum):
+  APPLE = 1
+  BANANA = 2
+  apple = 3
+
+
+class EnumClassParserTest(parameterized.TestCase):
 
   def test_requires_enum(self):
     with self.assertRaises(TypeError):
@@ -144,9 +151,24 @@ class EnumClassParserTest(absltest.TestCase):
     with self.assertRaises(ValueError):
       _argument_parser.EnumClassParser(EmptyEnum)
 
+  def test_case_sensitive_rejects_duplicates(self):
+    unused_normal_parser = _argument_parser.EnumClassParser(MixedCaseEnum)
+    with self.assertRaisesRegex(ValueError, 'Duplicate.+apple'):
+      _argument_parser.EnumClassParser(MixedCaseEnum, case_sensitive=False)
+
   def test_parse_string(self):
     parser = _argument_parser.EnumClassParser(Fruit)
     self.assertEqual(Fruit.APPLE, parser.parse('APPLE'))
+
+  def test_parse_string_case_sensitive(self):
+    parser = _argument_parser.EnumClassParser(Fruit)
+    with self.assertRaises(ValueError):
+      parser.parse('apple')
+
+  @parameterized.parameters('APPLE', 'apple', 'Apple')
+  def test_parse_string_case_insensitive(self, value):
+    parser = _argument_parser.EnumClassParser(Fruit, case_sensitive=False)
+    self.assertIs(Fruit.APPLE, parser.parse(value))
 
   def test_parse_literal(self):
     parser = _argument_parser.EnumClassParser(Fruit)
@@ -157,14 +179,15 @@ class EnumClassParserTest(absltest.TestCase):
     with self.assertRaises(ValueError):
       parser.parse('ORANGE')
 
-  def test_serialize_parse(self):
-    serializer = _argument_parser.EnumClassSerializer()
-    val1 = Fruit.BANANA
-    parser = _argument_parser.EnumClassParser(Fruit)
-    serialized = serializer.serialize(val1)
-    self.assertEqual(serialized, 'BANANA')
-    val2 = parser.parse(serialized)
-    self.assertEqual(val1, val2)
+  @parameterized.parameters((Fruit.BANANA, False, 'BANANA'),
+                            (Fruit.BANANA, True, 'banana'))
+  def test_serialize_parse(self, value, lowercase, expected):
+    serializer = _argument_parser.EnumClassSerializer(lowercase=lowercase)
+    parser = _argument_parser.EnumClassParser(
+        Fruit, case_sensitive=not lowercase)
+    serialized = serializer.serialize(value)
+    self.assertEqual(serialized, expected)
+    self.assertEqual(value, parser.parse(expected))
 
 
 class HelperFunctionsTest(absltest.TestCase):

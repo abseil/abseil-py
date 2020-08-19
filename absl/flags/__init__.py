@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """This package is used to define and parse command line flags.
 
 This package defines a *distributed* flag-definition policy: rather than
@@ -75,7 +74,6 @@ DEFINE_multi_enum_class = _defines.DEFINE_multi_enum_class
 DEFINE_alias = _defines.DEFINE_alias
 # pylint: enable=invalid-name
 
-
 # Flag validators.
 register_validator = _validators.register_validator
 validator = _validators.validator
@@ -86,12 +84,10 @@ mark_flags_as_required = _validators.mark_flags_as_required
 mark_flags_as_mutual_exclusive = _validators.mark_flags_as_mutual_exclusive
 mark_bool_flags_as_mutual_exclusive = _validators.mark_bool_flags_as_mutual_exclusive
 
-
 # Key flag related functions.
 declare_key_flag = _defines.declare_key_flag
 adopt_module_key_flags = _defines.adopt_module_key_flags
 disclaim_key_flags = _defines.disclaim_key_flags
-
 
 # Module exceptions.
 # pylint: disable=invalid-name
@@ -104,7 +100,6 @@ UnparsedFlagAccessError = _exceptions.UnparsedFlagAccessError
 ValidationError = _exceptions.ValidationError
 FlagNameConflictsWithMethodError = _exceptions.FlagNameConflictsWithMethodError
 
-
 # Public classes.
 Flag = _flag.Flag
 BooleanFlag = _flag.BooleanFlag
@@ -112,6 +107,7 @@ EnumFlag = _flag.EnumFlag
 EnumClassFlag = _flag.EnumClassFlag
 MultiFlag = _flag.MultiFlag
 MultiEnumClassFlag = _flag.MultiEnumClassFlag
+FlagHolder = _flagvalues.FlagHolder
 FlagValues = _flagvalues.FlagValues
 ArgumentParser = _argument_parser.ArgumentParser
 BooleanParser = _argument_parser.BooleanParser
@@ -127,13 +123,11 @@ CsvListSerializer = _argument_parser.CsvListSerializer
 WhitespaceSeparatedListParser = _argument_parser.WhitespaceSeparatedListParser
 # pylint: enable=invalid-name
 
-
 # Helper functions.
 get_help_width = _helpers.get_help_width
 text_wrap = _helpers.text_wrap
 flag_dict_to_args = _helpers.flag_dict_to_args
 doc_to_help = _helpers.doc_to_help
-
 
 # Special flags.
 _helpers.SPECIAL_FLAGS = FlagValues()
@@ -141,14 +135,14 @@ _helpers.SPECIAL_FLAGS = FlagValues()
 DEFINE_string(
     'flagfile', '',
     'Insert flag definitions from the given file into the command line.',
-    _helpers.SPECIAL_FLAGS)
+    _helpers.SPECIAL_FLAGS)  # pytype: disable=wrong-arg-types
 
-DEFINE_string(
-    'undefok', '',
-    'comma-separated list of flag names that it is okay to specify '
-    'on the command line even if the program does not define a flag '
-    'with that name.  IMPORTANT: flags in this list that have '
-    'arguments MUST use the --flag=value format.', _helpers.SPECIAL_FLAGS)
+DEFINE_string('undefok', '',
+              'comma-separated list of flag names that it is okay to specify '
+              'on the command line even if the program does not define a flag '
+              'with that name.  IMPORTANT: flags in this list that have '
+              'arguments MUST use the --flag=value format.',
+              _helpers.SPECIAL_FLAGS)  # pytype: disable=wrong-arg-types
 
 # The global FlagValues instance.
 FLAGS = _flagvalues.FLAGS

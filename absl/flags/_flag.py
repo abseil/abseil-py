@@ -213,10 +213,15 @@ class Flag(object):
     if value is None:
       self.default = None
     else:
-      self.default = self._parse(value)
+      self.default = self._parse_from_default(value)
     self.default_as_str = self._get_parsed_value_as_string(self.default)
     if self.using_default_value:
       self.value = self.default
+
+  # This is split out so that aliases can skip regular parsing of the default
+  # value.
+  def _parse_from_default(self, value):
+    return self._parse(value)
 
   def flag_type(self):
     """Returns a str that describes the type of the flag.
@@ -340,13 +345,21 @@ class EnumFlag(Flag):
 class EnumClassFlag(Flag):
   """Basic enum flag; its value is an enum class's member."""
 
-  def __init__(self, name, default, help, enum_class,  # pylint: disable=redefined-builtin
-               short_name=None, **args):
-    p = _argument_parser.EnumClassParser(enum_class)
-    g = _argument_parser.EnumClassSerializer()
+  def __init__(
+      self,
+      name,
+      default,
+      help,  # pylint: disable=redefined-builtin
+      enum_class,
+      short_name=None,
+      case_sensitive=False,
+      **args):
+    p = _argument_parser.EnumClassParser(
+        enum_class, case_sensitive=case_sensitive)
+    g = _argument_parser.EnumClassSerializer(lowercase=not case_sensitive)
     super(EnumClassFlag, self).__init__(
         p, g, name, default, help, short_name, **args)
-    self.help = '<%s>: %s' % ('|'.join(enum_class.__members__), self.help)
+    self.help = '<%s>: %s' % ('|'.join(p.member_names), self.help)
 
   def _extra_xml_dom_elements(self, doc):
     elements = []
@@ -440,15 +453,22 @@ class MultiEnumClassFlag(MultiFlag):
   type.
   """
 
-  def __init__(self, name, default, help_string, enum_class, **args):
-    p = _argument_parser.EnumClassParser(enum_class)
-    g = _argument_parser.EnumClassListSerializer(list_sep=',')
+  def __init__(self,
+               name,
+               default,
+               help_string,
+               enum_class,
+               case_sensitive=False,
+               **args):
+    p = _argument_parser.EnumClassParser(
+        enum_class, case_sensitive=case_sensitive)
+    g = _argument_parser.EnumClassListSerializer(
+        list_sep=',', lowercase=not case_sensitive)
     super(MultiEnumClassFlag, self).__init__(
         p, g, name, default, help_string, **args)
     self.help = (
         '<%s>: %s;\n    repeat this option to specify a list of values' %
-        ('|'.join(enum_class.__members__),
-         help_string or '(no help available)'))
+        ('|'.join(p.member_names), help_string or '(no help available)'))
 
   def _extra_xml_dom_elements(self, doc):
     elements = []

@@ -59,6 +59,80 @@ class ConfigurationTest(absltest.TestCase):
                    logging.PythonFormatter))
 
 
+class LoggerLevelsTest(parameterized.TestCase):
+
+  def setUp(self):
+    super(LoggerLevelsTest, self).setUp()
+    # Since these tests muck with the flag, always save/restore in case the
+    # tests forget to clean up properly.
+    # enter_context() is py3-only, but manually enter/exit should suffice.
+    cm = self.set_logger_levels({})
+    cm.__enter__()
+    self.addCleanup(lambda: cm.__exit__(None, None, None))
+
+  @contextlib.contextmanager
+  def set_logger_levels(self, levels):
+    original_levels = {
+        name: std_logging.getLogger(name).level for name in levels
+    }
+
+    try:
+      with flagsaver.flagsaver(logger_levels=levels):
+        yield
+    finally:
+      for name, level in original_levels.items():
+        std_logging.getLogger(name).setLevel(level)
+
+  def assert_logger_level(self, name, expected_level):
+    logger = std_logging.getLogger(name)
+    self.assertEqual(logger.level, expected_level)
+
+  def assert_logged(self, logger_name, expected_msgs):
+    logger = std_logging.getLogger(logger_name)
+    # NOTE: assertLogs() sets the logger to INFO if not specified.
+    with self.assertLogs(logger, logger.level) as cm:
+      logger.debug('debug')
+      logger.info('info')
+      logger.warning('warning')
+      logger.error('error')
+      logger.critical('critical')
+
+    actual = {r.getMessage() for r in cm.records}
+    self.assertEqual(set(expected_msgs), actual)
+
+  @unittest.skipIf(six.PY2, 'Py2 is missing assertLogs')
+  def test_setting_levels(self):
+    # Other tests change the root logging level, so we can't
+    # assume it's the default.
+    orig_root_level = std_logging.root.getEffectiveLevel()
+    with self.set_logger_levels({'foo': 'ERROR', 'bar': 'DEBUG'}):
+
+      self.assert_logger_level('foo', std_logging.ERROR)
+      self.assert_logger_level('bar', std_logging.DEBUG)
+      self.assert_logger_level('', orig_root_level)
+
+      self.assert_logged('foo', {'error', 'critical'})
+      self.assert_logged('bar',
+                         {'debug', 'info', 'warning', 'error', 'critical'})
+
+  @parameterized.named_parameters(
+      ('empty', ''),
+      ('one_value', 'one:INFO'),
+      ('two_values', 'one.a:INFO,two.b:ERROR'),
+      ('whitespace_ignored', ' one : DEBUG , two : INFO'),
+  )
+  def test_serialize_parse(self, levels_str):
+    fl = FLAGS['logger_levels']
+    fl.parse(levels_str)
+    expected = levels_str.replace(' ', '')
+    actual = fl.serialize()
+    self.assertEqual('--logger_levels={}'.format(expected), actual)
+
+  def test_invalid_value(self):
+    with self.assertRaisesRegex(ValueError, 'Unknown level.*10'):
+      FLAGS['logger_levels'].parse('foo:10')
+
+
 class PythonHandlerTest(absltest.TestCase):
   """Tests the PythonHandler class."""
 

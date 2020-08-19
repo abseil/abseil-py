@@ -29,6 +29,7 @@ from absl.flags import _defines
 from absl.flags import _exceptions
 from absl.flags import _flagvalues
 from absl.flags import _helpers
+from absl.flags import _validators
 from absl.flags.tests import module_foo
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -378,6 +379,18 @@ class FlagValuesTest(absltest.TestCase):
     self.assertFalse(fv['is_gnu_getopt'].value)
     self.assertIsInstance(fv.is_gnu_getopt, types.MethodType)
 
+  def test_get_flags_for_module(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('foo', None, 'help', flag_values=fv)
+    module_foo.define_flags(fv)
+    flags = fv.get_flags_for_module('__main__')
+
+    self.assertEqual({'foo'}, {flag.name for flag in flags})
+
+    flags = fv.get_flags_for_module(module_foo)
+    self.assertEqual({'tmod_foo_bool', 'tmod_foo_int', 'tmod_foo_str'},
+                     {flag.name for flag in flags})
+
   def test_get_help(self):
     fv = _flagvalues.FlagValues()
     self.assertMultiLineEqual('''\
@@ -553,6 +566,15 @@ absl.flags.tests.module_foo:
 
     actual = flag_values.flags_into_string()
     self.assertEqual(expected, actual)
+
+  def test_validate_all_flags(self):
+    fv = _flagvalues.FlagValues()
+    _defines.DEFINE_string('name', None, '', flag_values=fv)
+    _validators.mark_flag_as_required('name', flag_values=fv)
+    with self.assertRaises(_exceptions.IllegalFlagValueError):
+      fv.validate_all_flags()
+    fv.name = 'test'
+    fv.validate_all_flags()
 
 
 class FlagValuesLoggingTest(absltest.TestCase):
@@ -823,6 +845,43 @@ class UnparsedFlagAccessTest(absltest.TestCase):
     fv.unparse_flags()
     with self.assertRaises(_exceptions.UnparsedFlagAccessError):
       _ = fv.a_str
+
+
+class FlagHolderTest(absltest.TestCase):
+
+  def setUp(self):
+    super(FlagHolderTest, self).setUp()
+    self.fv = _flagvalues.FlagValues()
+    self.name_flag = _defines.DEFINE_string(
+        'name', 'default', 'help', flag_values=self.fv)
+
+  def parse_flags(self, *argv):
+    self.fv.unparse_flags()
+    self.fv(['binary_name'] + list(argv))
+
+  def test_name(self):
+    self.assertEqual('name', self.name_flag.name)
+
+  def test_value_before_flag_parsing(self):
+    with self.assertRaises(_exceptions.UnparsedFlagAccessError):
+      _ = self.name_flag.value
+
+  def test_value_returns_default_value_if_not_explicitly_set(self):
+    self.parse_flags()
+    self.assertEqual('default', self.name_flag.value)
+
+  def test_value_returns_explicitly_set_value(self):
+    self.parse_flags('--name=new_value')
+    self.assertEqual('new_value', self.name_flag.value)
+
+  def test_allow_override(self):
+    first = _defines.DEFINE_integer(
+        'int_flag', 1, 'help', flag_values=self.fv, allow_override=1)
+    second = _defines.DEFINE_integer(
+        'int_flag', 2, 'help', flag_values=self.fv, allow_override=1)
+    self.parse_flags('--int_flag=3')
+    self.assertEqual(3, first.value)
+    self.assertEqual(3, second.value)
 
 
 if __name__ == '__main__':

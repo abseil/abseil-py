@@ -37,6 +37,7 @@ class TestOrderRandomizationTest(parameterized.TestCase):
   """
 
   def setUp(self):
+    super(TestOrderRandomizationTest, self).setUp()
     self._test_name = 'absl/testing/tests/absltest_randomization_testcase'
 
   def _run_test(self, extra_argv, extra_env):
@@ -107,7 +108,14 @@ class TestOrderRandomizationTest(parameterized.TestCase):
           'env': {
               'TEST_RANDOMIZE_ORDERING_SEED': '1'
           },
-      },)
+      },
+      {
+          'argv': [],
+          'env': {
+              'LATE_SET_TEST_RANDOMIZE_ORDERING_SEED': '1'
+          },
+      },
+  )
   def test_fixed_seed(self, argv, env):
     output, tests, exit_code = self._run_test(argv, env)
     self.assertEqual(0, exit_code, msg='command output: ' + output)

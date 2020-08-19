@@ -8,6 +8,46 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 Nothing notable unreleased.
 
+## 0.10.0 (2020-08-19)
+
+### Added
+
+*   (testing) `_TempDir` and `_TempFile` now implement `__fspath__` to satisfy
+    `os.PathLike`
+*   (logging) `--logger_levels`: allows specifying the log levels of loggers.
+*   (flags) `FLAGS.validate_all_flags`: a new method that validates all flags
+    and raises an exception if one fails.
+*   (flags) `FLAGS.get_flags_for_module`: Allows fetching the flags a module
+    defines.
+*   (testing) `parameterized.TestCase`: Supports async test definitions.
+*   (testing,app) Added `--pdb` flag: When true, uncaught exceptions will be
+    handled by `pdb.post_mortem`. This is an alias for `--pdb_post_mortem`.
+
+### Changed
+
+*   (testing) Failed tests output a copy/pastable test id to make it easier to
+    copy the failing test to the command line.
+*   (testing) `@parameterized.parameters` now treats a single `abc.Mapping` as
+    a single test case, consistent with `named_parameters`. Previously the
+    `abc.Mapping` is treated as if only its keys are passed as a list of test
+    cases. If you were relying on the old inconsistent behavior, explicitly
+    convert the `abc.Mapping` to a `list`.
+*   (flags) `DEFINE_enum_class` and `DEFINE_mutlti_enum_class` accept a
+    `case_sensitive` argument. When `False` (the default), strings are mapped to
+    enum member names without case sensitivity, and member names are serialized
+    in lowercase form. Flag definitions for enums whose members include
+    duplicates when case is ignored must now explicitly pass
+    `case_sensitive=True`.
+
+### Fixed
+
+*   (flags) Defining an alias no longer marks the aliased flag as always present
+    on the command line.
+*   (flags) Aliasing a multi flag no longer causes the default value to be
+    appended to.
+*   (flags) Alias default values now matched the aliased default value.
+*   (flags) Alias `present` counter now correctly reflects command line usage.
+
 ## 0.9.0 (2019-12-17)
 
 ### Added
@@ -40,8 +80,8 @@ Nothing notable unreleased.
 *   (bazel) Tests now pass when bazel
     `--incompatible_allow_python_version_transitions=true` is set.
 *   (bazel) Both Python 2 and Python 3 versions of tests are now created. To
-    only run one major Python version, use
-    `bazel test --test_tag_filters=-python[23]` to ignore the other version.
+    only run one major Python version, use `bazel test
+    --test_tag_filters=-python[23]` to ignore the other version.
 *   (testing) `assertTotallyOrdered` no longer requires objects to implement
     `__hash__`.
 *   (testing) `absltest` now integrates better with `--pdb_post_mortem`.
@@ -50,9 +90,9 @@ Nothing notable unreleased.
 
 ### Fixed
 
-*    #99: `absl.logging` no longer registers itself to `logging.root` at import
-     time.
-*    #108: Tests now pass with Bazel 0.28.0 on macOS.
+*   #99: `absl.logging` no longer registers itself to `logging.root` at import
+    time.
+*   #108: Tests now pass with Bazel 0.28.0 on macOS.
 
 ## 0.7.1 (2019-03-12)
 

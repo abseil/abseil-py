@@ -56,7 +56,12 @@ py_library(
 
 py_library(
     name = "parameterized",
-    srcs = ["parameterized.py"],
+    srcs = [
+        "parameterized.py",
+    ] + select({
+        "//absl:py2_mode": [],
+        "//absl:py3_mode": ["_parameterized_async.py"],
+    }),
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
@@ -127,6 +132,27 @@ py2py3_test_binary(
     name = "tests/absltest_filtering_test_helper",
     testonly = 1,
     srcs = ["tests/absltest_filtering_test_helper.py"],
+    srcs_version = "PY2AND3",
+    deps = [":absltest"],
+)
+
+py2and3_test(
+    name = "tests/absltest_fail_fast_test",
+    size = "small",
+    srcs = ["tests/absltest_fail_fast_test.py"],
+    data = [":tests/absltest_fail_fast_test_helper"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_bazelize_command",
+        ":absltest",
+        "//absl/logging",
+    ],
+)
+
+py2py3_test_binary(
+    name = "tests/absltest_fail_fast_test_helper",
+    testonly = 1,
+    srcs = ["tests/absltest_fail_fast_test_helper.py"],
     srcs_version = "PY2AND3",
     deps = [":absltest"],
 )

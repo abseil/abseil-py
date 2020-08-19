@@ -207,7 +207,12 @@ def _get_default_randomize_ordering_seed():
     ValueError: Raised when the flag or env value is not one of the options
         above.
   """
-  randomize = FLAGS.test_randomize_ordering_seed
+  if FLAGS['test_randomize_ordering_seed'].present:
+    randomize = FLAGS.test_randomize_ordering_seed
+  elif 'TEST_RANDOMIZE_ORDERING_SEED' in os.environ:
+    randomize = os.environ['TEST_RANDOMIZE_ORDERING_SEED']
+  else:
+    randomize = ''
   if not randomize:
     return 0
   if randomize == 'random':
@@ -236,14 +241,15 @@ flags.DEFINE_string('test_srcdir',
 flags.DEFINE_string('test_tmpdir', get_default_test_tmpdir(),
                     'Directory for temporary testing files',
                     allow_override_cpp=True)
-flags.DEFINE_string('test_randomize_ordering_seed',
-                    os.environ.get('TEST_RANDOMIZE_ORDERING_SEED', ''),
-                    'If positive, use this as a seed to randomize the '
-                    'execution order for test cases. If "random", pick a '
-                    'random seed to use. If 0 or not set, do not randomize '
-                    'test case execution order. This flag also overrides '
-                    'the TEST_RANDOMIZE_ORDERING_SEED environment variable.',
-                    allow_override_cpp=True)
+flags.DEFINE_string(
+    'test_randomize_ordering_seed',
+    '',
+    'If positive, use this as a seed to randomize the '
+    'execution order for test cases. If "random", pick a '
+    'random seed to use. If 0 or not set, do not randomize '
+    'test case execution order. This flag also overrides '
+    'the TEST_RANDOMIZE_ORDERING_SEED environment variable.',
+    allow_override_cpp=True)
 flags.DEFINE_string('xml_output_file', '',
                     'File to store XML test results')
 
@@ -307,6 +313,10 @@ class _TempDir(object):
   """Represents a temporary directory for tests.
 
   Creation of this class is internal. Using its public methods is OK.
+
+  This class implements the `os.PathLike` interface (specifically,
+  `os.PathLike[str]`). This means, in Python 3, it can be directly passed
+  to e.g. `os.path.join()`.
   """
 
   def __init__(self, path):
@@ -317,8 +327,17 @@ class _TempDir(object):
   @property
   def full_path(self):
     # type: () -> Text
-    """The path, as a string, for the directory."""
+    """Returns the path, as a string, for the directory.
+
+    TIP: Instead of e.g. `os.path.join(temp_dir.full_path)`, you can simply
+    do `os.path.join(temp_dir)` because `__fspath__()` is implemented.
+    """
     return self._path
+
+  def __fspath__(self):
+    # type: () -> Text
+    """See os.PathLike."""
+    return self.full_path
 
   def create_file(self, file_path=None, content=None, mode='w', encoding='utf8',
                   errors='strict'):
@@ -375,6 +394,10 @@ class _TempFile(object):
   """Represents a tempfile for tests.
 
   Creation of this class is internal. Using its public methods is OK.
+
+  This class implements the `os.PathLike` interface (specifically,
+  `os.PathLike[str]`). This means, in Python 3, it can be directly passed
+  to e.g. `os.path.join()`.
   """
 
   def __init__(self, path):
@@ -419,8 +442,17 @@ class _TempFile(object):
   @property
   def full_path(self):
     # type: () -> Text
-    """The path, as a string, for the file."""
+    """Returns the path, as a string, for the file.
+
+    TIP: Instead of e.g. `os.path.join(temp_file.full_path)`, you can simply
+    do `os.path.join(temp_file)` because `__fspath__()` is implemented.
+    """
     return self._path
+
+  def __fspath__(self):
+    # type: () -> Text
+    """See os.PathLike."""
+    return self.full_path
 
   def read_text(self, encoding='utf8', errors='strict'):
     # type: (Text, Text) -> Text
@@ -484,7 +516,7 @@ class _TempFile(object):
                        'file in text mode'.format(mode))
     if 't' not in mode:
       mode += 't'
-    cm = self._open(mode, encoding, errors)  # type: ContextManager[TextIO]
+    cm = self._open(mode, encoding, errors)
     return cm
 
   def open_bytes(self, mode='rb'):
@@ -506,15 +538,15 @@ class _TempFile(object):
                        'file in binary mode'.format(mode))
     if 'b' not in mode:
       mode += 'b'
-    cm = self._open(mode, encoding=None, errors=None)  # type: ContextManager[BinaryIO]
+    cm = self._open(mode, encoding=None, errors=None)
     return cm
 
   # TODO(b/123775699): Once pytype supports typing.Literal, use overload and
-  # Literal to express more precise return types and remove the type comments in
-  # open_text and open_bytes.
+  # Literal to express more precise return types. The contained type is
+  # currently `Any` to avoid [bad-return-type] errors in the open_* methods.
   @contextlib.contextmanager
   def _open(self, mode, encoding='utf8', errors='strict'):
-    # type: (Text, Text, Text) -> Iterator[Union[IO[Text], IO[bytes]]]
+    # type: (Text, Text, Text) -> Iterator[Any]
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
       yield fp
@@ -529,7 +561,9 @@ class TestCase(unittest3_backport.TestCase):
   # tempfile module. This can be overridden at the class level, instance level,
   # or with the `cleanup` arg of `create_tempfile()` and `create_tempdir()`. See
   # `TempFileCleanup` for details on the different values.
-  tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup
+  # TODO(b/70517332): Remove the type comment and the disable once pytype has
+  # better support for enums.
+  tempfile_cleanup = TempFileCleanup.ALWAYS  # type: TempFileCleanup  # pytype: disable=annotation-type-mismatch
 
   maxDiff = 80 * 20
   longMessage = True
@@ -558,7 +592,19 @@ class TestCase(unittest3_backport.TestCase):
     This creates a named directory on disk that is isolated to this test, and
     will be properly cleaned up by the test. This avoids several pitfalls of
     creating temporary directories for test purposes, as well as makes it easier
-    to setup directories and verify their contents.
+    to setup directories and verify their contents. For example:
+
+        def test_foo(self):
+          out_dir = self.create_tempdir()
+          out_log = out_dir.create_file('output.log')
+          expected_outputs = [
+              os.path.join(out_dir, 'data-0.txt'),
+              os.path.join(out_dir, 'data-1.txt'),
+          ]
+          code_under_test(out_dir)
+          self.assertTrue(os.path.exists(expected_paths[0]))
+          self.assertTrue(os.path.exists(expected_paths[1]))
+          self.assertEqual('foo', out_log.read_text())
 
     See also: `create_tempfile()` for creating temporary files.
 
@@ -570,7 +616,8 @@ class TestCase(unittest3_backport.TestCase):
         `self.tempfile_cleanup`.
 
     Returns:
-      A _TempDir representing the created directory.
+      A _TempDir representing the created directory; see _TempDir class docs
+      for usage.
     """
     test_path = self._get_tempdir_path_test()
 
@@ -600,7 +647,13 @@ class TestCase(unittest3_backport.TestCase):
     be properly cleaned up by the test. This avoids several pitfalls of
     creating temporary files for test purposes, as well as makes it easier
     to setup files, their data, read them back, and inspect them when
-    a test fails.
+    a test fails. For example:
+
+        def test_foo(self):
+          output = self.create_tempfile()
+          code_under_test(output)
+          self.assertGreater(os.path.getsize(output), 0)
+          self.assertEqual('foo', output.read_text())
 
     NOTE: This will zero-out the file. This ensures there is no pre-existing
     state.
@@ -629,7 +682,8 @@ class TestCase(unittest3_backport.TestCase):
         `self.tempfile_cleanup`.
 
     Returns:
-      A _TempFile representing the created file.
+      A _TempFile representing the created file; see _TempFile class docs for
+      usage.
     """
     test_path = self._get_tempdir_path_test()
     tf, cleanup_path = _TempFile._create(test_path, file_path, content=content,
@@ -719,7 +773,13 @@ class TestCase(unittest3_backport.TestCase):
     Returns:
       desc: A short description of a test method.
     """
-    desc = str(self)
+    desc = self.id()
+
+    # Omit the main name so that test name can be directly copy/pasted to
+    # the command line.
+    if desc.startswith('__main__.'):
+      desc = desc[len('__main__.'):]
+
     # NOTE: super() is used here instead of directly invoking
     # unittest.TestCase.shortDescription(self), because of the
     # following line that occurs later on:
@@ -1912,15 +1972,6 @@ def _quote_long_string(s):
           '----------->8\n')
 
 
-class _TestProgramManualRun(unittest.TestProgram):
-  """A TestProgram which runs the tests manually."""
-
-  def runTests(self, do_run=False):
-    """Runs the tests."""
-    if do_run:
-      unittest.TestProgram.runTests(self)
-
-
 def print_python_version():
   # type: () -> None
   # Having this in the test output logs by default helps debugging when all
@@ -1932,7 +1983,7 @@ def print_python_version():
 
 
 def main(*args, **kwargs):
-  # type: (Text, Mapping[Text, Any]) -> None
+  # type: (Text, Any) -> None
   """Executes a set of Python unit tests.
 
   Usually this function is called without arguments, so the
@@ -2071,9 +2122,15 @@ def _is_suspicious_attribute(testCaseClass, name):
   if name.startswith('Test') and len(name) > 4 and name[4].isupper():
     attr = getattr(testCaseClass, name)
     if inspect.isfunction(attr) or inspect.ismethod(attr):
-      args = inspect.getargspec(attr)
-      return (len(args.args) == 1 and args.args[0] == 'self'
-              and args.varargs is None and args.keywords is None)
+      if six.PY2:
+        args = inspect.getargspec(attr)
+        return (len(args.args) == 1 and args.args[0] == 'self'
+                and args.varargs is None and args.keywords is None)
+      else:
+        args = inspect.getfullargspec(attr)
+        return (len(args.args) == 1 and args.args[0] == 'self'
+                and args.varargs is None and args.varkw is None and
+                not args.kwonlyargs)
   return False
 
 
@@ -2097,10 +2154,10 @@ class TestLoader(unittest.TestLoader):
     super(TestLoader, self).__init__(*args, **kwds)
     seed = _get_default_randomize_ordering_seed()
     if seed:
-      self._seed = seed
-      self._random = random.Random(self._seed)
+      self._randomize_ordering_seed = seed
+      self._random = random.Random(self._randomize_ordering_seed)
     else:
-      self._seed = None
+      self._randomize_ordering_seed = None
       self._random = None
 
   def getTestCaseNames(self, testCaseClass):  # pylint:disable=invalid-name
@@ -2109,10 +2166,12 @@ class TestLoader(unittest.TestLoader):
       if _is_suspicious_attribute(testCaseClass, name):
         raise TypeError(TestLoader._ERROR_MSG % name)
     names = super(TestLoader, self).getTestCaseNames(testCaseClass)
-    if self._seed is not None:
-      logging.info('Randomizing test order with seed: %d', self._seed)
-      logging.info('To reproduce this order, re-run with '
-                   '--test_randomize_ordering_seed=%d', self._seed)
+    if self._randomize_ordering_seed is not None:
+      logging.info(
+          'Randomizing test order with seed: %d', self._randomize_ordering_seed)
+      logging.info(
+          'To reproduce this order, re-run with '
+          '--test_randomize_ordering_seed=%d', self._randomize_ordering_seed)
       self._random.shuffle(names)
     return names
 
@@ -2147,6 +2206,30 @@ def _setup_filtering(argv):
     return
 
   argv[1:1] = shlex.split(test_filter)
+
+
+def _setup_test_runner_fail_fast(argv):
+  # type: (MutableSequence[Text]) -> None
+  """Implements the bazel test fail fast protocol.
+
+  The following environment variable is used in this method:
+
+    TESTBRIDGE_TEST_RUNNER_FAIL_FAST=<1|0>
+
+  If set to 1, --failfast is passed to the unittest framework to return upon
+  first failure.
+
+  Args:
+    argv: the argv to mutate in-place.
+  """
+
+  if argv is None:
+    return
+
+  if os.environ.get('TESTBRIDGE_TEST_RUNNER_FAIL_FAST') != '1':
+    return
+
+  argv[1:1] = ['--failfast']
 
 
 def _setup_sharding(custom_loader=None):
@@ -2210,11 +2293,15 @@ def _setup_sharding(custom_loader=None):
 
   def getShardedTestCaseNames(testCaseClass):
     filtered_names = []
-    for testcase in sorted(delegate_get_names(testCaseClass)):
+    # We need to sort the list of tests in order to determine which tests this
+    # shard is responsible for; however, it's important to preserve the order
+    # returned by the base loader, e.g. in the case of randomized test ordering.
+    ordered_names = delegate_get_names(testCaseClass)
+    for testcase in sorted(ordered_names):
       bucket = next(bucket_iterator)
       if bucket == shard_index:
         filtered_names.append(testcase)
-    return filtered_names
+    return [x for x in ordered_names if x in filtered_names]
 
   base_loader.getTestCaseNames = getShardedTestCaseNames
   return base_loader
@@ -2228,6 +2315,8 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
 
   # Set up test filtering if requested in environment.
   _setup_filtering(argv)
+  # Set up --failfast as requested in environment
+  _setup_test_runner_fail_fast(argv)
 
   # Shard the (default or custom) loader if sharding is turned on.
   kwargs['testLoader'] = _setup_sharding(kwargs.get('testLoader', None))
@@ -2272,6 +2361,14 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     # with partial information, in case the test process crashes).
     xml_buffer = six.StringIO()
     kwargs['testRunner'].set_default_xml_stream(xml_buffer)  # pytype: disable=attribute-error
+
+    # If we've used a seed to randomize test case ordering, we want to record it
+    # as a top-level attribute in the `testsuites` section of the XML output.
+    randomize_ordering_seed = getattr(
+        kwargs['testLoader'], '_randomize_ordering_seed', None)
+    setter = getattr(kwargs['testRunner'], 'set_testsuites_property', None)
+    if randomize_ordering_seed and setter:
+      setter('test_randomize_ordering_seed', randomize_ordering_seed)
   elif kwargs.get('testRunner') is None:
     kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
 

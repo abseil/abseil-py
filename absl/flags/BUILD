@@ -1,8 +1,8 @@
+load("//absl:_build_defs.bzl", "py2and3_test", "py2py3_test_binary")
+
 licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
-
-load("//absl:_build_defs.bzl", "py2and3_test")
 
 py_library(
     name = "flags",
@@ -114,6 +114,7 @@ py2and3_test(
         ":_argument_parser",
         "//absl:_enum_module",
         "//absl/testing:absltest",
+        "//absl/testing:parameterized",
         "@six_archive//:six",
     ],
 )
@@ -196,11 +197,10 @@ py2and3_test(
     ],
 )
 
-py_binary(
+py2py3_test_binary(
     name = "tests/argparse_flags_test_helper",
     testonly = 1,
     srcs = ["tests/argparse_flags_test_helper.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":argparse_flags",

@@ -51,6 +51,7 @@ flags.DEFINE_boolean('run_with_pdb', False, 'Set to true for PDB debug mode')
 flags.DEFINE_boolean('pdb_post_mortem', False,
                      'Set to true to handle uncaught exceptions with PDB '
                      'post mortem.')
+flags.DEFINE_alias('pdb', 'pdb_post_mortem')
 flags.DEFINE_boolean('run_with_profiling', False,
                      'Set to true for profiling the script. '
                      'Execution will be slower, and the output format might '

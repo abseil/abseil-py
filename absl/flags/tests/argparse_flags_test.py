@@ -420,7 +420,7 @@ class ArgparseWithAppRunTest(parameterized.TestCase):
     env['MAIN_FUNC'] = main_func_name
     env['FLAGS_PARSER_FUNC'] = flags_parser_func_name
     helper = _bazelize_command.get_executable_path(
-        'absl/flags/tests/argparse_flags_test_helper', add_version_suffix=False)
+        'absl/flags/tests/argparse_flags_test_helper')
     try:
       stdout = subprocess.check_output(
           [helper] + args, env=env, universal_newlines=True)
