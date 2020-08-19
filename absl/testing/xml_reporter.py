@@ -241,6 +241,7 @@ class _TestSuiteResult(object):
     self.error_counts = {}
     self.overall_start_time = -1
     self.overall_end_time = -1
+    self._testsuites_properties = {}
 
   def add_test_case_result(self, test_case_result):
     suite_name = type(test_case_result.test).__name__
@@ -281,6 +282,12 @@ class _TestSuiteResult(object):
         ('timestamp', _iso8601_timestamp(self.overall_start_time)),
     ]
     _print_xml_element_header('testsuites', overall_attributes, stream)
+    if self._testsuites_properties:
+      stream.write('    <properties>\n')
+      for name, value in sorted(six.iteritems(self._testsuites_properties)):
+        stream.write('      <property name="%s" value="%s"></property>\n' %
+                     (_escape_xml_attr(name), _escape_xml_attr(str(value))))
+      stream.write('    </properties>\n')
 
     for suite_name in self.suites:
       suite = self.suites[suite_name]
@@ -342,11 +349,13 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
   _TEST_CASE_RESULT_CLASS = _TestCaseResult
 
   def __init__(self, xml_stream, stream, descriptions, verbosity,
-               time_getter=_time_copy):
+               time_getter=_time_copy, testsuites_properties=None):
     super(_TextAndXMLTestResult, self).__init__(stream, descriptions, verbosity)
     self.xml_stream = xml_stream
     self.pending_test_case_results = {}
     self.suite = self._TEST_SUITE_RESULT_CLASS()
+    if testsuites_properties:
+      self.suite._testsuites_properties = testsuites_properties
     self.time_getter = time_getter
 
     # This lock guards any mutations on pending_test_case_results.
@@ -516,6 +525,7 @@ class TextAndXMLTestRunner(unittest.TextTestRunner):
   _TEST_RESULT_CLASS = _TextAndXMLTestResult
 
   _xml_stream = None
+  _testsuites_properties = {}
 
   def __init__(self, xml_stream=None, *args, **kwargs):
     """Initialize a TextAndXMLTestRunner.
@@ -551,5 +561,10 @@ class TextAndXMLTestRunner(unittest.TextTestRunner):
     if self._xml_stream is None:
       return super(TextAndXMLTestRunner, self)._makeResult()
     else:
-      return self._TEST_RESULT_CLASS(self._xml_stream, self.stream,
-                                     self.descriptions, self.verbosity)
+      return self._TEST_RESULT_CLASS(
+          self._xml_stream, self.stream, self.descriptions, self.verbosity,
+          testsuites_properties=self._testsuites_properties)
+
+  @classmethod
+  def set_testsuites_property(cls, key, value):
+    cls._testsuites_properties[key] = value

@@ -43,7 +43,7 @@ class TestShardingTest(absltest.TestCase):
     if self._shard_file is not None and os.path.exists(self._shard_file):
       os.unlink(self._shard_file)
 
-  def _run_sharded(self, total_shards, shard_index, shard_file=None):
+  def _run_sharded(self, total_shards, shard_index, shard_file=None, env=None):
     """Runs the py_test binary in a subprocess.
 
     Args:
@@ -51,12 +51,17 @@ class TestShardingTest(absltest.TestCase):
       shard_index: int, the shard index.
       shard_file: string, if not 'None', the path to the shard file.
         This method asserts it is properly created.
+      env: Environment variables to be set for the py_test binary.
 
     Returns:
       (stdout, exit_code) tuple of (string, int).
     """
-    env = {'TEST_TOTAL_SHARDS': str(total_shards),
-           'TEST_SHARD_INDEX': str(shard_index)}
+    if env is None:
+      env = {}
+    env.update({
+        'TEST_TOTAL_SHARDS': str(total_shards),
+        'TEST_SHARD_INDEX': str(shard_index)
+    })
     if 'SYSTEMROOT' in os.environ:
       # This is used by the random module on Windows to locate crypto
       # libraries.
@@ -102,14 +107,14 @@ class TestShardingTest(absltest.TestCase):
       combined_outerr.extend(method_list)
       exit_code_by_shard.append(exit_code)
 
-    self.assertEquals(1, len([x for x in exit_code_by_shard if x != 0]),
-                      'Expected exactly one failure')
+    self.assertLen([x for x in exit_code_by_shard if x != 0], 1,
+                   'Expected exactly one failure')
 
     # Test completeness and partition properties.
-    self.assertEquals(NUM_TEST_METHODS, len(combined_outerr),
-                      'Partition requirement not met')
-    self.assertEquals(NUM_TEST_METHODS, len(set(combined_outerr)),
-                      'Completeness requirement not met')
+    self.assertLen(combined_outerr, NUM_TEST_METHODS,
+                   'Partition requirement not met')
+    self.assertLen(set(combined_outerr), NUM_TEST_METHODS,
+                   'Completeness requirement not met')
 
     # Test balance:
     for i in range(len(outerr_by_shard)):
@@ -123,7 +128,7 @@ class TestShardingTest(absltest.TestCase):
 
   def test_zero_shards(self):
     out, exit_code = self._run_sharded(0, 0)
-    self.assertEquals(1, exit_code)
+    self.assertEqual(1, exit_code)
     self.assertGreaterEqual(out.find('Bad sharding values. index=0, total=0'),
                             0, 'Bad output: %s' % (out))
 
@@ -135,6 +140,20 @@ class TestShardingTest(absltest.TestCase):
 
   def test_with_ten_shards(self):
     self._assert_sharding_correctness(10)
+
+  def test_sharding_with_randomization(self):
+    # If we're both sharding *and* randomizing, we need to confirm that we
+    # randomize within the shard; we use two seeds to confirm we're seeing the
+    # same tests (sharding is consistent) in a different order.
+    tests_seen = []
+    for seed in ('7', '17'):
+      out, exit_code = self._run_sharded(
+          2, 0, env={'TEST_RANDOMIZE_ORDERING_SEED': seed})
+      self.assertEqual(0, exit_code)
+      tests_seen.append([x for x in out.splitlines() if x.startswith('class')])
+    first_tests, second_tests = tests_seen  # pylint: disable=unbalanced-tuple-unpacking
+    self.assertEqual(set(first_tests), set(second_tests))
+    self.assertNotEqual(first_tests, second_tests)
 
 
 if __name__ == '__main__':

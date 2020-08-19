@@ -34,6 +34,11 @@ from absl.testing import absltest
 from absl.testing import parameterized
 import six
 
+try:
+  import pathlib
+except ImportError:  # PY2
+  pathlib = None
+
 PY_VERSION_2 = sys.version_info[0] == 2
 
 FLAGS = flags.FLAGS
@@ -1166,16 +1171,14 @@ test case
   def test_short_description_without_docstring(self):
     self.assertEquals(
         self.shortDescription(),
-        ('test_short_description_without_docstring '
-         '(%s.TestCaseTest)' % __name__))
+        'TestCaseTest.test_short_description_without_docstring')
 
   def test_short_description_with_one_line_docstring(self):
     """Tests shortDescription() for a method with a docstring."""
     self.assertEquals(
         self.shortDescription(),
-        ('test_short_description_with_one_line_docstring '
-         '(%s.TestCaseTest)\n'
-         'Tests shortDescription() for a method with a docstring.' % __name__))
+        'TestCaseTest.test_short_description_with_one_line_docstring\n'
+        'Tests shortDescription() for a method with a docstring.')
 
   def test_short_description_with_multi_line_docstring(self):
     """Tests shortDescription() for a method with a longer docstring.
@@ -1186,10 +1189,8 @@ test case
     """
     self.assertEquals(
         self.shortDescription(),
-        ('test_short_description_with_multi_line_docstring '
-         '(%s.TestCaseTest)\n'
-         'Tests shortDescription() for a method with a longer docstring.'
-         % __name__))
+        'TestCaseTest.test_short_description_with_multi_line_docstring\n'
+        'Tests shortDescription() for a method with a longer docstring.')
 
   def test_assert_url_equal_same(self):
     self.assertUrlEqual('http://a', 'http://a')
@@ -2043,6 +2044,16 @@ class TempFileTest(absltest.TestCase, HelperMixin):
     second = self.create_tempfile('foo', content='second')
     self.assertEqual('second', first.read_text())
     self.assertEqual('second', second.read_text())
+
+  @absltest.skipUnless(getattr(os, 'PathLike', None), 'Testing os.PathLike')
+  def test_temp_file_path_like(self):
+    tempdir = self.create_tempdir('foo')
+    self.assertIsInstance(tempdir, os.PathLike)
+
+    tempfile_ = tempdir.create_file('bar')
+    self.assertIsInstance(tempfile_, os.PathLike)
+
+    self.assertEqual(tempfile_.read_text(), pathlib.Path(tempfile_).read_text())
 
   def test_unnamed(self):
     td = self.create_tempdir()

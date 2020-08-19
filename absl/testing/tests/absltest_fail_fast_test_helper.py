@@ -1,4 +1,4 @@
-# Copyright 2017 The Abseil Authors.
+# Copyright 2020 The Abseil Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,35 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Stub tests, only for use in absltest_randomization_test.py."""
+"""A helper test program for absltest_fail_fast_test."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import sys
 
 from absl.testing import absltest
 
 
-# This stanza exercises setting $TEST_RANDOMIZE_ORDERING_SEED *after* importing
-# the absltest library.
-if os.environ.get('LATE_SET_TEST_RANDOMIZE_ORDERING_SEED', ''):
-  os.environ['TEST_RANDOMIZE_ORDERING_SEED'] = os.environ[
-      'LATE_SET_TEST_RANDOMIZE_ORDERING_SEED']
-
-
 class ClassA(absltest.TestCase):
+  """Helper test case A for absltest_fail_fast_test."""
 
-  def test_a(self):
+  def testA(self):
     sys.stderr.write('\nclass A test A\n')
 
-  def test_b(self):
+  def testB(self):
     sys.stderr.write('\nclass A test B\n')
 
-  def test_c(self):
+  def testC(self):
     sys.stderr.write('\nclass A test C\n')
+    self.fail('Force failure')
+
+  def testD(self):
+    sys.stderr.write('\nclass A test D\n')
+
+  def testE(self):
+    sys.stderr.write('\nclass A test E\n')
 
 
 if __name__ == '__main__':

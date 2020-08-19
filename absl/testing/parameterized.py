@@ -45,9 +45,7 @@ or dictionaries (with named parameters):
       self.assertEqual(result, op1 + op2)
 
 If a parameterized test fails, the error message will show the
-original test name (which is modified internally) and the arguments
-for the specific invocation, which are part of the string returned by
-the shortDescription() method on test cases.
+original test name and the parameters for that test.
 
 The id method of the test, used internally by the unittest framework, is also
 modified to show the arguments (but note that the name reported by `id()`
@@ -155,13 +153,30 @@ inside a tuple:
     )
     def testSumIsZero(self, arg):
       self.assertEqual(0, sum(arg))
+
+
+Async Support
+===============================
+If a test needs to call async functions, it can inherit from both
+parameterized.TestCase and another TestCase that supports async calls, such
+as [asynctest](https://github.com/Martiusweb/asynctest):
+
+  import asynctest
+
+  class AsyncExample(parameterized.TestCase, asynctest.TestCase):
+    @parameterized.parameters(
+      ('a', 1),
+      ('b', 2),
+    )
+    async def testSomeAsyncFunction(self, arg, expected):
+      actual = await someAsyncFunction(arg)
+      self.assertEqual(actual, expected)
 """
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import collections
 import functools
 import re
 import types
@@ -170,6 +185,11 @@ import unittest
 from absl._collections_abc import abc
 from absl.testing import absltest
 import six
+
+try:
+  from absl.testing import _parameterized_async
+except (ImportError, SyntaxError):
+  _parameterized_async = None
 
 _ADDR_RE = re.compile(r'\<([a-zA-Z0-9_\-\.]+) object at 0x[a-fA-F0-9]+\>')
 _NAMED = object()
@@ -254,17 +274,16 @@ class _ParameterizedTestIter(object):
   def __iter__(self):
     test_method = self._test_method
     naming_type = self._naming_type
-    extra_ids = collections.defaultdict(int)
 
     def make_bound_param_test(testcase_params):
       @functools.wraps(test_method)
       def bound_param_test(self):
         if isinstance(testcase_params, abc.Mapping):
-          test_method(self, **testcase_params)
+          return test_method(self, **testcase_params)
         elif _non_string_or_bytes_iterable(testcase_params):
-          test_method(self, *testcase_params)
+          return test_method(self, *testcase_params)
         else:
-          test_method(self, testcase_params)
+          return test_method(self, testcase_params)
 
       if naming_type is _NAMED:
         # Signal the metaclass that the name of the test function is unique
@@ -308,13 +327,9 @@ class _ParameterizedTestIter(object):
         # _ARGUMENT_REPR tests using an indexed suffix.
         # To keep test names descriptive, only the original method name is used.
         # To make sure test names are unique, we add a unique descriptive suffix
-        # __x_extra_id__ for every test.
-        extra_id = '(%s)' % (_format_parameter_list(testcase_params),)
-        extra_ids[extra_id] += 1
-        while extra_ids[extra_id] > 1:
-          extra_id = '%s (%d)' % (extra_id, extra_ids[extra_id])
-          extra_ids[extra_id] += 1
-        bound_param_test.__x_extra_id__ = extra_id
+        # __x_params_repr__ for every test.
+        params_repr = '(%s)' % (_format_parameter_list(testcase_params),)
+        bound_param_test.__x_params_repr__ = params_repr
       else:
         raise RuntimeError('%s is not a valid naming type.' % (naming_type,))
 
@@ -322,27 +337,32 @@ class _ParameterizedTestIter(object):
           bound_param_test.__name__, _format_parameter_list(testcase_params))
       if test_method.__doc__:
         bound_param_test.__doc__ += '\n%s' % (test_method.__doc__,)
+      if (_parameterized_async and
+          _parameterized_async.iscoroutinefunction(test_method)):
+        return _parameterized_async.async_wrapped(bound_param_test)
       return bound_param_test
 
     return (make_bound_param_test(c) for c in self.testcases)
 
 
 def _modify_class(class_object, testcases, naming_type):
-  assert not getattr(class_object, '_test_method_ids', None), (
+  assert not getattr(class_object, '_test_params_reprs', None), (
       'Cannot add parameters to %s. Either it already has parameterized '
       'methods, or its super class is also a parameterized class.' % (
           class_object,))
-  class_object._test_method_ids = test_method_ids = {}
+  # NOTE: _test_params_repr is private to parameterized.TestCase and it's
+  # metaclass; do not use it outside of those classes.
+  class_object._test_params_reprs = test_params_reprs = {}
   for name, obj in six.iteritems(class_object.__dict__.copy()):
     if (name.startswith(unittest.TestLoader.testMethodPrefix)
         and isinstance(obj, types.FunctionType)):
       delattr(class_object, name)
       methods = {}
       _update_class_dict_for_param_test_case(
-          class_object.__name__, methods, test_method_ids, name,
+          class_object.__name__, methods, test_params_reprs, name,
           _ParameterizedTestIter(obj, testcases, naming_type, name))
-      for name, meth in six.iteritems(methods):
-        setattr(class_object, name, meth)
+      for meth_name, meth in six.iteritems(methods):
+        setattr(class_object, meth_name, meth)
 
 
 def _parameter_decorator(naming_type, testcases):
@@ -367,13 +387,12 @@ def _parameter_decorator(naming_type, testcases):
 
   if (len(testcases) == 1 and
       not isinstance(testcases[0], tuple) and
-      not (naming_type == _NAMED and
-           isinstance(testcases[0], abc.Mapping))):
+      not isinstance(testcases[0], abc.Mapping)):
     # Support using a single non-tuple parameter as a list of test cases.
-    # Note in named parameters case, the single non-tuple parameter can't be
-    # Mapping either, which means a single named parameter case.
+    # Note that the single non-tuple parameter can't be Mapping either, which
+    # means a single dict parameter case.
     assert _non_string_or_bytes_iterable(testcases[0]), (
-        'Single parameter argument must be a non-string iterable')
+        'Single parameter argument must be a non-string non-Mapping iterable')
     testcases = testcases[0]
 
   if not isinstance(testcases, abc.Sequence):
@@ -429,69 +448,81 @@ def named_parameters(*testcases):
 
 
 class TestGeneratorMetaclass(type):
-  """Metaclass for test cases with test generators.
-
-  A test generator is an iterable in a testcase that produces callables. These
-  callables must be single-argument methods. These methods are injected into
-  the class namespace and the original iterable is removed. If the name of the
-  iterable conforms to the test pattern, the injected methods will be picked
-  up as tests by the unittest framework.
-
-  In general, it is supposed to be used in conjuction with the
-  parameters decorator.
-  """
+  """Metaclass for adding tests generated by parameterized decorators."""
 
   def __new__(mcs, class_name, bases, dct):
-    test_method_ids = dct.setdefault('_test_method_ids', {})
+    # NOTE: _test_params_repr is private to parameterized.TestCase and it's
+    # metaclass; do not use it outside of those classes.
+    test_params_reprs = dct.setdefault('_test_params_reprs', {})
     for name, obj in six.iteritems(dct.copy()):
       if (name.startswith(unittest.TestLoader.testMethodPrefix) and
           _non_string_or_bytes_iterable(obj)):
+        # NOTE: `obj` might not be a _ParameterizedTestIter in two cases:
+        # 1. a class-level iterable named test* that isn't a test, such as
+        #    a list of something. Such attributes get deleted from the class.
+        #
+        # 2. If a decorator is applied to the parameterized test, e.g.
+        #    @morestuff
+        #    @parameterized.parameters(...)
+        #    def test_foo(...): ...
+        #
+        #   This is OK so long as the underlying parameterized function state
+        #   is forwarded (e.g. using functool.wraps() and **without**
+        #   accessing explicitly accessing the internal attributes.
         if isinstance(obj, _ParameterizedTestIter):
           # Update the original test method name so it's more accurate.
           # The mismatch might happen when another decorator is used inside
           # the parameterized decrators, and the inner decorator doesn't
           # preserve its __name__.
-          # `obj` might be a generator, not _ParameterizedTestIter.
           obj._original_name = name
         iterator = iter(obj)
         dct.pop(name)
         _update_class_dict_for_param_test_case(
-            class_name, dct, test_method_ids, name, iterator)
+            class_name, dct, test_params_reprs, name, iterator)
     # If the base class is a subclass of parameterized.TestCase, inherit its
-    # _test_method_ids too.
+    # _test_params_reprs too.
     for base in bases:
-      # Check if the base has _test_method_ids first, then check if it's a
+      # Check if the base has _test_params_reprs first, then check if it's a
       # subclass of parameterized.TestCase. Otherwise when this is called for
       # the parameterized.TestCase definition itself, this raises because
       # itself is not defined yet. This works as long as absltest.TestCase does
-      # not define _test_method_ids.
-      if getattr(base, '_test_method_ids', None) and issubclass(base, TestCase):
-        for test_method, test_method_id in six.iteritems(base._test_method_ids):
+      # not define _test_params_reprs.
+      base_test_params_reprs = getattr(base, '_test_params_reprs', None)
+      if base_test_params_reprs and issubclass(base, TestCase):
+        for test_method, test_method_id in base_test_params_reprs.items():
           # test_method may both exists in base and this class.
           # This class's method overrides base class's.
           # That's why it should only inherit it if it does not exist.
-          test_method_ids.setdefault(test_method, test_method_id)
+          test_params_reprs.setdefault(test_method, test_method_id)
 
     return type.__new__(mcs, class_name, bases, dct)
 
 
 def _update_class_dict_for_param_test_case(
-    test_class_name, dct, test_method_ids, name, iterator):
+    test_class_name, dct, test_params_reprs, name, iterator):
   """Adds individual test cases to a dictionary.
 
   Args:
     test_class_name: The name of the class tests are added to.
     dct: The target dictionary.
-    test_method_ids: The dictionary for mapping names to test IDs.
+    test_params_reprs: The dictionary for mapping names to test IDs.
     name: The original name of the test case.
     iterator: The iterator generating the individual test cases.
 
   Raises:
     DuplicateTestNameError: Raised when a test name occurs multiple times.
+    RuntimeError: If non-parameterized functions are generated.
   """
   for idx, func in enumerate(iterator):
     assert callable(func), 'Test generators must yield callables, got %r' % (
         func,)
+    if not (getattr(func, '__x_use_name__', None) or
+            getattr(func, '__x_params_repr__', None)):
+      raise RuntimeError(
+          '{}.{} generated a test function without using the parameterized '
+          'decorators. Only tests generated using the decorators are '
+          'supported.'.format(test_class_name, name))
+
     if getattr(func, '__x_use_name__', False):
       original_name = func.__name__
       new_name = original_name
@@ -503,18 +534,23 @@ def _update_class_dict_for_param_test_case(
       raise DuplicateTestNameError(test_class_name, new_name, original_name)
 
     dct[new_name] = func
-    test_method_id = original_name + getattr(func, '__x_extra_id__', '')
-    assert test_method_id not in test_method_ids.values(), (
-        'Id of parameterized test case "%s" not unique' % (test_method_id,))
-    test_method_ids[new_name] = test_method_id
+    test_params_reprs[new_name] = getattr(func, '__x_params_repr__', '')
 
 
-class TestCase(six.with_metaclass(TestGeneratorMetaclass, absltest.TestCase)):
+@six.add_metaclass(TestGeneratorMetaclass)
+class TestCase(absltest.TestCase):
   """Base class for test cases using the parameters decorator."""
 
+  # visibility: private; do not call outside this class.
+  def _get_params_repr(self):
+    return self._test_params_reprs.get(self._testMethodName, '')
+
   def __str__(self):
-    return '%s (%s)' % (
-        self._test_method_ids.get(self._testMethodName, self._testMethodName),
+    params_repr = self._get_params_repr()
+    if params_repr:
+      params_repr = ' ' + params_repr
+    return '{}{} ({})'.format(
+        self._testMethodName, params_repr,
         unittest.util.strclass(self.__class__))
 
   def id(self):
@@ -526,11 +562,16 @@ class TestCase(six.with_metaclass(TestGeneratorMetaclass, absltest.TestCase)):
     Returns:
       The test id.
     """
-    return '%s.%s' % (
-        unittest.util.strclass(self.__class__),
-        # When a test method is NOT decorated, it doesn't exist in
-        # _test_method_ids. Use the _testMethodName directly.
-        self._test_method_ids.get(self._testMethodName, self._testMethodName))
+    base = super(TestCase, self).id()
+    params_repr = self._get_params_repr()
+    if params_repr:
+      # We include the params in the id so that, when reported in the
+      # test.xml file, the value is more informative than just "test_foo0".
+      # Use a space to separate them so that it's copy/paste friendly and
+      # easy to identify the actual test id.
+      return '{} {}'.format(base, params_repr)
+    else:
+      return base
 
 
 # This function is kept CamelCase because it's used as a class's base class.

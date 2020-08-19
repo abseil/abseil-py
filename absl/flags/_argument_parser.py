@@ -22,6 +22,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import csv
 import io
 import string
@@ -76,6 +77,24 @@ class _ArgumentParserCache(type):
         return type.__call__(cls, *args)
 
 
+# NOTE about Genericity and Metaclass of ArgumentParser.
+# (1) In the .py source (this file)
+#     - is not declared as Generic
+#     - has _ArgumentParserCache as a metaclass
+# (2) In the .pyi source (type stub)
+#     - is declared as Generic
+#     - doesn't have a metaclass
+# The reason we need this is due to Generic having a different metaclass
+# (for python versions <= 3.7) and a class can have only one metaclass.
+#
+# * Lack of metaclass in .pyi is not a deal breaker, since the metaclass
+#   doesn't affect any type information. Also type checkers can check the type
+#   parameters.
+# * However, not declaring ArgumentParser as Generic in the source affects
+#   runtime annotation processing. In particular this means, subclasses should
+#   inherit from `ArgumentParser` and not `ArgumentParser[SomeType]`.
+#   The corresponding DEFINE_someType method (the public API) can be annotated
+#   to return FlagHolder[SomeType].
 class ArgumentParser(six.with_metaclass(_ArgumentParserCache, object)):
   """Base class used to parse and convert arguments.
 
@@ -354,11 +373,13 @@ class EnumParser(ArgumentParser):
 class EnumClassParser(ArgumentParser):
   """Parser of an Enum class member."""
 
-  def __init__(self, enum_class):
+  def __init__(self, enum_class, case_sensitive=True):
     """Initializes EnumParser.
 
     Args:
       enum_class: class, the Enum class with all possible flag values.
+      case_sensitive: bool, whether or not the enum is to be case-sensitive. If
+        False, all member names must be unique when case is ignored.
 
     Raises:
       TypeError: When enum_class is not a subclass of Enum.
@@ -373,9 +394,30 @@ class EnumClassParser(ArgumentParser):
     if not enum_class.__members__:
       raise ValueError('enum_class cannot be empty, but "{}" is empty.'
                        .format(enum_class))
+    if not case_sensitive:
+      members = collections.Counter(
+          name.lower() for name in enum_class.__members__)
+      duplicate_keys = {
+          member for member, count in members.items() if count > 1
+      }
+      if duplicate_keys:
+        raise ValueError(
+            'Duplicate enum values for {} using case_sensitive=False'.format(
+                duplicate_keys))
 
     super(EnumClassParser, self).__init__()
     self.enum_class = enum_class
+    self._case_sensitive = case_sensitive
+    if case_sensitive:
+      self._member_names = tuple(enum_class.__members__)
+    else:
+      self._member_names = tuple(
+          name.lower() for name in enum_class.__members__)
+
+  @property
+  def member_names(self):
+    """The accepted enum names, in lowercase if not case sensitive."""
+    return self._member_names
 
   def parse(self, argument):
     """Determines validity of argument and returns the correct element of enum.
@@ -391,11 +433,19 @@ class EnumClassParser(ArgumentParser):
     """
     if isinstance(argument, self.enum_class):
       return argument
-    if argument not in self.enum_class.__members__:
-      raise ValueError('value should be one of <%s>' %
-                       '|'.join(self.enum_class.__members__.keys()))
+    elif not isinstance(argument, six.string_types):
+      raise ValueError(
+          '{} is not an enum member or a name of a member in {}'.format(
+              argument, self.enum_class))
+    key = EnumParser(
+        self._member_names, case_sensitive=self._case_sensitive).parse(argument)
+    if self._case_sensitive:
+      return self.enum_class[key]
     else:
-      return self.enum_class[argument]
+      # If EnumParser.parse() return a value, we're guaranteed to find it
+      # as a member of the class
+      return next(value for name, value in self.enum_class.__members__.items()
+                  if name.lower() == key.lower())
 
   def flag_type(self):
     """See base class."""
@@ -413,13 +463,30 @@ class ListSerializer(ArgumentSerializer):
 
 
 class EnumClassListSerializer(ListSerializer):
+  """A serializer for MultiEnumClass flags.
+
+  This serializer simply joins the output of `EnumClassSerializer` using a
+  provided seperator.
+  """
+
+  def __init__(self, list_sep, **kwargs):
+    """Initializes EnumClassListSerializer.
+
+    Args:
+      list_sep: String to be used as a separator when serializing
+      **kwargs: Keyword arguments to the `EnumClassSerializer` used to serialize
+        individual values.
+    """
+    super(EnumClassListSerializer, self).__init__(list_sep)
+    self._element_serializer = EnumClassSerializer(**kwargs)
 
   def serialize(self, value):
     """See base class."""
     if isinstance(value, list):
-      return self.list_sep.join(_helpers.str_or_unicode(x.name) for x in value)
+      return self.list_sep.join(
+          self._element_serializer.serialize(x) for x in value)
     else:
-      return _helpers.str_or_unicode(value.name)
+      return self._element_serializer.serialize(value)
 
 
 class CsvListSerializer(ArgumentSerializer):
@@ -448,9 +515,18 @@ class CsvListSerializer(ArgumentSerializer):
 class EnumClassSerializer(ArgumentSerializer):
   """Class for generating string representations of an enum class flag value."""
 
+  def __init__(self, lowercase):
+    """Initializes EnumClassSerializer.
+
+    Args:
+      lowercase: If True, enum member names are lowercased during serialization.
+    """
+    self._lowercase = lowercase
+
   def serialize(self, value):
     """Returns a serialized string of the Enum class value."""
-    return _helpers.str_or_unicode(value.name)
+    as_string = _helpers.str_or_unicode(value.name)
+    return as_string.lower() if self._lowercase else as_string
 
 
 class BaseListParser(ArgumentParser):
