@@ -2444,7 +2444,10 @@ def _get_qualname(cls):
 def _rmtree_ignore_errors(path):
   # type: (Text) -> None
   if os.path.isfile(path):
-    os.unlink(path)
+    try:
+      os.unlink(path)
+    except OSError:
+      pass
   else:
     shutil.rmtree(path, ignore_errors=True)
 

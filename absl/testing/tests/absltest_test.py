@@ -23,6 +23,7 @@ import contextlib
 import io
 import os
 import re
+import stat
 import string
 import subprocess
 import sys
@@ -2044,6 +2045,16 @@ class TempFileTest(absltest.TestCase, HelperMixin):
     second = self.create_tempfile('foo', content='second')
     self.assertEqual('second', first.read_text())
     self.assertEqual('second', second.read_text())
+
+  def test_create_file_fails_cleanup(self):
+    path = self.create_tempfile().full_path
+    # Removing the write bit from the file makes it undeletable on Windows.
+    os.chmod(path, 0)
+    # Removing the write bit from the whole directory makes all contained files
+    # undeletable on unix. We also need it to be exec so that os.path.isfile
+    # returns true, and we reach the buggy branch.
+    os.chmod(os.path.dirname(path), stat.S_IEXEC)
+    # The test should pass, even though that file cannot be deleted in teardown.
 
   @absltest.skipUnless(getattr(os, 'PathLike', None), 'Testing os.PathLike')
   def test_temp_file_path_like(self):
