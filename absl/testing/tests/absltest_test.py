@@ -567,14 +567,14 @@ Missing entries:
     self.assertNotAlmostEqual(1.0000001, 1.0)
 
   def test_assert_almost_equals_with_delta(self):
-    self.assertAlmostEquals(3.14, 3, delta=0.2)
-    self.assertAlmostEquals(2.81, 3.14, delta=1)
-    self.assertAlmostEquals(-1, 1, delta=3)
-    self.assertRaises(AssertionError, self.assertAlmostEquals,
+    self.assertAlmostEqual(3.14, 3, delta=0.2)
+    self.assertAlmostEqual(2.81, 3.14, delta=1)
+    self.assertAlmostEqual(-1, 1, delta=3)
+    self.assertRaises(AssertionError, self.assertAlmostEqual,
                       3.14, 2.81, delta=0.1)
-    self.assertRaises(AssertionError, self.assertAlmostEquals,
+    self.assertRaises(AssertionError, self.assertAlmostEqual,
                       1, 2, delta=0.5)
-    self.assertNotAlmostEquals(3.14, 2.81, delta=0.1)
+    self.assertNotAlmostEqual(3.14, 2.81, delta=0.1)
 
   def test_assert_starts_with(self):
     self.assertStartsWith('foobar', 'foo')
@@ -663,19 +663,24 @@ Missing entries:
     tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
     self.assertCommandFails(
         ['cat', os.path.join(tmpdir, 'file.txt')],
-        ['No such file or directory'])
+        ['No such file or directory'],
+        env=_env_for_command_tests())
 
   def test_assert_command_fails_with_list_of_string(self):
-    self.assertCommandFails(['false'], [''])
+    self.assertCommandFails(
+        ['false'], [''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_list_of_unicode_string(self):
-    self.assertCommandFails([u'false'], [''])
+    self.assertCommandFails(
+        [u'false'], [''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_unicode_string(self):
-    self.assertCommandFails(u'false', [u''])
+    self.assertCommandFails(
+        u'false', [u''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_unicode_string_bytes_regex(self):
-    self.assertCommandFails(u'false', [b''])
+    self.assertCommandFails(
+        u'false', [b''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_message(self):
     msg = 'This is a useful message'
@@ -683,20 +688,27 @@ Missing entries:
                              ' fail:.* This is a useful message', re.DOTALL)
 
     with self.assertRaisesRegex(AssertionError, expected_re):
-      self.assertCommandFails([u'true'], [''], msg=msg)
+      self.assertCommandFails(
+          [u'true'], [''], msg=msg, env=_env_for_command_tests())
 
   def test_assert_command_succeeds_stderr(self):
     expected_re = re.compile('No such file or directory')
     tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
 
     with self.assertRaisesRegex(AssertionError, expected_re):
-      self.assertCommandSucceeds(['cat', os.path.join(tmpdir, 'file.txt')])
+      self.assertCommandSucceeds(
+          ['cat', os.path.join(tmpdir, 'file.txt')],
+          env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_matching_unicode_regexes(self):
-    self.assertCommandSucceeds(['echo', 'SUCCESS'], regexes=[u'SUCCESS'])
+    self.assertCommandSucceeds(
+        ['echo', 'SUCCESS'], regexes=[u'SUCCESS'],
+        env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_matching_bytes_regexes(self):
-    self.assertCommandSucceeds(['echo', 'SUCCESS'], regexes=[b'SUCCESS'])
+    self.assertCommandSucceeds(
+        ['echo', 'SUCCESS'], regexes=[b'SUCCESS'],
+        env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_non_matching_regexes(self):
     expected_re = re.compile('Running command.* This is a useful message',
@@ -704,18 +716,21 @@ Missing entries:
     msg = 'This is a useful message'
 
     with self.assertRaisesRegex(AssertionError, expected_re):
-      self.assertCommandSucceeds(['echo', 'FAIL'], regexes=['SUCCESS'], msg=msg)
+      self.assertCommandSucceeds(
+          ['echo', 'FAIL'], regexes=['SUCCESS'], msg=msg,
+          env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_list_of_string(self):
-    self.assertCommandSucceeds(['true'])
+    self.assertCommandSucceeds(
+        ['true'], env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_list_of_unicode_string(self):
-    self.assertCommandSucceeds([u'true'])
+    self.assertCommandSucceeds(
+        [u'true'], env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_unicode_string(self):
-    # This uses shell=True. On Windows Bazel, it requires environment
-    # variables from the current process otherwise it can't find msys 'true'.
-    self.assertCommandSucceeds(u'true', env=dict(os.environ))
+    self.assertCommandSucceeds(
+        u'true', env=_env_for_command_tests())
 
   def test_inequality(self):
     # Try ints
@@ -1447,23 +1462,27 @@ test case
 class GetCommandStderrTestCase(absltest.TestCase):
 
   def setUp(self):
+    super(GetCommandStderrTestCase, self).setUp()
     self.original_environ = os.environ.copy()
 
   def tearDown(self):
+    super(GetCommandStderrTestCase, self).tearDown()
     os.environ = self.original_environ
 
   def test_return_status(self):
     tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
     returncode = (
         absltest.get_command_stderr(
-            ['cat', os.path.join(tmpdir, 'file.txt')])[0])
+            ['cat', os.path.join(tmpdir, 'file.txt')],
+            env=_env_for_command_tests())[0])
     self.assertEqual(1, returncode)
 
   def test_stderr(self):
     tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
     stderr = (
         absltest.get_command_stderr(
-            ['cat', os.path.join(tmpdir, 'file.txt')])[1])
+            ['cat', os.path.join(tmpdir, 'file.txt')],
+            env=_env_for_command_tests())[1])
     if not PY_VERSION_2:
       stderr = stderr.decode('utf-8')
     self.assertRegex(stderr, 'No such file or directory')
@@ -2179,6 +2198,16 @@ def _listdir_recursive(path):
     yield dirname
     for filename in filenames:
       yield os.path.join(dirname, filename)
+
+
+def _env_for_command_tests():
+  if os.name == 'nt' and 'PATH' in os.environ:
+    # get_command_stderr and assertCommandXXX don't inherit environment
+    # variables by default. This makes sure msys commands can be found on
+    # Windows.
+    return {'PATH': os.environ['PATH']}
+  else:
+    return None
 
 
 if __name__ == '__main__':
