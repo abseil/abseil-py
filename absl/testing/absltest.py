@@ -113,6 +113,9 @@ FLAGS = flags.FLAGS
 
 _TEXT_OR_BINARY_TYPES = (six.text_type, six.binary_type)
 
+# Suppress surplus entries in AssertionError stack traces.
+__unittest = True  # pylint: disable=invalid-name
+
 
 def expectedFailureIf(condition, reason):  # pylint: disable=invalid-name
   """Expects the test to fail if the run condition is True.

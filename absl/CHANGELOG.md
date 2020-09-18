@@ -6,7 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+*   (testing) Surplus entries in AssertionError stack traces from absltest are
+    now suppressed and no longer reported in the xml_reporter.
 
 ## 0.10.0 (2020-08-19)
 
