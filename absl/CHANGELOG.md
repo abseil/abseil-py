@@ -6,8 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+### Changed
+
 *   (testing) Surplus entries in AssertionError stack traces from absltest are
     now suppressed and no longer reported in the xml_reporter.
+*   (logging) An exception is now raised instead of `logging.fatal` when logging
+    directories cannot be found.
 
 ## 0.10.0 (2020-08-19)
 
