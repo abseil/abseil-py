@@ -499,15 +499,24 @@ class FlagValues(object):
 
   def __setattr__(self, name, value):
     """Sets the 'value' attribute of the flag --name."""
-    fl = self._flags()
-    if name in self.__dict__['__hiddenflags']:
-      raise AttributeError(name)
-    if name not in fl:
-      return self._set_unknown_flag(name, value)
-    fl[name].value = value
-    self._assert_validators(fl[name].validators)
-    fl[name].using_default_value = False
+    self._set_attributes(**{name: value})
     return value
+
+  def _set_attributes(self, **attributes):
+    """Sets multiple flag values together, triggers validators afterwards."""
+    fl = self._flags()
+    known_flags = set()
+    for name, value in six.iteritems(attributes):
+      if name in self.__dict__['__hiddenflags']:
+        raise AttributeError(name)
+      if name in fl:
+        fl[name].value = value
+        known_flags.add(name)
+      else:
+        self._set_unknown_flag(name, value)
+    for name in known_flags:
+      self._assert_validators(fl[name].validators)
+      fl[name].using_default_value = False
 
   def validate_all_flags(self):
     """Verifies whether all flags pass validation.

@@ -240,7 +240,7 @@ class FlagValuesTest(absltest.TestCase):
     # Delete the changelist flag, its short name should still be registered.
     del fv.changelist
     module_or_id_changelist = testing_fn('changelist')
-    self.assertEqual(module_or_id_changelist, None)
+    self.assertIsNone(module_or_id_changelist)
     module_or_id_c = testing_fn('c')
     self.assertEqual(module_or_id_c, current_module_or_id)
     module_or_id_l = testing_fn('l')
@@ -333,21 +333,21 @@ class FlagValuesTest(absltest.TestCase):
 
   def test_len(self):
     fv = _flagvalues.FlagValues()
-    self.assertEqual(0, len(fv))
+    self.assertEmpty(fv)
     self.assertFalse(fv)
 
     _defines.DEFINE_boolean('boolean', False, 'help', flag_values=fv)
-    self.assertEqual(1, len(fv))
+    self.assertLen(fv, 1)
     self.assertTrue(fv)
 
     _defines.DEFINE_boolean(
         'bool', False, 'help', short_name='b', flag_values=fv)
-    self.assertEqual(3, len(fv))
+    self.assertLen(fv, 3)
     self.assertTrue(fv)
 
   def test_pickle(self):
     fv = _flagvalues.FlagValues()
-    with self.assertRaisesRegexp(TypeError, "can't pickle FlagValues"):
+    with self.assertRaisesRegex(TypeError, "can't pickle FlagValues"):
       pickle.dumps(fv)
 
   def test_copy(self):
@@ -355,8 +355,8 @@ class FlagValuesTest(absltest.TestCase):
     _defines.DEFINE_integer('answer', 0, 'help', flag_values=fv)
     fv(['', '--answer=1'])
 
-    with self.assertRaisesRegexp(
-        TypeError, 'FlagValues does not support shallow copies'):
+    with self.assertRaisesRegex(TypeError,
+                                'FlagValues does not support shallow copies'):
       copy.copy(fv)
 
     fv2 = copy.deepcopy(fv)
@@ -640,6 +640,7 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
 class SettingUnknownFlagTest(absltest.TestCase):
 
   def setUp(self):
+    super(SettingUnknownFlagTest, self).setUp()
     self.setter_called = 0
 
   def set_undef(self, unused_name, unused_val):
@@ -679,9 +680,39 @@ class SettingUnknownFlagTest(absltest.TestCase):
       new_flags.undefined_flag = 0
 
 
+class SetAttributesTest(absltest.TestCase):
+
+  def setUp(self):
+    super(SetAttributesTest, self).setUp()
+    self.new_flags = _flagvalues.FlagValues()
+    _defines.DEFINE_boolean(
+        'defined_flag', None, '', flag_values=self.new_flags)
+    _defines.DEFINE_boolean(
+        'another_defined_flag', None, '', flag_values=self.new_flags)
+    self.setter_called = 0
+
+  def set_undef(self, unused_name, unused_val):
+    self.setter_called += 1
+
+  def test_two_defined_flags(self):
+    self.new_flags._set_attributes(
+        defined_flag=False, another_defined_flag=False)
+    self.assertEqual(self.setter_called, 0)
+
+  def test_one_defined_one_undefined_flag(self):
+    with self.assertRaises(_exceptions.UnrecognizedFlagError):
+      self.new_flags._set_attributes(defined_flag=False, undefined_flag=0)
+
+  def test_register_unknown_flag_setter(self):
+    self.new_flags._register_unknown_flag_setter(self.set_undef)
+    self.new_flags._set_attributes(defined_flag=False, undefined_flag=0)
+    self.assertEqual(self.setter_called, 1)
+
+
 class FlagsDashSyntaxTest(absltest.TestCase):
 
   def setUp(self):
+    super(FlagsDashSyntaxTest, self).setUp()
     self.fv = _flagvalues.FlagValues()
     _defines.DEFINE_string(
         'long_name', 'default', 'help', flag_values=self.fv, short_name='s')
@@ -754,7 +785,7 @@ class UnparseFlagsTest(absltest.TestCase):
 
     fv.mark_as_parsed()
     self.assertEqual('foo', fv.default_foo)
-    self.assertEqual(None, fv.default_none)
+    self.assertIsNone(fv.default_none)
 
     fv(['', '--default_foo=notFoo', '--default_none=notNone'])
     self.assertEqual('notFoo', fv.default_foo)
@@ -762,7 +793,7 @@ class UnparseFlagsTest(absltest.TestCase):
 
     fv.unparse_flags()
     self.assertEqual('foo', fv['default_foo'].value)
-    self.assertEqual(None, fv['default_none'].value)
+    self.assertIsNone(fv['default_none'].value)
 
     fv(['', '--default_foo=alsoNotFoo', '--default_none=alsoNotNone'])
     self.assertEqual('alsoNotFoo', fv.default_foo)
@@ -772,15 +803,15 @@ class UnparseFlagsTest(absltest.TestCase):
     fv = _flagvalues.FlagValues()
     _defines.DEFINE_multi_string('foo', None, 'help', flag_values=fv)
     fv.mark_as_parsed()
-    self.assertEqual(None, fv.foo)
+    self.assertIsNone(fv.foo)
     fv(['', '--foo=aa'])
     self.assertEqual(['aa'], fv.foo)
     fv.unparse_flags()
-    self.assertEqual(None, fv['foo'].value)
+    self.assertIsNone(fv['foo'].value)
     fv(['', '--foo=bb', '--foo=cc'])
     self.assertEqual(['bb', 'cc'], fv.foo)
     fv.unparse_flags()
-    self.assertEqual(None, fv['foo'].value)
+    self.assertIsNone(fv['foo'].value)
 
   def test_multi_string_default_string(self):
     fv = _flagvalues.FlagValues()

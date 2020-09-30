@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     now suppressed and no longer reported in the xml_reporter.
 *   (logging) An exception is now raised instead of `logging.fatal` when logging
     directories cannot be found.
+*   (testing) Multiple flags are now set together before their validators run.
+    This resolves an issue where multi-flag validators rely on specific flag
+    combinations.
 
 ## 0.10.0 (2020-08-19)
 
