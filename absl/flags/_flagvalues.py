@@ -1357,6 +1357,20 @@ class FlagHolder(_Base):
     # This allows future use of this for "required flags with None default"
     self._ensure_non_none_value = ensure_non_none_value
 
+  def __eq__(self, other):
+    raise TypeError(
+        "unsupported operand type(s) for ==: '{0}' and '{1}' "
+        "(did you mean to use '{0}.value' instead?)".format(
+            type(self).__name__, type(other).__name__))
+
+  def __bool__(self):
+    raise TypeError(
+        "bool() not supported for instances of type '{0}' "
+        "(did you mean to use '{0}.value' instead?)".format(
+            type(self).__name__))
+
+  __nonzero__ = __bool__
+
   @property
   def name(self):
     return self._name

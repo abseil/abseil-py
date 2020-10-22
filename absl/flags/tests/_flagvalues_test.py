@@ -914,6 +914,18 @@ class FlagHolderTest(absltest.TestCase):
     self.assertEqual(3, first.value)
     self.assertEqual(3, second.value)
 
+  def test_eq(self):
+    with self.assertRaises(TypeError):
+      self.name_flag == 'value'  # pylint: disable=pointless-statement
+
+  def test_eq_reflection(self):
+    with self.assertRaises(TypeError):
+      'value' == self.name_flag  # pylint: disable=pointless-statement
+
+  def test_bool(self):
+    with self.assertRaises(TypeError):
+      bool(self.name_flag)
+
 
 if __name__ == '__main__':
   absltest.main()

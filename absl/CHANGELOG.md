@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (testing) Multiple flags are now set together before their validators run.
     This resolves an issue where multi-flag validators rely on specific flag
     combinations.
+*   (flags) As a deterrent for misuse, FlagHolder objects will now raise a
+    TypeError exception when used in a conditional statement or equality
+    expression.
 
 ## 0.10.0 (2020-08-19)
 
