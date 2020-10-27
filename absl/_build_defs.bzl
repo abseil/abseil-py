@@ -33,6 +33,7 @@ def py2py3_test_binary(name, **kwargs):
         if len(kwargs.get("srcs", [])) != 1:
             fail("py2py3_test_binary requires main or len(srcs)==1")
         kwargs["main"] = kwargs["srcs"][0]
+    kwargs.setdefault("tags", []).append("py3-compatible")
 
     native.alias(name = name, actual = select({
         "//absl:py3_mode": name + "_py3",

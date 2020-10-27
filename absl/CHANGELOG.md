@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 Nothing notable unreleased.
 
+## 0.11.0 (2020-10-27)
+
+### Changed
+
+*   (testing) Surplus entries in AssertionError stack traces from absltest are
+    now suppressed and no longer reported in the xml_reporter.
+*   (logging) An exception is now raised instead of `logging.fatal` when logging
+    directories cannot be found.
+*   (testing) Multiple flags are now set together before their validators run.
+    This resolves an issue where multi-flag validators rely on specific flag
+    combinations.
+*   (flags) As a deterrent for misuse, FlagHolder objects will now raise a
+    TypeError exception when used in a conditional statement or equality
+    expression.
+
 ## 0.10.0 (2020-08-19)
 
 ### Added

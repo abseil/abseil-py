@@ -663,6 +663,10 @@ def find_log_dir_and_names(program_name=None, log_dir=None):
 
   Returns:
     (log_dir, file_prefix, symlink_prefix)
+
+  Raises:
+    FileNotFoundError: raised in Python 3 when it cannot find a log directory.
+    OSError: raised in Python 2 when it cannot find a log directory.
   """
   if not program_name:
     # Strip the extension (foobar.par becomes foobar, and
@@ -699,6 +703,10 @@ def find_log_dir(log_dir=None):
         directory.  Otherwise if the --log_dir command-line flag is provided,
         the logfile will be created in that directory.  Otherwise the logfile
         will be created in a standard location.
+
+  Raises:
+    FileNotFoundError: raised in Python 3 when it cannot find a log directory.
+    OSError: raised in Python 2 when it cannot find a log directory.
   """
   # Get a list of possible log dirs (will try to use them in order).
   if log_dir:
@@ -715,7 +723,9 @@ def find_log_dir(log_dir=None):
   for d in dirs:
     if os.path.isdir(d) and os.access(d, os.W_OK):
       return d
-  _absl_logger.fatal("Can't find a writable directory for logs, tried %s", dirs)
+  exception_class = OSError if six.PY2 else FileNotFoundError
+  raise exception_class(
+      "Can't find a writable directory for logs, tried %s" % dirs)
 
 
 def get_absl_log_prefix(record):

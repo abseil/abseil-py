@@ -499,15 +499,24 @@ class FlagValues(object):
 
   def __setattr__(self, name, value):
     """Sets the 'value' attribute of the flag --name."""
-    fl = self._flags()
-    if name in self.__dict__['__hiddenflags']:
-      raise AttributeError(name)
-    if name not in fl:
-      return self._set_unknown_flag(name, value)
-    fl[name].value = value
-    self._assert_validators(fl[name].validators)
-    fl[name].using_default_value = False
+    self._set_attributes(**{name: value})
     return value
+
+  def _set_attributes(self, **attributes):
+    """Sets multiple flag values together, triggers validators afterwards."""
+    fl = self._flags()
+    known_flags = set()
+    for name, value in six.iteritems(attributes):
+      if name in self.__dict__['__hiddenflags']:
+        raise AttributeError(name)
+      if name in fl:
+        fl[name].value = value
+        known_flags.add(name)
+      else:
+        self._set_unknown_flag(name, value)
+    for name in known_flags:
+      self._assert_validators(fl[name].validators)
+      fl[name].using_default_value = False
 
   def validate_all_flags(self):
     """Verifies whether all flags pass validation.
@@ -1347,6 +1356,20 @@ class FlagHolder(_Base):
     # We intentionally do NOT check if the default value is None.
     # This allows future use of this for "required flags with None default"
     self._ensure_non_none_value = ensure_non_none_value
+
+  def __eq__(self, other):
+    raise TypeError(
+        "unsupported operand type(s) for ==: '{0}' and '{1}' "
+        "(did you mean to use '{0}.value' instead?)".format(
+            type(self).__name__, type(other).__name__))
+
+  def __bool__(self):
+    raise TypeError(
+        "bool() not supported for instances of type '{0}' "
+        "(did you mean to use '{0}.value' instead?)".format(
+            type(self).__name__))
+
+  __nonzero__ = __bool__
 
   @property
   def name(self):

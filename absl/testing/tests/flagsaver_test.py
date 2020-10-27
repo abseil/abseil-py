@@ -24,8 +24,20 @@ from absl.testing import flagsaver
 
 flags.DEFINE_string('flagsaver_test_flag0', 'unchanged0', 'flag to test with')
 flags.DEFINE_string('flagsaver_test_flag1', 'unchanged1', 'flag to test with')
+
 flags.DEFINE_string('flagsaver_test_validated_flag', None, 'flag to test with')
 flags.register_validator('flagsaver_test_validated_flag', lambda x: not x)
+
+flags.DEFINE_string('flagsaver_test_validated_flag1', None, 'flag to test with')
+flags.DEFINE_string('flagsaver_test_validated_flag2', None, 'flag to test with')
+
+
+@flags.multi_flags_validator(
+    ('flagsaver_test_validated_flag1', 'flagsaver_test_validated_flag2'))
+def validate_test_flags(flag_dict):
+  return (flag_dict['flagsaver_test_validated_flag1'] ==
+          flag_dict['flagsaver_test_validated_flag2'])
+
 
 FLAGS = flags.FLAGS
 
@@ -41,19 +53,6 @@ class _TestError(Exception):
 
 class FlagSaverTest(absltest.TestCase):
 
-  def setUp(self):
-    # Save the value of the instance of FLAGS local to this module.
-    global FLAGS  # pylint: disable=global-statement
-    self.flags = FLAGS
-    # pylint: disable=g-bad-name
-    FLAGS = flags.FlagValues()
-    FLAGS.append_flag_values(self.flags)
-    FLAGS.mark_as_parsed()
-
-  def tearDown(self):
-    global FLAGS  # pylint: disable=global-statement
-    FLAGS = self.flags  # pylint: disable=g-bad-name
-
   def test_context_manager_without_parameters(self):
     with flagsaver.flagsaver():
       FLAGS.flagsaver_test_flag0 = 'new value'
@@ -65,6 +64,42 @@ class FlagSaverTest(absltest.TestCase):
       FLAGS.flagsaver_test_flag1 = 'another value'
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
     self.assertEqual('unchanged1', FLAGS.flagsaver_test_flag1)
+
+  def test_context_manager_with_cross_validated_overrides_set_together(self):
+    # When the flags are set in the same flagsaver call their validators will
+    # be triggered only once the setting is done.
+    with flagsaver.flagsaver(
+        flagsaver_test_validated_flag1='new_value',
+        flagsaver_test_validated_flag2='new_value'):
+      self.assertEqual('new_value', FLAGS.flagsaver_test_validated_flag1)
+      self.assertEqual('new_value', FLAGS.flagsaver_test_validated_flag2)
+
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
+
+  def test_context_manager_with_cross_validated_overrides_set_badly(self):
+
+    # Different values should violate the validator.
+    with self.assertRaisesRegex(flags.IllegalFlagValueError,
+                                'Flag validation failed'):
+      with flagsaver.flagsaver(
+          flagsaver_test_validated_flag1='new_value',
+          flagsaver_test_validated_flag2='other_value'):
+        pass
+
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
+
+  def test_context_manager_with_cross_validated_overrides_set_separately(self):
+
+    # Setting just one flag will trip the validator as well.
+    with self.assertRaisesRegex(flags.IllegalFlagValueError,
+                                'Flag validation failed'):
+      with flagsaver.flagsaver(flagsaver_test_validated_flag1='new_value'):
+        pass
+
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
 
   def test_context_manager_with_exception(self):
     with self.assertRaises(_TestError):
@@ -83,7 +118,7 @@ class FlagSaverTest(absltest.TestCase):
         pass
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
     self.assertEqual('unchanged1', FLAGS.flagsaver_test_flag1)
-    self.assertEqual(None, FLAGS.flagsaver_test_validated_flag)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag)
 
   def test_decorator_without_call(self):
 
@@ -132,6 +167,59 @@ class FlagSaverTest(absltest.TestCase):
     self.assertEqual('new value', mutate_flags())
     # But... notice that the flag is now unchanged0.
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
+
+  def test_decorator_with_cross_validated_overrides_set_together(self):
+
+    # When the flags are set in the same flagsaver call their validators will
+    # be triggered only once the setting is done.
+    @flagsaver.flagsaver(
+        flagsaver_test_validated_flag1='new_value',
+        flagsaver_test_validated_flag2='new_value')
+    def mutate_flags_together():
+      return (FLAGS.flagsaver_test_validated_flag1,
+              FLAGS.flagsaver_test_validated_flag2)
+
+    self.assertEqual(('new_value', 'new_value'), mutate_flags_together())
+
+    # The flags have not changed outside the context of the function.
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
+
+  def test_decorator_with_cross_validated_overrides_set_badly(self):
+
+    # Different values should violate the validator.
+    @flagsaver.flagsaver(
+        flagsaver_test_validated_flag1='new_value',
+        flagsaver_test_validated_flag2='other_value')
+    def mutate_flags_together_badly():
+      return (FLAGS.flagsaver_test_validated_flag1,
+              FLAGS.flagsaver_test_validated_flag2)
+
+    with self.assertRaisesRegex(flags.IllegalFlagValueError,
+                                'Flag validation failed'):
+      mutate_flags_together_badly()
+
+    # The flags have not changed outside the context of the exception.
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
+
+  def test_decorator_with_cross_validated_overrides_set_separately(self):
+
+    # Setting the flags sequentially and not together will trip the validator,
+    # because it will be called at the end of each flagsaver call.
+    @flagsaver.flagsaver(flagsaver_test_validated_flag1='new_value')
+    @flagsaver.flagsaver(flagsaver_test_validated_flag2='new_value')
+    def mutate_flags_separately():
+      return (FLAGS.flagsaver_test_validated_flag1,
+              FLAGS.flagsaver_test_validated_flag2)
+
+    with self.assertRaisesRegex(flags.IllegalFlagValueError,
+                                'Flag validation failed'):
+      mutate_flags_separately()
+
+    # The flags have not changed outside the context of the exception.
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag1)
+    self.assertIsNone(FLAGS.flagsaver_test_validated_flag2)
 
   def test_save_flag_value(self):
     # First save the flag values.

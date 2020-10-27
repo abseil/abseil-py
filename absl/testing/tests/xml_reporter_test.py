@@ -81,7 +81,7 @@ OUTPUT_STRING = '\n'.join([
 FAILURE_MESSAGE = r"""
   <failure message="e" type="{}"><!\[CDATA\[Traceback \(most recent call last\):
   File ".*xml_reporter_test\.py", line \d+, in get_sample_failure
-    raise AssertionError\(\'e\'\)
+    self.fail\(\'e\'\)
 AssertionError: e
 \]\]></failure>""".format(xml_escaped_exception_type(AssertionError))
 
@@ -284,7 +284,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
   def get_sample_failure(self):
     try:
-      raise AssertionError('e')
+      self.fail('e')
     except AssertionError:
       error_values = sys.exc_info()
       return error_values
