@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.11.0 (2020-10-27)
+
 ### Changed
 
 *   (testing) Surplus entries in AssertionError stack traces from absltest are
