@@ -753,13 +753,12 @@ class LoggingTest(absltest.TestCase):
 
   def test_find_log_dir_with_nothing(self):
     with mock.patch.object(os.path, 'exists'), \
-        mock.patch.object(os.path, 'isdir'), \
-        mock.patch.object(logging.get_absl_logger(), 'fatal') as mock_fatal:
+        mock.patch.object(os.path, 'isdir'):
       os.path.exists.return_value = False
       os.path.isdir.return_value = False
-      log_dir = logging.find_log_dir()
-      mock_fatal.assert_called()
-      self.assertEqual(None, log_dir)
+      exception_class = OSError if six.PY2 else FileNotFoundError
+      with self.assertRaises(exception_class):
+        logging.find_log_dir()
 
   def test_find_log_dir_and_names_with_args(self):
     user = 'test_user'

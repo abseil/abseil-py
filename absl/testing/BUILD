@@ -50,7 +50,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         "//absl/flags",
-        "@six_archive//:six",
     ],
 )
 

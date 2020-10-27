@@ -277,7 +277,10 @@ def run(
   Args:
     main: The main function to execute. It takes an single argument "argv",
         which is a list of command line arguments with parsed flags removed.
-        If it returns an integer, it is used as the process's exit code.
+        The return value is passed to `sys.exit`, and so for example
+        a return value of 0 or None results in a successful termination, whereas
+        a return value of 1 results in abnormal termination.
+        For more details, see https://docs.python.org/3/library/sys#sys.exit
     argv: A non-empty list of the command line arguments including program name,
         sys.argv is used if None.
     flags_parser: Callable[[List[Text]], Any], the function used to parse flags.

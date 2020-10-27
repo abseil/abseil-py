@@ -470,12 +470,14 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
 
   def addError(self, test, err):
     super(_TextAndXMLTestResult, self).addError(test, err)
-    error_summary = ('error', err[0], err[1], self._exc_info_to_string(err))
+    error_summary = ('error', err[0], err[1],
+                     self._exc_info_to_string(err, test=test))
     self.add_pending_test_case_result(test, error_summary=error_summary)
 
   def addFailure(self, test, err):
     super(_TextAndXMLTestResult, self).addFailure(test, err)
-    error_summary = ('failure', err[0], err[1], self._exc_info_to_string(err))
+    error_summary = ('failure', err[0], err[1],
+                     self._exc_info_to_string(err, test=test))
     self.add_pending_test_case_result(test, error_summary=error_summary)
 
   def addSkip(self, test, reason):
@@ -485,7 +487,8 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
   def addExpectedFailure(self, test, err):
     super(_TextAndXMLTestResult, self).addExpectedFailure(test, err)
     if callable(getattr(test, 'recordProperty', None)):
-      test.recordProperty('EXPECTED_FAILURE', self._exc_info_to_string(err))
+      test.recordProperty('EXPECTED_FAILURE',
+                          self._exc_info_to_string(err, test=test))
     self.add_pending_test_case_result(test)
 
   def addUnexpectedSuccess(self, test):
@@ -501,10 +504,10 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
     if err is not None:
       if issubclass(err[0], test.failureException):
         error_summary = ('failure', err[0], err[1],
-                         self._exc_info_to_string(err))
+                         self._exc_info_to_string(err, test=test))
       else:
         error_summary = ('error', err[0], err[1],
-                         self._exc_info_to_string(err))
+                         self._exc_info_to_string(err, test=test))
     else:
       error_summary = None
     self.add_pending_test_case_result(subtest, error_summary=error_summary)

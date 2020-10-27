@@ -62,7 +62,6 @@ import functools
 import inspect
 
 from absl import flags
-import six
 
 FLAGS = flags.FLAGS
 
@@ -156,8 +155,7 @@ class _FlagOverrider(object):
   def __enter__(self):
     self._saved_flag_values = save_flag_values(FLAGS)
     try:
-      for name, value in six.iteritems(self._overrides):
-        setattr(FLAGS, name, value)
+      FLAGS._set_attributes(**self._overrides)
     except:
       # It may fail because of flag validators.
       restore_flag_values(self._saved_flag_values, FLAGS)

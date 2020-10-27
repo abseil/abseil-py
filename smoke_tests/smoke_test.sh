@@ -32,13 +32,20 @@ TMP_DIR=$(mktemp -d)
 trap "{ rm -rf ${TMP_DIR}; }" EXIT
 # Do not bootstrap pip/setuptools, they are manually installed with get-pip.py
 # inside the virtualenv.
-${ABSL_VIRTUALENV} --no-site-packages --no-pip --no-setuptools --no-wheel \
+if ${ABSL_VIRTUALENV} --help | grep '\--no-site-packages'; then
+  no_site_packages_flag="--no-site-packages"
+else
+  # --no-site-packages becomes the default in version 20 and is no longer a
+  # flag.
+  no_site_packages_flag=""
+fi
+${ABSL_VIRTUALENV} ${no_site_packages_flag} --no-pip --no-setuptools --no-wheel \
     -p ${ABSL_PYTHON} ${TMP_DIR}
 
 # Temporarily disable unbound variable errors to activate virtualenv.
 set +u
 if [[ $(uname -s) == MSYS* ]]; then
-  source ${TMP_DIR}/scripts/activate
+  source ${TMP_DIR}/Scripts/activate
 else
   source ${TMP_DIR}/bin/activate
 fi
@@ -59,6 +66,7 @@ pip install six
 # cause problems.
 pip install enum34
 
+python --version
 python setup.py install
 python smoke_tests/sample_app.py --echo smoke 2>&1 |grep 'echo is smoke.'
 python smoke_tests/sample_test.py 2>&1 | grep 'msg_for_test'
