@@ -88,7 +88,10 @@ class TextTestRunner(unittest.TextTestRunner):
 
   def _run_debug(self, test):
     # type: (TestCase) -> TestResult
-    test.debug()
+    try:
+      test.debug()
+    except unittest.SkipTest:
+      pass
     # Return an empty result to indicate success.
     return self._makeResult()
 
