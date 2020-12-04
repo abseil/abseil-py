@@ -494,6 +494,84 @@ class ParameterizedTestsTest(absltest.TestCase):
         ],
         short_descs)
 
+  def test_successful_product_test(self):
+
+    class GoodProductTestCase(parameterized.TestCase):
+
+      @parameterized.product(
+          num=(0, 20, 80),
+          modulo=(2, 4),
+          expected=(0,)
+      )
+      def testModuloResult(self, num, modulo, expected):
+        self.assertEqual(expected, num % modulo)
+
+    ts = unittest.makeSuite(GoodProductTestCase)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(ts.countTestCases(), 6)
+    self.assertEqual(res.testsRun, 6)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_product_recorded_failures(self):
+
+    class MixedProductTestCase(parameterized.TestCase):
+
+      @parameterized.product(
+          num=(0, 10, 20),
+          modulo=(2, 4),
+          expected=(0,)
+      )
+      def testModuloResult(self, num, modulo, expected):
+        self.assertEqual(expected, num % modulo)
+
+    ts = unittest.makeSuite(MixedProductTestCase)
+    self.assertEqual(6, ts.countTestCases())
+
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(res.testsRun, 6)
+    self.assertFalse(res.wasSuccessful())
+    self.assertLen(res.failures, 1)
+    self.assertEmpty(res.errors)
+
+  def test_mismatched_product_parameter(self):
+
+    class MismatchedProductParam(parameterized.TestCase):
+
+      @parameterized.product(
+          a=(1, 2),
+          mismatch=(1, 2)
+      )
+      # will fail because of mismatch in parameter names.
+      def test_something(self, a, b):
+        pass
+
+    ts = unittest.makeSuite(MismatchedProductParam)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(res.testsRun, 4)
+    self.assertFalse(res.wasSuccessful())
+    self.assertLen(res.errors, 4)
+
+  def test_no_test_error_empty_product_parameter(self):
+    with self.assertRaises(parameterized.NoTestsError):
+
+      class EmptyProductParam(parameterized.TestCase):  # pylint: disable=unused-variable
+
+        @parameterized.product(arg1=[1, 2], arg2=[])
+        def test_something(self, arg1, arg2):
+          pass  # not called because arg2 has empty list of values.
+
+  def test_bad_product_parameters(self):
+    with self.assertRaisesRegex(AssertionError, 'must be given as list or'):
+
+      class BadProductParams(parameterized.TestCase):  # pylint: disable=unused-variable
+
+        @parameterized.product(arg1=[1, 2], arg2='abcd')
+        def test_something(self, arg1, arg2):
+          pass  # not called because arg2 is not list or tuple.
+
   def test_generator_tests_disallowed(self):
     with self.assertRaisesRegex(RuntimeError, 'generated.*without'):
       class GeneratorTests(parameterized.TestCase):  # pylint: disable=unused-variable
