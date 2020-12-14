@@ -27,6 +27,11 @@ is temporarily set to 'foo'.
   def some_func():
     do_stuff()
 
+  # Use a decorator which can optionally override flags with flagholders.
+  @flagsaver.flagsaver((module.FOO_FLAG, 'foo'), (other_mod.BAR_FLAG, 23))
+  def some_func():
+    do_stuff()
+
   # Use a decorator which does not override flags itself.
   @flagsaver.flagsaver
   def some_func():
@@ -70,7 +75,8 @@ def flagsaver(*args, **kwargs):
   """The main flagsaver interface. See module doc for usage."""
   if not args:
     return _FlagOverrider(**kwargs)
-  elif len(args) == 1:
+  # args can be [func] if used as `@flagsaver` instead of `@flagsaver(...)`
+  if len(args) == 1 and callable(args[0]):
     if kwargs:
       raise ValueError(
           "It's invalid to specify both positional and keyword parameters.")
@@ -78,9 +84,18 @@ def flagsaver(*args, **kwargs):
     if inspect.isclass(func):
       raise TypeError('@flagsaver.flagsaver cannot be applied to a class.')
     return _wrap(func, {})
-  else:
-    raise ValueError(
-        "It's invalid to specify more than one positional parameters.")
+  # args can be a list of (FlagHolder, value) pairs.
+  # In which case they augment any specified kwargs.
+  for arg in args:
+    if not isinstance(arg, tuple) or len(arg) != 2:
+      raise ValueError('Expected (FlagHolder, value) pair, found %r' % (arg,))
+    holder, value = arg
+    if not isinstance(holder, flags.FlagHolder):
+      raise ValueError('Expected (FlagHolder, value) pair, found %r' % (arg,))
+    if holder.name in kwargs:
+      raise ValueError('Cannot set --%s multiple times' % holder.name)
+    kwargs[holder.name] = value
+  return _FlagOverrider(**kwargs)
 
 
 def save_flag_values(flag_values=FLAGS):
