@@ -19,7 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 import os
-import platform
 import sys
 
 try:
@@ -29,8 +28,8 @@ except ImportError:
   use_setuptools()
   import setuptools
 
-py_version = platform.python_version_tuple()
-if py_version < ('2', '7') or py_version[0] == '3' and py_version < ('3', '4'):
+py_version = sys.version_info
+if py_version < (2, 7) or py_version[0] == 3 and py_version < (3, 4):
   raise RuntimeError('Python version 2.7 or 3.4+ is required.')
 
 INSTALL_REQUIRES = [

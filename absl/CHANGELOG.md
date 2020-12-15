@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Added
+
+*   (testing) flagsaver overrides can now be specified in terms of FlagHolder.
+*   (testing) `parameterized.product`: Allows testing a method over cartesian
+    product of parameters values.
 
 ## 0.11.0 (2020-10-27)
 

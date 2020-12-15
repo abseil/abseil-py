@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Tests for flagsaver."""
 
 from __future__ import absolute_import
@@ -30,6 +29,11 @@ flags.register_validator('flagsaver_test_validated_flag', lambda x: not x)
 
 flags.DEFINE_string('flagsaver_test_validated_flag1', None, 'flag to test with')
 flags.DEFINE_string('flagsaver_test_validated_flag2', None, 'flag to test with')
+
+INT_FLAG = flags.DEFINE_integer(
+    'flagsaver_test_int_flag', default=1, help='help')
+STR_FLAG = flags.DEFINE_string(
+    'flagsaver_test_str_flag', default='str default', help='help')
 
 
 @flags.multi_flags_validator(
@@ -64,6 +68,24 @@ class FlagSaverTest(absltest.TestCase):
       FLAGS.flagsaver_test_flag1 = 'another value'
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
     self.assertEqual('unchanged1', FLAGS.flagsaver_test_flag1)
+
+  def test_context_manager_with_flagholders(self):
+    with flagsaver.flagsaver((INT_FLAG, 3), (STR_FLAG, 'new value')):
+      self.assertEqual('new value', STR_FLAG.value)
+      self.assertEqual(3, INT_FLAG.value)
+      FLAGS.flagsaver_test_flag1 = 'another value'
+    self.assertEqual(INT_FLAG.value, INT_FLAG.default)
+    self.assertEqual(STR_FLAG.value, STR_FLAG.default)
+    self.assertEqual('unchanged1', FLAGS.flagsaver_test_flag1)
+
+  def test_context_manager_with_overrides_and_flagholders(self):
+    with flagsaver.flagsaver((INT_FLAG, 3), flagsaver_test_flag0='new value'):
+      self.assertEqual(STR_FLAG.default, STR_FLAG.value)
+      self.assertEqual(3, INT_FLAG.value)
+      FLAGS.flagsaver_test_flag0 = 'new value'
+    self.assertEqual(INT_FLAG.value, INT_FLAG.default)
+    self.assertEqual(STR_FLAG.value, STR_FLAG.default)
+    self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
 
   def test_context_manager_with_cross_validated_overrides_set_together(self):
     # When the flags are set in the same flagsaver call their validators will
@@ -135,8 +157,7 @@ class FlagSaverTest(absltest.TestCase):
     # mutate_flags returns the flag value before it gets restored by
     # the flagsaver decorator.  So we check that flag value was
     # actually changed in the method's scope.
-    self.assertEqual('new value',
-                     mutate_flags('new value'))
+    self.assertEqual('new value', mutate_flags('new value'))
     # But... notice that the flag is now unchanged0.
     self.assertEqual('unchanged0', FLAGS.flagsaver_test_flag0)
 
@@ -288,8 +309,8 @@ class FlagSaverTest(absltest.TestCase):
       self.assertLen(FLAGS['flagsaver_test_flag0'].validators, 2)
 
     modify_validators()
-    self.assertEqual(
-        original_validators, FLAGS['flagsaver_test_flag0'].validators)
+    self.assertEqual(original_validators,
+                     FLAGS['flagsaver_test_flag0'].validators)
 
 
 class FlagSaverDecoratorUsageTest(absltest.TestCase):
@@ -408,6 +429,38 @@ class FlagSaverBadUsageTest(absltest.TestCase):
     with self.assertRaises(ValueError):
       func_a = lambda: None
       flagsaver.flagsaver(func_a, flagsaver_test_flag0='new value')
+
+  def test_duplicate_holder_parameters(self):
+    with self.assertRaises(ValueError):
+      flagsaver.flagsaver((INT_FLAG, 45), (INT_FLAG, 45))
+
+  def test_duplicate_holder_and_kw_parameter(self):
+    with self.assertRaises(ValueError):
+      flagsaver.flagsaver((INT_FLAG, 45), **{INT_FLAG.name: 45})
+
+  def test_both_positional_and_holder_parameters(self):
+    with self.assertRaises(ValueError):
+      func_a = lambda: None
+      flagsaver.flagsaver(func_a, (INT_FLAG, 45))
+
+  def test_holder_parameters_wrong_shape(self):
+    with self.assertRaises(ValueError):
+      flagsaver.flagsaver(INT_FLAG)
+
+  def test_holder_parameters_tuple_too_long(self):
+    with self.assertRaises(ValueError):
+      # Even if it is a bool flag, it should be a tuple
+      flagsaver.flagsaver((INT_FLAG, 4, 5))
+
+  def test_holder_parameters_tuple_wrong_type(self):
+    with self.assertRaises(ValueError):
+      # Even if it is a bool flag, it should be a tuple
+      flagsaver.flagsaver((4, INT_FLAG))
+
+  def test_both_wrong_positional_parameters(self):
+    with self.assertRaises(ValueError):
+      func_a = lambda: None
+      flagsaver.flagsaver(func_a, STR_FLAG, '45')
 
 
 if __name__ == '__main__':

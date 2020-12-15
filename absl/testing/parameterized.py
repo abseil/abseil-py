@@ -155,6 +155,22 @@ inside a tuple:
       self.assertEqual(0, sum(arg))
 
 
+Cartesian product of Parameter Values as Parametrized Test Cases
+======================================================
+If required to test method over a cartesian product of parameters,
+`parameterized.product` may be used to facilitate generation of parameters
+test combinations:
+
+  class TestModuloExample(parameterized.TestCase):
+    @parameterized.product(
+        num=[0, 20, 80],
+        modulo=[2, 4],
+        expected=[0]
+    )
+    def testModuloResult(self, num, modulo, expected):
+      self.assertEqual(expected, num % modulo)
+
+
 Async Support
 ===============================
 If a test needs to call async functions, it can inherit from both
@@ -178,6 +194,7 @@ from __future__ import division
 from __future__ import print_function
 
 import functools
+import itertools
 import re
 import types
 import unittest
@@ -445,6 +462,38 @@ def named_parameters(*testcases):
      A test generator to be handled by TestGeneratorMetaclass.
   """
   return _parameter_decorator(_NAMED, testcases)
+
+
+def product(**testgrid):
+  """A decorator for running tests over cartesian product of parameters values.
+
+  See the module docstring for a usage example. The test will be run for every
+  possible combination of the parameters.
+
+  Args:
+    **testgrid: A mapping of parameter names and their possible values.
+      Possible values should given as either a list or a tuple.
+
+  Raises:
+    NoTestsError: Raised when the decorator generates no tests.
+
+  Returns:
+     A test generator to be handled by TestGeneratorMetaclass.
+  """
+
+  for name, values in testgrid.items():
+    assert isinstance(values, list) or isinstance(values, tuple), (
+        'Values of {} must be given as list or tuple, found {}'.format(
+            name, type(values)))
+
+  # Create all possible combinations of parameters as a cartesian product
+  # of parameter values.
+  testcases = [
+      dict(zip(testgrid.keys(), product))
+      for product in itertools.product(*testgrid.values())
+  ]
+
+  return _parameter_decorator(_ARGUMENT_REPR, testcases)
 
 
 class TestGeneratorMetaclass(type):
