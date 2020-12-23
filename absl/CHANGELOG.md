@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+*   (flags) Added a `required: Optional[bool] = False` parameter to `DEFINE_*`
+    functions.
 *   (testing) flagsaver overrides can now be specified in terms of FlagHolder.
 *   (testing) `parameterized.product`: Allows testing a method over cartesian
     product of parameters values.
