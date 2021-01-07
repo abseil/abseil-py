@@ -51,13 +51,13 @@ class Flag(Generic[_T]):
                name: Text,
                default: Any,
                help_string: Optional[Text],
-               short_name: Optional[Text] = None,
-               boolean: bool = False,
-               allow_override: bool = False,
-               allow_override_cpp: bool = False,
-               allow_hide_cpp: bool = False,
-               allow_overwrite: bool = True,
-               allow_using_method_names: bool = False) -> None:
+               short_name: Optional[Text] = ...,
+               boolean: bool = ...,
+               allow_override: bool = ...,
+               allow_override_cpp: bool = ...,
+               allow_hide_cpp: bool = ...,
+               allow_overwrite: bool = ...,
+               allow_using_method_names: bool = ...) -> None:
     ...
 
 
@@ -97,8 +97,9 @@ class EnumFlag(Flag[Text]):
                default: Any,
                help: Optional[Text],
                enum_values: Sequence[Text],
-               short_name: Optional[Text] = None,
-               case_sensitive: bool = True, **args: Any):
+               short_name: Optional[Text] = ...,
+               case_sensitive: bool = ...,
+               **args: Any):
       ...
 
 
