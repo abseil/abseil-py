@@ -32,8 +32,6 @@ def DEFINE(
     name: Text,
     default: Any,
     help: Optional[Text],
-    # Explicitly replacing ... with _flagvalues.FLAGS causes pytype to
-    # not like the syntax.
     flag_values : _flagvalues.FlagValues = ...,
     serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = ...,
     module_name: Optional[Text] = ...,
@@ -48,8 +46,6 @@ def DEFINE(
     name: Text,
     default: Any,
     help: Optional[Text],
-    # Explicitly replacing ... with _flagvalues.FLAGS causes pytype to
-    # not like the syntax.
     flag_values : _flagvalues.FlagValues = ...,
     serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = ...,
     module_name: Optional[Text] = ...,

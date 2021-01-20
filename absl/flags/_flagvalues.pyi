@@ -53,7 +53,6 @@ class FlagValues:
 
   def __len__(self) -> int: ...
 
-  # pytype doesn't take string constants '' for default values
   def get_help(self,
                prefix: Text = ...,
                include_special_flags: bool = ...) -> Text:
@@ -89,7 +88,6 @@ class FlagValues:
     self, flagname: Text, default: Any = ...) -> Any:
     ...
 
-  # pytype doesn't take string values: 'FlagValues'
   def append_flag_values(self, flag_values: Any) -> None: ...
 
   def remove_flag_values(self, flag_values: Any) -> None: ...
