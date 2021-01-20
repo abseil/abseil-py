@@ -35,7 +35,7 @@ def DEFINE(
     flag_values : _flagvalues.FlagValues = ...,
     serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = ...,
     module_name: Optional[Text] = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[_T]:
   ...
 
@@ -59,7 +59,8 @@ def DEFINE_flag(
     flag: _flag.Flag[_T],
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[Text] = ...,
-    required: Literal[True]) -> _flagvalues.FlagHolder[_T]:
+    required: Literal[True] = ...
+) -> _flagvalues.FlagHolder[_T]:
   ...
 
 @overload
@@ -113,7 +114,7 @@ def DEFINE_string(
     default: Optional[Text],
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[Text]:
   ...
 
@@ -144,7 +145,7 @@ def DEFINE_boolean(
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[Text] = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[bool]:
   ...
 
@@ -178,7 +179,7 @@ def DEFINE_float(
     lower_bound: Optional[float] = ...,
     upper_bound: Optional[float] = ...,
     flag_values: _flagvalues.FlagValues = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[float]:
   ...
 
@@ -215,7 +216,7 @@ def DEFINE_integer(
     lower_bound: Optional[int] = ...,
     upper_bound: Optional[int] = ...,
     flag_values: _flagvalues.FlagValues = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[int]:
   ...
 
@@ -251,7 +252,7 @@ def DEFINE_enum(
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
     module_name:  Optional[Text] = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[Text]:
   ...
 
@@ -288,7 +289,7 @@ def DEFINE_enum_class(
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[Text] = ...,
     case_sensitive: bool = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[_ET]:
   ...
 
@@ -325,7 +326,7 @@ def DEFINE_list(
     default: Union[None, Iterable[Text], Text],
     help: Text,
     flag_values: _flagvalues.FlagValues  = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
   ...
 
@@ -356,7 +357,7 @@ def DEFINE_spaceseplist(
     help: Text,
     comma_compat: bool = ...,
     flag_values: _flagvalues.FlagValues = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
   ...
 
@@ -391,7 +392,7 @@ def DEFINE_multi(
     help: Text,
     flag_values:_flagvalues.FlagValues = ...,
     module_name: Optional[Text] = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[_T]]:
   ...
 
@@ -427,7 +428,7 @@ def DEFINE_multi_string(
     default: Union[None, Iterable[Text], Text],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
   ...
 
@@ -459,7 +460,7 @@ def DEFINE_multi_integer(
     lower_bound: Optional[int] = ...,
     upper_bound: Optional[int] = ...,
     flag_values: _flagvalues.FlagValues = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[int]]:
   ...
 
@@ -495,7 +496,7 @@ def DEFINE_multi_float(
     lower_bound: Optional[float] = ...,
     upper_bound: Optional[float] = ...,
     flag_values: _flagvalues.FlagValues = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[float]]:
   ...
 
@@ -531,7 +532,7 @@ def DEFINE_multi_enum(
     enum_values: Iterable[Text],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
   ...
 
@@ -565,7 +566,7 @@ def DEFINE_multi_enum_class(
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[Text] = ...,
-    required: Literal[True],
+    required: Literal[True] = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
   ...
 
