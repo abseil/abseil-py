@@ -142,7 +142,7 @@ class TempFileCleanup(enum.Enum):
   # Always cleanup temp files when the test completes.
   ALWAYS = 'always'
   # Only cleanup temp file if the test passes. This allows easier inspection
-  # of tempfile contents on test failure. FLAGS.test_tempdir determines
+  # of tempfile contents on test failure. FLAGS.test_tmpdir determines
   # where tempfiles are created.
   SUCCESS = 'success'
   # Never cleanup temp files.
