@@ -94,7 +94,8 @@ def DEFINE(  # pylint: disable=invalid-name
     serializer: ArgumentSerializer, the flag serializer instance.
     module_name: str, the name of the Python module declaring this flag. If not
       provided, it will be computed using the stack trace of this call.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: dict, the extra keyword args that are passed to Flag __init__.
 
   Returns:
@@ -125,7 +126,8 @@ def DEFINE_flag(  # pylint: disable=invalid-name
       registered. This should almost never need to be overridden.
     module_name: str, the name of the Python module declaring this flag. If not
       provided, it will be computed using the stack trace of this call.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
 
   Returns:
     a handle to defined flag.
@@ -318,7 +320,8 @@ def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
       registered. This should almost never need to be overridden.
     module_name: str, the name of the Python module declaring this flag. If not
       provided, it will be computed using the stack trace of this call.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: dict, the extra keyword args that are passed to Flag __init__.
 
   Returns:
@@ -351,7 +354,8 @@ def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
     upper_bound: float, max value of the flag.
     flag_values: FlagValues, the FlagValues instance with which the flag will be
       registered. This should almost never need to be overridden.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: dict, the extra keyword args that are passed to DEFINE.
 
   Returns:
@@ -394,7 +398,8 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
     upper_bound: int, max value of the flag.
     flag_values: FlagValues, the FlagValues instance with which the flag will be
       registered. This should almost never need to be overridden.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: dict, the extra keyword args that are passed to DEFINE.
 
   Returns:
@@ -439,7 +444,8 @@ def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
       registered. This should almost never need to be overridden.
     module_name: str, the name of the Python module declaring this flag. If not
       provided, it will be computed using the stack trace of this call.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: dict, the extra keyword args that are passed to Flag __init__.
 
   Returns:
@@ -473,7 +479,8 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
       provided, it will be computed using the stack trace of this call.
     case_sensitive: bool, whether to map strings to members of the enum_class
       without considering case.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: dict, the extra keyword args that are passed to Flag __init__.
 
   Returns:
@@ -506,7 +513,8 @@ def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
     help: str, the help message.
     flag_values: FlagValues, the FlagValues instance with which the flag will be
       registered. This should almost never need to be overridden.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
@@ -547,7 +555,8 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
       backwards compatibility with flags that used to be comma-separated.
     flag_values: FlagValues, the FlagValues instance with which the flag will be
       registered. This should almost never need to be overridden.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
@@ -600,7 +609,8 @@ def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
       registered. This should almost never need to be overridden.
     module_name: A string, the name of the Python module declaring this flag. If
       not provided, it will be computed using the stack trace of this call.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
@@ -634,7 +644,8 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
     help: str, the help message.
     flag_values: FlagValues, the FlagValues instance with which the flag will be
       registered. This should almost never need to be overridden.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
@@ -679,7 +690,8 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
     upper_bound: int, max values of the flag.
     flag_values: FlagValues, the FlagValues instance with which the flag will be
       registered. This should almost never need to be overridden.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
@@ -724,7 +736,8 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
     upper_bound: float, max values of the flag.
     flag_values: FlagValues, the FlagValues instance with which the flag will be
       registered. This should almost never need to be overridden.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
@@ -770,7 +783,8 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
     flag_values: FlagValues, the FlagValues instance with which the flag will be
       registered. This should almost never need to be overridden.
     case_sensitive: Whether or not the enum is to be case-sensitive.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
@@ -820,7 +834,8 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
       not provided, it will be computed using the stack trace of this call.
     case_sensitive: bool, whether to map strings to members of the enum_class
       without considering case.
-    required: bool, is this a required flag.
+    required: bool, is this a required flag. This must be used as a keyword
+      argument.
     **args: Dictionary with extra keyword args that are passed to the Flag
       __init__.
 
