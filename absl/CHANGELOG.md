@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+*   (flags) Made `EnumClassSerializer` public.
 *   (flags) Added a `required: Optional[bool] = False` parameter to `DEFINE_*`
     functions.
 *   (testing) flagsaver overrides can now be specified in terms of FlagHolder.
