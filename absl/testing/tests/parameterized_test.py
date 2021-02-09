@@ -494,7 +494,7 @@ class ParameterizedTestsTest(absltest.TestCase):
         ],
         short_descs)
 
-  def test_successful_product_test(self):
+  def test_successful_product_test_testgrid(self):
 
     class GoodProductTestCase(parameterized.TestCase):
 
@@ -512,6 +512,75 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEqual(ts.countTestCases(), 6)
     self.assertEqual(res.testsRun, 6)
     self.assertTrue(res.wasSuccessful())
+
+  def test_successful_product_test_kwarg_seqs(self):
+
+    class GoodProductTestCase(parameterized.TestCase):
+
+      @parameterized.product((dict(num=0), dict(num=20), dict(num=0)),
+                             (dict(modulo=2), dict(modulo=4)),
+                             (dict(expected=0),))
+      def testModuloResult(self, num, modulo, expected):
+        self.assertEqual(expected, num % modulo)
+
+    ts = unittest.makeSuite(GoodProductTestCase)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(ts.countTestCases(), 6)
+    self.assertEqual(res.testsRun, 6)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_successful_product_test_kwarg_seq_and_testgrid(self):
+
+    class GoodProductTestCase(parameterized.TestCase):
+
+      @parameterized.product((dict(
+          num=5, modulo=3, expected=2), dict(num=7, modulo=4, expected=3)),
+                             dtype=(int, float))
+      def testModuloResult(self, num, dtype, modulo, expected):
+        self.assertEqual(expected, dtype(num) % modulo)
+
+    ts = unittest.makeSuite(GoodProductTestCase)
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(ts.countTestCases(), 4)
+    self.assertEqual(res.testsRun, 4)
+    self.assertTrue(res.wasSuccessful())
+
+  def test_inconsistent_arg_names_in_kwargs_seq(self):
+    with self.assertRaisesRegex(AssertionError, 'must all have the same keys'):
+
+      class BadProductParams(parameterized.TestCase):  # pylint: disable=unused-variable
+
+        @parameterized.product((dict(num=5, modulo=3), dict(num=7, modula=2)),
+                               dtype=(int, float))
+        def test_something(self):
+          pass  # not called because argnames are not the same
+
+  def test_duplicate_arg_names_in_kwargs_seqs(self):
+    with self.assertRaisesRegex(AssertionError, 'must all have distinct'):
+
+      class BadProductParams(parameterized.TestCase):  # pylint: disable=unused-variable
+
+        @parameterized.product((dict(num=5, modulo=3), dict(num=7, modulo=4)),
+                               (dict(foo='bar', num=5), dict(foo='baz', num=7)),
+                               dtype=(int, float))
+        def test_something(self):
+          pass  # not called because `num` is specified twice
+
+  def test_duplicate_arg_names_in_kwargs_seq_and_testgrid(self):
+    with self.assertRaisesRegex(AssertionError, 'duplicate argument'):
+
+      class BadProductParams(parameterized.TestCase):  # pylint: disable=unused-variable
+
+        @parameterized.product(
+            (dict(num=5, modulo=3), dict(num=7, modulo=4)),
+            (dict(foo='bar'), dict(foo='baz')),
+            dtype=(int, float),
+            foo=('a', 'b'),
+        )
+        def test_something(self):
+          pass  # not called because `foo` is specified twice
 
   def test_product_recorded_failures(self):
 
