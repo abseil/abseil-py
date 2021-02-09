@@ -89,6 +89,7 @@ ListParser = _argument_parser.ListParser
 ListSerializer = _argument_parser.ListSerializer
 CsvListSerializer = _argument_parser.CsvListSerializer
 WhitespaceSeparatedListParser = _argument_parser.WhitespaceSeparatedListParser
+EnumClassSerializer = _argument_parser.EnumClassSerializer
 # pylint: enable=invalid-name
 
 # Helper functions.
