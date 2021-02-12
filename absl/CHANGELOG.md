@@ -16,6 +16,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     product of parameters values, specified as a sequences of values for each
     parameter or as kwargs-like dicts of parameter values.
 
+### Fixed
+
+*   (flags) Made `CsvListSerializer` respect its delimiter argument.
+
 ## 0.11.0 (2020-10-27)
 
 ### Changed

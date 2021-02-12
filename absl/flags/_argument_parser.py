@@ -499,12 +499,14 @@ class CsvListSerializer(ArgumentSerializer):
     if six.PY2:
       # In Python2 csv.writer doesn't accept unicode, so we convert to UTF-8.
       output = io.BytesIO()
-      csv.writer(output).writerow([unicode(x).encode('utf-8') for x in value])
+      writer = csv.writer(output, delimiter=self.list_sep)
+      writer.writerow([unicode(x).encode('utf-8') for x in value])  # pylint: disable=undefined-variable
       serialized_value = output.getvalue().decode('utf-8').strip()
     else:
       # In Python3 csv.writer expects a text stream.
       output = io.StringIO()
-      csv.writer(output).writerow([str(x) for x in value])
+      writer = csv.writer(output, delimiter=self.list_sep)
+      writer.writerow([str(x) for x in value])
       serialized_value = output.getvalue().strip()
 
     # We need the returned value to be pure ascii or Unicodes so that

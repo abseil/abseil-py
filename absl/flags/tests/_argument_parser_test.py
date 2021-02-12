@@ -190,6 +190,13 @@ class EnumClassParserTest(parameterized.TestCase):
     self.assertEqual(value, parser.parse(expected))
 
 
+class SerializerTest(absltest.TestCase):
+
+  def test_csv_serializer(self):
+    serializer = _argument_parser.CsvListSerializer('+')
+    self.assertEqual(serializer.serialize(['foo', 'bar']), 'foo+bar')
+
+
 class HelperFunctionsTest(absltest.TestCase):
 
   def test_is_integer_type(self):
