@@ -179,7 +179,7 @@ as elements of the cartesian product:
          dict(num=7, modulo=4, expected=3)),
         dtype=(int, float)
     )
-    def testModuloResult(self, num, modulo, expected):
+    def testModuloResult(self, num, modulo, expected, dtype):
       self.assertEqual(expected, dtype(num) % modulo)
 
 This results in 4 test cases being created - for each of the two sets of test
