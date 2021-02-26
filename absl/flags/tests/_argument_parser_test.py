@@ -190,11 +190,22 @@ class EnumClassParserTest(parameterized.TestCase):
     self.assertEqual(value, parser.parse(expected))
 
 
-class SerializerTest(absltest.TestCase):
+class SerializerTest(parameterized.TestCase):
 
   def test_csv_serializer(self):
     serializer = _argument_parser.CsvListSerializer('+')
     self.assertEqual(serializer.serialize(['foo', 'bar']), 'foo+bar')
+
+  @parameterized.parameters([
+      dict(lowercase=False, expected='APPLE+BANANA'),
+      dict(lowercase=True, expected='apple+banana'),
+  ])
+  def test_enum_class_list_serializer(self, lowercase, expected):
+    values = [Fruit.APPLE, Fruit.BANANA]
+    serializer = _argument_parser.EnumClassListSerializer(
+        list_sep='+', lowercase=lowercase)
+    serialized = serializer.serialize(values)
+    self.assertEqual(expected, serialized)
 
 
 class HelperFunctionsTest(absltest.TestCase):

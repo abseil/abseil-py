@@ -119,6 +119,7 @@ IntegerParser = _argument_parser.IntegerParser
 BaseListParser = _argument_parser.BaseListParser
 ListParser = _argument_parser.ListParser
 ListSerializer = _argument_parser.ListSerializer
+EnumClassListSerializer = _argument_parser.EnumClassListSerializer
 CsvListSerializer = _argument_parser.CsvListSerializer
 WhitespaceSeparatedListParser = _argument_parser.WhitespaceSeparatedListParser
 EnumClassSerializer = _argument_parser.EnumClassSerializer
