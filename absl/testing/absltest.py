@@ -696,6 +696,7 @@ class TestCase(unittest3_backport.TestCase):
     return tf
 
   def enter_context(self, manager):
+    # type: (ContextManager[_T]) -> _T
     """Returns the CM's value after registering it with the exit stack.
 
     Entering a context pushes it onto a stack of contexts. The context is exited
@@ -714,7 +715,6 @@ class TestCase(unittest3_backport.TestCase):
     Args:
       manager: The context manager to enter.
     """
-    # type: (ContextManager[_T]) -> _T
     if not self._exit_stack:
       raise AssertionError(
           'self._exit_stack is not set: enter_context is Py3-only; also make '
