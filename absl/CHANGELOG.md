@@ -15,6 +15,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (testing) `parameterized.product`: Allows testing a method over cartesian
     product of parameters values, specified as a sequences of values for each
     parameter or as kwargs-like dicts of parameter values.
+*   (testing) Added public flag holders for `--test_srcdir` and `--test_tmpdir`.
+    Users should use `absltest.TEST_SRCDIR.value` and
+    `absltest.TEST_TMPDIR.value` instead of `FLAGS.test_srcdir` and
+    `FLAGS.test_tmpdir`.
 
 ### Fixed
 

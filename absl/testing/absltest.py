@@ -142,7 +142,7 @@ class TempFileCleanup(enum.Enum):
   # Always cleanup temp files when the test completes.
   ALWAYS = 'always'
   # Only cleanup temp file if the test passes. This allows easier inspection
-  # of tempfile contents on test failure. FLAGS.test_tmpdir determines
+  # of tempfile contents on test failure. absltest.TEST_TMPDIR.value determines
   # where tempfiles are created.
   SUCCESS = 'success'
   # Never cleanup temp files.
@@ -232,18 +232,24 @@ def _get_default_randomize_ordering_seed():
       'Unknown test randomization seed value: {}'.format(randomize))
 
 
-flags.DEFINE_integer('test_random_seed', _get_default_test_random_seed(),
-                     'Random seed for testing. Some test frameworks may '
-                     'change the default value of this flag between runs, so '
-                     'it is not appropriate for seeding probabilistic tests.',
-                     allow_override_cpp=True)
-flags.DEFINE_string('test_srcdir',
-                    get_default_test_srcdir(),
-                    'Root of directory tree where source files live',
-                    allow_override_cpp=True)
-flags.DEFINE_string('test_tmpdir', get_default_test_tmpdir(),
-                    'Directory for temporary testing files',
-                    allow_override_cpp=True)
+TEST_SRCDIR = flags.DEFINE_string(
+    'test_srcdir',
+    get_default_test_srcdir(),
+    'Root of directory tree where source files live',
+    allow_override_cpp=True)
+TEST_TMPDIR = flags.DEFINE_string(
+    'test_tmpdir',
+    get_default_test_tmpdir(),
+    'Directory for temporary testing files',
+    allow_override_cpp=True)
+
+flags.DEFINE_integer(
+    'test_random_seed',
+    _get_default_test_random_seed(),
+    'Random seed for testing. Some test frameworks may '
+    'change the default value of this flag between runs, so '
+    'it is not appropriate for seeding probabilistic tests.',
+    allow_override_cpp=True)
 flags.DEFINE_string(
     'test_randomize_ordering_seed',
     '',
@@ -253,8 +259,7 @@ flags.DEFINE_string(
     'test case execution order. This flag also overrides '
     'the TEST_RANDOMIZE_ORDERING_SEED environment variable.',
     allow_override_cpp=True)
-flags.DEFINE_string('xml_output_file', '',
-                    'File to store XML test results')
+flags.DEFINE_string('xml_output_file', '', 'File to store XML test results')
 
 
 # We might need to monkey-patch TestResult so that it stops considering an
@@ -724,7 +729,7 @@ class TestCase(unittest3_backport.TestCase):
   @classmethod
   def _get_tempdir_path_cls(cls):
     # type: () -> Text
-    return os.path.join(FLAGS.test_tmpdir, _get_qualname(cls))
+    return os.path.join(TEST_TMPDIR.value, _get_qualname(cls))
 
   def _get_tempdir_path_test(self):
     # type: () -> Text
@@ -2184,7 +2189,7 @@ def get_default_xml_output_filename():
   if os.environ.get('XML_OUTPUT_FILE'):
     return os.environ['XML_OUTPUT_FILE']
   elif os.environ.get('RUNNING_UNDER_TEST_DAEMON'):
-    return os.path.join(os.path.dirname(FLAGS.test_tmpdir), 'test_detail.xml')
+    return os.path.join(os.path.dirname(TEST_TMPDIR.value), 'test_detail.xml')
   elif os.environ.get('TEST_XMLOUTPUTDIR'):
     return os.path.join(
         os.environ['TEST_XMLOUTPUTDIR'],
@@ -2388,9 +2393,9 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
       runner.run_for_debugging = True
 
   # Make sure tmpdir exists.
-  if not os.path.isdir(FLAGS.test_tmpdir):
+  if not os.path.isdir(TEST_TMPDIR.value):
     try:
-      os.makedirs(FLAGS.test_tmpdir)
+      os.makedirs(TEST_TMPDIR.value)
     except OSError as e:
       # Concurrent test might have created the directory.
       if e.errno != errno.EEXIST:

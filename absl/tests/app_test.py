@@ -245,7 +245,7 @@ class FunctionalTests(absltest.TestCase):
       # Pure python binary does not write to GWQ Status.
       return
 
-    tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         False,
         arguments=['--raise_exception'],
