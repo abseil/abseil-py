@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.12.0 (2021-03-08)
+
 ### Added
 
 *   (flags) Made `EnumClassSerializer` and `EnumClassListSerializer` public.
