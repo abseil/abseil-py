@@ -29,7 +29,6 @@ import subprocess
 import sys
 import tempfile
 
-from absl import flags
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
@@ -41,8 +40,6 @@ except ImportError:  # PY2
   pathlib = None
 
 PY_VERSION_2 = sys.version_info[0] == 2
-
-FLAGS = flags.FLAGS
 
 
 class HelperMixin(object):
@@ -97,8 +94,8 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
         expect_success=True)
 
   def test_flags_env_var_no_flags(self):
-    tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
-    srcdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
+    srcdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         2,
         [],
@@ -111,8 +108,8 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
         expect_success=True)
 
   def test_flags_no_env_var_flags(self):
-    tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
-    srcdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
+    srcdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         3,
         ['--test_random_seed=123', '--test_srcdir={}'.format(srcdir),
@@ -126,10 +123,10 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
         expect_success=True)
 
   def test_flags_env_var_flags(self):
-    tmpdir_from_flag = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
-    srcdir_from_flag = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
-    tmpdir_from_env_var = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
-    srcdir_from_env_var = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir_from_flag = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
+    srcdir_from_flag = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
+    tmpdir_from_env_var = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
+    srcdir_from_env_var = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         4,
         ['--test_random_seed=221', '--test_srcdir={}'.format(srcdir_from_flag),
@@ -143,9 +140,9 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
         expect_success=True)
 
   def test_xml_output_file_from_xml_output_file_env(self):
-    xml_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    xml_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     xml_output_file_env = os.path.join(xml_dir, 'xml_output_file.xml')
-    random_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    random_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         6,
         [],
@@ -157,8 +154,9 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
         expect_success=True)
 
   def test_xml_output_file_from_daemon(self):
-    tmpdir = os.path.join(tempfile.mkdtemp(dir=FLAGS.test_tmpdir), 'sub_dir')
-    random_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir = os.path.join(tempfile.mkdtemp(
+        dir=absltest.TEST_TMPDIR.value), 'sub_dir')
+    random_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         6,
         ['--test_tmpdir', tmpdir],
@@ -171,7 +169,7 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
         expect_success=True)
 
   def test_xml_output_file_from_test_xmloutputdir_env(self):
-    xml_output_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    xml_output_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     expected_xml_file = 'absltest_test_helper.xml'
     self.run_helper(
         6,
@@ -185,9 +183,9 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
         expect_success=True)
 
   def test_xml_output_file_from_flag(self):
-    random_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    random_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     flag_file = os.path.join(
-        tempfile.mkdtemp(dir=FLAGS.test_tmpdir), 'output.xml')
+        tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value), 'output.xml')
     self.run_helper(
         6,
         ['--xml_output_file', flag_file],
@@ -660,7 +658,7 @@ Missing entries:
       self.assertRegexMatch('foo str', [b'str', u'foo'])
 
   def test_assert_command_fails_stderr(self):
-    tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.assertCommandFails(
         ['cat', os.path.join(tmpdir, 'file.txt')],
         ['No such file or directory'],
@@ -693,7 +691,7 @@ Missing entries:
 
   def test_assert_command_succeeds_stderr(self):
     expected_re = re.compile('No such file or directory')
-    tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
 
     with self.assertRaisesRegex(AssertionError, expected_re):
       self.assertCommandSucceeds(
@@ -1470,7 +1468,7 @@ class GetCommandStderrTestCase(absltest.TestCase):
     os.environ = self.original_environ
 
   def test_return_status(self):
-    tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     returncode = (
         absltest.get_command_stderr(
             ['cat', os.path.join(tmpdir, 'file.txt')],
@@ -1478,7 +1476,7 @@ class GetCommandStderrTestCase(absltest.TestCase):
     self.assertEqual(1, returncode)
 
   def test_stderr(self):
-    tmpdir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     stderr = (
         absltest.get_command_stderr(
             ['cat', os.path.join(tmpdir, 'file.txt')],

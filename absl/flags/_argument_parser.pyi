@@ -118,3 +118,7 @@ class CsvListSerializer(ArgumentSerializer[List[Any]]):
   def __init__(self, list_sep: Text) -> None:
     ...
 
+
+class EnumClassSerializer(ArgumentSerializer[_ET]):
+  def __init__(self, lowercase: bool) -> None:
+    ...

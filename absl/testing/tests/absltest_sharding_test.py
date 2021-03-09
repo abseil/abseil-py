@@ -21,11 +21,9 @@ from __future__ import print_function
 import os
 import subprocess
 
-from absl import flags
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 
-FLAGS = flags.FLAGS
 NUM_TEST_METHODS = 8  # Hard-coded, based on absltest_sharding_test_helper.py
 
 
@@ -124,7 +122,8 @@ class TestShardingTest(absltest.TestCase):
                               (i, len(outerr_by_shard)))
 
   def test_shard_file(self):
-    self._run_sharded(3, 1, os.path.join(FLAGS.test_tmpdir, 'shard_file'))
+    self._run_sharded(3, 1, os.path.join(
+        absltest.TEST_TMPDIR.value, 'shard_file'))
 
   def test_zero_shards(self):
     out, exit_code = self._run_sharded(0, 0)

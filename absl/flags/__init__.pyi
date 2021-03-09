@@ -11,30 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""This package is used to define and parse command line flags.
-
-This package defines a *distributed* flag-definition policy: rather than
-an application having to define all flags in or near main(), each Python
-module defines flags that are useful to it.  When one Python module
-imports another, it gains access to the other's flags.  (This is
-implemented by having all modules share a common, global registry object
-containing all the flag information.)
-
-Flags are defined through the use of one of the DEFINE_xxx functions.
-The specific function used determines how the flag is parsed, checked,
-and optionally type-converted, when it's seen on the command line.
-"""
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import getopt
-import os
-import re
-import sys
-import types
-import warnings
 
 from absl.flags import _argument_parser
 from absl.flags import _defines
@@ -43,14 +19,6 @@ from absl.flags import _flag
 from absl.flags import _flagvalues
 from absl.flags import _helpers
 from absl.flags import _validators
-import six
-
-# Initialize the FLAGS_MODULE as early as possible.
-# It's only used by adopt_module_key_flags to take SPECIAL_FLAGS into account.
-_helpers.FLAGS_MODULE = sys.modules[__name__]
-
-# Add current module to disclaimed module ids.
-_helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
 # DEFINE functions. They are explained in more details in the module doc string.
 # pylint: disable=invalid-name
@@ -119,7 +87,6 @@ IntegerParser = _argument_parser.IntegerParser
 BaseListParser = _argument_parser.BaseListParser
 ListParser = _argument_parser.ListParser
 ListSerializer = _argument_parser.ListSerializer
-EnumClassListSerializer = _argument_parser.EnumClassListSerializer
 CsvListSerializer = _argument_parser.CsvListSerializer
 WhitespaceSeparatedListParser = _argument_parser.WhitespaceSeparatedListParser
 EnumClassSerializer = _argument_parser.EnumClassSerializer
@@ -131,20 +98,6 @@ text_wrap = _helpers.text_wrap
 flag_dict_to_args = _helpers.flag_dict_to_args
 doc_to_help = _helpers.doc_to_help
 
-# Special flags.
-_helpers.SPECIAL_FLAGS = FlagValues()
-
-DEFINE_string(
-    'flagfile', '',
-    'Insert flag definitions from the given file into the command line.',
-    _helpers.SPECIAL_FLAGS)  # pytype: disable=wrong-arg-types
-
-DEFINE_string('undefok', '',
-              'comma-separated list of flag names that it is okay to specify '
-              'on the command line even if the program does not define a flag '
-              'with that name.  IMPORTANT: flags in this list that have '
-              'arguments MUST use the --flag=value format.',
-              _helpers.SPECIAL_FLAGS)  # pytype: disable=wrong-arg-types
-
 # The global FlagValues instance.
 FLAGS = _flagvalues.FLAGS
+

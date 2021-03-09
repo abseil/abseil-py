@@ -26,14 +26,11 @@ import subprocess
 import sys
 import tempfile
 
-from absl import flags
 from absl import logging
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
 import six
-
-FLAGS = flags.FLAGS
 
 _PY_VLOG3_LOG_MESSAGE = """\
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:62] This line is VLOG level 3
@@ -320,10 +317,12 @@ class FunctionalTest(parameterized.TestCase):
     return expected_logs
 
   def setUp(self):
-    self._log_dir = tempfile.mkdtemp(dir=FLAGS.test_tmpdir)
+    super(FunctionalTest, self).setUp()
+    self._log_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
 
   def tearDown(self):
     shutil.rmtree(self._log_dir)
+    super(FunctionalTest, self).tearDown()
 
   def _exec_test(self,
                  verify_exit_fn,

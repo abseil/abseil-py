@@ -6,11 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.12.0 (2021-03-08)
+
 ### Added
 
+*   (flags) Made `EnumClassSerializer` and `EnumClassListSerializer` public.
+*   (flags) Added a `required: Optional[bool] = False` parameter to `DEFINE_*`
+    functions.
 *   (testing) flagsaver overrides can now be specified in terms of FlagHolder.
 *   (testing) `parameterized.product`: Allows testing a method over cartesian
-    product of parameters values.
+    product of parameters values, specified as a sequences of values for each
+    parameter or as kwargs-like dicts of parameter values.
+*   (testing) Added public flag holders for `--test_srcdir` and `--test_tmpdir`.
+    Users should use `absltest.TEST_SRCDIR.value` and
+    `absltest.TEST_TMPDIR.value` instead of `FLAGS.test_srcdir` and
+    `FLAGS.test_tmpdir`.
+
+### Fixed
+
+*   (flags) Made `CsvListSerializer` respect its delimiter argument.
 
 ## 0.11.0 (2020-10-27)
 
