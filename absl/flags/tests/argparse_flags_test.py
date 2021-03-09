@@ -33,9 +33,6 @@ import mock
 import six
 
 
-FLAGS = flags.FLAGS
-
-
 class ArgparseFlagsTest(parameterized.TestCase):
 
   def setUp(self):
@@ -318,7 +315,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
     parser.add_argument('--header', help='Header message to print.')
     parser.add_argument('integers', metavar='N', type=int, nargs='+',
                         help='an integer for the accumulator')
-    flagfile = tempfile.NamedTemporaryFile(dir=FLAGS.test_tmpdir, delete=False)
+    flagfile = tempfile.NamedTemporaryFile(
+        dir=absltest.TEST_TMPDIR.value, delete=False)
     self.addCleanup(os.unlink, flagfile.name)
     with flagfile:
       flagfile.write(b'''

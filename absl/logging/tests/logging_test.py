@@ -1020,7 +1020,7 @@ class GetLogFileNameTest(parameterized.TestCase):
       self.assertEqual('', logging.get_log_file_name())
 
   def test_get_log_file_name_py_file(self):
-    _, filename = tempfile.mkstemp(dir=FLAGS.test_tmpdir)
+    _, filename = tempfile.mkstemp(dir=absltest.TEST_TMPDIR.value)
     with open(filename, 'a') as stream:
       with override_python_handler_stream(stream):
         self.assertEqual(filename, logging.get_log_file_name())

@@ -20,31 +20,105 @@ from absl.flags import _flagvalues
 
 import enum
 
-from typing import Text, List, Any, TypeVar, Optional, Union, Type, Iterable, overload
+from typing import Text, List, Any, TypeVar, Optional, Union, Type, Iterable, overload, Literal
 
 _T = TypeVar('_T')
 _ET = TypeVar('_ET', bound=enum.Enum)
 
 
+@overload
 def DEFINE(
     parser: _argument_parser.ArgumentParser[_T],
     name: Text,
     default: Any,
     help: Optional[Text],
-    # Explicitly replacing ... with _flagvalues.FLAGS causes pytype to
-    # not like the syntax.
     flag_values : _flagvalues.FlagValues = ...,
-    serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = None,
-    module_name: Optional[Text] = None,
+    serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = ...,
+    module_name: Optional[Text] = ...,
+    required: Literal[True] = ...,
+    **args: Any) -> _flagvalues.FlagHolder[_T]:
+  ...
+
+
+@overload
+def DEFINE(
+    parser: _argument_parser.ArgumentParser[_T],
+    name: Text,
+    default: Any,
+    help: Optional[Text],
+    flag_values : _flagvalues.FlagValues = ...,
+    serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = ...,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[_T]]:
   ...
 
 
-
+@overload
 def DEFINE_flag(
     flag: _flag.Flag[_T],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None) -> _flagvalues.FlagHolder[Optional[_T]]:
+    module_name: Optional[Text] = ...,
+    required: Literal[True] = ...
+) -> _flagvalues.FlagHolder[_T]:
+  ...
+
+@overload
+def DEFINE_flag(
+    flag: _flag.Flag[_T],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    required: bool = ...) -> _flagvalues.FlagHolder[Optional[_T]]:
+  ...
+
+# typing overloads for DEFINE_* methods...
+#
+# - DEFINE_* method return FlagHolder[Optional[T]] or FlagHolder[T] depending
+#   on the arguments.
+# - If the flag value is guaranteed to be not None, the return type is
+#   FlagHolder[T].
+# - If the flag is required OR has a non-None default, the flag value i
+#   guaranteed to be not None after flag parsing has finished.
+# The information above is captured with three overloads as follows.
+#
+# (if required=True and passed in as a keyword argument,
+#  return type is FlagHolder[Y])
+# @overload
+# def DEFINE_xxx(
+#    ... arguments...
+#    default: Union[None, X] = ...,
+#    *,
+#    required: Literal[True]) -> _flagvalues.FlagHolder[Y]:
+#   ...
+#
+# (if default=None, return type is FlagHolder[Optional[Y]])
+# @overload
+# def DEFINE_xxx(
+#    ... arguments...
+#    default: None,
+#    required: bool = ...) -> _flagvalues.FlagHolder[Optional[Y]]:
+#   ...
+#
+# (if default!=None, return type is FlagHolder[Y]):
+# @overload
+# def DEFINE_xxx(
+#    ... arguments...
+#    default: X,
+#    required: bool = ...) -> _flagvalues.FlagHolder[Y]:
+#   ...
+#
+# where X = type of non-None default values for the flag
+#   and Y = non-None type for flag value
+
+@overload
+def DEFINE_string(
+    name: Text,
+    default: Optional[Text],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[Text]:
   ...
 
 @overload
@@ -53,6 +127,7 @@ def DEFINE_string(
     default: None,
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[Text]]:
   ...
 
@@ -62,7 +137,20 @@ def DEFINE_string(
     default: Text,
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Text]:
+  ...
+
+@overload
+def DEFINE_boolean(
+    name : Text,
+    default: Union[None, Text, bool, int],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[bool]:
   ...
 
 @overload
@@ -71,7 +159,8 @@ def DEFINE_boolean(
     default: None,
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[bool]]:
   ...
 
@@ -81,8 +170,22 @@ def DEFINE_boolean(
     default: Union[Text, bool, int],
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[bool]:
+  ...
+
+@overload
+def DEFINE_float(
+    name: Text,
+    default: Union[None, float, Text],
+    help: Optional[Text],
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[float]:
   ...
 
 @overload
@@ -90,9 +193,10 @@ def DEFINE_float(
     name: Text,
     default: None,
     help: Optional[Text],
-    lower_bound: Optional[float] = None,
-    upper_bound: Optional[float] = None,
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[float]]:
   ...
 
@@ -101,9 +205,10 @@ def DEFINE_float(
     name: Text,
     default: Union[float, Text],
     help: Optional[Text],
-    lower_bound: Optional[float] = None,
-    upper_bound: Optional[float] = None,
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[float]:
   ...
 
@@ -111,11 +216,25 @@ def DEFINE_float(
 @overload
 def DEFINE_integer(
     name: Text,
+    default: Union[None, int, Text],
+    help: Optional[Text],
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[int]:
+  ...
+
+@overload
+def DEFINE_integer(
+    name: Text,
     default: None,
     help: Optional[Text],
-    lower_bound: Optional[int] = None,
-    upper_bound: Optional[int] = None,
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[int]]:
   ...
 
@@ -124,10 +243,24 @@ def DEFINE_integer(
     name: Text,
     default: Union[int, Text],
     help: Optional[Text],
-    lower_bound: Optional[int] = None,
-    upper_bound: Optional[int] = None,
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[int]:
+  ...
+
+@overload
+def DEFINE_enum(
+    name : Text,
+    default: Optional[Text],
+    enum_values: Iterable[Text],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name:  Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[Text]:
   ...
 
 @overload
@@ -137,7 +270,8 @@ def DEFINE_enum(
     enum_values: Iterable[Text],
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name:  Optional[Text] = None,
+    module_name:  Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[Text]]:
   ...
 
@@ -148,8 +282,23 @@ def DEFINE_enum(
     enum_values: Iterable[Text],
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name:  Optional[Text] = None,
+    module_name:  Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Text]:
+  ...
+
+@overload
+def DEFINE_enum_class(
+    name: Text,
+    default: Union[None, _ET, Text],
+    enum_class: Type[_ET],
+    help: Optional[Text],
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    case_sensitive: bool = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[_ET]:
   ...
 
 @overload
@@ -159,8 +308,9 @@ def DEFINE_enum_class(
     enum_class: Type[_ET],
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None,
+    module_name: Optional[Text] = ...,
     case_sensitive: bool = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[_ET]]:
   ...
 
@@ -171,8 +321,9 @@ def DEFINE_enum_class(
     enum_class: Type[_ET],
     help: Optional[Text],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None,
+    module_name: Optional[Text] = ...,
     case_sensitive: bool = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[_ET]:
   ...
 
@@ -180,9 +331,21 @@ def DEFINE_enum_class(
 @overload
 def DEFINE_list(
     name: Text,
+    default: Union[None, Iterable[Text], Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues  = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_list(
+    name: Text,
     default: None,
     help: Text,
     flag_values: _flagvalues.FlagValues  = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
   ...
 
@@ -192,6 +355,19 @@ def DEFINE_list(
     default: Union[Iterable[Text], Text],
     help: Text,
     flag_values: _flagvalues.FlagValues  = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_spaceseplist(
+    name: Text,
+    default: Union[None, Iterable[Text], Text],
+    help: Text,
+    comma_compat: bool = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
     **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
   ...
 
@@ -200,8 +376,9 @@ def DEFINE_spaceseplist(
     name: Text,
     default: None,
     help: Text,
-    comma_compat: bool = False,
+    comma_compat: bool = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
   ...
 
@@ -210,9 +387,24 @@ def DEFINE_spaceseplist(
     name: Text,
     default: Union[Iterable[Text], Text],
     help: Text,
-    comma_compat: bool = False,
+    comma_compat: bool = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_multi(
+    parser : _argument_parser.ArgumentParser[_T],
+    serializer: _argument_parser.ArgumentSerializer[_T],
+    name: Text,
+    default: Union[None, Iterable[_T], _T, Text],
+    help: Text,
+    flag_values:_flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[_T]]:
   ...
 
 @overload
@@ -223,7 +415,8 @@ def DEFINE_multi(
     default: None,
     help: Text,
     flag_values:_flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[_T]]]:
   ...
 
@@ -235,8 +428,20 @@ def DEFINE_multi(
     default: Union[Iterable[_T], _T, Text],
     help: Text,
     flag_values:_flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[_T]]:
+  ...
+
+@overload
+def DEFINE_multi_string(
+    name: Text,
+    default: Union[None, Iterable[Text], Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
   ...
 
 @overload
@@ -245,6 +450,7 @@ def DEFINE_multi_string(
     default: None,
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
   ...
 
@@ -254,7 +460,21 @@ def DEFINE_multi_string(
     default: Union[Iterable[Text], Text],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_multi_integer(
+    name: Text,
+    default: Union[None, Iterable[int], int, Text],
+    help: Text,
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[int]]:
   ...
 
 @overload
@@ -262,9 +482,10 @@ def DEFINE_multi_integer(
     name: Text,
     default: None,
     help: Text,
-    lower_bound: Optional[int] = None,
-    upper_bound: Optional[int] = None,
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[int]]]:
   ...
 
@@ -273,10 +494,24 @@ def DEFINE_multi_integer(
     name: Text,
     default: Union[Iterable[int], int, Text],
     help: Text,
-    lower_bound: Optional[int] = None,
-    upper_bound: Optional[int] = None,
+    lower_bound: Optional[int] = ...,
+    upper_bound: Optional[int] = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[int]]:
+  ...
+
+@overload
+def DEFINE_multi_float(
+    name: Text,
+    default: Union[None, Iterable[float], float, Text],
+    help: Text,
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[float]]:
   ...
 
 @overload
@@ -284,9 +519,10 @@ def DEFINE_multi_float(
     name: Text,
     default: None,
     help: Text,
-    lower_bound: Optional[float] = None,
-    upper_bound: Optional[float] = None,
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[float]]]:
   ...
 
@@ -295,12 +531,25 @@ def DEFINE_multi_float(
     name: Text,
     default: Union[Iterable[float], float, Text],
     help: Text,
-    lower_bound: Optional[float] = None,
-    upper_bound: Optional[float] = None,
+    lower_bound: Optional[float] = ...,
+    upper_bound: Optional[float] = ...,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[float]]:
   ...
 
+
+@overload
+def DEFINE_multi_enum(
+    name: Text,
+    default: Union[None, Iterable[Text], Text],
+    enum_values: Iterable[Text],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
 
 @overload
 def DEFINE_multi_enum(
@@ -309,6 +558,7 @@ def DEFINE_multi_enum(
     enum_values: Iterable[Text],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[Text]]]:
   ...
 
@@ -319,7 +569,21 @@ def DEFINE_multi_enum(
     enum_values: Iterable[Text],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[Text]]:
+  ...
+
+@overload
+def DEFINE_multi_enum_class(
+    name: Text,
+    default: Union[None, Iterable[_ET], _ET, Text],
+    enum_class: Type[_ET],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
   ...
 
 @overload
@@ -329,7 +593,8 @@ def DEFINE_multi_enum_class(
     enum_class: Type[_ET],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[Optional[List[_ET]]]:
   ...
 
@@ -340,7 +605,8 @@ def DEFINE_multi_enum_class(
     enum_class: Type[_ET],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
     **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
   ...
 
@@ -350,7 +616,7 @@ def DEFINE_alias(
     name: Text,
     original_name: Text,
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[Text] = None) -> _flagvalues.FlagHolder[Any]:
+    module_name: Optional[Text] = ...) -> _flagvalues.FlagHolder[Any]:
   ...
 
 

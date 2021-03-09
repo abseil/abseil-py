@@ -41,33 +41,33 @@ class HelperTest(absltest.TestCase):
       else:
         expected_prefix = '/'
       self.assertTrue(
-          FLAGS.test_tmpdir.startswith(expected_prefix),
+          absltest.TEST_TMPDIR.value.startswith(expected_prefix),
           '--test_tmpdir={} does not start with {}'.format(
-              FLAGS.test_tmpdir, expected_prefix))
-      self.assertTrue(os.access(FLAGS.test_tmpdir, os.W_OK))
+              absltest.TEST_TMPDIR.value, expected_prefix))
+      self.assertTrue(os.access(absltest.TEST_TMPDIR.value, os.W_OK))
     elif FLAGS.test_id == 2:
       self.assertEqual(FLAGS.test_random_seed, 321)
       self.assertEqual(
-          FLAGS.test_srcdir,
+          absltest.TEST_SRCDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
       self.assertEqual(
-          FLAGS.test_tmpdir,
+          absltest.TEST_TMPDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
     elif FLAGS.test_id == 3:
       self.assertEqual(FLAGS.test_random_seed, 123)
       self.assertEqual(
-          FLAGS.test_srcdir,
+          absltest.TEST_SRCDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
       self.assertEqual(
-          FLAGS.test_tmpdir,
+          absltest.TEST_TMPDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
     elif FLAGS.test_id == 4:
       self.assertEqual(FLAGS.test_random_seed, 221)
       self.assertEqual(
-          FLAGS.test_srcdir,
+          absltest.TEST_SRCDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
       self.assertEqual(
-          FLAGS.test_tmpdir,
+          absltest.TEST_TMPDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
     else:
       raise unittest.SkipTest(
