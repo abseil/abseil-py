@@ -100,6 +100,11 @@ if six.PY2:
 else:
   import threading as _thread_lib  # For .get_ident().
 
+try:
+  from typing import NoReturn
+except ImportError:
+  pass
+
 
 FLAGS = flags.FLAGS
 
@@ -379,6 +384,7 @@ def set_stderrthreshold(s):
 
 
 def fatal(msg, *args, **kwargs):
+  # type: (Any, Any, Any) -> NoReturn
   """Logs a fatal message."""
   log(FATAL, msg, *args, **kwargs)
 
