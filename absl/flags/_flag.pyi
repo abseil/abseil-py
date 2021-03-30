@@ -32,6 +32,7 @@ class Flag(Generic[_T]):
 
   name = ... # type: Text
   default = ... # type: Any
+  default_unparsed = ... # type: Any
   help = ... # type: Text
   short_name = ... # type: Text
   boolean = ... # type: bool
