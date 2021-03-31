@@ -286,6 +286,8 @@ def run(
     flags_parser: Callable[[List[Text]], Any], the function used to parse flags.
         The return value of this function is passed to `main` untouched.
         It must guarantee FLAGS is parsed after this function is called.
+        Should be passed as a keyword-only arg which will become mandatory in a
+        future release.
   - Parses command line flags with the flag module.
   - If there are any errors, prints usage().
   - Calls main() with the remaining arguments.
