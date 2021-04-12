@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Added
 
 *   (app) Type annotations for public `app` interfaces.
+*   (testing) Added new decorator `@absltest.skipThisClass` to indicate a class
+    contains shared functionality to be used as a base class for other
+    TestCases, and therefore should be skipped.
 
 ### Changed
 
