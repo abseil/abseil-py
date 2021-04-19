@@ -30,6 +30,9 @@ class ArgumentSerializer(Generic[_T]):
 # The metaclass of ArgumentParser is not reflected here, because it does not
 # affect the provided API.
 class ArgumentParser(Generic[_T]):
+
+  syntactic_help: Text
+
   def parse(self, argument: Text) -> Optional[_T]: ...
 
   def flag_type(self) -> Text: ...
