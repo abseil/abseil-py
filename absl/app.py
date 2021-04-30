@@ -34,6 +34,7 @@ import errno
 import os
 import pdb
 import sys
+import textwrap
 import traceback
 
 from absl import command_name
@@ -158,7 +159,13 @@ def parse_flags_with_usage(args):
   try:
     return FLAGS(args)
   except flags.Error as error:
-    sys.stderr.write('FATAL Flags parsing error: %s\n' % error)
+    message = str(error)
+    if '\n' in message:
+      final_message = 'FATAL Flags parsing error:\n%s\n' % textwrap.indent(
+          message, '  ')
+    else:
+      final_message = 'FATAL Flags parsing error: %s\n' % message
+    sys.stderr.write(final_message)
     sys.stderr.write('Pass --helpshort or --helpfull to see help on flags.\n')
     sys.exit(1)
 

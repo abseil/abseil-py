@@ -31,6 +31,7 @@ from xml.dom import minidom
 from absl.flags import _exceptions
 from absl.flags import _flag
 from absl.flags import _helpers
+from absl.flags import _validators_classes
 import six
 
 # pylint: disable=unused-import
@@ -544,13 +545,27 @@ class FlagValues(object):
       IllegalFlagValueError: Raised if validation fails for at least one
           validator.
     """
+    messages = []
+    bad_flags = set()
     for validator in sorted(
         validators, key=lambda validator: validator.insertion_index):
       try:
+        if isinstance(validator, _validators_classes.SingleFlagValidator):
+          if validator.flag_name in bad_flags:
+            continue
+        elif isinstance(validator, _validators_classes.MultiFlagsValidator):
+          if bad_flags & set(validator.flag_names):
+            continue
         validator.verify(self)
       except _exceptions.ValidationError as e:
+        if isinstance(validator, _validators_classes.SingleFlagValidator):
+          bad_flags.add(validator.flag_name)
+        elif isinstance(validator, _validators_classes.MultiFlagsValidator):
+          bad_flags.update(set(validator.flag_names))
         message = validator.print_flags_with_values(self)
-        raise _exceptions.IllegalFlagValueError('%s: %s' % (message, str(e)))
+        messages.append('%s: %s' % (message, str(e)))
+    if messages:
+      raise _exceptions.IllegalFlagValueError('\n'.join(messages))
 
   def __delattr__(self, flag_name):
     """Deletes a previously-defined flag from a flag object.

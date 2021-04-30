@@ -83,6 +83,7 @@ py_library(
         ":_exceptions",
         ":_flag",
         ":_helpers",
+        ":_validators_classes",
         "@six_archive//:six",
     ],
 )
@@ -103,6 +104,18 @@ py_library(
     deps = [
         ":_exceptions",
         ":_flagvalues",
+        ":_validators_classes",
+    ],
+)
+
+py_library(
+    name = "_validators_classes",
+    srcs = [
+        "_validators_classes.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":_exceptions",
     ],
 )
 

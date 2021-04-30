@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 *   (app) Annotated the `flag_parser` paramteter of `run` as keyword-only. This
     keyword-only constraint will be enforced at runtime in a future release.
+*   (app, flags) Flag validations now include all errors from disjoint flag
+    sets, instead of fail fast upon first error from all validators. Multiple
+    validators on the same flag still fails fast.
 
 ## 0.12.0 (2021-03-08)
 
