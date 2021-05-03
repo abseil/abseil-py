@@ -1487,6 +1487,15 @@ class GetCommandStderrTestCase(absltest.TestCase):
     self.assertRegex(stderr, 'No such file or directory')
 
 
+@contextlib.contextmanager
+def cm_for_test(obj):
+  try:
+    obj.cm_state = 'yielded'
+    yield 'value'
+  finally:
+    obj.cm_state = 'exited'
+
+
 @absltest.skipIf(six.PY2, 'Python 2 does not have ExitStack')
 class EnterContextTest(absltest.TestCase):
 
@@ -1503,15 +1512,33 @@ class EnterContextTest(absltest.TestCase):
     self.addCleanup(assert_cm_exited)
 
     super(EnterContextTest, self).setUp()
-    self.cm_value = self.enter_context(self.cm_for_test())
+    self.cm_value = self.enter_context(cm_for_test(self))
 
-  @contextlib.contextmanager
-  def cm_for_test(self):
-    try:
-      self.cm_state = 'yielded'
-      yield 'value'
-    finally:
-      self.cm_state = 'exited'
+  def test_enter_context(self):
+    self.assertEqual(self.cm_value, 'value')
+    self.assertEqual(self.cm_state, 'yielded')
+
+
+@absltest.skipIf(not hasattr(absltest.TestCase, 'addClassCleanup'),
+                 'Python 3.8 required for class-level enter_context')
+class EnterContextClassmethodTest(absltest.TestCase):
+
+  cm_state = 'unset'
+  cm_value = 'unset'
+
+  @classmethod
+  def setUpClass(cls):
+
+    def assert_cm_exited():
+      assert cls.cm_state == 'exited'
+
+    # Because cleanup functions are run in reverse order, we have to add
+    # our assert-cleanup before the exit stack registers its own cleanup.
+    # This ensures we see state after the stack cleanup runs.
+    cls.addClassCleanup(assert_cm_exited)
+
+    super(EnterContextClassmethodTest, cls).setUpClass()
+    cls.cm_value = cls.enter_context(cm_for_test(cls))
 
   def test_enter_context(self):
     self.assertEqual(self.cm_value, 'value')
