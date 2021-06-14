@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.13.0 (2021-06-14)
+
 ### Added
 
 *   (app) Type annotations for public `app` interfaces.
