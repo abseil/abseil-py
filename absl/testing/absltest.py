@@ -560,6 +560,39 @@ class _TempFile(object):
       yield fp
 
 
+class _method(object):
+  """A decorator that supports both instance and classmethod invocations.
+
+  Using similar semantics to the @property builtin, this decorator can augment
+  an instance method to support conditional logic when invoked on a class
+  object. This breaks support for invoking an instance method via the class
+  (e.g. Cls.method(self, ...)) but is still situationally useful.
+  """
+
+  def __init__(self, finstancemethod):
+    # type: (Callable[..., Any]) -> None
+    self._finstancemethod = finstancemethod
+    self._fclassmethod = None
+
+  def classmethod(self, fclassmethod):
+    # type: (Callable[..., Any]) -> _method
+    self._fclassmethod = classmethod(fclassmethod)
+    return self
+
+  def __doc__(self):
+    # type: () -> str
+    if getattr(self._finstancemethod, '__doc__'):
+      return self._finstancemethod.__doc__
+    elif getattr(self._fclassmethod, '__doc__'):
+      return self._fclassmethod.__doc__
+    return ''
+
+  def __get__(self, obj, type_):
+    # type: (Optional[Any], Optional[Type[Any]]) -> Callable[..., Any]
+    func = self._fclassmethod if obj is None else self._finstancemethod
+    return func.__get__(obj, type_)  # pytype: disable=attribute-error
+
+
 class TestCase(unittest3_backport.TestCase):
   """Extension of unittest.TestCase providing more power."""
 
@@ -576,19 +609,30 @@ class TestCase(unittest3_backport.TestCase):
   maxDiff = 80 * 20
   longMessage = True
 
+  # Exit stacks for per-test and per-class scopes.
+  _exit_stack = None
+  _cls_exit_stack = None
+
   def __init__(self, *args, **kwargs):
     super(TestCase, self).__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
     self._outcome = getattr(self, '_outcome')  # type: Optional[_OutcomeType]
-    # This is re-initialized by setUp().
-    self._exit_stack = None
 
   def setUp(self):
     super(TestCase, self).setUp()
-    # NOTE: Only Py3 contextlib has ExitStack
+    # NOTE: Only Python 3 contextlib has ExitStack
     if hasattr(contextlib, 'ExitStack'):
       self._exit_stack = contextlib.ExitStack()
       self.addCleanup(self._exit_stack.close)
+
+  @classmethod
+  def setUpClass(cls):
+    super(TestCase, cls).setUpClass()
+    # NOTE: Only Python 3 contextlib has ExitStack and only Python 3.8+ has
+    # addClassCleanup.
+    if hasattr(contextlib, 'ExitStack') and hasattr(cls, 'addClassCleanup'):
+      cls._cls_exit_stack = contextlib.ExitStack()
+      cls.addClassCleanup(cls._cls_exit_stack.close)
 
   def create_tempdir(self, name=None, cleanup=None):
     # type: (Optional[Text], Optional[TempFileCleanup]) -> _TempDir
@@ -700,14 +744,19 @@ class TestCase(unittest3_backport.TestCase):
     self._maybe_add_temp_path_cleanup(cleanup_path, cleanup)
     return tf
 
+  @_method
   def enter_context(self, manager):
     # type: (ContextManager[_T]) -> _T
     """Returns the CM's value after registering it with the exit stack.
 
-    Entering a context pushes it onto a stack of contexts. The context is exited
-    when the test completes. Contexts are are exited in the reverse order of
-    entering. They will always be exited, regardless of test failure/success.
-    The context stack is specific to the test being run.
+    Entering a context pushes it onto a stack of contexts. When `enter_context`
+    is called on the test instance (e.g. `self.enter_context`), the context is
+    exited after the test case's tearDown call. When called on the test class
+    (e.g. `TestCase.enter_context`), the context is exited after the test
+    class's tearDownClass call.
+
+    Contexts are are exited in the reverse order of entering. They will always
+    be exited, regardless of test failure/success.
 
     This is useful to eliminate per-test boilerplate when context managers
     are used. For example, instead of decorating every test with `@mock.patch`,
@@ -725,6 +774,15 @@ class TestCase(unittest3_backport.TestCase):
           'self._exit_stack is not set: enter_context is Py3-only; also make '
           'sure that AbslTest.setUp() is called.')
     return self._exit_stack.enter_context(manager)
+
+  @enter_context.classmethod
+  def enter_context(cls, manager):  # pylint: disable=no-self-argument
+    # type: (ContextManager[_T]) -> _T
+    if not cls._cls_exit_stack:
+      raise AssertionError(
+          'cls._cls_exit_stack is not set: cls.enter_context requires '
+          'Python 3.8+; also make sure that AbslTest.setUpClass() is called.')
+    return cls._cls_exit_stack.enter_context(manager)
 
   @classmethod
   def _get_tempdir_path_cls(cls):
@@ -2140,6 +2198,81 @@ def _is_suspicious_attribute(testCaseClass, name):
                 and args.varargs is None and args.varkw is None and
                 not args.kwonlyargs)
   return False
+
+
+def skipThisClass(reason):
+  # type: (Text) -> Callable[[_T], _T]
+  """Skip tests in the decorated TestCase, but not any of its subclasses.
+
+  This decorator indicates that this class should skip all its tests, but not
+  any of its subclasses. Useful for if you want to share testMethod or setUp
+  implementations between a number of concrete testcase classes.
+
+  Example usage, showing how you can share some common test methods between
+  subclasses. In this example, only 'BaseTest' will be marked as skipped, and
+  not RealTest or SecondRealTest:
+
+    @absltest.skipThisClass("Shared functionality")
+    class BaseTest(absltest.TestCase):
+      def test_simple_functionality(self):
+        self.assertEqual(self.system_under_test.method(), 1)
+
+    class RealTest(BaseTest):
+      def setUp(self):
+        super().setUp()
+        self.system_under_test = MakeSystem(argument)
+
+      def test_specific_behavior(self):
+        ...
+
+    class SecondRealTest(BaseTest):
+      def setUp(self):
+        super().setUp()
+        self.system_under_test = MakeSystem(other_arguments)
+
+      def test_other_behavior(self):
+        ...
+
+  Args:
+    reason: The reason we have a skip in place. For instance: 'shared test
+      methods' or 'shared assertion methods'.
+
+  Returns:
+    Decorator function that will cause a class to be skipped.
+  """
+  if isinstance(reason, type):
+    raise TypeError('Got {!r}, expected reason as string'.format(reason))
+
+  def _skip_class(test_case_class):
+    if not issubclass(test_case_class, unittest.TestCase):
+      raise TypeError(
+          'Decorating {!r}, expected TestCase subclass'.format(test_case_class))
+
+    # Only shadow the setUpClass method if it is directly defined. If it is
+    # in the parent class we invoke it via a super() call instead of holding
+    # a reference to it.
+    shadowed_setupclass = test_case_class.__dict__.get('setUpClass', None)
+
+    @classmethod
+    def replacement_setupclass(cls, *args, **kwargs):
+      # Skip this class if it is the one that was decorated with @skipThisClass
+      if cls is test_case_class:
+        raise SkipTest(reason)
+      if shadowed_setupclass:
+        # Pass along `cls` so the MRO chain doesn't break.
+        # The original method is a `classmethod` descriptor, which can't
+        # be directly called, but `__func__` has the underlying function.
+        return shadowed_setupclass.__func__(cls, *args, **kwargs)
+      else:
+        # Because there's no setUpClass() defined directly on test_case_class,
+        # we call super() ourselves to continue execution of the inheritance
+        # chain.
+        return super(test_case_class, cls).setUpClass(*args, **kwargs)
+
+    test_case_class.setUpClass = replacement_setupclass
+    return test_case_class
+
+  return _skip_class
 
 
 class TestLoader(unittest.TestLoader):

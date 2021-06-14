@@ -28,6 +28,7 @@ import string
 import subprocess
 import sys
 import tempfile
+import unittest
 
 from absl.testing import _bazelize_command
 from absl.testing import absltest
@@ -1486,6 +1487,15 @@ class GetCommandStderrTestCase(absltest.TestCase):
     self.assertRegex(stderr, 'No such file or directory')
 
 
+@contextlib.contextmanager
+def cm_for_test(obj):
+  try:
+    obj.cm_state = 'yielded'
+    yield 'value'
+  finally:
+    obj.cm_state = 'exited'
+
+
 @absltest.skipIf(six.PY2, 'Python 2 does not have ExitStack')
 class EnterContextTest(absltest.TestCase):
 
@@ -1502,15 +1512,33 @@ class EnterContextTest(absltest.TestCase):
     self.addCleanup(assert_cm_exited)
 
     super(EnterContextTest, self).setUp()
-    self.cm_value = self.enter_context(self.cm_for_test())
+    self.cm_value = self.enter_context(cm_for_test(self))
 
-  @contextlib.contextmanager
-  def cm_for_test(self):
-    try:
-      self.cm_state = 'yielded'
-      yield 'value'
-    finally:
-      self.cm_state = 'exited'
+  def test_enter_context(self):
+    self.assertEqual(self.cm_value, 'value')
+    self.assertEqual(self.cm_state, 'yielded')
+
+
+@absltest.skipIf(not hasattr(absltest.TestCase, 'addClassCleanup'),
+                 'Python 3.8 required for class-level enter_context')
+class EnterContextClassmethodTest(absltest.TestCase):
+
+  cm_state = 'unset'
+  cm_value = 'unset'
+
+  @classmethod
+  def setUpClass(cls):
+
+    def assert_cm_exited():
+      assert cls.cm_state == 'exited'
+
+    # Because cleanup functions are run in reverse order, we have to add
+    # our assert-cleanup before the exit stack registers its own cleanup.
+    # This ensures we see state after the stack cleanup runs.
+    cls.addClassCleanup(assert_cm_exited)
+
+    super(EnterContextClassmethodTest, cls).setUpClass()
+    cls.cm_value = cls.enter_context(cm_for_test(cls))
 
   def test_enter_context(self):
     self.assertEqual(self.cm_value, 'value')
@@ -2189,6 +2217,201 @@ class TempFileTest(absltest.TestCase, HelperMixin):
         'TempFileHelperTest/test_success/success',
     }
     self.run_tempfile_helper('OFF', expected)
+
+
+class SkipClassTest(absltest.TestCase):
+
+  def test_incorrect_decorator_call(self):
+    with self.assertRaises(TypeError):
+
+      @absltest.skipThisClass  # pylint: disable=unused-variable
+      class Test(absltest.TestCase):
+        pass
+
+  def test_incorrect_decorator_subclass(self):
+    with self.assertRaises(TypeError):
+
+      @absltest.skipThisClass('reason')
+      def test_method():  # pylint: disable=unused-variable
+        pass
+
+  def test_correct_decorator_class(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(absltest.TestCase):
+      pass
+
+    with self.assertRaises(absltest.SkipTest):
+      Test.setUpClass()
+
+  def test_correct_decorator_subclass(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(absltest.TestCase):
+      pass
+
+    class Subclass(Test):
+      pass
+
+    with self.subTest('Base class should be skipped'):
+      with self.assertRaises(absltest.SkipTest):
+        Test.setUpClass()
+
+    with self.subTest('Subclass should not be skipped'):
+      Subclass.setUpClass()  # should not raise.
+
+  def test_setup(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(absltest.TestCase):
+
+      @classmethod
+      def setUpClass(cls):
+        super(Test, cls).setUpClass()
+        cls.foo = 1
+
+    class Subclass(Test):
+      pass
+
+    Subclass.setUpClass()
+    self.assertEqual(Subclass.foo, 1)
+
+  def test_setup_chain(self):
+
+    @absltest.skipThisClass('reason')
+    class BaseTest(absltest.TestCase):
+
+      @classmethod
+      def setUpClass(cls):
+        super(BaseTest, cls).setUpClass()
+        cls.foo = 1
+
+    @absltest.skipThisClass('reason')
+    class SecondBaseTest(BaseTest):
+
+      @classmethod
+      def setUpClass(cls):
+        super(SecondBaseTest, cls).setUpClass()
+        cls.bar = 2
+
+    class Subclass(SecondBaseTest):
+      pass
+
+    Subclass.setUpClass()
+    self.assertEqual(Subclass.foo, 1)
+    self.assertEqual(Subclass.bar, 2)
+
+  def test_setup_args(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(absltest.TestCase):
+
+      @classmethod
+      def setUpClass(cls, foo, bar=None):
+        super(Test, cls).setUpClass()
+        cls.foo = foo
+        cls.bar = bar
+
+    class Subclass(Test):
+
+      @classmethod
+      def setUpClass(cls):
+        super(Subclass, cls).setUpClass('foo', bar='baz')
+
+    Subclass.setUpClass()
+    self.assertEqual(Subclass.foo, 'foo')
+    self.assertEqual(Subclass.bar, 'baz')
+
+  def test_setup_multiple_inheritance(self):
+
+    # Test that skipping this class doesn't break the MRO chain and stop
+    # RequiredBase.setUpClass from running.
+    @absltest.skipThisClass('reason')
+    class Left(absltest.TestCase):
+      pass
+
+    class RequiredBase(absltest.TestCase):
+
+      @classmethod
+      def setUpClass(cls):
+        super(RequiredBase, cls).setUpClass()
+        cls.foo = 'foo'
+
+    class Right(RequiredBase):
+
+      @classmethod
+      def setUpClass(cls):
+        super(Right, cls).setUpClass()
+
+    # Test will fail unless Left.setUpClass() follows mro properly
+    # Right.setUpClass()
+    class Subclass(Left, Right):
+
+      @classmethod
+      def setUpClass(cls):
+        super(Subclass, cls).setUpClass()
+
+    class Test(Subclass):
+      pass
+
+    Test.setUpClass()
+    self.assertEqual(Test.foo, 'foo')
+
+  def test_skip_class(self):
+
+    @absltest.skipThisClass('reason')
+    class BaseTest(absltest.TestCase):
+
+      def test_foo(self):
+        _ = 1 / 0
+
+    class Test(BaseTest):
+
+      def test_foo(self):
+        self.assertEqual(1, 1)
+
+    with self.subTest('base class'):
+      ts = unittest.makeSuite(BaseTest)
+      self.assertEqual(1, ts.countTestCases())
+
+      res = unittest.TestResult()
+      ts.run(res)
+      self.assertTrue(res.wasSuccessful())
+      self.assertLen(res.skipped, 1)
+      self.assertEqual(0, res.testsRun)
+      self.assertEmpty(res.failures)
+      self.assertEmpty(res.errors)
+
+    with self.subTest('real test'):
+      ts = unittest.makeSuite(Test)
+      self.assertEqual(1, ts.countTestCases())
+
+      res = unittest.TestResult()
+      ts.run(res)
+      self.assertTrue(res.wasSuccessful())
+      self.assertEqual(1, res.testsRun)
+      self.assertEmpty(res.skipped)
+      self.assertEmpty(res.failures)
+      self.assertEmpty(res.errors)
+
+  def test_skip_class_unittest(self):
+
+    @absltest.skipThisClass('reason')
+    class Test(unittest.TestCase):  # note: unittest not absltest
+
+      def test_foo(self):
+        _ = 1 / 0
+
+    ts = unittest.makeSuite(Test)
+    self.assertEqual(1, ts.countTestCases())
+
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertTrue(res.wasSuccessful())
+    self.assertLen(res.skipped, 1)
+    self.assertEqual(0, res.testsRun)
+    self.assertEmpty(res.failures)
+    self.assertEmpty(res.errors)
 
 
 def _listdir_recursive(path):

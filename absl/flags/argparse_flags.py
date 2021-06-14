@@ -18,7 +18,6 @@ argparse_flags.ArgumentParser is a drop-in replacement for
 argparse.ArgumentParser. It takes care of collecting and defining absl flags
 in argparse.
 
-
 Here is a simple example:
 
     # Assume the following absl.flags is defined in another module:

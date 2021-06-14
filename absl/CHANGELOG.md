@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 Nothing notable unreleased.
 
+## 0.13.0 (2021-06-14)
+
+### Added
+
+*   (app) Type annotations for public `app` interfaces.
+*   (testing) Added new decorator `@absltest.skipThisClass` to indicate a class
+    contains shared functionality to be used as a base class for other
+    TestCases, and therefore should be skipped.
+
+### Changed
+
+*   (app) Annotated the `flag_parser` paramteter of `run` as keyword-only. This
+    keyword-only constraint will be enforced at runtime in a future release.
+*   (app, flags) Flag validations now include all errors from disjoint flag
+    sets, instead of fail fast upon first error from all validators. Multiple
+    validators on the same flag still fails fast.
+
 ## 0.12.0 (2021-03-08)
 
 ### Added
@@ -62,8 +79,8 @@ Nothing notable unreleased.
 
 *   (testing) Failed tests output a copy/pastable test id to make it easier to
     copy the failing test to the command line.
-*   (testing) `@parameterized.parameters` now treats a single `abc.Mapping` as
-    a single test case, consistent with `named_parameters`. Previously the
+*   (testing) `@parameterized.parameters` now treats a single `abc.Mapping` as a
+    single test case, consistent with `named_parameters`. Previously the
     `abc.Mapping` is treated as if only its keys are passed as a list of test
     cases. If you were relying on the old inconsistent behavior, explicitly
     convert the `abc.Mapping` to a `list`.
