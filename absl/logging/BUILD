@@ -1,5 +1,3 @@
-load("//absl:_build_defs.bzl", "py2and3_test", "py2py3_test_binary")
-
 licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
@@ -24,11 +22,12 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
-py2and3_test(
+py_test(
     name = "tests/converter_test",
     size = "small",
     srcs = ["tests/converter_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":converter",
         ":logging",
@@ -36,11 +35,12 @@ py2and3_test(
     ],
 )
 
-py2and3_test(
+py_test(
     name = "tests/logging_test",
     size = "small",
     srcs = ["tests/logging_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":logging",
         "//absl/flags",
@@ -52,11 +52,12 @@ py2and3_test(
     ],
 )
 
-py2and3_test(
+py_test(
     name = "tests/log_before_import_test",
     srcs = ["tests/log_before_import_test.py"],
     main = "tests/log_before_import_test.py",
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":logging",
         "//absl/testing:absltest",
@@ -64,10 +65,11 @@ py2and3_test(
     ],
 )
 
-py2and3_test(
+py_test(
     name = "tests/verbosity_flag_test",
     srcs = ["tests/verbosity_flag_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":logging",
         "//absl/flags",
@@ -75,11 +77,12 @@ py2and3_test(
     ],
 )
 
-py2py3_test_binary(
+py_binary(
     name = "tests/logging_functional_test_helper",
     testonly = 1,
     srcs = ["tests/logging_functional_test_helper.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":logging",
         "//absl:app",
@@ -89,13 +92,14 @@ py2py3_test_binary(
     ],
 )
 
-py2and3_test(
+py_test(
     name = "tests/logging_functional_test",
     size = "large",
     srcs = ["tests/logging_functional_test.py"],
     data = [":tests/logging_functional_test_helper"],
+    python_version = "PY3",
     shard_count = 50,
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         ":logging",
         "//absl/flags",
