@@ -891,7 +891,7 @@ class ParameterizedTestsTest(absltest.TestCase):
         def test_something(self, unused_obj):
           pass
 
-  def tes_double_class_decorations_not_supported(self):
+  def test_double_class_decorations_not_supported(self):
 
     @parameterized.parameters('foo', 'bar')
     class SuperclassWithClassDecorator(parameterized.TestCase):
