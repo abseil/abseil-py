@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Fixed
+
+*   #171: Creating `argparse_flags.ArgumentParser` with `argument_default=` no
+    longer raises an exception when other `absl.flags` flags are defined.
 
 ## 0.13.0 (2021-06-14)
 
