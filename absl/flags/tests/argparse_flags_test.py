@@ -36,6 +36,7 @@ import six
 class ArgparseFlagsTest(parameterized.TestCase):
 
   def setUp(self):
+    super().setUp()
     self._absl_flags = flags.FlagValues()
     flags.DEFINE_bool(
         'absl_bool', None, 'help for --absl_bool.',
@@ -392,6 +393,15 @@ class ArgparseFlagsTest(parameterized.TestCase):
         inherited_absl_flags=self._absl_flags)
     with self.assertRaises(SystemExit):
       parser.parse_args(cmd_args)
+
+  def test_argument_default(self):
+    # Regression test for https://github.com/abseil/abseil-py/issues/171.
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags, argument_default=23)
+    parser.add_argument(
+        '--magic_number', type=int, help='The magic number to use.')
+    args = parser.parse_args([])
+    self.assertEqual(args.magic_number, 23)
 
 
 class ArgparseWithAppRunTest(parameterized.TestCase):

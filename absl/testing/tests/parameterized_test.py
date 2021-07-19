@@ -420,7 +420,7 @@ class ParameterizedTestsTest(absltest.TestCase):
       test(res)
       self.assertIn(test.arguments, params)
       params.remove(test.arguments)
-    self.assertEqual(0, len(params))
+    self.assertEmpty(params)
 
   def test_recorded_failures(self):
     ts = unittest.makeSuite(self.MixedAdditionParams)
@@ -430,8 +430,8 @@ class ParameterizedTestsTest(absltest.TestCase):
     ts.run(res)
     self.assertEqual(2, res.testsRun)
     self.assertFalse(res.wasSuccessful())
-    self.assertEqual(1, len(res.failures))
-    self.assertEqual(0, len(res.errors))
+    self.assertLen(res.failures, 1)
+    self.assertEmpty(res.errors)
 
   def test_short_description(self):
     ts = unittest.makeSuite(self.GoodAdditionParams)
@@ -742,7 +742,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     loader = unittest.TestLoader()
     ts = list(loader.loadTestsFromName('NamedTests.test_something_interesting',
                                        module=self))
-    self.assertEqual(1, len(ts))
+    self.assertLen(ts, 1)
     self.assertEndsWith(ts[0].id(), '.test_something_interesting')
 
   def test_load_dict_named_test(self):
@@ -750,7 +750,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     ts = list(
         loader.loadTestsFromName(
             'NamedTests.test_dict_something_interesting', module=self))
-    self.assertEqual(1, len(ts))
+    self.assertLen(ts, 1)
     self.assertEndsWith(ts[0].id(), '.test_dict_something_interesting')
 
   def test_load_mixed_named_test(self):
@@ -758,7 +758,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     ts = list(
         loader.loadTestsFromName(
             'NamedTests.test_mixed_something_interesting', module=self))
-    self.assertEqual(1, len(ts))
+    self.assertLen(ts, 1)
     self.assertEndsWith(ts[0].id(), '.test_mixed_something_interesting')
 
   def test_duplicate_named_test_fails(self):
@@ -826,7 +826,7 @@ class ParameterizedTestsTest(absltest.TestCase):
 
     expected_testcases = [1, 2, 3, 4, 5, 6]
     self.assertTrue(hasattr(test_something, 'testcases'))
-    self.assertItemsEqual(expected_testcases, test_something.testcases)
+    self.assertCountEqual(expected_testcases, test_something.testcases)
 
   def test_chained_decorator(self):
     ts = unittest.makeSuite(self.ChainedTests)
@@ -872,14 +872,14 @@ class ParameterizedTestsTest(absltest.TestCase):
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(4, res.testsRun)
-    self.assertEqual(2, len(res.failures))
+    self.assertLen(res.failures, 2)
 
   def test_generator_decorated_class(self):
     ts = unittest.makeSuite(self.GeneratorDecoratedClass)
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(32, res.testsRun)
-    self.assertEqual(16, len(res.failures))
+    self.assertLen(res.failures, 16)
 
   def test_no_duplicate_decorations(self):
     with self.assertRaises(AssertionError):
@@ -891,7 +891,7 @@ class ParameterizedTestsTest(absltest.TestCase):
         def test_something(self, unused_obj):
           pass
 
-  def tes_double_class_decorations_not_supported(self):
+  def test_double_class_decorations_not_supported(self):
 
     @parameterized.parameters('foo', 'bar')
     class SuperclassWithClassDecorator(parameterized.TestCase):
@@ -915,7 +915,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     # One for when the skip wrapper is called first and doesn't iterate.
     self.assertEqual(3, res.testsRun)
     self.assertFalse(res.wasSuccessful())
-    self.assertLen(res.failures, 0)
+    self.assertEmpty(res.failures)
     # One error from test_other_then_parameterized.
     self.assertLen(res.errors, 1)
 
@@ -933,7 +933,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     # One for when the skip wrapper is called first and doesn't iterate.
     self.assertEqual(3, res.testsRun)
     self.assertFalse(res.wasSuccessful())
-    self.assertLen(res.failures, 0)
+    self.assertEmpty(res.failures)
     # One error from test_other_then_parameterized.
     self.assertLen(res.errors, 1)
 
@@ -951,7 +951,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     # One for when the skip wrapper is called first and doesn't iterate.
     self.assertEqual(3, res.testsRun)
     self.assertFalse(res.wasSuccessful())
-    self.assertLen(res.failures, 0)
+    self.assertEmpty(res.failures)
     # One error from test_other_then_parameterized.
     self.assertLen(res.errors, 1)
 
@@ -996,7 +996,7 @@ class ParameterizedTestsTest(absltest.TestCase):
         full_class_name + '.test_normal1 (13)',
     ]
     self.assertTrue(test_ids)
-    self.assertItemsEqual(expected_test_ids, test_ids)
+    self.assertCountEqual(expected_test_ids, test_ids)
 
   def test_multi_generators(self):
     ts = unittest.makeSuite(self.MultiGeneratorsTestCase)

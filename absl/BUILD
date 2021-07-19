@@ -1,5 +1,3 @@
-load(":_build_defs.bzl", "py2and3_test", "py2py3_test_binary")
-
 licenses(["notice"])
 
 exports_files(["LICENSE"])
@@ -75,23 +73,25 @@ py_library(
     ],
 )
 
-py2py3_test_binary(
+py_binary(
     name = "tests/app_test_helper_pure_python",
     testonly = 1,
     srcs = ["tests/app_test_helper.py"],
     main = "tests/app_test_helper.py",
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":app",
         "//absl/flags",
     ],
 )
 
-py2and3_test(
+py_test(
     name = "tests/app_test",
     srcs = ["tests/app_test.py"],
     data = [":tests/app_test_helper_pure_python"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":_enum_module",
         ":app",
@@ -105,10 +105,11 @@ py2and3_test(
     ],
 )
 
-py2and3_test(
+py_test(
     name = "tests/command_name_test",
     srcs = ["tests/command_name_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":command_name",
         "//absl/testing:absltest",
