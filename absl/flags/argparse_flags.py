@@ -148,7 +148,8 @@ class ArgumentParser(argparse.ArgumentParser):
           default=argparse.SUPPRESS, help='show full help message and exit')
 
     if self._inherited_absl_flags:
-      self.add_argument('--undefok', help=argparse.SUPPRESS)
+      self.add_argument(
+          '--undefok', default=argparse.SUPPRESS, help=argparse.SUPPRESS)
       self._define_absl_flags(self._inherited_absl_flags)
 
   def parse_known_args(self, args=None, namespace=None):
@@ -237,7 +238,14 @@ class ArgumentParser(argparse.ArgumentParser):
 class _FlagAction(argparse.Action):
   """Action class for Abseil non-boolean flags."""
 
-  def __init__(self, option_strings, dest, help, metavar, flag_instance):  # pylint: disable=redefined-builtin
+  def __init__(
+      self,
+      option_strings,
+      dest,
+      help,  # pylint: disable=redefined-builtin
+      metavar,
+      flag_instance,
+      default=argparse.SUPPRESS):
     """Initializes _FlagAction.
 
     Args:
@@ -246,6 +254,8 @@ class _FlagAction(argparse.Action):
       help: See argparse.Action.
       metavar: See argparse.Action.
       flag_instance: absl.flags.Flag, the absl flag instance.
+      default: Ignored. The flag always uses dest=argparse.SUPPRESS so it
+          doesn't affect the parsing result.
     """
     del dest
     self._flag_instance = flag_instance
@@ -264,7 +274,14 @@ class _FlagAction(argparse.Action):
 class _BooleanFlagAction(argparse.Action):
   """Action class for Abseil boolean flags."""
 
-  def __init__(self, option_strings, dest, help, metavar, flag_instance):  # pylint: disable=redefined-builtin
+  def __init__(
+      self,
+      option_strings,
+      dest,
+      help,  # pylint: disable=redefined-builtin
+      metavar,
+      flag_instance,
+      default=argparse.SUPPRESS):
     """Initializes _BooleanFlagAction.
 
     Args:
@@ -273,8 +290,10 @@ class _BooleanFlagAction(argparse.Action):
       help: See argparse.Action.
       metavar: See argparse.Action.
       flag_instance: absl.flags.Flag, the absl flag instance.
+      default: Ignored. The flag always uses dest=argparse.SUPPRESS so it
+          doesn't affect the parsing result.
     """
-    del dest
+    del dest, default
     self._flag_instance = flag_instance
     flag_names = [self._flag_instance.name]
     if self._flag_instance.short_name:
