@@ -905,6 +905,17 @@ class FlagHolderTest(absltest.TestCase):
     self.parse_flags('--name=new_value')
     self.assertEqual('new_value', self.name_flag.value)
 
+  def test_present_returns_false_before_flag_parsing(self):
+    self.assertFalse(self.name_flag.present)
+
+  def test_present_returns_false_if_not_explicitly_set(self):
+    self.parse_flags()
+    self.assertFalse(self.name_flag.present)
+
+  def test_present_returns_true_if_explicitly_set(self):
+    self.parse_flags('--name=new_value')
+    self.assertTrue(self.name_flag.present)
+
   def test_allow_override(self):
     first = _defines.DEFINE_integer(
         'int_flag', 1, 'help', flag_values=self.fv, allow_override=1)
@@ -913,6 +924,8 @@ class FlagHolderTest(absltest.TestCase):
     self.parse_flags('--int_flag=3')
     self.assertEqual(3, first.value)
     self.assertEqual(3, second.value)
+    self.assertTrue(first.present)
+    self.assertTrue(second.present)
 
   def test_eq(self):
     with self.assertRaises(TypeError):
