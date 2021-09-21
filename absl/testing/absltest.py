@@ -2452,7 +2452,7 @@ def _setup_sharding(custom_loader=None):
 def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
   # type: (MutableSequence[Text], Sequence[Any], MutableMapping[Text, Any], Type) -> unittest.TestResult
   # pylint: enable=line-too-long
-  """Same as run_tests, except it returns the result instead of existing."""
+  """Same as run_tests, except it returns the result instead of exiting."""
 
   # The entry from kwargs overrides argv.
   argv = kwargs.pop('argv', argv)
