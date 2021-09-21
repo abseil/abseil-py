@@ -1410,3 +1410,8 @@ class FlagHolder(_Base):
   def default(self):
     """Returns the default value of the flag."""
     return self._flagvalues[self._name].default
+
+  @property
+  def present(self):
+    """Returns True if the flag was parsed from command-line flags."""
+    return bool(self._flagvalues[self._name].present)

@@ -63,7 +63,7 @@ with open(_README_PATH, 'rb') as fp:
 
 setuptools.setup(
     name='absl-py',
-    version='0.13.0',
+    version='0.14.0',
     description=(
         'Abseil Python Common Libraries, '
         'see https://github.com/abseil/abseil-py.'),

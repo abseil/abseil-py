@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import sys
 
 from absl.testing import absltest
@@ -44,4 +45,7 @@ class ClassA(absltest.TestCase):
 
 
 if __name__ == '__main__':
-  absltest.main()
+  if os.getenv('USE_ARGV', '0') == '1':
+    absltest.main(argv=sys.argv)
+  else:
+    absltest.main()
