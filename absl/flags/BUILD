@@ -157,6 +157,7 @@ py_test(
         ":_exceptions",
         ":_flagvalues",
         ":_helpers",
+        ":_validators",
         ":tests/module_foo",
         "//absl/logging",
         "//absl/testing:absltest",

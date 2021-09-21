@@ -24,22 +24,30 @@ import subprocess
 from absl import logging
 from absl.testing import _bazelize_command
 from absl.testing import absltest
+from absl.testing import parameterized
 
 
-class TestFailFastTest(absltest.TestCase):
+@parameterized.named_parameters(
+    ('use_argv', True),
+    ('no_argv', False),
+)
+class TestFailFastTest(parameterized.TestCase):
   """Integration tests: Runs a test binary with fail fast.
 
   This is done by setting the fail fast environment variable
   """
 
   def setUp(self):
+    super().setUp()
     self._test_name = 'absl/testing/tests/absltest_fail_fast_test_helper'
 
-  def _run_fail_fast(self, fail_fast):
+  def _run_fail_fast(self, fail_fast, use_argv):
     """Runs the py_test binary in a subprocess.
 
     Args:
       fail_fast: string, the fail fast value.
+      use_argv: bool, whether the test helper should use an explicit argv=
+          parameter when calling absltest.main.
 
     Returns:
       (stdout, exit_code) tuple of (string, int).
@@ -52,6 +60,8 @@ class TestFailFastTest(absltest.TestCase):
     additional_args = []
     if fail_fast is not None:
       env['TESTBRIDGE_TEST_RUNNER_FAIL_FAST'] = fail_fast
+    if use_argv:
+      env['USE_ARGV'] = '1'
 
     proc = subprocess.Popen(
         args=([_bazelize_command.get_executable_path(self._test_name)]
@@ -65,8 +75,8 @@ class TestFailFastTest(absltest.TestCase):
     logging.info('output: %s', stdout)
     return stdout, proc.wait()
 
-  def test_no_fail_fast(self):
-    out, exit_code = self._run_fail_fast(None)
+  def test_no_fail_fast(self, use_argv):
+    out, exit_code = self._run_fail_fast(None, use_argv)
     self.assertEqual(1, exit_code)
     self.assertIn('class A test A', out)
     self.assertIn('class A test B', out)
@@ -74,8 +84,8 @@ class TestFailFastTest(absltest.TestCase):
     self.assertIn('class A test D', out)
     self.assertIn('class A test E', out)
 
-  def test_empty_fail_fast(self):
-    out, exit_code = self._run_fail_fast('')
+  def test_empty_fail_fast(self, use_argv):
+    out, exit_code = self._run_fail_fast('', use_argv)
     self.assertEqual(1, exit_code)
     self.assertIn('class A test A', out)
     self.assertIn('class A test B', out)
@@ -83,8 +93,8 @@ class TestFailFastTest(absltest.TestCase):
     self.assertIn('class A test D', out)
     self.assertIn('class A test E', out)
 
-  def test_fail_fast_1(self):
-    out, exit_code = self._run_fail_fast('1')
+  def test_fail_fast_1(self, use_argv):
+    out, exit_code = self._run_fail_fast('1', use_argv)
     self.assertEqual(1, exit_code)
     self.assertIn('class A test A', out)
     self.assertIn('class A test B', out)
@@ -92,8 +102,8 @@ class TestFailFastTest(absltest.TestCase):
     self.assertNotIn('class A test D', out)
     self.assertNotIn('class A test E', out)
 
-  def test_fail_fast_0(self):
-    out, exit_code = self._run_fail_fast('0')
+  def test_fail_fast_0(self, use_argv):
+    out, exit_code = self._run_fail_fast('0', use_argv)
     self.assertEqual(1, exit_code)
     self.assertIn('class A test A', out)
     self.assertIn('class A test B', out)

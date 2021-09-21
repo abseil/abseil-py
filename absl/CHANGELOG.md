@@ -6,10 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.14.0 (2021-09-21)
+
 ### Fixed
 
 *   #171: Creating `argparse_flags.ArgumentParser` with `argument_default=` no
     longer raises an exception when other `absl.flags` flags are defined.
+*   #173: `absltest` now correctly sets up test filtering and fail fast flags
+    when an explicit `argv=` parameter is passed to `absltest.main`.
 
 ## 0.13.0 (2021-06-14)
 
