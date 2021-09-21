@@ -2452,7 +2452,10 @@ def _setup_sharding(custom_loader=None):
 def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
   # type: (MutableSequence[Text], Sequence[Any], MutableMapping[Text, Any], Type) -> unittest.TestResult
   # pylint: enable=line-too-long
-  """Executes a set of Python unit tests and returns the result."""
+  """Same as run_tests, except it returns the result instead of existing."""
+
+  # The entry from kwargs overrides argv.
+  argv = kwargs.pop('argv', argv)
 
   # Set up test filtering if requested in environment.
   _setup_filtering(argv)
@@ -2536,7 +2539,7 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
 
   # Let unittest.TestProgram.__init__ do its own argv parsing, e.g. for '-v',
   # on argv, which is sys.argv without the command-line flags.
-  kwargs.setdefault('argv', argv)
+  kwargs['argv'] = argv
 
   try:
     test_program = unittest.TestProgram(*args, **kwargs)
@@ -2564,7 +2567,9 @@ def run_tests(argv, args, kwargs):  # pylint: disable=line-too-long
 
   Args:
     argv: sys.argv with the command-line flags removed from the front, i.e. the
-      argv with which app.run() has called __main__.main.
+      argv with which app.run() has called __main__.main. It is passed to
+      unittest.TestProgram.__init__(argv=), which does its own flag parsing. It
+      is ignored if kwargs contains an argv entry.
     args: Positional arguments passed through to unittest.TestProgram.__init__.
     kwargs: Keyword arguments passed through to unittest.TestProgram.__init__.
   """
