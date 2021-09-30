@@ -1,7 +1,5 @@
 licenses(["notice"])  # Apache 2.0
 
-exports_files(["LICENSE"])
-
 config_setting(
     name = "osx",
     constraint_values = ["//third_party/bazel_platforms/os:osx"],
