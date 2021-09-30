@@ -1,7 +1,5 @@
 licenses(["notice"])  # Apache 2.0
 
-exports_files(["LICENSE"])
-
 py_library(
     name = "logging",
     srcs = ["__init__.py"],

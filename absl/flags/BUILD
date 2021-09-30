@@ -1,7 +1,5 @@
 licenses(["notice"])  # Apache 2.0
 
-exports_files(["LICENSE"])
-
 py_library(
     name = "flags",
     srcs = ["__init__.py"],
