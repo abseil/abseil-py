@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 Nothing notable unreleased.
 
+## 0.14.1 (2021-09-30)
+
+### Fixed
+
+*   Top-level `LICENSE` file is now exported in bazel.
+
 ## 0.14.0 (2021-09-21)
 
 ### Fixed
