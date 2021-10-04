@@ -31,7 +31,7 @@ from absl.testing import parameterized
     ('as_env_variable_use_argv', True, True),
     ('as_env_variable_no_argv', True, False),
     ('as_commandline_args_use_argv', False, True),
-    ('as_commandline_args_no_argv', False, True),
+    ('as_commandline_args_no_argv', False, False),
 )
 class TestFilteringTest(absltest.TestCase):
   """Integration tests: Runs a test binary with filtering.
