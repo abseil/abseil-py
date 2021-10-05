@@ -119,7 +119,10 @@ py_binary(
     srcs = ["tests/absltest_filtering_test_helper.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":absltest"],
+    deps = [
+        ":absltest",
+        "//absl:app",
+    ],
 )
 
 py_test(
@@ -143,7 +146,10 @@ py_binary(
     srcs = ["tests/absltest_fail_fast_test_helper.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":absltest"],
+    deps = [
+        ":absltest",
+        "//absl:app",
+    ],
 )
 
 py_test(

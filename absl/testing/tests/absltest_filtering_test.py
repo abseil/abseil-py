@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Tests for test filtering protocol."""
 
 from __future__ import absolute_import
@@ -28,9 +27,9 @@ from absl.testing import parameterized
 
 
 @parameterized.named_parameters(
-    ('as_env_variable_use_argv', True, True),
+    ('as_env_variable_use_app_run', True, True),
     ('as_env_variable_no_argv', True, False),
-    ('as_commandline_args_use_argv', False, True),
+    ('as_commandline_args_use_app_run', False, True),
     ('as_commandline_args_no_argv', False, False),
 )
 class TestFilteringTest(absltest.TestCase):
@@ -44,15 +43,15 @@ class TestFilteringTest(absltest.TestCase):
     super().setUp()
     self._test_name = 'absl/testing/tests/absltest_filtering_test_helper'
 
-  def _run_filtered(self, test_filter, use_env_variable, use_argv):
+  def _run_filtered(self, test_filter, use_env_variable, use_app_run):
     """Runs the py_test binary in a subprocess.
 
     Args:
       test_filter: string, the filter argument to use.
       use_env_variable: bool, pass the test filter as environment variable if
-          True, otherwise pass as command line arguments.
-      use_argv: bool, whether the test helper should use an explicit argv=
-          parameter when calling absltest.main.
+        True, otherwise pass as command line arguments.
+      use_app_run: bool, whether the test helper should call
+        `absltest.main(argv=)` inside `app.run`.
 
     Returns:
       (stdout, exit_code) tuple of (string, int).
@@ -62,18 +61,17 @@ class TestFilteringTest(absltest.TestCase):
       # This is used by the random module on Windows to locate crypto
       # libraries.
       env['SYSTEMROOT'] = os.environ['SYSTEMROOT']
+    env['USE_APP_RUN'] = '1' if use_app_run else '0'
     additional_args = []
     if test_filter is not None:
       if use_env_variable:
         env['TESTBRIDGE_TEST_ONLY'] = test_filter
       elif test_filter:
         additional_args.extend(test_filter.split(' '))
-      if use_argv:
-        env['USE_ARGV'] = '1'
 
     proc = subprocess.Popen(
-        args=([_bazelize_command.get_executable_path(self._test_name)]
-              + additional_args),
+        args=([_bazelize_command.get_executable_path(self._test_name)] +
+              additional_args),
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -83,36 +81,37 @@ class TestFilteringTest(absltest.TestCase):
     logging.info('output: %s', stdout)
     return stdout, proc.wait()
 
-  def test_no_filter(self, use_env_variable, use_argv):
-    out, exit_code = self._run_filtered(None, use_env_variable, use_argv)
+  def test_no_filter(self, use_env_variable, use_app_run):
+    out, exit_code = self._run_filtered(None, use_env_variable, use_app_run)
     self.assertEqual(1, exit_code)
     self.assertIn('class B test E', out)
 
-  def test_empty_filter(self, use_env_variable, use_argv):
-    out, exit_code = self._run_filtered('', use_env_variable, use_argv)
+  def test_empty_filter(self, use_env_variable, use_app_run):
+    out, exit_code = self._run_filtered('', use_env_variable, use_app_run)
     self.assertEqual(1, exit_code)
     self.assertIn('class B test E', out)
 
-  def test_class_filter(self, use_env_variable, use_argv):
-    out, exit_code = self._run_filtered('ClassA', use_env_variable, use_argv)
+  def test_class_filter(self, use_env_variable, use_app_run):
+    out, exit_code = self._run_filtered('ClassA', use_env_variable, use_app_run)
     self.assertEqual(0, exit_code)
     self.assertNotIn('class B', out)
 
-  def test_method_filter(self, use_env_variable, use_argv):
+  def test_method_filter(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered('ClassB.testA', use_env_variable,
-                                        use_argv)
+                                        use_app_run)
     self.assertEqual(0, exit_code)
     self.assertNotIn('class A', out)
     self.assertNotIn('class B test B', out)
 
     out, exit_code = self._run_filtered('ClassB.testE', use_env_variable,
-                                        use_argv)
+                                        use_app_run)
     self.assertEqual(1, exit_code)
     self.assertNotIn('class A', out)
 
-  def test_multiple_class_and_method_filter(self, use_env_variable, use_argv):
+  def test_multiple_class_and_method_filter(self, use_env_variable,
+                                            use_app_run):
     out, exit_code = self._run_filtered(
-        'ClassA.testA ClassA.testB ClassB.testC', use_env_variable, use_argv)
+        'ClassA.testA ClassA.testB ClassB.testC', use_env_variable, use_app_run)
     self.assertEqual(0, exit_code)
     self.assertIn('class A test A', out)
     self.assertIn('class A test B', out)
@@ -120,9 +119,9 @@ class TestFilteringTest(absltest.TestCase):
     self.assertIn('class B test C', out)
     self.assertNotIn('class B test A', out)
 
-  def test_not_found_filters(self, use_env_variable, use_argv):
+  def test_not_found_filters(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered('NotExistedClass.not_existed_method',
-                                        use_env_variable, use_argv)
+                                        use_env_variable, use_app_run)
     self.assertEqual(1, exit_code)
     self.assertIn("has no attribute 'NotExistedClass'", out)
 
