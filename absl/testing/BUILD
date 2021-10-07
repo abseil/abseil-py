@@ -106,7 +106,7 @@ py_library(
 
 py_test(
     name = "tests/absltest_filtering_test",
-    size = "small",
+    size = "medium",
     srcs = ["tests/absltest_filtering_test.py"],
     data = [":tests/absltest_filtering_test_helper"],
     python_version = "PY3",
@@ -128,6 +128,7 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         ":absltest",
+        ":parameterized",
         "//absl:app",
     ],
 )

@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Changed
+
+*   (testing) #128: When running bazel with its `--test_filter=` flag, it now
+    treats the filters as `unittest`'s `-k` flag in Python 3.7+.
 
 ## 0.14.1 (2021-09-30)
 
