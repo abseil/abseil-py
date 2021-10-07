@@ -17,13 +17,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import subprocess
 
 from absl import logging
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
+from absl.testing.tests import absltest_env
 
 
 @parameterized.named_parameters(
@@ -56,11 +56,7 @@ class TestFilteringTest(absltest.TestCase):
     Returns:
       (stdout, exit_code) tuple of (string, int).
     """
-    env = {}
-    if 'SYSTEMROOT' in os.environ:
-      # This is used by the random module on Windows to locate crypto
-      # libraries.
-      env['SYSTEMROOT'] = os.environ['SYSTEMROOT']
+    env = absltest_env.inherited_env()
     env['USE_APP_RUN'] = '1' if use_app_run else '0'
     additional_args = []
     if test_filter is not None:

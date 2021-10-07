@@ -33,6 +33,7 @@ import unittest
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
+from absl.testing.tests import absltest_env
 import six
 
 try:
@@ -50,7 +51,7 @@ class HelperMixin(object):
     return _bazelize_command.get_executable_path(helper)
 
   def run_helper(self, test_id, args, env_overrides, expect_success):
-    env = os.environ.copy()
+    env = absltest_env.inherited_env()
     for key, value in six.iteritems(env_overrides):
       if value is None:
         if key in env:

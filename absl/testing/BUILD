@@ -98,6 +98,12 @@ py_library(
     ],
 )
 
+py_library(
+    name = "tests/absltest_env",
+    testonly = True,
+    srcs = ["tests/absltest_env.py"],
+)
+
 py_test(
     name = "tests/absltest_filtering_test",
     size = "small",
@@ -109,6 +115,7 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         ":parameterized",
+        ":tests/absltest_env",
         "//absl/logging",
     ],
 )
@@ -136,6 +143,7 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         ":parameterized",
+        ":tests/absltest_env",
         "//absl/logging",
     ],
 )
@@ -163,6 +171,7 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         ":parameterized",
+        ":tests/absltest_env",
         "//absl/flags",
     ],
 )
@@ -188,7 +197,7 @@ py_test(
     deps = [
         ":_bazelize_command",
         ":absltest",
-        "//absl/flags",
+        ":tests/absltest_env",
     ],
 )
 
@@ -212,7 +221,7 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         ":parameterized",
-        "//absl/flags",
+        ":tests/absltest_env",
         "@six_archive//:six",
     ],
 )
