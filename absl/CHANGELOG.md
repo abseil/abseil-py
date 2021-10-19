@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 0.15.0 (2021-10-19)
+
 ### Changed
 
 *   (testing) #128: When running bazel with its `--test_filter=` flag, it now
