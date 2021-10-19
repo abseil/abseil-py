@@ -114,3 +114,14 @@ py_test(
         "@mock_archive//:mock",
     ],
 )
+
+py_test(
+    name = "tests/python_version_test",
+    srcs = ["tests/python_version_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        "//absl/flags",
+        "//absl/testing:absltest",
+    ],
+)

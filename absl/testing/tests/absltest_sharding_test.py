@@ -23,6 +23,8 @@ import subprocess
 
 from absl.testing import _bazelize_command
 from absl.testing import absltest
+from absl.testing.tests import absltest_env
+
 
 NUM_TEST_METHODS = 8  # Hard-coded, based on absltest_sharding_test_helper.py
 
@@ -34,14 +36,20 @@ class TestShardingTest(absltest.TestCase):
   """
 
   def setUp(self):
+    super().setUp()
     self._test_name = 'absl/testing/tests/absltest_sharding_test_helper'
     self._shard_file = None
 
   def tearDown(self):
+    super().tearDown()
     if self._shard_file is not None and os.path.exists(self._shard_file):
       os.unlink(self._shard_file)
 
-  def _run_sharded(self, total_shards, shard_index, shard_file=None, env=None):
+  def _run_sharded(self,
+                   total_shards,
+                   shard_index,
+                   shard_file=None,
+                   additional_env=None):
     """Runs the py_test binary in a subprocess.
 
     Args:
@@ -49,21 +57,19 @@ class TestShardingTest(absltest.TestCase):
       shard_index: int, the shard index.
       shard_file: string, if not 'None', the path to the shard file.
         This method asserts it is properly created.
-      env: Environment variables to be set for the py_test binary.
+      additional_env: Additional environment variables to be set for the py_test
+        binary.
 
     Returns:
       (stdout, exit_code) tuple of (string, int).
     """
-    if env is None:
-      env = {}
+    env = absltest_env.inherited_env()
+    if additional_env:
+      env.update(additional_env)
     env.update({
         'TEST_TOTAL_SHARDS': str(total_shards),
         'TEST_SHARD_INDEX': str(shard_index)
     })
-    if 'SYSTEMROOT' in os.environ:
-      # This is used by the random module on Windows to locate crypto
-      # libraries.
-      env['SYSTEMROOT'] = os.environ['SYSTEMROOT']
     if shard_file:
       self._shard_file = shard_file
       env['TEST_SHARD_STATUS_FILE'] = shard_file
@@ -147,7 +153,7 @@ class TestShardingTest(absltest.TestCase):
     tests_seen = []
     for seed in ('7', '17'):
       out, exit_code = self._run_sharded(
-          2, 0, env={'TEST_RANDOMIZE_ORDERING_SEED': seed})
+          2, 0, additional_env={'TEST_RANDOMIZE_ORDERING_SEED': seed})
       self.assertEqual(0, exit_code)
       tests_seen.append([x for x in out.splitlines() if x.startswith('class')])
     first_tests, second_tests = tests_seen  # pylint: disable=unbalanced-tuple-unpacking

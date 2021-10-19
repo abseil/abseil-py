@@ -98,9 +98,15 @@ py_library(
     ],
 )
 
+py_library(
+    name = "tests/absltest_env",
+    testonly = True,
+    srcs = ["tests/absltest_env.py"],
+)
+
 py_test(
     name = "tests/absltest_filtering_test",
-    size = "small",
+    size = "medium",
     srcs = ["tests/absltest_filtering_test.py"],
     data = [":tests/absltest_filtering_test_helper"],
     python_version = "PY3",
@@ -109,6 +115,7 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         ":parameterized",
+        ":tests/absltest_env",
         "//absl/logging",
     ],
 )
@@ -119,7 +126,11 @@ py_binary(
     srcs = ["tests/absltest_filtering_test_helper.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":absltest"],
+    deps = [
+        ":absltest",
+        ":parameterized",
+        "//absl:app",
+    ],
 )
 
 py_test(
@@ -133,6 +144,7 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         ":parameterized",
+        ":tests/absltest_env",
         "//absl/logging",
     ],
 )
@@ -143,7 +155,10 @@ py_binary(
     srcs = ["tests/absltest_fail_fast_test_helper.py"],
     python_version = "PY3",
     srcs_version = "PY3",
-    deps = [":absltest"],
+    deps = [
+        ":absltest",
+        "//absl:app",
+    ],
 )
 
 py_test(
@@ -157,6 +172,7 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         ":parameterized",
+        ":tests/absltest_env",
         "//absl/flags",
     ],
 )
@@ -182,7 +198,7 @@ py_test(
     deps = [
         ":_bazelize_command",
         ":absltest",
-        "//absl/flags",
+        ":tests/absltest_env",
     ],
 )
 
@@ -206,7 +222,7 @@ py_test(
         ":_bazelize_command",
         ":absltest",
         ":parameterized",
-        "//absl/flags",
+        ":tests/absltest_env",
         "@six_archive//:six",
     ],
 )
