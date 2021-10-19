@@ -21,7 +21,9 @@ from __future__ import print_function
 import os
 import sys
 
+from absl import app
 from absl.testing import absltest
+from absl.testing import parameterized
 
 
 class ClassA(absltest.TestCase):
@@ -57,8 +59,27 @@ class ClassB(absltest.TestCase):
     self.fail('Force failure')
 
 
+class ParameterizedTest(parameterized.TestCase):
+  """Helper parameterized test case for absltest_filtering_test."""
+
+  @parameterized.parameters([1, 2])
+  def test_unnamed(self, value):
+    sys.stderr.write('\nparameterized unnamed %s' % value)
+
+  @parameterized.named_parameters(
+      ('test1', 1),
+      ('test2', 2),
+  )
+  def test_named(self, value):
+    sys.stderr.write('\nparameterized named %s' % value)
+
+
+def main(argv):
+  absltest.main(argv=argv)
+
+
 if __name__ == '__main__':
-  if os.getenv('USE_ARGV', '0') == '1':
-    absltest.main(argv=sys.argv)
+  if os.environ['USE_APP_RUN'] == '1':
+    app.run(main)
   else:
     absltest.main()

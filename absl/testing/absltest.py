@@ -2336,8 +2336,12 @@ def _setup_filtering(argv):
   The following environment variable is used in this method:
 
     TESTBRIDGE_TEST_ONLY: string, if set, is forwarded to the unittest
-      framework to use as a test filter. Its value is split with shlex
-      before being passed as positional arguments on argv.
+      framework to use as a test filter. Its value is split with shlex, then:
+      1. On Python 3.6 and before, split values are passed as positional
+         arguments on argv.
+      2. On Python 3.7+, split values are passed to unittest's `-k` flag. Tests
+         are matched by glob patterns or substring. See
+         https://docs.python.org/3/library/unittest.html#cmdoption-unittest-k
 
   Args:
     argv: the argv to mutate in-place.
@@ -2346,7 +2350,11 @@ def _setup_filtering(argv):
   if argv is None or not test_filter:
     return
 
-  argv[1:1] = shlex.split(test_filter)
+  filters = shlex.split(test_filter)
+  if sys.version_info[:2] >= (3, 7):
+    filters = ['-k=' + test_filter for test_filter in filters]
+
+  argv[1:1] = filters
 
 
 def _setup_test_runner_fail_fast(argv):

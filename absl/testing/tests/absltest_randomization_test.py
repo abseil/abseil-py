@@ -18,7 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import random
 import subprocess
 
@@ -26,6 +25,7 @@ from absl import flags
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
+from absl.testing.tests import absltest_env
 
 FLAGS = flags.FLAGS
 
@@ -50,7 +50,7 @@ class TestOrderRandomizationTest(parameterized.TestCase):
     Returns:
       (stdout, test_cases, exit_code) tuple of (str, list of strs, int).
     """
-    env = dict(os.environ)
+    env = absltest_env.inherited_env()
     # If *this* test is being run with this flag, we don't want to
     # automatically set it for all tests we run.
     env.pop('TEST_RANDOMIZE_ORDERING_SEED', '')

@@ -21,6 +21,7 @@ from __future__ import print_function
 import os
 import sys
 
+from absl import app
 from absl.testing import absltest
 
 
@@ -44,8 +45,12 @@ class ClassA(absltest.TestCase):
     sys.stderr.write('\nclass A test E\n')
 
 
+def main(argv):
+  absltest.main(argv=argv)
+
+
 if __name__ == '__main__':
-  if os.getenv('USE_ARGV', '0') == '1':
-    absltest.main(argv=sys.argv)
+  if os.environ['USE_APP_RUN'] == '1':
+    app.run(main)
   else:
     absltest.main()
