@@ -28,9 +28,8 @@ except ImportError:
   use_setuptools()
   import setuptools
 
-py_version = sys.version_info
-if py_version < (2, 7) or py_version[0] == 3 and py_version < (3, 4):
-  raise RuntimeError('Python version 2.7 or 3.4+ is required.')
+if sys.version_info < (3, 6):
+  raise RuntimeError('Python version 3.6+ is required.')
 
 INSTALL_REQUIRES = [
     'six',
@@ -39,22 +38,11 @@ INSTALL_REQUIRES = [
 setuptools_version = tuple(
     int(x) for x in setuptools.__version__.split('.')[:2])
 
-# A variety of environments have very, very old versions of setuptools that
-# don't support the environment markers ("foo; python_version < X"). Since
-# we're using sdist, this setup.py gets run directly when installing, so
-# we can just manually do the dependency checking.
-# See these for more info:
-# https://github.com/abseil/abseil-py/issues/79
-# https://hynek.me/articles/conditional-python-dependencies/
-# Environment marker support was added in setuptools 36.2, see
-# https://github.com/pypa/setuptools/blob/master/CHANGES.rst#v3620
-if setuptools_version < (36, 2):
-  if sys.version_info[0:2] < (3, 4):
-    INSTALL_REQUIRES.append('enum34')
-else:
-  # Environment markers are the preferred way: it allows correct non-source
-  # distributions (i.e., wheels) to be generated.
-  INSTALL_REQUIRES.append("enum34; python_version < '3.4'")
+additional_kwargs = {}
+if setuptools_version >= (24, 2):
+  # `python_requires` was added in 24.2, see
+  # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
+  additional_kwargs['python_requires'] = '>=3.6'
 
 _README_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), 'README.md')
@@ -79,18 +67,16 @@ setuptools.setup(
     license='Apache 2.0',
     classifiers=[
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: Apache Software License',
         'Operating System :: OS Independent',
     ],
+    **additional_kwargs,
 )

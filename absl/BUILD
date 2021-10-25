@@ -39,21 +39,6 @@ config_setting(
 )
 
 py_library(
-    name = "_enum_module",
-    srcs = ["_enum_module.py"],
-    visibility = [":__subpackages__"],
-    deps = [
-        "@six_archive//:six",
-    ] + select({
-        # In some Python 3 environments, despite the _enum_module import path
-        # tricks, the enum backport still ends up on sys.path before the
-        # stdlib, which more-or-less breaks Python
-        ":py3_mode": [],
-        "//conditions:default": ["@enum34_archive//:enum"],
-    }),
-)
-
-py_library(
     name = "_collections_abc",
     srcs = ["_collections_abc.py"],
     visibility = [":__subpackages__"],
@@ -91,7 +76,6 @@ py_test(
     python_version = "PY3",
     srcs_version = "PY3",
     deps = [
-        ":_enum_module",
         ":app",
         ":tests/app_test_helper",
         "//absl/flags",

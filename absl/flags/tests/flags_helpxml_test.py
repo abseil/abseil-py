@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import enum
 import io
 import os
 import string
@@ -26,7 +27,6 @@ import xml.dom.minidom
 import xml.sax.saxutils
 
 from absl import flags
-from absl._enum_module import enum
 from absl.flags import _helpers
 from absl.flags.tests import module_bar
 from absl.testing import absltest
