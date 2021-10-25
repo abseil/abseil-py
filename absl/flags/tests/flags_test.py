@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import contextlib
+import enum
 import io
 import os
 import shutil
@@ -26,7 +27,6 @@ import tempfile
 import unittest
 
 from absl import flags
-from absl._enum_module import enum
 from absl.flags import _exceptions
 from absl.flags import _helpers
 from absl.flags.tests import module_bar

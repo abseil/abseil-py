@@ -21,6 +21,7 @@ from __future__ import print_function
 import codecs
 import contextlib
 import copy
+import enum
 import os
 import re
 import subprocess
@@ -30,7 +31,6 @@ import unittest
 
 from absl import app
 from absl import flags
-from absl._enum_module import enum
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import flagsaver

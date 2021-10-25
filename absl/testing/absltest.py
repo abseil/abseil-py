@@ -24,6 +24,7 @@ from __future__ import print_function
 
 import contextlib
 import difflib
+import enum
 import errno
 import getpass
 import inspect
@@ -57,7 +58,6 @@ from absl import app
 from absl import flags
 from absl import logging
 from absl._collections_abc import abc
-from absl._enum_module import enum
 from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
 from absl.third_party import unittest3_backport

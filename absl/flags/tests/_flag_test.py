@@ -22,9 +22,9 @@ from __future__ import division
 from __future__ import print_function
 
 import copy
+import enum
 import pickle
 
-from absl._enum_module import enum
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
 from absl.flags import _flag
