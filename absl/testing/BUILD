@@ -33,7 +33,6 @@ py_library(
         "//absl:app",
         "//absl/flags",
         "//absl/logging",
-        "//absl/third_party/unittest3_backport",
         "@six_archive//:six",
     ],
 )
@@ -72,7 +71,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":_pretty_print_reporter",
-        "//absl/third_party/unittest3_backport",
         "@six_archive//:six",
     ],
 )
@@ -92,9 +90,6 @@ py_library(
     name = "_pretty_print_reporter",
     srcs = ["_pretty_print_reporter.py"],
     srcs_version = "PY2AND3",
-    deps = [
-        "//absl/third_party/unittest3_backport",
-    ],
 )
 
 py_library(
@@ -275,7 +270,6 @@ py_test(
         ":parameterized",
         ":xml_reporter",
         "//absl/logging",
-        "//absl/third_party/unittest3_backport",
         "@mock_archive//:mock",
         "@six_archive//:six",
     ],

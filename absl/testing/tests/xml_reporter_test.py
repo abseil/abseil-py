@@ -33,7 +33,6 @@ from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
 from absl.testing import xml_reporter
-from absl.third_party import unittest3_backport
 import mock
 import six
 
@@ -198,10 +197,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.passing_test')
-    if six.PY3:
-      subtest = unittest.case._SubTest(test, 'msg', None)
-    else:
-      subtest = unittest3_backport.case._SubTest(test, 'msg', None)
+    subtest = unittest.case._SubTest(test, 'msg', None)
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, None)
@@ -231,15 +227,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.passing_test')
-    if six.PY3:
-      subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})
-    else:
-      # In Python 3 subTest uses a ChainMap to hold the parameters, but ChainMap
-      # does not exist in Python 2, so a list of dict is used to simulate the
-      # behavior of a ChainMap. This is why a list is provided as a parameter
-      # here.
-      subtest = unittest3_backport.case._SubTest(test, 'msg',
-                                                 [{'case': 'a.b.c'}])
+    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, None)
@@ -346,10 +334,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.failing_test')
-    if six.PY3:
-      subtest = unittest.case._SubTest(test, 'msg', None)
-    else:
-      subtest = unittest3_backport.case._SubTest(test, 'msg', None)
+    subtest = unittest.case._SubTest(test, 'msg', None)
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, self.get_sample_failure())
@@ -412,10 +397,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.error_test')
-    if six.PY3:
-      subtest = unittest.case._SubTest(test, 'msg', None)
-    else:
-      subtest = unittest3_backport.case._SubTest(test, 'msg', None)
+    subtest = unittest.case._SubTest(test, 'msg', None)
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, self.get_sample_error())
@@ -900,10 +882,10 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.startTestRun()
     result.startTest(test)
 
-    # Replace parent stopTest method from unittest3_backport.TextTestResult with
+    # Replace parent stopTest method from unittest.TextTestResult with
     # a version that calls self.addFailure().
     with mock.patch.object(
-        unittest3_backport.TextTestResult,
+        unittest.TextTestResult,
         'stopTest',
         side_effect=lambda t: result.addFailure(t, self.get_sample_failure())):
       # Run stopTest in a separate thread since we are looking to verify that

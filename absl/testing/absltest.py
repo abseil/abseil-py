@@ -60,7 +60,6 @@ from absl import logging
 from absl._collections_abc import abc
 from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
-from absl.third_party import unittest3_backport
 import six
 from six.moves import urllib
 from six.moves import xrange  # pylint: disable=redefined-builtin
@@ -81,11 +80,8 @@ else:
     # Unbounded TypeVar for general usage
     _T = typing.TypeVar('_T')
 
-    if six.PY2:
-      _OutcomeType = unittest3_backport.case._Outcome
-    else:
-      import unittest.case
-      _OutcomeType = unittest.case._Outcome  # pytype: disable=module-attr
+    import unittest.case
+    _OutcomeType = unittest.case._Outcome  # pytype: disable=module-attr
 
 
 if six.PY3:
@@ -593,7 +589,7 @@ class _method(object):
     return func.__get__(obj, type_)  # pytype: disable=attribute-error
 
 
-class TestCase(unittest3_backport.TestCase):
+class TestCase(unittest.TestCase):
   """Extension of unittest.TestCase providing more power."""
 
   # When to cleanup files/directories created by our `create_tempfile()` and
@@ -1198,18 +1194,6 @@ class TestCase(unittest3_backport.TestCase):
     self.assertTrue(minv <= value, msg)
     self.assertTrue(maxv >= value, msg)
 
-  # Backport these names so that Py2 code can be written in Py3 style.
-  if six.PY2:
-
-    def assertRegex(self, *args, **kwargs):
-      return self.assertRegexpMatches(*args, **kwargs)
-
-    def assertRaisesRegex(self, *args, **kwargs):
-      return self.assertRaisesRegexp(*args, **kwargs)
-
-    def assertNotRegex(self, *args, **kwargs):
-      return self.assertNotRegexpMatches(*args, **kwargs)
-
   def assertRegexMatch(self, actual_str, regexes, message=None):
     r"""Asserts that at least one regex in regexes matches str.
 
@@ -1625,7 +1609,7 @@ class TestCase(unittest3_backport.TestCase):
                                            '%r unexpectedly less than %r' %
                                            (b, a)))
       self.assertLessEqual(a, b, msg)
-      self.assertLessEqual(b, a, msg)
+      self.assertLessEqual(b, a, msg)  # pylint: disable=arguments-out-of-order
       self.assertFalse(a > b,
                        self._formatMessage(msg,
                                            '%r unexpectedly greater than %r' %
@@ -1635,7 +1619,7 @@ class TestCase(unittest3_backport.TestCase):
                                            '%r unexpectedly greater than %r' %
                                            (b, a)))
       self.assertGreaterEqual(a, b, msg)
-      self.assertGreaterEqual(b, a, msg)
+      self.assertGreaterEqual(b, a, msg)  # pylint: disable=arguments-out-of-order
 
     msg = kwargs.get('msg')
 
