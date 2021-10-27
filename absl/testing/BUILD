@@ -1,26 +1,5 @@
 licenses(["notice"])  # Apache 2.0
 
-config_setting(
-    name = "osx",
-    constraint_values = ["//third_party/bazel_platforms/os:osx"],
-)
-
-config_setting(
-    name = "ios",
-    flag_values = {"//tools/cpp:cc_target_os": "apple"},
-)
-
-_absl_test_platform_deps = select({
-    ":osx": [],
-    ":ios": [],
-    # TODO(b/75911467): Remove after :osx works in host mode
-    "//tools/cc_target_os:platform_macos": [],
-    "//conditions:default": [
-        "//third_party/py/faulthandler",
-        "//third_party/py/readline",  # Enables arrow keys and tab-completion in (pdb).
-    ],
-})
-
 py_library(
     name = "absltest",
     srcs = ["absltest.py"],
@@ -33,7 +12,6 @@ py_library(
         "//absl:app",
         "//absl/flags",
         "//absl/logging",
-        "//absl/third_party/unittest3_backport",
         "@six_archive//:six",
     ],
 )
@@ -72,7 +50,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":_pretty_print_reporter",
-        "//absl/third_party/unittest3_backport",
         "@six_archive//:six",
     ],
 )
@@ -92,9 +69,6 @@ py_library(
     name = "_pretty_print_reporter",
     srcs = ["_pretty_print_reporter.py"],
     srcs_version = "PY2AND3",
-    deps = [
-        "//absl/third_party/unittest3_backport",
-    ],
 )
 
 py_library(
@@ -275,7 +249,6 @@ py_test(
         ":parameterized",
         ":xml_reporter",
         "//absl/logging",
-        "//absl/third_party/unittest3_backport",
         "@mock_archive//:mock",
         "@six_archive//:six",
     ],
