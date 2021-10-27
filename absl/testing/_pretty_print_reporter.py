@@ -19,10 +19,9 @@ from __future__ import division
 from __future__ import print_function
 
 import unittest
-from absl.third_party import unittest3_backport
 
 
-class TextTestResult(unittest3_backport.TextTestResult):
+class TextTestResult(unittest.TextTestResult):
   """TestResult class that provides the default text result formatting."""
 
   def __init__(self, stream, descriptions, verbosity):
