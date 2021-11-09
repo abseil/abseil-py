@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 *   `absl-py` no longer supports Python 2.7, 3.4, 3.5. All versions have reached
     end-of-life for more than a year now.
+*   New releases will be tagged as `vX.Y.Z` instead of `pypi-vX.Y.Z` in the git
+    repo going forward.
 
 ## 0.15.0 (2021-10-19)
 
