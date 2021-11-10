@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 1.0.0 (2021-11-09)
+
 ### Changed
 
 *   `absl-py` no longer supports Python 2.7, 3.4, 3.5. All versions have reached
