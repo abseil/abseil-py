@@ -203,7 +203,8 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
     warnings.warn(
         'Flag --%s has a non-None default value; therefore, '
         'mark_flag_as_required will pass even if flag is not specified in the '
-        'command line!' % flag_name)
+        'command line!' % flag_name,
+        stacklevel=2)
   register_validator(
       flag_name,
       lambda value: value is not None,
@@ -255,7 +256,8 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
       warnings.warn(
           'Flag --{} has a non-None default value. That does not make sense '
           'with mark_flags_as_mutual_exclusive, which checks whether the '
-          'listed flags have a value other than None.'.format(flag_name))
+          'listed flags have a value other than None.'.format(flag_name),
+          stacklevel=2)
 
   def validate_mutual_exclusion(flags_dict):
     flag_count = sum(1 for val in flags_dict.values() if val is not None)
