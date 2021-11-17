@@ -51,11 +51,11 @@ will be expected to conform to the Python style outlined
 
 *   Maintain **clean commit history** and use **meaningful commit messages**.
     PRs with messy commit history are difficult to review and won't be merged.
-    Use `rebase -i upstream/master` to curate your commit history and/or to
-    bring in latest changes from master (but avoid rebasing in the middle of a
+    Use `rebase -i upstream/main` to curate your commit history and/or to
+    bring in latest changes from main (but avoid rebasing in the middle of a
     code review).
 
-*   Keep your PR up to date with upstream/master (if there are merge conflicts,
+*   Keep your PR up to date with upstream/main (if there are merge conflicts,
     we can't really merge your change).
 
 *   **All tests need to be passing** before your change can be merged. We
