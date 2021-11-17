@@ -2394,16 +2394,12 @@ def _setup_sharding(custom_loader=None):
   # to query whether a test binary implements the test sharding protocol.
   if 'TEST_SHARD_STATUS_FILE' in os.environ:
     try:
-      f = None
-      try:
-        f = open(os.environ['TEST_SHARD_STATUS_FILE'], 'w')
+      with open(os.environ['TEST_SHARD_STATUS_FILE'], 'w') as f:
         f.write('')
-      except IOError:
-        sys.stderr.write('Error opening TEST_SHARD_STATUS_FILE (%s). Exiting.'
-                         % os.environ['TEST_SHARD_STATUS_FILE'])
-        sys.exit(1)
-    finally:
-      if f is not None: f.close()
+    except IOError:
+      sys.stderr.write('Error opening TEST_SHARD_STATUS_FILE (%s). Exiting.'
+                       % os.environ['TEST_SHARD_STATUS_FILE'])
+      sys.exit(1)
 
   base_loader = custom_loader or TestLoader()
   if 'TEST_TOTAL_SHARDS' not in os.environ:
