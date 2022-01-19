@@ -146,7 +146,7 @@ class HelpXMLFlag(flags.BooleanFlag):
 
 
 def parse_flags_with_usage(args):
-  """Tries to parse the flags, print usage, and exit if unparseable.
+  """Tries to parse the flags, print usage, and exit if unparsable.
 
   Args:
     args: [str], a non-empty list of the command line arguments including
