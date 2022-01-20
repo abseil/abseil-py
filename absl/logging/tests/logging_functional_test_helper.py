@@ -276,7 +276,7 @@ def _test_unicode():
                                     ' found existing name {}').format(name)
     test_names.append(name)
 
-    # Add line seprators so that tests can verify the output for each log
+    # Add line separators so that tests can verify the output for each log
     # message.
     sys.stderr.write('-- begin {} --\n'.format(name))
     logging.info(msg, *args)

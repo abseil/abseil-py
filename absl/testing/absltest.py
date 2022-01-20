@@ -1825,7 +1825,7 @@ def _sorted_list_difference(expected, actual):
 
   Args:
     expected:  The list we expected.
-    actual:  The list we actualy got.
+    actual:  The list we actually got.
   Returns:
     (missing, unexpected)
     missing: items in expected that are not in actual.
@@ -2077,7 +2077,7 @@ def _register_sigterm_with_faulthandler():
   # type: () -> None
   """Have faulthandler dump stacks on SIGTERM.  Useful to diagnose timeouts."""
   if faulthandler and getattr(faulthandler, 'register', None):
-    # faulthandler.register is not avaiable on Windows.
+    # faulthandler.register is not available on Windows.
     # faulthandler.enable() is already called by app.run.
     try:
       faulthandler.register(signal.SIGTERM, chain=True)  # pytype: disable=module-attr

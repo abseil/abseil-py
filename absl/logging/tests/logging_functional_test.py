@@ -340,7 +340,7 @@ class FunctionalTest(parameterized.TestCase):
           Tuple is (log prefix, log type, expected contents):
           - log prefix: A program name, or 'stderr'.
           - log type: 'INFO', 'ERROR', etc.
-          - expected: Can be the followings:
+          - expected: Can be the following:
             - A string
             - A callable, called with the logs as a single argument
             - None, means don't check contents of log file

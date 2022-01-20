@@ -16,7 +16,7 @@ _INHERITED_ENV_KEYS = frozenset({
 def inherited_env():
   """Returns the environment variables that should be inherited from parent.
 
-  Reason why using an explict list of environment variables instead of
+  Reason why using an explicit list of environment variables instead of
   inheriting all from parent: the absltest module itself interprets a list of
   environment variables set by bazel, e.g. XML_OUTPUT_FILE,
   TESTBRIDGE_TEST_ONLY. While testing absltest's own behavior, we should
