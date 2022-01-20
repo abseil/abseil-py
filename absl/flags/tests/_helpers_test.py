@@ -134,7 +134,7 @@ class GetCallingModuleTest(absltest.TestCase):
     orig_sys_modules = sys.modules
 
     # Mock sys.modules: simulates error produced by importing a module
-    # in paralel with our iteration over sys.modules.iteritems().
+    # in parallel with our iteration over sys.modules.iteritems().
     class SysModulesMock(dict):
 
       def __init__(self, original_content):

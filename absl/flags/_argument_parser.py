@@ -466,7 +466,7 @@ class EnumClassListSerializer(ListSerializer):
   """A serializer for MultiEnumClass flags.
 
   This serializer simply joins the output of `EnumClassSerializer` using a
-  provided seperator.
+  provided separator.
   """
 
   def __init__(self, list_sep, **kwargs):

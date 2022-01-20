@@ -383,7 +383,7 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
   def stopTestRun(self):
     self.suite.set_end_time(self.time_getter())
     # All pending_test_case_results will be added to the suite and removed from
-    # the pending_test_case_results dictionary. Grabing the write lock to avoid
+    # the pending_test_case_results dictionary. Grabbing the write lock to avoid
     # results from being added during this process to avoid duplicating adds or
     # accidentally erasing newly appended pending results.
     with self._pending_test_case_results_lock:

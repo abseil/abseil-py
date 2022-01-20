@@ -279,7 +279,7 @@ class _StderrthresholdFlag(flags.Flag):
   @value.setter
   def value(self, v):
     if v in _CPP_LEVEL_TO_NAMES:
-      # --stderrthreshold also accepts numberic strings whose values are
+      # --stderrthreshold also accepts numeric strings whose values are
       # Abseil C++ log levels.
       cpp_value = int(v)
       v = _CPP_LEVEL_TO_NAMES[v]  # Normalize to strings.
@@ -1029,7 +1029,7 @@ class ABSLLogger(logging.getLoggerClass()):
   """A logger that will create LogRecords while skipping some stack frames.
 
   This class maintains an internal list of filenames and method names
-  for use when determining who called the currently execuing stack
+  for use when determining who called the currently executing stack
   frame.  Any method names from specific source files are skipped when
   walking backwards through the stack.
 

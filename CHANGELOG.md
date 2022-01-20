@@ -228,7 +228,7 @@ Nothing notable unreleased.
 *   (flags) An empty --flagfile value (e.g. "--flagfile=" or "--flagfile=''"
     doesn't raise an error; its not just ignored. This matches Abseil C++
     behavior.
-*   (bazel) Building with Bazel 0.2.0 works without extra incompatiblity disable
+*   (bazel) Building with Bazel 0.2.0 works without extra incompatibility disable
     build flags.
 
 ### Changed

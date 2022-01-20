@@ -1067,7 +1067,7 @@ class FlagsUnitTest(absltest.TestCase):
       argv = ('./program', '--repeat=2.5')
       FLAGS(argv)
 
-    # Missing required arugment
+    # Missing required argument
     with self.assertRaises(flags.Error):
       argv = ('./program', '--name')
       FLAGS(argv)
@@ -1111,7 +1111,7 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(float(FLAGS['float'].default), FLAGS.alias_float)
     self.assertSameElements(FLAGS['letters'].default, FLAGS.alias_letters)
 
-    # Original flags set on comand line
+    # Original flags set on command line
     argv = ('./program', '--name=Martin', '--debug=True', '--decimal=777',
             '--letters=x,y,z')
     FLAGS(argv)
@@ -1870,7 +1870,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     fake_argv = fake_cmd_line.split(' ')
 
     # We should see the original cmd line with the file's contents spliced in.
-    # Flags from the file will appear in the order order they are sepcified
+    # Flags from the file will appear in the order order they are specified
     # in the file, in the same position as the flagfile argument.
     expected_results = [
         'fooScript', '--q', '--unittest_message1=tempFile1!',
@@ -2085,7 +2085,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
   def test_no_touchy_non_flags(self):
     """Test that the flags parser does not mutilate arguments.
 
-    The argumants are not supposed to be flags
+    The arguments are not supposed to be flags
     """
     fake_argv = [
         'fooScript', '--unittest_boolflag', 'command', '--command_arg1',

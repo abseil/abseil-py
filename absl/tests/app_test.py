@@ -163,7 +163,7 @@ class FunctionalTests(absltest.TestCase):
     stdout, stderr = process.communicate()
     # In Python 2, we can't control the encoding used by universal_newline
     # mode, which can cause UnicodeDecodeErrors when subprocess tries to
-    # conver the bytes to unicode, so we have to decode it manually.
+    # convert the bytes to unicode, so we have to decode it manually.
     stdout = _normalize_newlines(stdout.decode('utf8'))
     stderr = _normalize_newlines(stderr.decode('utf8'))
 
