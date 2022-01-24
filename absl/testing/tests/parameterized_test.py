@@ -14,18 +14,12 @@
 
 """Tests for absl.testing.parameterized."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import sys
 import unittest
 
 from absl._collections_abc import abc
 from absl.testing import absltest
 from absl.testing import parameterized
-import six
-from six.moves import range  # pylint: disable=redefined-builtin
 
 
 class MyOwnClass(object):
@@ -1044,7 +1038,7 @@ class CoopMetaclassCreationTest(absltest.TestCase):
 
       def __init__(cls, name, bases, dct):
         type.__init__(cls, name, bases, dct)
-        for member_name, obj in six.iteritems(dct):
+        for member_name, obj in dct.items():
           if member_name.startswith('test'):
             setattr(cls, member_name,
                     lambda self, f=obj: _decorate_with_side_effects(f, self))

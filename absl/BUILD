@@ -65,8 +65,6 @@ py_test(
         "//absl/testing:_bazelize_command",
         "//absl/testing:absltest",
         "//absl/testing:flagsaver",
-        "@mock_archive//:mock",
-        "@six_archive//:six",
     ],
 )
 

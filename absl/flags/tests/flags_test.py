@@ -13,10 +13,6 @@
 # limitations under the License.
 """Tests for absl.flags used as a package."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import contextlib
 import enum
 import io
@@ -33,7 +29,6 @@ from absl.flags.tests import module_bar
 from absl.flags.tests import module_baz
 from absl.flags.tests import module_foo
 from absl.testing import absltest
-import six
 
 FLAGS = flags.FLAGS
 
@@ -117,8 +112,7 @@ class AliasFlagsTest(absltest.TestCase):
 
   def assert_alias_mirrors_aliased(self, alias, aliased, ignore_due_to_bug=()):
     # A few sanity checks to avoid false success
-    if six.PY3:
-      self.assertIn('FlagAlias', alias.__class__.__qualname__)
+    self.assertIn('FlagAlias', alias.__class__.__qualname__)
     self.assertIsNot(alias, aliased)
     self.assertNotEqual(aliased.name, alias.name)
 
@@ -541,7 +535,7 @@ class FlagsUnitTest(absltest.TestCase):
     argv = ('./program', '--x', '0x1234567890ABCDEF1234567890ABCDEF')
     argv = FLAGS(argv)
     self.assertEqual(FLAGS.x, 0x1234567890ABCDEF1234567890ABCDEF)
-    self.assertIsInstance(FLAGS.x, six.integer_types)
+    self.assertIsInstance(FLAGS.x, int)
 
     argv = ('./program', '--x', '0o12345')
     argv = FLAGS(argv)
@@ -1727,11 +1721,9 @@ class UnicodeFlagsTest(absltest.TestCase):
         b'help:\xC3\xAD'.decode('utf-8'),
         flag_values=fv)
 
-    outfile = io.StringIO() if six.PY3 else io.BytesIO()
+    outfile = io.StringIO()
     fv.write_help_in_xml_format(outfile)
     actual_output = outfile.getvalue()
-    if six.PY2:
-      actual_output = actual_output.decode('utf-8')
 
     # The xml output is large, so we just check parts of it.
     self.assertIn(
@@ -1740,20 +1732,12 @@ class UnicodeFlagsTest(absltest.TestCase):
         b'    <default>\xc3\x80\xc3\xbd</default>\n'
         b'    <current>\xc3\x80\xc3\xbd</current>'.decode('utf-8'),
         actual_output)
-    if six.PY2:
-      self.assertIn(
-          b'<name>unicode2</name>\n'
-          b'    <meaning>help:\xc3\xad</meaning>\n'
-          b'    <default>abc,\xc3\x80,\xc3\xbd</default>\n'
-          b"    <current>['abc', u'\\xc0', u'\\xfd']"
-          b'</current>'.decode('utf-8'), actual_output)
-    else:
-      self.assertIn(
-          b'<name>unicode2</name>\n'
-          b'    <meaning>help:\xc3\xad</meaning>\n'
-          b'    <default>abc,\xc3\x80,\xc3\xbd</default>\n'
-          b"    <current>['abc', '\xc3\x80', '\xc3\xbd']"
-          b'</current>'.decode('utf-8'), actual_output)
+    self.assertIn(
+        b'<name>unicode2</name>\n'
+        b'    <meaning>help:\xc3\xad</meaning>\n'
+        b'    <default>abc,\xc3\x80,\xc3\xbd</default>\n'
+        b"    <current>['abc', '\xc3\x80', '\xc3\xbd']"
+        b'</current>'.decode('utf-8'), actual_output)
     self.assertIn(
         b'<name>non_unicode</name>\n'
         b'    <meaning>help:\xc3\xad</meaning>\n'

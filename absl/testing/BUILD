@@ -193,7 +193,6 @@ py_test(
         ":absltest",
         ":parameterized",
         ":tests/absltest_env",
-        "@six_archive//:six",
     ],
 )
 
@@ -230,7 +229,6 @@ py_test(
         ":absltest",
         ":parameterized",
         "//absl:_collections_abc",
-        "@six_archive//:six",
     ],
 )
 
@@ -246,8 +244,6 @@ py_test(
         ":parameterized",
         ":xml_reporter",
         "//absl/logging",
-        "@mock_archive//:mock",
-        "@six_archive//:six",
     ],
 )
 
