@@ -124,7 +124,6 @@ py_test(
         ":_argument_parser",
         "//absl/testing:absltest",
         "//absl/testing:parameterized",
-        "@six_archive//:six",
     ],
 )
 
@@ -158,8 +157,6 @@ py_test(
         "//absl/logging",
         "//absl/testing:absltest",
         "//absl/testing:parameterized",
-        "@mock_archive//:mock",
-        "@six_archive//:six",
     ],
 )
 
@@ -206,8 +203,6 @@ py_test(
         "//absl/testing:_bazelize_command",
         "//absl/testing:absltest",
         "//absl/testing:parameterized",
-        "@mock_archive//:mock",
-        "@six_archive//:six",
     ],
 )
 
@@ -248,7 +243,6 @@ py_test(
         ":flags",
         ":tests/module_bar",
         "//absl/testing:absltest",
-        "@six_archive//:six",
     ],
 )
 
@@ -280,7 +274,6 @@ py_test(
         ":tests/module_baz",
         ":tests/module_foo",
         "//absl/testing:absltest",
-        "@six_archive//:six",
     ],
 )
 

@@ -14,10 +14,6 @@
 
 """Unit tests for absl.logging."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import contextlib
 import functools
 import getpass
@@ -32,19 +28,15 @@ import threading
 import time
 import traceback
 import unittest
+from unittest import mock
 
 from absl import flags
 from absl import logging
 from absl.testing import absltest
 from absl.testing import flagsaver
 from absl.testing import parameterized
-import mock
-import six
-from six.moves import range  # pylint: disable=redefined-builtin
 
 FLAGS = flags.FLAGS
-
-_StreamIO = io.StringIO if six.PY3 else io.BytesIO  # pylint: disable=invalid-name
 
 
 class ConfigurationTest(absltest.TestCase):
@@ -53,10 +45,10 @@ class ConfigurationTest(absltest.TestCase):
   def test_logger_and_handler(self):
     absl_logger = std_logging.getLogger('absl')
     self.assertIs(absl_logger, logging.get_absl_logger())
-    self.assertTrue(isinstance(absl_logger, logging.ABSLLogger))
-    self.assertTrue(
-        isinstance(logging.get_absl_handler().python_handler.formatter,
-                   logging.PythonFormatter))
+    self.assertIsInstance(absl_logger, logging.ABSLLogger)
+    self.assertIsInstance(
+        logging.get_absl_handler().python_handler.formatter,
+        logging.PythonFormatter)
 
 
 class LoggerLevelsTest(parameterized.TestCase):
@@ -100,7 +92,6 @@ class LoggerLevelsTest(parameterized.TestCase):
     actual = {r.getMessage() for r in cm.records}
     self.assertEqual(set(expected_msgs), actual)
 
-  @unittest.skipIf(six.PY2, 'Py2 is missing assertLogs')
   def test_setting_levels(self):
     # Other tests change the root logging level, so we can't
     # assume it's the default.
@@ -137,6 +128,7 @@ class PythonHandlerTest(absltest.TestCase):
   """Tests the PythonHandler class."""
 
   def setUp(self):
+    super().setUp()
     (year, month, day, hour, minute, sec,
      dunno, dayofyear, dst_flag) = (1979, 10, 21, 18, 17, 16, 3, 15, 0)
     self.now_tuple = (year, month, day, hour, minute, sec,
@@ -145,6 +137,7 @@ class PythonHandlerTest(absltest.TestCase):
 
   def tearDown(self):
     mock.patch.stopall()
+    super().tearDown()
 
   @flagsaver.flagsaver(logtostderr=False)
   def test_set_google_log_file_no_log_to_stderr(self):
@@ -236,7 +229,7 @@ class PythonHandlerTest(absltest.TestCase):
       self.python_handler._log_to_stderr.assert_called_once_with(record)
 
   def test_emit(self):
-    stream = _StreamIO()
+    stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     handler.stderr_threshold = std_logging.FATAL
     record = std_logging.LogRecord(
@@ -246,8 +239,8 @@ class PythonHandlerTest(absltest.TestCase):
 
   @flagsaver.flagsaver(stderrthreshold='debug')
   def test_emit_and_stderr_threshold(self):
-    mock_stderr = _StreamIO()
-    stream = _StreamIO()
+    mock_stderr = io.StringIO()
+    stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     record = std_logging.LogRecord(
         'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False)
@@ -258,8 +251,8 @@ class PythonHandlerTest(absltest.TestCase):
 
   @flagsaver.flagsaver(alsologtostderr=True)
   def test_emit_also_log_to_stderr(self):
-    mock_stderr = _StreamIO()
-    stream = _StreamIO()
+    mock_stderr = io.StringIO()
+    stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     handler.stderr_threshold = std_logging.FATAL
     record = std_logging.LogRecord(
@@ -270,7 +263,7 @@ class PythonHandlerTest(absltest.TestCase):
       self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
 
   def test_emit_on_stderr(self):
-    mock_stderr = _StreamIO()
+    mock_stderr = io.StringIO()
     with mock.patch.object(sys, 'stderr', new=mock_stderr) as mock_stderr:
       handler = logging.PythonHandler()
       handler.stderr_threshold = std_logging.INFO
@@ -280,7 +273,7 @@ class PythonHandlerTest(absltest.TestCase):
       self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
 
   def test_emit_fatal_absl(self):
-    stream = _StreamIO()
+    stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     record = std_logging.LogRecord(
         'name', std_logging.FATAL, 'path', 12, 'logging_msg', [], False)
@@ -292,7 +285,7 @@ class PythonHandlerTest(absltest.TestCase):
         mock_flush.assert_called()  # flush is also called by super class.
 
   def test_emit_fatal_non_absl(self):
-    stream = _StreamIO()
+    stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     record = std_logging.LogRecord(
         'name', std_logging.FATAL, 'path', 12, 'logging_msg', [], False)
@@ -537,13 +530,6 @@ class ABSLLoggerTest(absltest.TestCase):
           self.logger.findCaller(stack_info=True))
     print_stack.assert_called_once()
 
-  @unittest.skipIf(six.PY3, 'Testing Python 2 specific behavior.')
-  def test_find_caller_python2(self):
-    """Ensure that we only return three items for base class compatibility."""
-    self.set_up_mock_frames()
-    self.logger.register_frame_to_skip('myfile.py', 'Method1')
-    self.assertEqual(('myfile.py', 125, 'Method2'), self.logger.findCaller())
-
   def test_critical(self):
     with mock.patch.object(self.logger, 'log'):
       self.logger.critical(self.message)
@@ -756,8 +742,7 @@ class LoggingTest(absltest.TestCase):
         mock.patch.object(os.path, 'isdir'):
       os.path.exists.return_value = False
       os.path.isdir.return_value = False
-      exception_class = OSError if six.PY2 else FileNotFoundError
-      with self.assertRaises(exception_class):
+      with self.assertRaises(FileNotFoundError):
         logging.find_log_dir()
 
   def test_find_log_dir_and_names_with_args(self):
@@ -824,7 +809,7 @@ class LoggingTest(absltest.TestCase):
                            program_name=program_name, log_dir=log_dir))
 
   def test_errors_in_logging(self):
-    with mock.patch.object(sys, 'stderr', new=_StreamIO()) as stderr:
+    with mock.patch.object(sys, 'stderr', new=io.StringIO()) as stderr:
       logging.info('not enough args: %s %s', 'foo')  # pylint: disable=logging-too-few-args
       self.assertIn('Traceback (most recent call last):', stderr.getvalue())
       self.assertIn('TypeError', stderr.getvalue())

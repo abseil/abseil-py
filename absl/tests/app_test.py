@@ -14,20 +14,16 @@
 
 """Tests for app.py."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import codecs
 import contextlib
 import copy
 import enum
+import io
 import os
 import re
 import subprocess
 import sys
 import tempfile
-import unittest
+from unittest import mock
 
 from absl import app
 from absl import flags
@@ -35,14 +31,10 @@ from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import flagsaver
 from absl.tests import app_test_helper
-import mock
-import six
 
 
 FLAGS = flags.FLAGS
 
-# six.StringIO best reflects the normal behavior of stdout for both py2 and 3.
-mock_stdio_type = six.StringIO
 
 _newline_regex = re.compile('(\r\n)|\r')
 
@@ -67,7 +59,7 @@ class UnitTests(absltest.TestCase):
 
   def test_usage(self):
     with mock.patch.object(
-        sys, 'stderr', new=mock_stdio_type()) as mock_stderr:
+        sys, 'stderr', new=io.StringIO()) as mock_stderr:
       app.usage()
     self.assertIn(__doc__, mock_stderr.getvalue())
     # Assert that flags are written to stderr.
@@ -75,34 +67,25 @@ class UnitTests(absltest.TestCase):
 
   def test_usage_shorthelp(self):
     with mock.patch.object(
-        sys, 'stderr', new=mock_stdio_type()) as mock_stderr:
+        sys, 'stderr', new=io.StringIO()) as mock_stderr:
       app.usage(shorthelp=True)
     # Assert that flags are NOT written to stderr.
     self.assertNotIn('  --', mock_stderr.getvalue())
 
   def test_usage_writeto_stderr(self):
     with mock.patch.object(
-        sys, 'stdout', new=mock_stdio_type()) as mock_stdout:
+        sys, 'stdout', new=io.StringIO()) as mock_stdout:
       app.usage(writeto_stdout=True)
     self.assertIn(__doc__, mock_stdout.getvalue())
 
   def test_usage_detailed_error(self):
     with mock.patch.object(
-        sys, 'stderr', new=mock_stdio_type()) as mock_stderr:
+        sys, 'stderr', new=io.StringIO()) as mock_stderr:
       app.usage(detailed_error='BAZBAZ')
     self.assertIn('BAZBAZ', mock_stderr.getvalue())
 
   def test_usage_exitcode(self):
-
-    # The test environment may not have the correct output encoding,
-    # and we can't really change it once we've started the test,
-    # so we have to replace it with one that understands unicode.
-    if six.PY2:
-      stderr = codecs.getwriter('utf8')(sys.stderr)
-    else:
-      stderr = sys.stderr
-
-    with mock.patch.object(sys, 'stderr', new=stderr):
+    with mock.patch.object(sys, 'stderr', new=sys.stderr):
       try:
         app.usage(exitcode=2)
         self.fail('app.usage(exitcode=1) should raise SystemExit')
@@ -112,7 +95,7 @@ class UnitTests(absltest.TestCase):
   def test_usage_expands_docstring(self):
     with patch_main_module_docstring('Name: %s, %%s'):
       with mock.patch.object(
-          sys, 'stderr', new=mock_stdio_type()) as mock_stderr:
+          sys, 'stderr', new=io.StringIO()) as mock_stderr:
         app.usage()
     self.assertIn('Name: {}, %s'.format(sys.argv[0]),
                   mock_stderr.getvalue())
@@ -120,7 +103,7 @@ class UnitTests(absltest.TestCase):
   def test_usage_does_not_expand_bad_docstring(self):
     with patch_main_module_docstring('Name: %s, %%s, %@'):
       with mock.patch.object(
-          sys, 'stderr', new=mock_stdio_type()) as mock_stderr:
+          sys, 'stderr', new=io.StringIO()) as mock_stderr:
         app.usage()
     self.assertIn('Name: %s, %%s, %@', mock_stderr.getvalue())
 
@@ -210,13 +193,7 @@ class FunctionalTests(absltest.TestCase):
 
     self.assertIn(u'smile:\U0001F604', stdout)
 
-    if six.PY2:
-      # Default values get repr'd, which causes unicode strings to incorrectly
-      # render with their escaped values.
-      self.assertIn(repr(u'thumb:\U0001F44D'), stdout)
-    else:
-      # In Python 3, the repr() of a unicode string isn't escaped.
-      self.assertIn(u'thumb:\U0001F44D', stdout)
+    self.assertIn(u'thumb:\U0001F44D', stdout)
 
   def test_helpshort(self):
     _, _, stderr = self.run_helper(
@@ -253,8 +230,6 @@ class FunctionalTests(absltest.TestCase):
     with open(os.path.join(tmpdir, 'STATUS')) as status_file:
       self.assertIn('MyException:', status_file.read())
 
-  @unittest.skipIf(six.PY2,
-                   'By default, faulthandler is only available in Python 3.')
   def test_faulthandler_dumps_stack_on_sigsegv(self):
     return_code, _, _ = self.run_helper(
         False,

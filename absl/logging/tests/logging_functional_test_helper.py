@@ -14,22 +14,17 @@
 
 """Helper script for logging_functional_test."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import logging as std_logging
 import os
 import sys
 import threading
 import time
 import timeit
+from unittest import mock
 
 from absl import app
 from absl import flags
 from absl import logging
-import mock
-from six.moves import xrange  # pylint: disable=redefined-builtin
 
 FLAGS = flags.FLAGS
 
@@ -71,14 +66,14 @@ def _test_do_logging():
                                   2)
       mock_timer.return_value = mock_timer() + .2
 
-  for i in xrange(1, 5):
+  for i in range(1, 5):
     logging.log_first_n(logging.INFO, 'Info first %d of %d', 2, i, 2)
     logging.log_every_n(logging.INFO, 'Info %d (every %d)', 3, i, 3)
 
   logging.vlog(-1, 'This line is VLOG level -1')
   logging.log(-1, 'This line is log level -1')
   logging.warning('Worrying Stuff')
-  for i in xrange(1, 5):
+  for i in range(1, 5):
     logging.log_first_n(logging.WARNING, 'Warn first %d of %d', 2, i, 2)
     logging.log_every_n(logging.WARNING, 'Warn %d (every %d)', 3, i, 3)
 
@@ -103,7 +98,7 @@ def _test_do_logging():
   logging.error('No traceback', exc_info=saved_exc_info[:2] + (None,))
 
   logging.error('Alarming Stuff')
-  for i in xrange(1, 5):
+  for i in range(1, 5):
     logging.log_first_n(logging.ERROR, 'Error first %d of %d', 2, i, 2)
     logging.log_every_n(logging.ERROR, 'Error %d (every %d)', 3, i, 3)
   logging.flush()

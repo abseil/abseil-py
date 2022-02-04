@@ -14,15 +14,11 @@
 
 """Tests for flags.FlagValues class."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import collections
 import copy
 import pickle
 import types
-import unittest
+from unittest import mock
 
 from absl import logging
 from absl.flags import _defines
@@ -33,8 +29,6 @@ from absl.flags import _validators
 from absl.flags.tests import module_foo
 from absl.testing import absltest
 from absl.testing import parameterized
-import mock
-import six
 
 
 class FlagValuesTest(absltest.TestCase):
@@ -853,15 +847,6 @@ class UnparsedFlagAccessTest(absltest.TestCase):
     with self.assertRaises(_exceptions.UnparsedFlagAccessError):
       _ = fv.name
 
-  @unittest.skipIf(six.PY3, 'Python 2 only test')
-  def test_hasattr_logs_in_py2(self):
-    fv = _flagvalues.FlagValues()
-    _defines.DEFINE_string('name', 'default', 'help', flag_values=fv)
-    with mock.patch.object(_flagvalues.logging, 'error') as mock_error:
-      self.assertFalse(hasattr(fv, 'name'))
-    mock_error.assert_called_once()
-
-  @unittest.skipIf(six.PY2, 'Python 3 only test')
   def test_hasattr_raises_in_py3(self):
     fv = _flagvalues.FlagValues()
     _defines.DEFINE_string('name', 'default', 'help', flag_values=fv)

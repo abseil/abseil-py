@@ -30,10 +30,7 @@ py_library(
     name = "parameterized",
     srcs = [
         "parameterized.py",
-    ] + select({
-        "//absl:py2_mode": [],
-        "//absl:py3_mode": ["_parameterized_async.py"],
-    }),
+    ],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
@@ -196,7 +193,6 @@ py_test(
         ":absltest",
         ":parameterized",
         ":tests/absltest_env",
-        "@six_archive//:six",
     ],
 )
 
@@ -233,7 +229,6 @@ py_test(
         ":absltest",
         ":parameterized",
         "//absl:_collections_abc",
-        "@six_archive//:six",
     ],
 )
 
@@ -249,8 +244,6 @@ py_test(
         ":parameterized",
         ":xml_reporter",
         "//absl/logging",
-        "@mock_archive//:mock",
-        "@six_archive//:six",
     ],
 )
 

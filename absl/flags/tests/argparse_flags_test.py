@@ -14,14 +14,12 @@
 
 """Tests for absl.flags.argparse_flags."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
+import io
 import os
 import subprocess
 import sys
 import tempfile
+from unittest import mock
 
 from absl import flags
 from absl import logging
@@ -29,8 +27,6 @@ from absl.flags import argparse_flags
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
-import mock
-import six
 
 
 class ArgparseFlagsTest(parameterized.TestCase):
@@ -149,7 +145,7 @@ class ArgparseFlagsTest(parameterized.TestCase):
   def test_dashes(self, argument, expected):
     parser = argparse_flags.ArgumentParser(
         inherited_absl_flags=self._absl_flags)
-    if isinstance(expected, six.string_types):
+    if isinstance(expected, str):
       parser.parse_args([argument])
       self.assertEqual(self._absl_flags.absl_string, expected)
     else:
@@ -286,7 +282,7 @@ class ArgparseFlagsTest(parameterized.TestCase):
     parser = argparse_flags.ArgumentParser(
         inherited_absl_flags=self._absl_flags)
     with self.assertRaises(SystemExit),\
-        mock.patch.object(sys, 'stdout', new=six.StringIO()) as mock_stdout:
+        mock.patch.object(sys, 'stdout', new=io.StringIO()) as mock_stdout:
       parser.parse_args(['--helpfull'])
     stdout_message = mock_stdout.getvalue()
     logging.info('captured stdout message:\n%s', stdout_message)

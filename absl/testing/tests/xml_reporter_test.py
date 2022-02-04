@@ -12,11 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import datetime
+import io
 import os
 import re
 import subprocess
@@ -25,6 +22,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 from xml.etree import ElementTree
 from xml.parsers import expat
 
@@ -33,11 +31,9 @@ from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
 from absl.testing import xml_reporter
-import mock
-import six
 
 
-class StringIOWriteLn(six.StringIO):
+class StringIOWriteLn(io.StringIO):
 
   def writeln(self, line):
     self.write(line + '\n')
@@ -67,14 +63,16 @@ def xml_escaped_exception_type(exception_type):
 
 OUTPUT_STRING = '\n'.join([
     r'<\?xml version="1.0"\?>',
-    '<testsuites name="" tests="%(tests)d" failures="%(failures)d"'
-    ' errors="%(errors)d" time="%(run_time).1f" timestamp="%(start_time)s">',
-    '<testsuite name="%(suite_name)s" tests="%(tests)d"'
-    ' failures="%(failures)d" errors="%(errors)d" time="%(run_time).1f" timestamp="%(start_time)s">',
-    '  <testcase name="%(test_name)s" status="%(status)s" result="%(result)s"'
-    ' time="%(run_time).1f" classname="%(classname)s"'
-    ' timestamp="%(start_time)s">%(message)s', '  </testcase>', '</testsuite>',
-    '</testsuites>'
+    ('<testsuites name="" tests="%(tests)d" failures="%(failures)d"'
+     ' errors="%(errors)d" time="%(run_time).1f" timestamp="%(start_time)s">'),
+    ('<testsuite name="%(suite_name)s" tests="%(tests)d"'
+     ' failures="%(failures)d" errors="%(errors)d" time="%(run_time).1f"'
+     ' timestamp="%(start_time)s">'),
+    ('  <testcase name="%(test_name)s" status="%(status)s" result="%(result)s"'
+     ' time="%(run_time).1f" classname="%(classname)s"'
+     ' timestamp="%(start_time)s">%(message)s'),
+    '  </testcase>', '</testsuite>',
+    '</testsuites>',
 ])
 
 FAILURE_MESSAGE = r"""
@@ -97,8 +95,8 @@ UNICODE_MESSAGE = r"""
     raise AssertionError\(u'\\xe9'\)
 AssertionError: {0}
 \]\]></%s>""".format(
-    r'\\xe9' if six.PY2 else r'\xe9',
-    xml_escaped_exception_type(AssertionError))
+        r'\xe9',
+        xml_escaped_exception_type(AssertionError))
 
 NEWLINE_MESSAGE = r"""
   <%s message="{0}" type="{1}"><!\[CDATA\[Traceback \(most recent call last\):
@@ -113,9 +111,10 @@ AssertionError: {3}
 
 UNEXPECTED_SUCCESS_MESSAGE = '\n'.join([
     '',
-    r'  <error message="" type=""><!\[CDATA\[Test case '
-    r'__main__.MockTest.unexpectedly_passing_test should have failed, '
-    r'but passed.\]\]></error>'])
+    (r'  <error message="" type=""><!\[CDATA\[Test case '
+     r'__main__.MockTest.unexpectedly_passing_test should have failed, '
+     r'but passed.\]\]></error>'),
+])
 
 UNICODE_ERROR_MESSAGE = UNICODE_MESSAGE % ('error', 'error')
 NEWLINE_ERROR_MESSAGE = NEWLINE_MESSAGE % ('error', 'error')
@@ -124,8 +123,9 @@ NEWLINE_ERROR_MESSAGE = NEWLINE_MESSAGE % ('error', 'error')
 class TextAndXMLTestResultTest(absltest.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.stream = StringIOWriteLn()
-    self.xml_stream = six.StringIO()
+    self.xml_stream = io.StringIO()
 
   def _make_result(self, times):
     timer = mock.Mock()
@@ -1060,50 +1060,24 @@ class XmlReporterFixtureTest(absltest.TestCase):
                             'error': 'test Errored!'}]}])
 
   def test_set_up_failure(self):
-    if six.PY2:
-      # A failure in setUp() produces an error (not a failure), which is
-      # inconsistent with the Python unittest documentation.  In Python
-      # 2.7, the bug appears to be in unittest.TestCase.run() method.
-      # Although it correctly checks for a SkipTest exception, it does
-      # not check for a failureException.
-      self._run_test(
-          flag='--set_up_fail',
-          num_errors=1,
-          num_failures=0,
-          suites=[{'name': 'FailableTest',
-                   'cases': [{'name': 'test',
-                              'classname': '__main__.FailableTest',
-                              'error': 'setUp Failed!'}]}])
-    else:
-      self._run_test(
-          flag='--set_up_fail',
-          num_errors=0,
-          num_failures=1,
-          suites=[{'name': 'FailableTest',
-                   'cases': [{'name': 'test',
-                              'classname': '__main__.FailableTest',
-                              'failure': 'setUp Failed!'}]}])
+    self._run_test(
+        flag='--set_up_fail',
+        num_errors=0,
+        num_failures=1,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest',
+                            'failure': 'setUp Failed!'}]}])
 
   def test_tear_down_failure(self):
-    if six.PY2:
-      # See comment in test_set_up_failure().
-      self._run_test(
-          flag='--tear_down_fail',
-          num_errors=1,
-          num_failures=0,
-          suites=[{'name': 'FailableTest',
-                   'cases': [{'name': 'test',
-                              'classname': '__main__.FailableTest',
-                              'error': 'tearDown Failed!'}]}])
-    else:
-      self._run_test(
-          flag='--tear_down_fail',
-          num_errors=0,
-          num_failures=1,
-          suites=[{'name': 'FailableTest',
-                   'cases': [{'name': 'test',
-                              'classname': '__main__.FailableTest',
-                              'failure': 'tearDown Failed!'}]}])
+    self._run_test(
+        flag='--tear_down_fail',
+        num_errors=0,
+        num_failures=1,
+        suites=[{'name': 'FailableTest',
+                 'cases': [{'name': 'test',
+                            'classname': '__main__.FailableTest',
+                            'failure': 'tearDown Failed!'}]}])
 
   def test_test_fail(self):
     self._run_test(

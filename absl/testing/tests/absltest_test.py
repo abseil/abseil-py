@@ -14,19 +14,15 @@
 
 """Tests for absltest."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import collections
 import contextlib
 import io
 import os
+import pathlib
 import re
 import stat
 import string
 import subprocess
-import sys
 import tempfile
 import unittest
 
@@ -34,14 +30,6 @@ from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
 from absl.testing.tests import absltest_env
-import six
-
-try:
-  import pathlib
-except ImportError:  # PY2
-  pathlib = None
-
-PY_VERSION_2 = sys.version_info[0] == 2
 
 
 class HelperMixin(object):
@@ -52,7 +40,7 @@ class HelperMixin(object):
 
   def run_helper(self, test_id, args, env_overrides, expect_success):
     env = absltest_env.inherited_env()
-    for key, value in six.iteritems(env_overrides):
+    for key, value in env_overrides.items():
       if value is None:
         if key in env:
           del env[key]
@@ -266,11 +254,6 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
 
     # Test that sequences of unhashable objects can be tested for sameness:
     self.assertSameElements([[1, 2], [3, 4]], [[3, 4], [1, 2]])
-    if PY_VERSION_2:
-      # dict's are no longer valid for < comparison in Python 3 making them
-      # unsortable (yay, sanity!).  But we need to preserve this old behavior
-      # when running under Python 2.
-      self.assertSameElements([{'a': 1}, {'b': 2}], [{'b': 2}, {'a': 1}])
     self.assertRaises(AssertionError, self.assertSameElements, [[1]], [[2]])
 
   def test_assert_items_equal_hotfix(self):
@@ -838,14 +821,10 @@ test case
 ?                                                       +++++++++++++++++++++
 +     own implementation that does not subclass from TestCase, of course.
 """
-    types = (str, unicode) if PY_VERSION_2 else (str,)
-
-    for type1 in types:
-      for type2 in types:
-        self.assertRaisesWithLiteralMatch(AssertionError, sample_text_error,
-                                          self.assertMultiLineEqual,
-                                          type1(sample_text),
-                                          type2(revised_sample_text))
+    self.assertRaisesWithLiteralMatch(AssertionError, sample_text_error,
+                                      self.assertMultiLineEqual,
+                                      sample_text,
+                                      revised_sample_text)
 
     self.assertRaises(AssertionError, self.assertMultiLineEqual, (1, 2), 'str')
     self.assertRaises(AssertionError, self.assertMultiLineEqual, 'str', (1, 2))
@@ -1091,10 +1070,6 @@ test case
     self.assertTotallyOrdered([1], [2])
     self.assertTotallyOrdered([1, 1, 1])
     self.assertTotallyOrdered([(1, 1)], [(1, 2)], [(2, 1)])
-    if PY_VERSION_2:
-      # In Python 3 comparing different types of elements is not supported.
-      self.assertTotallyOrdered([None], [1], [2])
-      self.assertTotallyOrdered([1, 1, 1], ['a string'])
 
     # From the docstring.
     class A(object):
@@ -1149,30 +1124,15 @@ test case
       """Like A, but not hashable."""
       __hash__ = None
 
-    if PY_VERSION_2:
-      self.assertTotallyOrdered(
-          [None],  # None should come before everything else.
-          [1],  # Integers sort earlier.
-          [A(1, 'a')],
-          [A(2, 'b')],  # 2 is after 1.
-          [
-              A(3, 'c'),
-              B(3, 'd'),
-              B(3, 'e')  # The second argument is irrelevant.
-          ],
-          [A(4, 'z')],
-          ['foo'])  # Strings sort last.
-    else:
-      # Python 3 does not define ordering across different types.
-      self.assertTotallyOrdered(
-          [A(1, 'a')],
-          [A(2, 'b')],  # 2 is after 1.
-          [
-              A(3, 'c'),
-              B(3, 'd'),
-              B(3, 'e')  # The second argument is irrelevant.
-          ],
-          [A(4, 'z')])
+    self.assertTotallyOrdered(
+        [A(1, 'a')],
+        [A(2, 'b')],  # 2 is after 1.
+        [
+            A(3, 'c'),
+            B(3, 'd'),
+            B(3, 'e')  # The second argument is irrelevant.
+        ],
+        [A(4, 'z')])
 
     # Invalid.
     msg = 'This is a useful message'
@@ -1224,10 +1184,7 @@ test case
 
   def test_assert_url_equal_different(self):
     msg = 'This is a useful message'
-    if PY_VERSION_2:
-      whole_msg = "'a' != 'b' : This is a useful message"
-    else:
-      whole_msg = 'This is a useful message:\n- a\n+ b\n'
+    whole_msg = 'This is a useful message:\n- a\n+ b\n'
     self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
                                       self.assertUrlEqual,
                                       'http://a', 'http://b', msg=msg)
@@ -1267,9 +1224,6 @@ test case
                              {'one': 1})
     self.assertSameStructure(collections.OrderedDict({'one': 1}),
                              collections.defaultdict(None, {'one': 1}))
-    # int and long should always be treated as the same type.
-    if PY_VERSION_2:
-      self.assertSameStructure({long(3): 3}, {3: long(3)})
 
   def test_same_structure_different(self):
     # Different type
@@ -1483,8 +1437,7 @@ class GetCommandStderrTestCase(absltest.TestCase):
         absltest.get_command_stderr(
             ['cat', os.path.join(tmpdir, 'file.txt')],
             env=_env_for_command_tests())[1])
-    if not PY_VERSION_2:
-      stderr = stderr.decode('utf-8')
+    stderr = stderr.decode('utf-8')
     self.assertRegex(stderr, 'No such file or directory')
 
 
@@ -1497,7 +1450,6 @@ def cm_for_test(obj):
     obj.cm_state = 'exited'
 
 
-@absltest.skipIf(six.PY2, 'Python 2 does not have ExitStack')
 class EnterContextTest(absltest.TestCase):
 
   def setUp(self):
@@ -1672,25 +1624,18 @@ class EqualityAssertionTest(absltest.TestCase):
     self.assertEqual(same_a, same_b)
     self.assertEquals(same_a, same_b)
     self.failUnlessEqual(same_a, same_b)
-    if PY_VERSION_2:
-      # Python 3 removes the global cmp function
-      self.assertEqual(0, cmp(same_a, same_b))
 
     self.assertFalse(same_a == different)
     self.assertTrue(same_a != different)
     self.assertNotEqual(same_a, different)
     self.assertNotEquals(same_a, different)
     self.failIfEqual(same_a, different)
-    if PY_VERSION_2:
-      self.assertNotEqual(0, cmp(same_a, different))
 
     self.assertFalse(same_b == different)
     self.assertTrue(same_b != different)
     self.assertNotEqual(same_b, different)
     self.assertNotEquals(same_b, different)
     self.failIfEqual(same_b, different)
-    if PY_VERSION_2:
-      self.assertNotEqual(0, cmp(same_b, different))
 
   def test_comparison_with_eq(self):
     same_a = self.EqualityTestsWithEq(42)
@@ -1705,15 +1650,9 @@ class EqualityAssertionTest(absltest.TestCase):
     self._perform_apple_apple_orange_checks(same_a, same_b, different)
 
   def test_comparison_with_cmp_or_lt_eq(self):
-    if PY_VERSION_2:
-      # In Python 3; the __cmp__ method is no longer special.
-      cmp_or_lteq_class = self.EqualityTestsWithCmp
-    else:
-      cmp_or_lteq_class = self.EqualityTestsWithLtEq
-
-    same_a = cmp_or_lteq_class(42)
-    same_b = cmp_or_lteq_class(42)
-    different = cmp_or_lteq_class(1769)
+    same_a = self.EqualityTestsWithLtEq(42)
+    same_b = self.EqualityTestsWithLtEq(42)
+    different = self.EqualityTestsWithLtEq(1769)
     self._perform_apple_apple_orange_checks(same_a, same_b, different)
 
 
@@ -2102,7 +2041,6 @@ class TempFileTest(absltest.TestCase, HelperMixin):
     os.chmod(os.path.dirname(path), stat.S_IEXEC)
     # The test should pass, even though that file cannot be deleted in teardown.
 
-  @absltest.skipUnless(getattr(os, 'PathLike', None), 'Testing os.PathLike')
   def test_temp_file_path_like(self):
     tempdir = self.create_tempdir('foo')
     self.assertIsInstance(tempdir, os.PathLike)
