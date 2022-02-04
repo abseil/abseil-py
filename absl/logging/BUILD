@@ -45,8 +45,6 @@ py_test(
         "//absl/testing:absltest",
         "//absl/testing:flagsaver",
         "//absl/testing:parameterized",
-        "@mock_archive//:mock",
-        "@six_archive//:six",
     ],
 )
 
@@ -85,8 +83,6 @@ py_binary(
         ":logging",
         "//absl:app",
         "//absl/flags",
-        "@mock_archive//:mock",
-        "@six_archive//:six",
     ],
 )
 
@@ -100,10 +96,8 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":logging",
-        "//absl/flags",
         "//absl/testing:_bazelize_command",
         "//absl/testing:absltest",
         "//absl/testing:parameterized",
-        "@six_archive//:six",
     ],
 )

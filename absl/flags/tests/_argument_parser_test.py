@@ -16,15 +16,11 @@
 Most of the argument parsers are covered in the flags_test.py.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import enum
+
 from absl.flags import _argument_parser
 from absl.testing import absltest
 from absl.testing import parameterized
-import six
 
 
 class ArgumentParserTest(absltest.TestCase):
@@ -48,14 +44,12 @@ class ArgumentParserTest(absltest.TestCase):
 class BooleanParserTest(absltest.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.parser = _argument_parser.BooleanParser()
 
   def test_parse_bytes(self):
-    if six.PY2:
-      self.assertTrue(self.parser.parse(b'true'))
-    else:
-      with self.assertRaises(TypeError):
-        self.parser.parse(b'true')
+    with self.assertRaises(TypeError):
+      self.parser.parse(b'true')
 
   def test_parse_str(self):
     self.assertTrue(self.parser.parse('true'))

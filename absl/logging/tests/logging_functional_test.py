@@ -14,10 +14,6 @@
 
 """Functional tests for absl.logging."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import fnmatch
 import os
 import re
@@ -30,7 +26,7 @@ from absl import logging
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import parameterized
-import six
+
 
 _PY_VLOG3_LOG_MESSAGE = """\
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:62] This line is VLOG level 3
@@ -178,11 +174,10 @@ def _get_fatal_log_expectation(testcase, message, include_stacktrace):
     expected_logs = format_string % message
     if include_stacktrace:
       expected_logs += 'Stack trace:\n'
-    if six.PY3:
-      faulthandler_start = 'Fatal Python error: Aborted'
-      testcase.assertIn(faulthandler_start, logs)
-      log_message = logs.split(faulthandler_start)[0]
-      testcase.assertEqual(_munge_log(expected_logs), _munge_log(log_message))
+    faulthandler_start = 'Fatal Python error: Aborted'
+    testcase.assertIn(faulthandler_start, logs)
+    log_message = logs.split(faulthandler_start)[0]
+    testcase.assertEqual(_munge_log(expected_logs), _munge_log(log_message))
 
   return assert_logs
 
@@ -310,10 +305,8 @@ class FunctionalTest(parameterized.TestCase):
       logs.append(_PY_ERROR_LOG_MESSAGE)
 
     expected_logs = ''.join(logs)
-    if six.PY3:
-      # In Python 3 class types are represented a bit differently
-      expected_logs = expected_logs.replace(
-          "<type 'exceptions.OSError'>", "<class 'OSError'>")
+    expected_logs = expected_logs.replace(
+        "<type 'exceptions.OSError'>", "<class 'OSError'>")
     return expected_logs
 
   def setUp(self):
@@ -434,11 +427,7 @@ class FunctionalTest(parameterized.TestCase):
         actual = output
       else:
         path = os.path.join(self._log_dir, basename)
-        if six.PY2:
-          f = open(path)
-        else:
-          f = open(path, encoding='utf-8')
-        with f:
+        with open(path, encoding='utf-8') as f:
           actual = f.read()
 
       if callable(expected):
@@ -673,34 +662,11 @@ E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std error log
 
   def test_none_exc_info_py_logging(self):
 
-    if six.PY2:
-      expected_stderr = ''
-      expected_info = '''\
-I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
-None
-'''
-    else:
-      if sys.version_info[0:2] == (3, 4):
-        # Python 3.4 is different.
-        def expected_stderr(stderr):
-          regex = r'''--- Logging error ---
-Traceback \(most recent call last\):
-.*
-Message: 'None exc_info'
-Arguments: \(\)'''
-          if not re.search(regex, stderr, flags=re.DOTALL | re.MULTILINE):
-            self.fail('Cannot find regex "%s" in stderr:\n%s' % (regex, stderr))
-        expected_info = ''
-      else:
-        expected_stderr = ''
-        expected_info = '''\
+    expected_stderr = ''
+    expected_info = '''\
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
 '''
-        # Python 3.5.0 to 3.5.2 are different too.
-        if (3, 5, 0) <= sys.version_info[:3] <= (3, 5, 2):
-          expected_info += 'NoneType\n'
-        else:
-          expected_info += 'NoneType: None\n'
+    expected_info += 'NoneType: None\n'
 
     expected_logs = [
         ['stderr', None, expected_stderr],
@@ -722,33 +688,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
           match, 'Cannot find stderr message for test {}'.format(name))
       return match.group(1)
 
-    def assert_stderr_python2(stderr):
-      """Verifies that it writes correct information to stderr for Python 2.
-
-      For unicode errors, it logs the exception with a stack trace to stderr.
-
-      Args:
-        stderr: the message from stderr.
-      """
-      # Successful logs:
-      for name in ('unicode', 'unicode % unicode', 'bytes % bytes'):
-        self.assertEqual('', get_stderr_message(stderr, name))
-
-      # UnicodeDecodeError errors:
-      for name in (
-          'unicode % bytes', 'bytes % unicode', 'unicode % iso8859-15'):
-        self.assertIn('UnicodeDecodeError',
-                      get_stderr_message(stderr, name))
-        self.assertIn('Traceback (most recent call last):',
-                      get_stderr_message(stderr, name))
-
-      # UnicodeEncodeError errors:
-      self.assertIn('UnicodeEncodeError',
-                    get_stderr_message(stderr, 'str % exception'))
-      self.assertIn('Traceback (most recent call last):',
-                    get_stderr_message(stderr, 'str % exception'))
-
-    def assert_stderr_python3(stderr):
+    def assert_stderr(stderr):
       """Verifies that it writes correct information to stderr for Python 3.
 
       There are no unicode errors in Python 3.
@@ -764,20 +704,9 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
         logging.info('name = %s', name)
         self.assertEqual('', get_stderr_message(stderr, name))
 
-    expected_logs = [[
-        'stderr', None,
-        assert_stderr_python2 if six.PY2 else assert_stderr_python3]]
+    expected_logs = [['stderr', None, assert_stderr]]
 
-    if six.PY2:
-      # In Python 2, only successfully formatted messages are logged.
-      info_log = u'''\
-I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
-I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
-I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
-'''.encode('utf-8')
-    else:
-      # In Python 3, all messages are formatted successfully and logged.
-      info_log = u'''\
+    info_log = u'''\
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] b'G\\xc3\\xaete: b'Ch\\xc3\\xa2tonnaye''

@@ -21,23 +21,6 @@ py_library(
     visibility = ["//visibility:public"],
 )
 
-# NOTE: Because of how Bazel's Python support works, its possible (quite likely,
-# actually) to be running Python 3 without this config setting being matched,
-# so be careful about assuming or requiring it to match for a target to
-# correctly work under Python 3.
-# See: https://github.com/bazelbuild/bazel/issues/4815
-config_setting(
-    name = "py3_mode",
-    flag_values = {"@bazel_tools//tools/python:python_version": "PY3"},
-    visibility = [":__subpackages__"],
-)
-
-config_setting(
-    name = "py2_mode",
-    flag_values = {"@bazel_tools//tools/python:python_version": "PY2"},
-    visibility = [":__subpackages__"],
-)
-
 py_library(
     name = "_collections_abc",
     srcs = ["_collections_abc.py"],
@@ -82,8 +65,6 @@ py_test(
         "//absl/testing:_bazelize_command",
         "//absl/testing:absltest",
         "//absl/testing:flagsaver",
-        "@mock_archive//:mock",
-        "@six_archive//:six",
     ],
 )
 
