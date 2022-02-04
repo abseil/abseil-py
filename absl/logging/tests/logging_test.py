@@ -363,28 +363,6 @@ class PythonHandlerTest(absltest.TestCase):
     self.assertTrue(fake_file.closed)
 
 
-class PrefixFormatterTest(absltest.TestCase):
-  """Tests the PrefixFormatter class."""
-
-  def setUp(self):
-    self.now_tuple = time.localtime(time.mktime(
-        (1979, 10, 21, 18, 17, 16, 3, 15, 1)))
-    self.new_prefix = lambda level: '(blah_prefix)'
-    mock.patch.object(time, 'time').start()
-    mock.patch.object(time, 'localtime').start()
-    self.record = std_logging.LogRecord(
-        'name', std_logging.INFO, 'path', 12, 'A Message', [], False)
-    self.formatter = logging.PythonFormatter()
-
-  def tearDown(self):
-    mock.patch.stopall()
-
-  @mock.patch.object(logging._thread_lib, 'get_ident')
-  def test_get_thread_id(self, mock_get_ident):
-    mock_get_ident.return_value = 12345
-    self.assertEqual(12345, logging._get_thread_id())
-
-
 class ABSLHandlerTest(absltest.TestCase):
 
   def setUp(self):
