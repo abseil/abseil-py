@@ -43,10 +43,6 @@ representation, before manipulating the levels, and then only to cpp
 or absl if those level schemes are absolutely necessary.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import logging
 
 STANDARD_CRITICAL = logging.CRITICAL

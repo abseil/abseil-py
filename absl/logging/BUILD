@@ -9,7 +9,6 @@ py_library(
         ":converter",
         "//absl:_collections_abc",
         "//absl/flags",
-        "@six_archive//:six",
     ],
 )
 
