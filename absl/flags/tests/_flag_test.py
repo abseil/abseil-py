@@ -35,6 +35,7 @@ from absl.testing import parameterized
 class FlagTest(absltest.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.flag = _flag.Flag(
         _argument_parser.ArgumentParser(),
         _argument_parser.ArgumentSerializer(),
@@ -59,6 +60,11 @@ class FlagTest(absltest.TestCase):
         'number', 1, 'help')
     self.assertEqual(1, flag.default_unparsed)
 
+  def test_no_truthiness(self):
+    with self.assertRaises(TypeError):
+      if self.flag:
+        self.fail('Flag instances must raise rather than be truthy.')
+
   def test_set_default_overrides_current_value(self):
     self.assertEqual('apple', self.flag.value)
     self.flag._set_default('orange')
@@ -71,14 +77,14 @@ class FlagTest(absltest.TestCase):
     self.assertEqual('apple', self.flag.value)
 
   def test_pickle(self):
-    with self.assertRaisesRegexp(TypeError, "can't pickle Flag objects"):
+    with self.assertRaisesRegex(TypeError, "can't pickle Flag objects"):
       pickle.dumps(self.flag)
 
   def test_copy(self):
     self.flag.value = 'orange'
 
-    with self.assertRaisesRegexp(
-        TypeError, 'Flag does not support shallow copies'):
+    with self.assertRaisesRegex(TypeError,
+                                'Flag does not support shallow copies'):
       copy.copy(self.flag)
 
     flag2 = copy.deepcopy(self.flag)
@@ -172,10 +178,10 @@ class EnumClassFlagTest(parameterized.TestCase):
 class MultiEnumClassFlagTest(parameterized.TestCase):
 
   @parameterized.named_parameters(
-      ('NoHelpSupplied', '', '<apple|orange>: (no help available);\n    '
+      ('NoHelpSupplied', '', '<apple|orange>: (no help available);\n    ' +
        'repeat this option to specify a list of values', False),
       ('WithHelpSupplied', 'Type of fruit.',
-       '<APPLE|ORANGE>: Type of fruit.;\n    '
+       '<APPLE|ORANGE>: Type of fruit.;\n    ' +
        'repeat this option to specify a list of values', True))
   def test_help_text(self, helptext_input, helptext_output, case_sensitive):
     f = _flag.MultiEnumClassFlag(
