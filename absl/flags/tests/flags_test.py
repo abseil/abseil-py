@@ -1511,6 +1511,20 @@ class MultiEnumFlagsTest(absltest.TestCase):
     fv(argv)
     self.assertListEqual(fv.get_flag_value('m_enum', None), ['WHOOSH', 'FOO'])
 
+  def test_help_text(self):
+    """Test multi_enum flag's help text."""
+    fv = flags.FlagValues()
+
+    flags.DEFINE_multi_enum(
+        'm_enum',
+        None, ['FOO', 'BAR'],
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+    self.assertRegex(
+        fv['m_enum'].help,
+        r'<FOO\|BAR>: Enum option that can occur multiple times;\s+'
+        'repeat this option to specify a list of values')
+
   def test_single_value_default(self):
     """Test multi_enum flags with a single default value."""
     fv = flags.FlagValues()
@@ -1589,6 +1603,21 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
     fv.mark_as_parsed()
 
     self.assertIsNone(fv.fruit)
+
+  def test_help_text(self):
+    fv = flags.FlagValues()
+    enum_defaults = None
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        enum_defaults,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv)
+
+    self.assertRegex(
+        fv['fruit'].help,
+        r'<apple\|orange>: Enum option that can occur multiple times;\s+'
+        'repeat this option to specify a list of values')
 
   def test_define_results_in_registered_flag_with_string(self):
     fv = flags.FlagValues()
