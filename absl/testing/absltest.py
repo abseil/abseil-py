@@ -1364,6 +1364,21 @@ class TestCase(unittest.TestCase):
       self.test_func(exc_value)
       return True
 
+  @typing.overload
+  def assertRaisesWithPredicateMatch(
+      self, expected_exception, predicate) -> _AssertRaisesContext:
+    # The purpose of this return statement is to work around
+    # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
+    return self._AssertRaisesContext(None, None, None)
+
+  @typing.overload
+  def assertRaisesWithPredicateMatch(
+      self, expected_exception, predicate, callable_obj: Callable[..., Any],
+      *args, **kwargs) -> None:
+    # The purpose of this return statement is to work around
+    # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
+    return self._AssertRaisesContext(None, None, None)
+
   def assertRaisesWithPredicateMatch(self, expected_exception, predicate,
                                      callable_obj=None, *args, **kwargs):
     """Asserts that exception is thrown and predicate(exception) is true.
@@ -1391,6 +1406,22 @@ class TestCase(unittest.TestCase):
       return context
     with context:
       callable_obj(*args, **kwargs)
+
+  @typing.overload
+  def assertRaisesWithLiteralMatch(
+      self, expected_exception, expected_exception_message
+  ) -> _AssertRaisesContext:
+    # The purpose of this return statement is to work around
+    # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
+    return self._AssertRaisesContext(None, None, None)
+
+  @typing.overload
+  def assertRaisesWithLiteralMatch(
+      self, expected_exception, expected_exception_message,
+      callable_obj: Callable[..., Any], *args, **kwargs) -> None:
+    # The purpose of this return statement is to work around
+    # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
+    return self._AssertRaisesContext(None, None, None)
 
   def assertRaisesWithLiteralMatch(self, expected_exception,
                                    expected_exception_message,
