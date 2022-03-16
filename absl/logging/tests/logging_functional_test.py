@@ -324,6 +324,7 @@ class FunctionalTest(parameterized.TestCase):
                  pass_logtostderr=False,
                  use_absl_log_file=False,
                  show_info_prefix=1,
+                 call_dict_config=False,
                  extra_args=()):
     """Execute the helper script and verify its output.
 
@@ -343,6 +344,8 @@ class FunctionalTest(parameterized.TestCase):
           logging.get_absl_handler().use_absl_log_file() before test_fn in
           logging_functional_test_helper.
       show_info_prefix: --showprefixforinfo value passed to the helper script.
+      call_dict_config: True if helper script should call
+          logging.config.dictConfig.
       extra_args: Iterable of str (optional, defaults to ()) - extra arguments
           to pass to the helper script.
 
@@ -361,6 +364,7 @@ class FunctionalTest(parameterized.TestCase):
     env.update({
         'TEST_NAME': test_name,
         'USE_ABSL_LOG_FILE': '%d' % (use_absl_log_file,),
+        'CALL_DICT_CONFIG': '%d' % (call_dict_config,),
     })
     cmd = [self._get_helper()] + args
 
