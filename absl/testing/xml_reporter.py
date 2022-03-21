@@ -27,7 +27,6 @@ import traceback
 import unittest
 from xml.sax import saxutils
 from absl.testing import _pretty_print_reporter
-import six
 
 
 # See http://www.w3.org/TR/REC-xml/#NT-Char
@@ -74,7 +73,7 @@ def _escape_cdata(s):
   Returns:
     An escaped version of the input string.
   """
-  for char, escaped in six.iteritems(_control_character_conversions):
+  for char, escaped in _control_character_conversions.items():
     s = s.replace(char, escaped)
   return s.replace(']]>', ']] >')
 
@@ -90,13 +89,8 @@ def _iso8601_timestamp(timestamp):
   """
   if timestamp is None or timestamp < 0:
     return None
-  # Use utcfromtimestamp in PY2 because it doesn't have a built-in UTC object
-  if six.PY2:
-    return '%s+00:00' % datetime.datetime.utcfromtimestamp(
-        timestamp).isoformat()
-  else:
-    return datetime.datetime.fromtimestamp(
-        timestamp, tz=datetime.timezone.utc).isoformat()
+  return datetime.datetime.fromtimestamp(
+      timestamp, tz=datetime.timezone.utc).isoformat()
 
 
 def _print_xml_element_header(element, attributes, stream, indentation=''):
@@ -110,8 +104,8 @@ def _print_xml_element_header(element, attributes, stream, indentation=''):
   """
   stream.write('%s<%s' % (indentation, element))
   for attribute in attributes:
-    if len(attribute) == 2 \
-        and attribute[0] is not None and attribute[1] is not None:
+    if (len(attribute) == 2 and attribute[0] is not None and
+        attribute[1] is not None):
       stream.write(' %s="%s"' % (attribute[0], attribute[1]))
   stream.write('>\n')
 
@@ -279,7 +273,7 @@ class _TestSuiteResult(object):
     _print_xml_element_header('testsuites', overall_attributes, stream)
     if self._testsuites_properties:
       stream.write('    <properties>\n')
-      for name, value in sorted(six.iteritems(self._testsuites_properties)):
+      for name, value in sorted(self._testsuites_properties.items()):
         stream.write('      <property name="%s" value="%s"></property>\n' %
                      (_escape_xml_attr(name), _escape_xml_attr(str(value))))
       stream.write('    </properties>\n')

@@ -12,7 +12,6 @@ py_library(
         "//absl:app",
         "//absl/flags",
         "//absl/logging",
-        "@six_archive//:six",
     ],
 )
 
@@ -36,7 +35,6 @@ py_library(
     deps = [
         ":absltest",
         "//absl:_collections_abc",
-        "@six_archive//:six",
     ],
 )
 
@@ -47,7 +45,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":_pretty_print_reporter",
-        "@six_archive//:six",
     ],
 )
 

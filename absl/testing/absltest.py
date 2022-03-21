@@ -18,10 +18,6 @@ This module contains base classes and high-level functions for Abseil-style
 tests.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import contextlib
 import difflib
 import enum
@@ -43,6 +39,8 @@ import sys
 import tempfile
 import textwrap
 import unittest
+from unittest import mock  # pylint: disable=unused-import Allow absltest.mock.
+from urllib import parse
 
 try:
   # The faulthandler module isn't always available, and pytype doesn't
@@ -60,9 +58,6 @@ from absl import logging
 from absl._collections_abc import abc
 from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
-import six
-from six.moves import urllib
-from six.moves import xrange  # pylint: disable=redefined-builtin
 
 # Make typing an optional import to avoid it being a required dependency
 # in Python 2. Type checkers will still understand the imports.
@@ -84,14 +79,6 @@ else:
     _OutcomeType = unittest.case._Outcome  # pytype: disable=module-attr
 
 
-if six.PY3:
-  from unittest import mock  # pylint: disable=unused-import
-else:
-  try:
-    import mock  # type: ignore
-  except ImportError:
-    mock = None
-
 
 # Re-export a bunch of unittest functions we support so that people don't
 # have to import unittest to get them
@@ -107,7 +94,7 @@ expectedFailure = unittest.expectedFailure
 
 FLAGS = flags.FLAGS
 
-_TEXT_OR_BINARY_TYPES = (six.text_type, six.binary_type)
+_TEXT_OR_BINARY_TYPES = (str, bytes)
 
 # Suppress surplus entries in AssertionError stack traces.
 __unittest = True  # pylint: disable=invalid-name
@@ -296,8 +283,8 @@ def _open(filepath, mode, _open_func=open):
   # type: (Text, Text, Callable[..., IO]) -> IO
   """Opens a file.
 
-  Like open(), but compatible with Python 2 and 3. Also ensures that we can open
-  real files even if tests stub out open().
+  Like open(), but ensure that we can open real files even if tests stub out
+  open().
 
   Args:
     filepath: A filepath.
@@ -307,10 +294,7 @@ def _open(filepath, mode, _open_func=open):
   Returns:
     The opened file object.
   """
-  if six.PY2:
-    return _open_func(filepath, mode)
-  else:
-    return _open_func(filepath, mode, encoding='utf-8')
+  return _open_func(filepath, mode, encoding='utf-8')
 
 
 class _TempDir(object):
@@ -390,7 +374,7 @@ class _TempDir(object):
 
     # Note: there's no need to clear the directory since the containing
     # dir was cleared by the tempdir() function.
-    _makedirs_exist_ok(path)
+    os.makedirs(path, exist_ok=True)
     return _TempDir(path)
 
 
@@ -418,14 +402,14 @@ class _TempFile(object):
     if file_path:
       cleanup_path = os.path.join(base_path, _get_first_part(file_path))
       path = os.path.join(base_path, file_path)
-      _makedirs_exist_ok(os.path.dirname(path))
+      os.makedirs(os.path.dirname(path), exist_ok=True)
       # The file may already exist, in which case, ensure it's writable so that
       # it can be truncated.
       if os.path.exists(path) and not os.access(path, os.W_OK):
         stat_info = os.stat(path)
         os.chmod(path, stat_info.st_mode | stat.S_IWUSR)
     else:
-      _makedirs_exist_ok(base_path)
+      os.makedirs(base_path, exist_ok=True)
       fd, path = tempfile.mkstemp(dir=str(base_path))
       os.close(fd)
       cleanup_path = path
@@ -433,7 +417,7 @@ class _TempFile(object):
     tf = cls(path)
 
     if content:
-      if isinstance(content, six.text_type):
+      if isinstance(content, str):
         tf.write_text(content, mode=mode, encoding=encoding, errors=errors)
       else:
         tf.write_bytes(content, mode)
@@ -482,8 +466,6 @@ class _TempFile(object):
       encoding: The encoding to use when writing the text to the file.
       errors: The error handling strategy to use when converting text to bytes.
     """
-    if six.PY2 and isinstance(text, bytes):
-      text = text.decode(encoding, errors)
     with self.open_text(mode, encoding=encoding, errors=errors) as fp:
       fp.write(text)
 
@@ -673,12 +655,12 @@ class TestCase(unittest.TestCase):
       path = os.path.join(test_path, name)
       cleanup_path = os.path.join(test_path, _get_first_part(name))
     else:
-      _makedirs_exist_ok(test_path)
+      os.makedirs(test_path, exist_ok=True)
       path = tempfile.mkdtemp(dir=test_path)
       cleanup_path = path
 
     _rmtree_ignore_errors(cleanup_path)
-    _makedirs_exist_ok(path)
+    os.makedirs(path, exist_ok=True)
 
     self._maybe_add_temp_path_cleanup(cleanup_path, cleanup)
 
@@ -783,7 +765,8 @@ class TestCase(unittest.TestCase):
   @classmethod
   def _get_tempdir_path_cls(cls):
     # type: () -> Text
-    return os.path.join(TEST_TMPDIR.value, _get_qualname(cls))
+    return os.path.join(TEST_TMPDIR.value,
+                        cls.__qualname__.replace('__main__.', ''))
 
   def _get_tempdir_path_test(self):
     # type: () -> Text
@@ -1053,51 +1036,14 @@ class TestCase(unittest.TestCase):
   def assertItemsEqual(self, expected_seq, actual_seq, msg=None):
     """Deprecated, please use assertCountEqual instead.
 
-    This is equivalent to assertCountEqual in Python 3. An implementation of
-    assertCountEqual is also provided by absltest.TestCase for Python 2.
+    This is equivalent to assertCountEqual.
 
     Args:
       expected_seq: A sequence containing elements we are expecting.
       actual_seq: The sequence that we are testing.
       msg: The message to be printed if the test fails.
     """
-    if six.PY3:
-      # The assertItemsEqual method was renamed assertCountEqual in Python 3.2
-      super(TestCase, self).assertCountEqual(expected_seq, actual_seq, msg)
-    else:
-      super(TestCase, self).assertItemsEqual(expected_seq, actual_seq, msg)
-
-  # Only override assertCountEqual in Python 2 to avoid unnecessary calls.
-  if six.PY2:
-
-    def assertCountEqual(self, expected_seq, actual_seq, msg=None):
-      """Tests two sequences have the same elements regardless of order.
-
-      It tests that the first sequence contains the same elements as the
-      second, regardless of their order. When they don't, an error message
-      listing the differences between the sequences will be generated.
-
-      Duplicate elements are not ignored when comparing first and second.
-      It verifies whether each element has the same count in both sequences.
-      Equivalent to:
-
-          self.assertEqual(Counter(list(expected_seq)),
-                           Counter(list(actual_seq)))
-
-      but works with sequences of unhashable objects as well.
-
-      Example:
-          - [0, 1, 1] and [1, 0, 1] compare equal.
-          - [0, 0, 1] and [0, 1] compare unequal.
-
-      Args:
-        expected_seq: A sequence containing elements we are expecting.
-        actual_seq: The sequence that we are testing.
-        msg: The message to be printed if the test fails.
-
-      """
-      # Only call super's method to avoid potential infinite recursions.
-      super(TestCase, self).assertItemsEqual(expected_seq, actual_seq, msg)
+    super().assertCountEqual(expected_seq, actual_seq, msg)
 
   def assertSameElements(self, expected_seq, actual_seq, msg=None):
     """Asserts that two sequences have the same elements (in any order).
@@ -1157,10 +1103,10 @@ class TestCase(unittest.TestCase):
   # has a different error format. However, I find this slightly more readable.
   def assertMultiLineEqual(self, first, second, msg=None, **kwargs):
     """Asserts that two multi-line strings are equal."""
-    assert isinstance(first, six.string_types), (
-        'First argument is not a string: %r' % (first,))
-    assert isinstance(second, six.string_types), (
-        'Second argument is not a string: %r' % (second,))
+    assert isinstance(first,
+                      str), ('First argument is not a string: %r' % (first,))
+    assert isinstance(second,
+                      str), ('Second argument is not a string: %r' % (second,))
     line_limit = kwargs.pop('line_limit', 0)
     if kwargs:
       raise TypeError('Unexpected keyword args {}'.format(tuple(kwargs)))
@@ -1237,14 +1183,14 @@ class TestCase(unittest.TestCase):
       if type(regex) is not regex_type:  # pylint: disable=unidiomatic-typecheck
         self.fail('regexes list must all be the same type.', message)
 
-    if regex_type is bytes and isinstance(actual_str, six.text_type):
+    if regex_type is bytes and isinstance(actual_str, str):
       regexes = [regex.decode('utf-8') for regex in regexes]
-      regex_type = six.text_type
-    elif regex_type is six.text_type and isinstance(actual_str, bytes):
+      regex_type = str
+    elif regex_type is str and isinstance(actual_str, bytes):
       regexes = [regex.encode('utf-8') for regex in regexes]
       regex_type = bytes
 
-    if regex_type is six.text_type:
+    if regex_type is str:
       regex = u'(?:%s)' % u')|(?:'.join(regexes)
     elif regex_type is bytes:
       regex = b'(?:' + (b')|(?:'.join(regexes)) + b')'
@@ -1276,7 +1222,7 @@ class TestCase(unittest.TestCase):
     # We need bytes regexes here because `err` is bytes.
     # Accommodate code which listed their output regexes w/o the b'' prefix by
     # converting them to bytes for the user.
-    if isinstance(regexes[0], six.text_type):
+    if isinstance(regexes[0], str):
       regexes = [regex.encode('utf-8') for regex in regexes]
 
     command_string = get_command_string(command)
@@ -1322,7 +1268,7 @@ class TestCase(unittest.TestCase):
     # We need bytes regexes here because `err` is bytes.
     # Accommodate code which listed their output regexes w/o the b'' prefix by
     # converting them to bytes for the user.
-    if isinstance(regexes[0], six.text_type):
+    if isinstance(regexes[0], str):
       regexes = [regex.encode('utf-8') for regex in regexes]
 
     command_string = get_command_string(command)
@@ -1533,7 +1479,7 @@ class TestCase(unittest.TestCase):
     subsequence = list(subsequence)
     longest_match = 0
 
-    for start in xrange(1 + len(container) - len(subsequence)):
+    for start in range(1 + len(container) - len(subsequence)):
       if longest_match == len(subsequence):
         break
       index = 0
@@ -1697,8 +1643,8 @@ class TestCase(unittest.TestCase):
 
     if a == b:
       return
-    a_items = Sorted(list(six.iteritems(a)))
-    b_items = Sorted(list(six.iteritems(b)))
+    a_items = Sorted(list(a.items()))
+    b_items = Sorted(list(b.items()))
 
     unexpected = []
     missing = []
@@ -1710,8 +1656,7 @@ class TestCase(unittest.TestCase):
       """Deterministic repr for dict."""
       # Sort the entries based on their repr, not based on their sort order,
       # which will be non-deterministic across executions, for many types.
-      entries = sorted((safe_repr(k), safe_repr(v))
-                       for k, v in six.iteritems(dikt))
+      entries = sorted((safe_repr(k), safe_repr(v)) for k, v in dikt.items())
       return '{%s}' % (', '.join('%s: %s' % pair for pair in entries))
 
     message = ['%s != %s%s' % (Repr(a), Repr(b), ' (%s)' % msg if msg else '')]
@@ -1749,8 +1694,8 @@ class TestCase(unittest.TestCase):
 
   def assertUrlEqual(self, a, b, msg=None):
     """Asserts that urls are equal, ignoring ordering of query params."""
-    parsed_a = urllib.parse.urlparse(a)
-    parsed_b = urllib.parse.urlparse(b)
+    parsed_a = parse.urlparse(a)
+    parsed_b = parse.urlparse(b)
     self.assertEqual(parsed_a.scheme, parsed_b.scheme, msg)
     self.assertEqual(parsed_a.netloc, parsed_b.netloc, msg)
     self.assertEqual(parsed_a.path, parsed_b.path, msg)
@@ -1758,8 +1703,8 @@ class TestCase(unittest.TestCase):
     self.assertEqual(sorted(parsed_a.params.split(';')),
                      sorted(parsed_b.params.split(';')), msg)
     self.assertDictEqual(
-        urllib.parse.parse_qs(parsed_a.query, keep_blank_values=True),
-        urllib.parse.parse_qs(parsed_b.query, keep_blank_values=True), msg)
+        parse.parse_qs(parsed_a.query, keep_blank_values=True),
+        parse.parse_qs(parsed_b.query, keep_blank_values=True), msg)
 
   def assertSameStructure(self, a, b, aname='a', bname='b', msg=None):
     """Asserts that two values contain the same structural content.
@@ -1897,7 +1842,7 @@ def _sorted_list_difference(expected, actual):
 
 def _are_both_of_integer_type(a, b):
   # type: (object, object) -> bool
-  return isinstance(a, six.integer_types) and isinstance(b, six.integer_types)
+  return isinstance(a, int) and isinstance(b, int)
 
 
 def _are_both_of_sequence_type(a, b):
@@ -1961,14 +1906,14 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
   elif (isinstance(a, abc.Sequence) and
         not isinstance(a, _TEXT_OR_BINARY_TYPES)):
     minlen = min(len(a), len(b))
-    for i in xrange(minlen):
+    for i in range(minlen):
       _walk_structure_for_problems(
           a[i], b[i], '%s[%d]' % (aname, i), '%s[%d]' % (bname, i),
           problem_list)
-    for i in xrange(minlen, len(a)):
+    for i in range(minlen, len(a)):
       problem_list.append('%s has [%i] with value %r but %s does not' %
                           (aname, i, a[i], bname))
-    for i in xrange(minlen, len(b)):
+    for i in range(minlen, len(b)):
       problem_list.append('%s lacks [%i] but %s has it with value %r' %
                           (aname, i, bname, b[i]))
 
@@ -1985,7 +1930,7 @@ def get_command_string(command):
   Returns:
     A string suitable for use as a shell command.
   """
-  if isinstance(command, six.string_types):
+  if isinstance(command, str):
     return command
   else:
     if os.name == 'nt':
@@ -2020,7 +1965,7 @@ def get_command_stderr(command, env=None, close_fds=True):
     # standard handles.
     close_fds = False
 
-  use_shell = isinstance(command, six.string_types)
+  use_shell = isinstance(command, str)
   process = subprocess.Popen(
       command,
       close_fds=close_fds,
@@ -2085,7 +2030,7 @@ def _is_in_app_main():
   """Returns True iff app.run is active."""
   f = sys._getframe().f_back  # pylint: disable=protected-access
   while f:
-    if f.f_code == six.get_function_code(app.run):  # pytype: disable=wrong-arg-types
+    if f.f_code == app.run.__code__:
       return True
     f = f.f_back
   return False
@@ -2181,7 +2126,7 @@ def _run_in_app(function, args, kwargs):
     # after the command-line has been parsed. So we have the for loop below
     # to change back flags to their old values.
     argv = FLAGS(sys.argv)
-    for saved_flag in six.itervalues(saved_flags):
+    for saved_flag in saved_flags.values():
       saved_flag.restore_flag()
 
     function(argv, args, kwargs)
@@ -2203,15 +2148,10 @@ def _is_suspicious_attribute(testCaseClass, name):
   if name.startswith('Test') and len(name) > 4 and name[4].isupper():
     attr = getattr(testCaseClass, name)
     if inspect.isfunction(attr) or inspect.ismethod(attr):
-      if six.PY2:
-        args = inspect.getargspec(attr)
-        return (len(args.args) == 1 and args.args[0] == 'self'
-                and args.varargs is None and args.keywords is None)
-      else:
-        args = inspect.getfullargspec(attr)
-        return (len(args.args) == 1 and args.args[0] == 'self'
-                and args.varargs is None and args.varkw is None and
-                not args.kwonlyargs)
+      args = inspect.getfullargspec(attr)
+      return (len(args.args) == 1 and args.args[0] == 'self' and
+              args.varargs is None and args.varkw is None and
+              not args.kwonlyargs)
   return False
 
 
@@ -2449,7 +2389,7 @@ def _setup_sharding(custom_loader=None):
   # the test case names for this shard.
   delegate_get_names = base_loader.getTestCaseNames
 
-  bucket_iterator = itertools.cycle(xrange(total_shards))
+  bucket_iterator = itertools.cycle(range(total_shards))
 
   def getShardedTestCaseNames(testCaseClass):
     filtered_names = []
@@ -2522,7 +2462,7 @@ def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
     # Use an in-memory buffer (not backed by the actual file) to store the XML
     # report, because some tools modify the file (e.g., create a placeholder
     # with partial information, in case the test process crashes).
-    xml_buffer = six.StringIO()
+    xml_buffer = io.StringIO()
     kwargs['testRunner'].set_default_xml_stream(xml_buffer)  # pytype: disable=attribute-error
 
     # If we've used a seed to randomize test case ordering, we want to record it
@@ -2597,15 +2537,6 @@ def run_tests(argv, args, kwargs):  # pylint: disable=line-too-long
   sys.exit(not result.wasSuccessful())
 
 
-def _get_qualname(cls):
-  # type: (Type) -> Text
-  if six.PY3:
-    name = cls.__qualname__
-  else:
-    name = '{}.{}'.format(cls.__module__, cls.__name__)
-  return name.replace('__main__.', '')
-
-
 def _rmtree_ignore_errors(path):
   # type: (Text) -> None
   if os.path.isfile(path):
@@ -2615,19 +2546,6 @@ def _rmtree_ignore_errors(path):
       pass
   else:
     shutil.rmtree(path, ignore_errors=True)
-
-
-def _makedirs_exist_ok(dir_name):
-  # type: (Text) -> None
-  if six.PY3:
-    os.makedirs(dir_name, exist_ok=True)  # pylint: disable=unexpected-keyword-arg
-  else:
-    # Python 2 doesn't have the exist_ok arg, so we roll it ourselves
-    try:
-      os.makedirs(dir_name)
-    except OSError as e:
-      if e.errno != errno.EEXIST:
-        raise
 
 
 def _get_first_part(path):
