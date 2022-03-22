@@ -76,7 +76,6 @@ py_test(
     deps = [
         ":command_name",
         "//absl/testing:absltest",
-        "@mock_archive//:mock",
     ],
 )
 

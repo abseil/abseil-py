@@ -256,7 +256,6 @@ py_test(
         ":_validators",
         ":flags",
         "//absl/testing:absltest",
-        "@mock_archive//:mock",
     ],
 )
 

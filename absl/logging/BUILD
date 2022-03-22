@@ -56,7 +56,6 @@ py_test(
     deps = [
         ":logging",
         "//absl/testing:absltest",
-        "@mock_archive//:mock",
     ],
 )
 
