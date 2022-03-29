@@ -366,6 +366,7 @@ class PythonHandlerTest(absltest.TestCase):
 class ABSLHandlerTest(absltest.TestCase):
 
   def setUp(self):
+    super().setUp()
     formatter = logging.PythonFormatter()
     self.absl_handler = logging.ABSLHandler(formatter)
 
@@ -438,12 +439,14 @@ class ABSLLoggerTest(absltest.TestCase):
     sys._getframe.return_value = mock_frame_0
 
   def setUp(self):
+    super().setUp()
     self.message = 'Hello Nurse'
     self.logger = logging.ABSLLogger('')
 
   def tearDown(self):
     mock.patch.stopall()
     self.logger._frames_to_skip.clear()
+    super().tearDown()
 
   def test_constructor_without_level(self):
     self.logger = logging.ABSLLogger('')
@@ -579,6 +582,7 @@ class ABSLLoggerTest(absltest.TestCase):
 class ABSLLogPrefixTest(parameterized.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.record = std_logging.LogRecord(
         'name', std_logging.INFO, 'path/to/source.py', 13, 'log message',
         None, None)
@@ -804,28 +808,28 @@ class LoggingTest(absltest.TestCase):
     old_level = logging.get_verbosity()
 
     logging.set_verbosity(logging.DEBUG)
-    self.assertEquals(logging.get_verbosity(), logging.DEBUG)
+    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
     self.assertTrue(logging.level_debug())
     self.assertTrue(logging.level_info())
     self.assertTrue(logging.level_warning())
     self.assertTrue(logging.level_error())
 
     logging.set_verbosity(logging.INFO)
-    self.assertEquals(logging.get_verbosity(), logging.INFO)
+    self.assertEqual(logging.get_verbosity(), logging.INFO)
     self.assertFalse(logging.level_debug())
     self.assertTrue(logging.level_info())
     self.assertTrue(logging.level_warning())
     self.assertTrue(logging.level_error())
 
     logging.set_verbosity(logging.WARNING)
-    self.assertEquals(logging.get_verbosity(), logging.WARNING)
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
     self.assertFalse(logging.level_debug())
     self.assertFalse(logging.level_info())
     self.assertTrue(logging.level_warning())
     self.assertTrue(logging.level_error())
 
     logging.set_verbosity(logging.ERROR)
-    self.assertEquals(logging.get_verbosity(), logging.ERROR)
+    self.assertEqual(logging.get_verbosity(), logging.ERROR)
     self.assertFalse(logging.level_debug())
     self.assertFalse(logging.level_info())
     self.assertTrue(logging.level_error())
@@ -837,43 +841,43 @@ class LoggingTest(absltest.TestCase):
 
     # Lowercase names.
     logging.set_verbosity('debug')
-    self.assertEquals(logging.get_verbosity(), logging.DEBUG)
+    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
     logging.set_verbosity('info')
-    self.assertEquals(logging.get_verbosity(), logging.INFO)
+    self.assertEqual(logging.get_verbosity(), logging.INFO)
     logging.set_verbosity('warning')
-    self.assertEquals(logging.get_verbosity(), logging.WARNING)
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
     logging.set_verbosity('warn')
-    self.assertEquals(logging.get_verbosity(), logging.WARNING)
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
     logging.set_verbosity('error')
-    self.assertEquals(logging.get_verbosity(), logging.ERROR)
+    self.assertEqual(logging.get_verbosity(), logging.ERROR)
     logging.set_verbosity('fatal')
 
     # Uppercase names.
-    self.assertEquals(logging.get_verbosity(), logging.FATAL)
+    self.assertEqual(logging.get_verbosity(), logging.FATAL)
     logging.set_verbosity('DEBUG')
-    self.assertEquals(logging.get_verbosity(), logging.DEBUG)
+    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
     logging.set_verbosity('INFO')
-    self.assertEquals(logging.get_verbosity(), logging.INFO)
+    self.assertEqual(logging.get_verbosity(), logging.INFO)
     logging.set_verbosity('WARNING')
-    self.assertEquals(logging.get_verbosity(), logging.WARNING)
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
     logging.set_verbosity('WARN')
-    self.assertEquals(logging.get_verbosity(), logging.WARNING)
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
     logging.set_verbosity('ERROR')
-    self.assertEquals(logging.get_verbosity(), logging.ERROR)
+    self.assertEqual(logging.get_verbosity(), logging.ERROR)
     logging.set_verbosity('FATAL')
-    self.assertEquals(logging.get_verbosity(), logging.FATAL)
+    self.assertEqual(logging.get_verbosity(), logging.FATAL)
 
     # Integers as strings.
     logging.set_verbosity(str(logging.DEBUG))
-    self.assertEquals(logging.get_verbosity(), logging.DEBUG)
+    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
     logging.set_verbosity(str(logging.INFO))
-    self.assertEquals(logging.get_verbosity(), logging.INFO)
+    self.assertEqual(logging.get_verbosity(), logging.INFO)
     logging.set_verbosity(str(logging.WARNING))
-    self.assertEquals(logging.get_verbosity(), logging.WARNING)
+    self.assertEqual(logging.get_verbosity(), logging.WARNING)
     logging.set_verbosity(str(logging.ERROR))
-    self.assertEquals(logging.get_verbosity(), logging.ERROR)
+    self.assertEqual(logging.get_verbosity(), logging.ERROR)
     logging.set_verbosity(str(logging.FATAL))
-    self.assertEquals(logging.get_verbosity(), logging.FATAL)
+    self.assertEqual(logging.get_verbosity(), logging.FATAL)
 
     logging.set_verbosity(old_level)
 

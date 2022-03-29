@@ -14,20 +14,16 @@
 
 """Test of logging behavior before app.run(), aka flag and logging init()."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import contextlib
 import io
 import os
 import re
 import sys
 import tempfile
+from unittest import mock
 
 from absl import logging
 from absl.testing import absltest
-import mock
 
 logging.get_verbosity()  # Access --verbosity before flag parsing.
 # Access --logtostderr before flag parsing.

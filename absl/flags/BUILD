@@ -1,4 +1,4 @@
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_library(
     name = "flags",
@@ -256,7 +256,6 @@ py_test(
         ":_validators",
         ":flags",
         "//absl/testing:absltest",
-        "@mock_archive//:mock",
     ],
 )
 

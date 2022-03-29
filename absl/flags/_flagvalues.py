@@ -774,7 +774,7 @@ class FlagValues(object):
         continue
 
       flag = flag_dict.get(name)
-      if flag:
+      if flag is not None:
         if flag.boolean and value is None:
           value = 'true'
         else:
@@ -782,13 +782,13 @@ class FlagValues(object):
       elif name.startswith('no') and len(name) > 2:
         # Boolean flags can take the form of --noflag, with no value.
         noflag = flag_dict.get(name[2:])
-        if noflag and noflag.boolean:
+        if noflag is not None and noflag.boolean:
           if value is not None:
             raise ValueError(arg + ' does not take an argument')
           flag = noflag
           value = 'false'
 
-      if retired_flag_func and not flag:
+      if retired_flag_func and flag is None:
         is_retired, is_bool = retired_flag_func(name)
 
         # If we didn't recognize that flag, but it starts with
@@ -808,7 +808,7 @@ class FlagValues(object):
               'be specified. See go/totw/90.', name)
           continue
 
-      if flag:
+      if flag is not None:
         flag.parse(value)
         flag.using_default_value = False
       else:

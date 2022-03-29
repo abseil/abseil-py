@@ -1,4 +1,4 @@
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_library(
     name = "logging",
@@ -9,7 +9,6 @@ py_library(
         ":converter",
         "//absl:_collections_abc",
         "//absl/flags",
-        "@six_archive//:six",
     ],
 )
 
@@ -57,7 +56,6 @@ py_test(
     deps = [
         ":logging",
         "//absl/testing:absltest",
-        "@mock_archive//:mock",
     ],
 )
 
