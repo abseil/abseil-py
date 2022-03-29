@@ -217,7 +217,6 @@ import unittest
 
 from absl._collections_abc import abc
 from absl.testing import absltest
-import six
 
 
 _ADDR_RE = re.compile(r'\<([a-zA-Z0-9_\-\.]+) object at 0x[a-fA-F0-9]+\>')
@@ -247,15 +246,14 @@ def _clean_repr(obj):
 
 
 def _non_string_or_bytes_iterable(obj):
-  return (isinstance(obj, abc.Iterable) and
-          not isinstance(obj, six.text_type) and
-          not isinstance(obj, six.binary_type))
+  return (isinstance(obj, abc.Iterable) and not isinstance(obj, str) and
+          not isinstance(obj, bytes))
 
 
 def _format_parameter_list(testcase_params):
   if isinstance(testcase_params, abc.Mapping):
     return ', '.join('%s=%s' % (argname, _clean_repr(value))
-                     for argname, value in six.iteritems(testcase_params))
+                     for argname, value in testcase_params.items())
   elif _non_string_or_bytes_iterable(testcase_params):
     return ', '.join(map(_clean_repr, testcase_params))
   else:
@@ -333,10 +331,11 @@ class _ParameterizedTestIter(object):
                 'Dict for named tests must contain key "%s"' % _NAMED_DICT_KEY)
           # Create a new dict to avoid modifying the supplied testcase_params.
           testcase_name = testcase_params[_NAMED_DICT_KEY]
-          testcase_params = {k: v for k, v in six.iteritems(testcase_params)
-                             if k != _NAMED_DICT_KEY}
+          testcase_params = {
+              k: v for k, v in testcase_params.items() if k != _NAMED_DICT_KEY
+          }
         elif _non_string_or_bytes_iterable(testcase_params):
-          if not isinstance(testcase_params[0], six.string_types):
+          if not isinstance(testcase_params[0], str):
             raise RuntimeError(
                 'The first element of named test parameters is the test name '
                 'suffix and must be a string')
@@ -388,7 +387,7 @@ def _modify_class(class_object, testcases, naming_type):
   # NOTE: _test_params_repr is private to parameterized.TestCase and it's
   # metaclass; do not use it outside of those classes.
   class_object._test_params_reprs = test_params_reprs = {}
-  for name, obj in six.iteritems(class_object.__dict__.copy()):
+  for name, obj in class_object.__dict__.copy().items():
     if (name.startswith(unittest.TestLoader.testMethodPrefix)
         and isinstance(obj, types.FunctionType)):
       delattr(class_object, name)
@@ -396,7 +395,7 @@ def _modify_class(class_object, testcases, naming_type):
       _update_class_dict_for_param_test_case(
           class_object.__name__, methods, test_params_reprs, name,
           _ParameterizedTestIter(obj, testcases, naming_type, name))
-      for meth_name, meth in six.iteritems(methods):
+      for meth_name, meth in methods.items():
         setattr(class_object, meth_name, meth)
 
 
@@ -554,7 +553,7 @@ class TestGeneratorMetaclass(type):
     # NOTE: _test_params_repr is private to parameterized.TestCase and it's
     # metaclass; do not use it outside of those classes.
     test_params_reprs = dct.setdefault('_test_params_reprs', {})
-    for name, obj in six.iteritems(dct.copy()):
+    for name, obj in dct.copy().items():
       if (name.startswith(unittest.TestLoader.testMethodPrefix) and
           _non_string_or_bytes_iterable(obj)):
         # NOTE: `obj` might not be a _ParameterizedTestIter in two cases:
@@ -637,8 +636,7 @@ def _update_class_dict_for_param_test_case(
     test_params_reprs[new_name] = getattr(func, '__x_params_repr__', '')
 
 
-@six.add_metaclass(TestGeneratorMetaclass)
-class TestCase(absltest.TestCase):
+class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
   """Base class for test cases using the parameters decorator."""
 
   # visibility: private; do not call outside this class.

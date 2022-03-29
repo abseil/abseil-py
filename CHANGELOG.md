@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+*   `Flag` instances now raise an error if used in a bool context. This prevents
+    the occasional mistake of testing an instance for truthiness rather than
+    testing `flag.value`.
 
 ## 1.0.0 (2021-11-09)
 

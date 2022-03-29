@@ -71,10 +71,6 @@ program.
 The differences in behavior are historical and unfortunate.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import collections
 import getpass
 import io
@@ -84,6 +80,7 @@ import os
 import socket
 import struct
 import sys
+import threading
 import time
 import timeit
 import traceback
@@ -93,12 +90,6 @@ import warnings
 from absl import flags
 from absl._collections_abc import abc
 from absl.logging import converter
-import six
-
-if six.PY2:
-  import thread as _thread_lib  # For .get_ident().
-else:
-  import threading as _thread_lib  # For .get_ident().
 
 try:
   from typing import NoReturn
@@ -257,7 +248,7 @@ class _LoggerLevelsSerializer(object):
   """Serializer for --logger_levels flag."""
 
   def serialize(self, value):
-    if isinstance(value, six.string_types):
+    if isinstance(value, str):
       return value
     return ','.join(
         '{}:{}'.format(name, level) for name, level in value.items())
@@ -399,15 +390,11 @@ def warning(msg, *args, **kwargs):
   log(WARNING, msg, *args, **kwargs)
 
 
-if six.PY2:
-  warn = warning  # Deprecated function.
-else:
-
-  def warn(msg, *args, **kwargs):
-    """Deprecated, use 'warning' instead."""
-    warnings.warn("The 'warn' function is deprecated, use 'warning' instead",
-                  DeprecationWarning, 2)
-    log(WARNING, msg, *args, **kwargs)
+def warn(msg, *args, **kwargs):
+  """Deprecated, use 'warning' instead."""
+  warnings.warn("The 'warn' function is deprecated, use 'warning' instead",
+                DeprecationWarning, 2)
+  log(WARNING, msg, *args, **kwargs)
 
 
 def info(msg, *args, **kwargs):
@@ -729,8 +716,7 @@ def find_log_dir(log_dir=None):
   for d in dirs:
     if os.path.isdir(d) and os.access(d, os.W_OK):
       return d
-  exception_class = OSError if six.PY2 else FileNotFoundError
-  raise exception_class(
+  raise FileNotFoundError(
       "Can't find a writable directory for logs, tried %s" % dirs)
 
 
@@ -795,7 +781,7 @@ def skip_log_prefix(func):
     file_name = func_code.co_filename
     func_name = func_code.co_name
     func_lineno = func_code.co_firstlineno
-  elif isinstance(func, six.string_types):
+  elif isinstance(func, str):
     file_name = get_absl_logger().findCaller()[0]
     func_name = func
     func_lineno = None
@@ -839,10 +825,7 @@ class PythonHandler(logging.StreamHandler):
         os.getpid())
     filename = os.path.join(actual_log_dir, basename)
 
-    if six.PY2:
-      self.stream = open(filename, 'a')
-    else:
-      self.stream = open(filename, 'a', encoding='utf-8')
+    self.stream = open(filename, 'a', encoding='utf-8')
 
     # os.symlink is not available on Windows Python 2.
     if getattr(os, 'symlink', None):
@@ -1072,16 +1055,13 @@ class ABSLLogger(logging.getLoggerClass()):
           (code.co_filename, code.co_name,
            code.co_firstlineno) not in f_to_skip and
           (code.co_filename, code.co_name) not in f_to_skip):
-        if six.PY2 and not stack_info:
-          return (code.co_filename, frame.f_lineno, code.co_name)
-        else:
-          sinfo = None
-          if stack_info:
-            out = io.StringIO()
-            out.write(u'Stack (most recent call last):\n')
-            traceback.print_stack(frame, file=out)
-            sinfo = out.getvalue().rstrip(u'\n')
-          return (code.co_filename, frame.f_lineno, code.co_name, sinfo)
+        sinfo = None
+        if stack_info:
+          out = io.StringIO()
+          out.write(u'Stack (most recent call last):\n')
+          traceback.print_stack(frame, file=out)
+          sinfo = out.getvalue().rstrip(u'\n')
+        return (code.co_filename, frame.f_lineno, code.co_name, sinfo)
       frame = frame.f_back
 
   def critical(self, msg, *args, **kwargs):
@@ -1098,9 +1078,8 @@ class ABSLLogger(logging.getLoggerClass()):
 
   def warn(self, msg, *args, **kwargs):
     """Logs 'msg % args' with severity 'WARN'."""
-    if six.PY3:
-      warnings.warn("The 'warn' method is deprecated, use 'warning' instead",
-                    DeprecationWarning, 2)
+    warnings.warn("The 'warn' method is deprecated, use 'warning' instead",
+                  DeprecationWarning, 2)
     self.log(logging.WARN, msg, *args, **kwargs)
 
   def warning(self, msg, *args, **kwargs):
@@ -1183,7 +1162,7 @@ def _get_thread_id():
   Returns:
     Thread ID unique to this process (unsigned)
   """
-  thread_id = _thread_lib.get_ident()
+  thread_id = threading.get_ident()
   return thread_id & _THREAD_ID_MASK
 
 

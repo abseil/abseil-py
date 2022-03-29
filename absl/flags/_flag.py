@@ -128,6 +128,10 @@ class Flag(object):
       return id(self) < id(other)
     return NotImplemented
 
+  def __bool__(self):
+    raise TypeError('A Flag instance would always be True. '
+                    'Did you mean to test the `.value` attribute?')
+
   def __getstate__(self):
     raise TypeError("can't pickle Flag objects")
 

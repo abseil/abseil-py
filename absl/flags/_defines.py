@@ -798,7 +798,7 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
       serializer,
       name,
       default,
-      help,
+      '<%s>: %s' % ('|'.join(enum_values), help),
       flag_values,
       required=required,
       **args)

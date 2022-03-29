@@ -340,7 +340,7 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '<flag>\n'
         '  <file>tool</file>\n'
         '  <name>flavours</name>\n'
-        '  <meaning>Compilation flavour.;\n'
+        '  <meaning>&lt;APPLE|BANANA|CHERRY&gt;: Compilation flavour.;\n'
         '    repeat this option to specify a list of values</meaning>\n'
         '  <default>[\'APPLE\', \'BANANA\']</default>\n'
         '  <current>[\'APPLE\', \'BANANA\']</current>\n'
@@ -474,7 +474,7 @@ EXPECTED_HELP_XML_FOR_FLAGS_FROM_MAIN_MODULE = """\
     <key>yes</key>
     <file>%(main_module_name)s</file>
     <name>flavours</name>
-    <meaning>Compilation flavour.;
+    <meaning>&lt;APPLE|BANANA|CHERRY&gt;: Compilation flavour.;
     repeat this option to specify a list of values</meaning>
     <default>['APPLE', 'BANANA']</default>
     <current>['APPLE', 'BANANA']</current>
