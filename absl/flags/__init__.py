@@ -25,10 +25,6 @@ The specific function used determines how the flag is parsed, checked,
 and optionally type-converted, when it's seen on the command line.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import getopt
 import os
 import re
@@ -43,7 +39,6 @@ from absl.flags import _flag
 from absl.flags import _flagvalues
 from absl.flags import _helpers
 from absl.flags import _validators
-import six
 
 # Initialize the FLAGS_MODULE as early as possible.
 # It's only used by adopt_module_key_flags to take SPECIAL_FLAGS into account.
