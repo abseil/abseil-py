@@ -31,10 +31,6 @@ except ImportError:
 if sys.version_info < (3, 6):
   raise RuntimeError('Python version 3.6+ is required.')
 
-INSTALL_REQUIRES = [
-    'six',
-]
-
 setuptools_version = tuple(
     int(x) for x in setuptools.__version__.split('.')[:2])
 
@@ -62,7 +58,6 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=[
         '*.tests', '*.tests.*', 'tests.*', 'tests',
     ]),
-    install_requires=INSTALL_REQUIRES,
     include_package_data=True,
     license='Apache 2.0',
     classifiers=[
