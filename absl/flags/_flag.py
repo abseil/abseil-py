@@ -18,10 +18,10 @@ Do NOT import this module directly. Import the flags package and use the
 aliases defined at the package level instead.
 """
 
+from collections import abc
 import copy
 import functools
 
-from absl._collections_abc import abc
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
 from absl.flags import _helpers

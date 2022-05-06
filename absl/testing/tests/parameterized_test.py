@@ -14,10 +14,10 @@
 
 """Tests for absl.testing.parameterized."""
 
+from collections import abc
 import sys
 import unittest
 
-from absl._collections_abc import abc
 from absl.testing import absltest
 from absl.testing import parameterized
 

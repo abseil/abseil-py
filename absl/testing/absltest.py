@@ -18,6 +18,7 @@ This module contains base classes and high-level functions for Abseil-style
 tests.
 """
 
+from collections import abc
 import contextlib
 import difflib
 import enum
@@ -55,7 +56,6 @@ except ImportError:
 from absl import app
 from absl import flags
 from absl import logging
-from absl._collections_abc import abc
 from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
 
