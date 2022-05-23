@@ -22,6 +22,7 @@ import itertools
 import logging
 import os
 import sys
+from typing import Generic, TypeVar
 from xml.dom import minidom
 
 from absl.flags import _exceptions
@@ -29,19 +30,13 @@ from absl.flags import _flag
 from absl.flags import _helpers
 from absl.flags import _validators_classes
 
-# pylint: disable=unused-import
-try:
-  import typing
-  from typing import Text, Optional
-except ImportError:
-  typing = None
-# pylint: enable=unused-import
-
 # Add flagvalues module to disclaimed module ids.
 _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
+_T = TypeVar('_T')
 
-class FlagValues(object):
+
+class FlagValues:
   """Registry of 'Flag' objects.
 
   A 'FlagValues' can then scan command line arguments, passing flag
@@ -1297,14 +1292,8 @@ class FlagValues(object):
 
 FLAGS = FlagValues()
 
-if typing:
-  _T = typing.TypeVar('_T')
-  _Base = typing.Generic[_T]
-else:
-  _Base = object
 
-
-class FlagHolder(_Base):
+class FlagHolder(Generic[_T]):
   """Holds a defined flag.
 
   This facilitates a cleaner api around global state. Instead of
