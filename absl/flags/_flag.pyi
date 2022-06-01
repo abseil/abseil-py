@@ -17,10 +17,8 @@
 import copy
 import functools
 
-from absl._collections_abc import abc
 from absl.flags import _argument_parser
 import enum
-import six
 
 from typing import Text, TypeVar, Generic, Iterable, Type, List, Optional, Any, Union, Sequence
 

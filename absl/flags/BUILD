@@ -13,7 +13,6 @@ py_library(
         ":_flagvalues",
         ":_helpers",
         ":_validators",
-        "@six_archive//:six",
     ],
 )
 
@@ -31,7 +30,6 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":_helpers",
-        "@six_archive//:six",
     ],
 )
 
@@ -66,8 +64,6 @@ py_library(
         ":_argument_parser",
         ":_exceptions",
         ":_helpers",
-        "//absl:_collections_abc",
-        "@six_archive//:six",
     ],
 )
 
@@ -80,7 +76,6 @@ py_library(
         ":_flag",
         ":_helpers",
         ":_validators_classes",
-        "@six_archive//:six",
     ],
 )
 
@@ -88,7 +83,6 @@ py_library(
     name = "_helpers",
     srcs = ["_helpers.py"],
     srcs_version = "PY2AND3",
-    deps = ["@six_archive//:six"],
 )
 
 py_library(

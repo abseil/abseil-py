@@ -204,10 +204,7 @@ as [asynctest](https://github.com/Martiusweb/asynctest):
       self.assertEqual(actual, expected)
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
+from collections import abc
 import functools
 import inspect
 import itertools
@@ -215,7 +212,6 @@ import re
 import types
 import unittest
 
-from absl._collections_abc import abc
 from absl.testing import absltest
 
 
