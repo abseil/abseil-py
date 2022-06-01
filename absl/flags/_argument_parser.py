@@ -18,22 +18,17 @@ Do NOT import this module directly. Import the flags package and use the
 aliases defined at the package level instead.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import collections
 import csv
 import io
 import string
 
 from absl.flags import _helpers
-import six
 
 
 def _is_integer_type(instance):
   """Returns True if instance is an integer, and not a bool."""
-  return (isinstance(instance, six.integer_types) and
+  return (isinstance(instance, int) and
           not isinstance(instance, bool))
 
 
@@ -95,7 +90,7 @@ class _ArgumentParserCache(type):
 #   inherit from `ArgumentParser` and not `ArgumentParser[SomeType]`.
 #   The corresponding DEFINE_someType method (the public API) can be annotated
 #   to return FlagHolder[SomeType].
-class ArgumentParser(six.with_metaclass(_ArgumentParserCache, object)):
+class ArgumentParser(metaclass=_ArgumentParserCache):
   """Base class used to parse and convert arguments.
 
   The parse() method checks to make sure that the string argument is a
@@ -128,7 +123,7 @@ class ArgumentParser(six.with_metaclass(_ArgumentParserCache, object)):
     Returns:
       The parsed value in native type.
     """
-    if not isinstance(argument, six.string_types):
+    if not isinstance(argument, str):
       raise TypeError('flag value must be a string, found "{}"'.format(
           type(argument)))
     return argument
@@ -228,7 +223,7 @@ class FloatParser(NumericParser):
   def convert(self, argument):
     """Returns the float value of argument."""
     if (_is_integer_type(argument) or isinstance(argument, float) or
-        isinstance(argument, six.string_types)):
+        isinstance(argument, str)):
       return float(argument)
     else:
       raise TypeError(
@@ -274,7 +269,7 @@ class IntegerParser(NumericParser):
     """Returns the int value of argument."""
     if _is_integer_type(argument):
       return argument
-    elif isinstance(argument, six.string_types):
+    elif isinstance(argument, str):
       base = 10
       if len(argument) > 2 and argument[0] == '0':
         if argument[1] == 'o':
@@ -296,14 +291,14 @@ class BooleanParser(ArgumentParser):
 
   def parse(self, argument):
     """See base class."""
-    if isinstance(argument, six.string_types):
+    if isinstance(argument, str):
       if argument.lower() in ('true', 't', '1'):
         return True
       elif argument.lower() in ('false', 'f', '0'):
         return False
       else:
         raise ValueError('Non-boolean argument to boolean flag', argument)
-    elif isinstance(argument, six.integer_types):
+    elif isinstance(argument, int):
       # Only allow bool or integer 0, 1.
       # Note that float 1.0 == True, 0.0 == False.
       bool_value = bool(argument)
@@ -433,7 +428,7 @@ class EnumClassParser(ArgumentParser):
     """
     if isinstance(argument, self.enum_class):
       return argument
-    elif not isinstance(argument, six.string_types):
+    elif not isinstance(argument, str):
       raise ValueError(
           '{} is not an enum member or a name of a member in {}'.format(
               argument, self.enum_class))
@@ -496,18 +491,10 @@ class CsvListSerializer(ArgumentSerializer):
 
   def serialize(self, value):
     """Serializes a list as a CSV string or unicode."""
-    if six.PY2:
-      # In Python2 csv.writer doesn't accept unicode, so we convert to UTF-8.
-      output = io.BytesIO()
-      writer = csv.writer(output, delimiter=self.list_sep)
-      writer.writerow([unicode(x).encode('utf-8') for x in value])  # pylint: disable=undefined-variable
-      serialized_value = output.getvalue().decode('utf-8').strip()
-    else:
-      # In Python3 csv.writer expects a text stream.
-      output = io.StringIO()
-      writer = csv.writer(output, delimiter=self.list_sep)
-      writer.writerow([str(x) for x in value])
-      serialized_value = output.getvalue().strip()
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter=self.list_sep)
+    writer.writerow([str(x) for x in value])
+    serialized_value = output.getvalue().strip()
 
     # We need the returned value to be pure ascii or Unicodes so that
     # when the xml help is generated they are usefully encodable.

@@ -72,6 +72,7 @@ The differences in behavior are historical and unfortunate.
 """
 
 import collections
+from collections import abc
 import getpass
 import io
 import itertools
@@ -88,7 +89,6 @@ import types
 import warnings
 
 from absl import flags
-from absl._collections_abc import abc
 from absl.logging import converter
 
 try:

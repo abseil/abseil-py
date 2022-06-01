@@ -31,10 +31,6 @@ except ImportError:
 if sys.version_info < (3, 6):
   raise RuntimeError('Python version 3.6+ is required.')
 
-INSTALL_REQUIRES = [
-    'six',
-]
-
 setuptools_version = tuple(
     int(x) for x in setuptools.__version__.split('.')[:2])
 
@@ -51,7 +47,7 @@ with open(_README_PATH, 'rb') as fp:
 
 setuptools.setup(
     name='absl-py',
-    version='1.0.0',
+    version='1.1.0',
     description=(
         'Abseil Python Common Libraries, '
         'see https://github.com/abseil/abseil-py.'),
@@ -62,7 +58,6 @@ setuptools.setup(
     packages=setuptools.find_packages(exclude=[
         '*.tests', '*.tests.*', 'tests.*', 'tests',
     ]),
-    install_requires=INSTALL_REQUIRES,
     include_package_data=True,
     license='Apache 2.0',
     classifiers=[

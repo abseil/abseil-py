@@ -22,13 +22,6 @@ py_library(
 )
 
 py_library(
-    name = "_collections_abc",
-    srcs = ["_collections_abc.py"],
-    visibility = [":__subpackages__"],
-    deps = ["@six_archive//:six"],
-)
-
-py_library(
     name = "tests/app_test_helper",
     testonly = 1,
     srcs = ["tests/app_test_helper.py"],

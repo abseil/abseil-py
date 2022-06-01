@@ -34,9 +34,6 @@ try:
 except ImportError:
   termios = None
 
-import six
-from six.moves import range  # pylint: disable=redefined-builtin
-
 
 _DEFAULT_HELP_WIDTH = 80  # Default width of help output.
 _MIN_HELP_WIDTH = 40  # Minimal "sane" width of help output. We assume that any
@@ -172,9 +169,6 @@ def create_xml_dom_element(doc, name, value):
     An instance of minidom.Element.
   """
   s = str_or_unicode(value)
-  if six.PY2 and not isinstance(s, unicode):
-    # Get a valid unicode string.
-    s = s.decode('utf-8', 'ignore')
   if isinstance(value, bool):
     # Display boolean values as the C++ flag library does: no caps.
     s = s.lower()
@@ -340,7 +334,7 @@ def flag_dict_to_args(flag_map, multi_flags=None):
   Yields:
     sequence of string suitable for a subprocess execution.
   """
-  for key, value in six.iteritems(flag_map):
+  for key, value in flag_map.items():
     if value is None:
       yield '--%s' % key
     elif isinstance(value, bool):

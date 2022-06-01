@@ -17,36 +17,26 @@ Do NOT import this module directly. Import the flags package and use the
 aliases defined at the package level instead.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import copy
 import itertools
 import logging
 import os
 import sys
+from typing import Generic, TypeVar
 from xml.dom import minidom
 
 from absl.flags import _exceptions
 from absl.flags import _flag
 from absl.flags import _helpers
 from absl.flags import _validators_classes
-import six
-
-# pylint: disable=unused-import
-try:
-  import typing
-  from typing import Text, Optional
-except ImportError:
-  typing = None
-# pylint: enable=unused-import
 
 # Add flagvalues module to disclaimed module ids.
 _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
+_T = TypeVar('_T')
 
-class FlagValues(object):
+
+class FlagValues:
   """Registry of 'Flag' objects.
 
   A 'FlagValues' can then scan command line arguments, passing flag
@@ -247,7 +237,7 @@ class FlagValues(object):
     for flags_by_module_dict in (self.flags_by_module_dict(),
                                  self.flags_by_module_id_dict(),
                                  self.key_flags_by_module_dict()):
-      for flags_in_module in six.itervalues(flags_by_module_dict):
+      for flags_in_module in flags_by_module_dict.values():
         # While (as opposed to if) takes care of multiple occurrences of a
         # flag in the list for the same module.
         while flag_obj in flags_in_module:
@@ -313,7 +303,7 @@ class FlagValues(object):
     registered_flag = self._flags().get(flagname)
     if registered_flag is None:
       return default
-    for module, flags in six.iteritems(self.flags_by_module_dict()):
+    for module, flags in self.flags_by_module_dict().items():
       for flag in flags:
         # It must compare the flag with the one in _flags. This is because a
         # flag might be overridden only for its long name (or short name),
@@ -338,7 +328,7 @@ class FlagValues(object):
     registered_flag = self._flags().get(flagname)
     if registered_flag is None:
       return default
-    for module_id, flags in six.iteritems(self.flags_by_module_id_dict()):
+    for module_id, flags in self.flags_by_module_id_dict().items():
       for flag in flags:
         # It must compare the flag with the one in _flags. This is because a
         # flag might be overridden only for its long name (or short name),
@@ -389,7 +379,7 @@ class FlagValues(object):
     Args:
       flag_values: FlagValues, the FlagValues instance from which to copy flags.
     """
-    for flag_name, flag in six.iteritems(flag_values._flags()):  # pylint: disable=protected-access
+    for flag_name, flag in flag_values._flags().items():  # pylint: disable=protected-access
       # Each flags with short_name appears here twice (once under its
       # normal name, and again with its short name).  To prevent
       # problems (DuplicateFlagError) with double flag registration, we
@@ -485,18 +475,8 @@ class FlagValues(object):
     if self.__dict__['__flags_parsed'] or fl[name].present:
       return fl[name].value
     else:
-      error_message = ('Trying to access flag --%s before flags were parsed.' %
-                       name)
-      if six.PY2:
-        # In Python 2, hasattr returns False if getattr raises any exception.
-        # That means if someone calls hasattr(FLAGS, 'flag'), it returns False
-        # instead of raises UnparsedFlagAccessError even if --flag is already
-        # defined. To make the error more visible, the best we can do is to
-        # log an error message before raising the exception.
-        # Don't log a full stacktrace here since that makes other callers
-        # get too much noise.
-        logging.error(error_message)
-      raise _exceptions.UnparsedFlagAccessError(error_message)
+      raise _exceptions.UnparsedFlagAccessError(
+          'Trying to access flag --%s before flags were parsed.' % name)
 
   def __setattr__(self, name, value):
     """Sets the 'value' attribute of the flag --name."""
@@ -507,7 +487,7 @@ class FlagValues(object):
     """Sets multiple flag values together, triggers validators afterwards."""
     fl = self._flags()
     known_flags = set()
-    for name, value in six.iteritems(attributes):
+    for name, value in attributes.items():
       if name in self.__dict__['__hiddenflags']:
         raise AttributeError(name)
       if name in fl:
@@ -528,7 +508,7 @@ class FlagValues(object):
           validator.
     """
     all_validators = set()
-    for flag in six.itervalues(self._flags()):
+    for flag in self._flags().values():
       all_validators.update(flag.validators)
     self._assert_validators(all_validators)
 
@@ -858,7 +838,7 @@ class FlagValues(object):
 
   def flag_values_dict(self):
     """Returns a dictionary that maps flag names to flag values."""
-    return {name: flag.value for name, flag in six.iteritems(self._flags())}
+    return {name: flag.value for name, flag in self._flags().items()}
 
   def __str__(self):
     """Returns a help string for all known flags."""
@@ -887,11 +867,10 @@ class FlagValues(object):
     else:
       output_lines = []
       # Just print one long list of flags.
-      values = six.itervalues(self._flags())
+      values = self._flags().values()
       if include_special_flags:
-        values = itertools.chain(values,
-                                 six.itervalues(
-                                     _helpers.SPECIAL_FLAGS._flags()))  # pylint: disable=protected-access
+        values = itertools.chain(
+            values, _helpers.SPECIAL_FLAGS._flags().values())  # pylint: disable=protected-access
       self._render_flag_list(values, output_lines, prefix)
       return '\n'.join(output_lines)
 
@@ -912,7 +891,7 @@ class FlagValues(object):
     if include_special_flags:
       self._render_module_flags(
           'absl.flags',
-          six.itervalues(_helpers.SPECIAL_FLAGS._flags()),  # pylint: disable=protected-access
+          _helpers.SPECIAL_FLAGS._flags().values(),  # pylint: disable=protected-access
           output_lines,
           prefix)
     return '\n'.join(output_lines)
@@ -1291,11 +1270,8 @@ class FlagValues(object):
                 is_key=is_key))
 
     outfile = outfile or sys.stdout
-    if six.PY2:
-      outfile.write(doc.toprettyxml(indent='  ', encoding='utf-8'))
-    else:
-      outfile.write(
-          doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8'))
+    outfile.write(
+        doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8'))
     outfile.flush()
 
   def _check_method_name_conflicts(self, name, flag):
@@ -1316,14 +1292,8 @@ class FlagValues(object):
 
 FLAGS = FlagValues()
 
-if typing:
-  _T = typing.TypeVar('_T')
-  _Base = typing.Generic[_T]
-else:
-  _Base = object
 
-
-class FlagHolder(_Base):
+class FlagHolder(Generic[_T]):
   """Holds a defined flag.
 
   This facilitates a cleaner api around global state. Instead of

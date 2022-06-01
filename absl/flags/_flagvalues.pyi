@@ -16,7 +16,6 @@
 
 
 from absl.flags import _flag
-import six
 
 from typing import Any, Dict, Generic, Iterable, Iterator, List, Optional, Sequence, Text, Type, TypeVar
 
