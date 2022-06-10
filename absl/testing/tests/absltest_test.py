@@ -186,6 +186,15 @@ class TestCaseTest(absltest.TestCase, HelperMixin):
         },
         expect_success=True)
 
+  def test_app_run(self):
+    stdout, _ = self.run_helper(
+        7,
+        ['--name=cat', '--name=dog'],
+        {'ABSLTEST_TEST_HELPER_USE_APP_RUN': '1'},
+        expect_success=True)
+    self.assertIn('Names in main() are: cat dog', stdout)
+    self.assertIn('Names in test_name_flag() are: cat dog', stdout)
+
   def test_assert_in(self):
     animals = {'monkey': 'banana', 'cow': 'grass', 'seal': 'fish'}
 

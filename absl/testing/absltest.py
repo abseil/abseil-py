@@ -2036,19 +2036,6 @@ def _is_in_app_main():
   return False
 
 
-class _SavedFlag(object):
-  """Helper class for saving and restoring a flag value."""
-
-  def __init__(self, flag):
-    self.flag = flag
-    self.value = flag.value
-    self.present = flag.present
-
-  def restore_flag(self):
-    self.flag.value = self.value
-    self.flag.present = self.present
-
-
 def _register_sigterm_with_faulthandler():
   # type: () -> None
   """Have faulthandler dump stacks on SIGTERM.  Useful to diagnose timeouts."""
@@ -2105,29 +2092,30 @@ def _run_in_app(function, args, kwargs):
   if _is_in_app_main():
     _register_sigterm_with_faulthandler()
 
-    # Save command-line flags so the side effects of FLAGS(sys.argv) can be
-    # undone.
-    flag_objects = (FLAGS[name] for name in FLAGS)
-    saved_flags = dict((f.name, _SavedFlag(f)) for f in flag_objects)
-
     # Change the default of alsologtostderr from False to True, so the test
     # programs's stderr will contain all the log messages.
     # If --alsologtostderr=false is specified in the command-line, or user
     # has called FLAGS.alsologtostderr = False before, then the value is kept
     # False.
     FLAGS.set_default('alsologtostderr', True)
-    # Remove it from saved flags so it doesn't get restored later.
-    del saved_flags['alsologtostderr']
 
-    # The call FLAGS(sys.argv) parses sys.argv, returns the arguments
-    # without the flags, and -- as a side effect -- modifies flag values in
-    # FLAGS. We don't want the side effect, because we don't want to
-    # override flag changes the program did (e.g. in __main__.main)
-    # after the command-line has been parsed. So we have the for loop below
-    # to change back flags to their old values.
-    argv = FLAGS(sys.argv)
-    for saved_flag in saved_flags.values():
-      saved_flag.restore_flag()
+    # Here we only want to get the `argv` without the flags. To avoid any
+    # side effects of parsing flags, we temporarily stub out the `parse` method
+    stored_parse_methods = {}
+    noop_parse = lambda _: None
+    for name in FLAGS:
+      # Avoid any side effects of parsing flags.
+      stored_parse_methods[name] = FLAGS[name].parse
+    # This must be a separate loop since multiple flag names (short_name=) can
+    # point to the same flag object.
+    for name in FLAGS:
+      FLAGS[name].parse = noop_parse
+    try:
+      argv = FLAGS(sys.argv)
+    finally:
+      for name in FLAGS:
+        FLAGS[name].parse = stored_parse_methods[name]
+      sys.stdout.flush()
 
     function(argv, args, kwargs)
   else:
