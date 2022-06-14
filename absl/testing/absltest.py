@@ -531,8 +531,9 @@ class _TempFile(object):
   # Literal to express more precise return types. The contained type is
   # currently `Any` to avoid [bad-return-type] errors in the open_* methods.
   @contextlib.contextmanager
-  def _open(self, mode, encoding='utf8', errors='strict'):
-    # type: (Text, Text, Text) -> Iterator[Any]
+  def _open(
+      self, mode: str, encoding: str = 'utf8', errors: str = 'strict'
+  ) -> Iterator[Any]:
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
       yield fp
