@@ -2145,6 +2145,11 @@ class TempFileTest(absltest.TestCase, HelperMixin):
         'TempFileHelperTest/test_failure',
         'TempFileHelperTest/test_failure/failure',
         'TempFileHelperTest/test_success',
+        'TempFileHelperTest/test_subtest_failure',
+        'TempFileHelperTest/test_subtest_failure/parent',
+        'TempFileHelperTest/test_subtest_failure/successful_child',
+        'TempFileHelperTest/test_subtest_failure/failed_child',
+        'TempFileHelperTest/test_subtest_success',
     }
     self.run_tempfile_helper('SUCCESS', expected)
 
@@ -2153,6 +2158,8 @@ class TempFileTest(absltest.TestCase, HelperMixin):
         'TempFileHelperTest',
         'TempFileHelperTest/test_failure',
         'TempFileHelperTest/test_success',
+        'TempFileHelperTest/test_subtest_failure',
+        'TempFileHelperTest/test_subtest_success',
     }
     self.run_tempfile_helper('ALWAYS', expected)
 
@@ -2163,6 +2170,14 @@ class TempFileTest(absltest.TestCase, HelperMixin):
         'TempFileHelperTest/test_failure/failure',
         'TempFileHelperTest/test_success',
         'TempFileHelperTest/test_success/success',
+        'TempFileHelperTest/test_subtest_failure',
+        'TempFileHelperTest/test_subtest_failure/parent',
+        'TempFileHelperTest/test_subtest_failure/successful_child',
+        'TempFileHelperTest/test_subtest_failure/failed_child',
+        'TempFileHelperTest/test_subtest_success',
+        'TempFileHelperTest/test_subtest_success/parent',
+        'TempFileHelperTest/test_subtest_success/child0',
+        'TempFileHelperTest/test_subtest_success/child1',
     }
     self.run_tempfile_helper('OFF', expected)
 
@@ -2172,8 +2187,8 @@ class SkipClassTest(absltest.TestCase):
   def test_incorrect_decorator_call(self):
     with self.assertRaises(TypeError):
 
-      @absltest.skipThisClass  # pylint: disable=unused-variable
-      class Test(absltest.TestCase):
+      @absltest.skipThisClass
+      class Test(absltest.TestCase):  # pylint: disable=unused-variable
         pass
 
   def test_incorrect_decorator_subclass(self):

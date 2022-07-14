@@ -787,24 +787,49 @@ class TestCase(unittest.TestCase):
     elif cleanup == TempFileCleanup.ALWAYS:
       self.addCleanup(_rmtree_ignore_errors, path)
     elif cleanup == TempFileCleanup.SUCCESS:
-      self._internal_cleanup_on_success(_rmtree_ignore_errors, path)
+      self._internal_add_cleanup_on_success(_rmtree_ignore_errors, path)
     else:
       raise AssertionError('Unexpected cleanup value: {}'.format(cleanup))
 
-  def _internal_cleanup_on_success(self, function, *args, **kwargs):
-    # type: (Callable[..., object], Any, Any) -> None
+  def _internal_add_cleanup_on_success(
+      self,
+      function: Callable[..., Any],
+      *args: Any,
+      **kwargs: Any,
+  ) -> None:
+    """Adds `function` as cleanup when the test case succeeds."""
+    outcome = self._outcome
+    previous_failure_count = (
+        len(outcome.result.failures)
+        + len(outcome.result.errors)
+        + len(outcome.result.unexpectedSuccesses)
+    )
     def _call_cleaner_on_success(*args, **kwargs):
-      if not self._ran_and_passed():
+      if not self._internal_ran_and_passed_when_called_during_cleanup(
+          previous_failure_count):
         return
       function(*args, **kwargs)
     self.addCleanup(_call_cleaner_on_success, *args, **kwargs)
 
-  def _ran_and_passed(self):
-    # type: () -> bool
+  def _internal_ran_and_passed_when_called_during_cleanup(
+      self,
+      previous_failure_count: int,
+  ) -> bool:
+    """Returns whether test is passed. Expected to be called during cleanup."""
     outcome = self._outcome
-    result = self.defaultTestResult()
-    self._feedErrorsToResult(result, outcome.errors)  # pytype: disable=attribute-error
-    return result.wasSuccessful()
+    if sys.version_info[:2] >= (3, 11):
+      current_failure_count = (
+          len(outcome.result.failures)
+          + len(outcome.result.errors)
+          + len(outcome.result.unexpectedSuccesses)
+      )
+      return current_failure_count == previous_failure_count
+    else:
+      # Before Python 3.11 https://github.com/python/cpython/pull/28180, errors
+      # were bufferred in _Outcome before calling cleanup.
+      result = self.defaultTestResult()
+      self._feedErrorsToResult(result, outcome.errors)  # pytype: disable=attribute-error
+      return result.wasSuccessful()
 
   def shortDescription(self):
     # type: () -> Text

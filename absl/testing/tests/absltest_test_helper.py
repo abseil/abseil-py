@@ -106,6 +106,8 @@ class HelperTest(absltest.TestCase):
 
 
 class TempFileHelperTest(absltest.TestCase):
+  """Helper test case for tempfile cleanup tests."""
+
   tempfile_cleanup = absltest.TempFileCleanup[os.environ.get(
       'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP', 'SUCCESS')]
 
@@ -115,6 +117,20 @@ class TempFileHelperTest(absltest.TestCase):
 
   def test_success(self):
     self.create_tempfile('success')
+
+  def test_subtest_failure(self):
+    self.create_tempfile('parent')
+    with self.subTest('success'):
+      self.create_tempfile('successful_child')
+    with self.subTest('failure'):
+      self.create_tempfile('failed_child')
+      self.fail('expected failure')
+
+  def test_subtest_success(self):
+    self.create_tempfile('parent')
+    for i in range(2):
+      with self.subTest(f'success{i}'):
+        self.create_tempfile(f'child{i}')
 
 
 def main(argv):
