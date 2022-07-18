@@ -18,10 +18,6 @@ The purpose of this module is to define a few flags.  We want to make
 sure the unit tests for flags.py involve more than one module.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 from absl import flags
 from absl.flags import _helpers
 

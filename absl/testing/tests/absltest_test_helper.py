@@ -14,26 +14,34 @@
 
 """Helper binary for absltest_test.py."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import os
 import tempfile
 import unittest
 
+from absl import app
 from absl import flags
 from absl.testing import absltest
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_integer('test_id', 0, 'Which test to run.')
+_TEST_ID = flags.DEFINE_integer('test_id', 0, 'Which test to run.')
+_NAME = flags.DEFINE_multi_string('name', [], 'List of names to print.')
+
+
+@flags.validator('name')
+def validate_name(value):
+  # This validator makes sure that the second FLAGS(sys.argv) inside
+  # absltest.main() won't actually trigger side effects of the flag parsing.
+  if len(value) > 2:
+    raise flags.ValidationError(
+        f'No more than two names should be specified, found {len(value)} names')
+  return True
 
 
 class HelperTest(absltest.TestCase):
 
   def test_flags(self):
-    if FLAGS.test_id == 1:
+    if _TEST_ID.value == 1:
       self.assertEqual(FLAGS.test_random_seed, 301)
       if os.name == 'nt':
         # On Windows, it's always in the temp dir, which doesn't start with '/'.
@@ -45,7 +53,7 @@ class HelperTest(absltest.TestCase):
           '--test_tmpdir={} does not start with {}'.format(
               absltest.TEST_TMPDIR.value, expected_prefix))
       self.assertTrue(os.access(absltest.TEST_TMPDIR.value, os.W_OK))
-    elif FLAGS.test_id == 2:
+    elif _TEST_ID.value == 2:
       self.assertEqual(FLAGS.test_random_seed, 321)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
@@ -53,7 +61,7 @@ class HelperTest(absltest.TestCase):
       self.assertEqual(
           absltest.TEST_TMPDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
-    elif FLAGS.test_id == 3:
+    elif _TEST_ID.value == 3:
       self.assertEqual(FLAGS.test_random_seed, 123)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
@@ -61,7 +69,7 @@ class HelperTest(absltest.TestCase):
       self.assertEqual(
           absltest.TEST_TMPDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
-    elif FLAGS.test_id == 4:
+    elif _TEST_ID.value == 4:
       self.assertEqual(FLAGS.test_random_seed, 221)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
@@ -71,26 +79,35 @@ class HelperTest(absltest.TestCase):
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
     else:
       raise unittest.SkipTest(
-          'Not asked to run: --test_id={}'.format(FLAGS.test_id))
+          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
 
   @unittest.expectedFailure
   def test_expected_failure(self):
-    if FLAGS.test_id == 5:
+    if _TEST_ID.value == 5:
       self.assertEqual(1, 1)  # Expected failure, got success.
     else:
       self.assertEqual(1, 2)  # The expected failure.
 
   def test_xml_env_vars(self):
-    if FLAGS.test_id == 6:
+    if _TEST_ID.value == 6:
       self.assertEqual(
           FLAGS.xml_output_file,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE'])
     else:
       raise unittest.SkipTest(
-          'Not asked to run: --test_id={}'.format(FLAGS.test_id))
+          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
+
+  def test_name_flag(self):
+    if _TEST_ID.value == 7:
+      print('Names in test_name_flag() are:', ' '.join(_NAME.value))
+    else:
+      raise unittest.SkipTest(
+          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
 
 
 class TempFileHelperTest(absltest.TestCase):
+  """Helper test case for tempfile cleanup tests."""
+
   tempfile_cleanup = absltest.TempFileCleanup[os.environ.get(
       'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP', 'SUCCESS')]
 
@@ -101,6 +118,29 @@ class TempFileHelperTest(absltest.TestCase):
   def test_success(self):
     self.create_tempfile('success')
 
+  def test_subtest_failure(self):
+    self.create_tempfile('parent')
+    with self.subTest('success'):
+      self.create_tempfile('successful_child')
+    with self.subTest('failure'):
+      self.create_tempfile('failed_child')
+      self.fail('expected failure')
+
+  def test_subtest_success(self):
+    self.create_tempfile('parent')
+    for i in range(2):
+      with self.subTest(f'success{i}'):
+        self.create_tempfile(f'child{i}')
+
+
+def main(argv):
+  del argv  # Unused.
+  print('Names in main() are:', ' '.join(_NAME.value))
+  absltest.main()
+
 
 if __name__ == '__main__':
-  absltest.main()
+  if os.environ.get('ABSLTEST_TEST_HELPER_USE_APP_RUN'):
+    app.run(main)
+  else:
+    absltest.main()

@@ -199,6 +199,7 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         ":absltest",
+        "//absl:app",
         "//absl/flags",
     ],
 )

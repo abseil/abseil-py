@@ -14,10 +14,6 @@
 
 """Tests -v/--verbosity flag and logging.root level's sync behavior."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import logging
 
 assert logging.root.getEffectiveLevel() == logging.WARN, (

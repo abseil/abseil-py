@@ -18,10 +18,6 @@ Do NOT import this module. DO NOT use anything from this module. They are
 private APIs.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 from absl.flags import _exceptions
 
 

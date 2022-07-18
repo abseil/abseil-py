@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 Nothing notable unreleased.
 
+## 1.2.0 (2022-07-18)
+
+### Fixed
+
+*   Fixed a crash in Python 3.11 when `TempFileCleanup.SUCCESS` is used.
+
 ## 1.1.0 (2022-06-01)
 
 *   `Flag` instances now raise an error if used in a bool context. This prevents

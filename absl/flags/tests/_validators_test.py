@@ -18,10 +18,6 @@ This file tests that each flag validator called when it should be, and that
 failed validator will throw an exception, etc.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import warnings
 
 
