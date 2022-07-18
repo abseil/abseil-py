@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 1.2.0 (2022-07-18)
+
 ### Fixed
 
 *   Fixed a crash in Python 3.11 when `TempFileCleanup.SUCCESS` is used.
