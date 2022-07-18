@@ -17,10 +17,6 @@
 Most of the Flag classes are covered in the flags_test.py.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import copy
 import enum
 import pickle

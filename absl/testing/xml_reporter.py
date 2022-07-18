@@ -14,10 +14,6 @@
 
 """A Python test reporter that generates test reports in JUnit XML format."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import datetime
 import re
 import sys

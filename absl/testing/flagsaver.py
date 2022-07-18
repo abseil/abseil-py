@@ -59,10 +59,6 @@ exception will be raised.  However if you *add* a flag after saving flag values,
 and then restore flag values, the added flag will be deleted with no errors.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import functools
 import inspect
 

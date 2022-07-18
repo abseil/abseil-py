@@ -576,7 +576,23 @@ def DEFINE_multi_enum(
 @overload
 def DEFINE_multi_enum_class(
     name: Text,
-    default: Union[None, Iterable[_ET], _ET, Text],
+    # This is separate from `Union[None, _ET, Text]` to avoid a Pytype issue
+    # inferring the return value to FlagHolder[List[Union[_ET, enum.Enum]]]
+    # when an iterable of concrete enum subclasses are used.
+    default: Iterable[_ET],
+    enum_class: Type[_ET],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    *,
+    required: Literal[True],
+    **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
+  ...
+
+@overload
+def DEFINE_multi_enum_class(
+    name: Text,
+    default: Union[None, _ET, Text],
     enum_class: Type[_ET],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
@@ -601,7 +617,10 @@ def DEFINE_multi_enum_class(
 @overload
 def DEFINE_multi_enum_class(
     name: Text,
-    default: Union[Iterable[_ET], _ET, Text],
+    # This is separate from `Union[None, _ET, Text]` to avoid a Pytype issue
+    # inferring the return value to FlagHolder[List[Union[_ET, enum.Enum]]]
+    # when an iterable of concrete enum subclasses are used.
+    default: Iterable[_ET],
     enum_class: Type[_ET],
     help: Text,
     flag_values: _flagvalues.FlagValues = ...,
@@ -610,6 +629,17 @@ def DEFINE_multi_enum_class(
     **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
   ...
 
+@overload
+def DEFINE_multi_enum_class(
+    name: Text,
+    default: Union[_ET, Text],
+    enum_class: Type[_ET],
+    help: Text,
+    flag_values: _flagvalues.FlagValues = ...,
+    module_name: Optional[Text] = ...,
+    required: bool = ...,
+    **args: Any) -> _flagvalues.FlagHolder[List[_ET]]:
+  ...
 
 
 def DEFINE_alias(

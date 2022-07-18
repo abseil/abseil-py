@@ -88,10 +88,6 @@ There are several differences between absl.flags and argparse_flags:
    3) argparse_flags supports `-h`; absl.app does not.
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import argparse
 import sys
 
