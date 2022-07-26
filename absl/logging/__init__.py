@@ -407,9 +407,9 @@ def debug(msg, *args, **kwargs):
   log(DEBUG, msg, *args, **kwargs)
 
 
-def exception(msg, *args):
+def exception(msg, *args, **kwargs):
   """Logs an exception, with traceback and message."""
-  error(msg, *args, exc_info=True)
+  error(msg, *args, **kwargs, exc_info=True)
 
 
 # Counter to keep track of number of log entries per token.
