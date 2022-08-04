@@ -10,7 +10,7 @@ Welcome
    
    *
    
-.. automodule::absl.module
+.. automodule: package_name.module
    :members:
    
 Indices and tables
