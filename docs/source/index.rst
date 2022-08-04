@@ -9,6 +9,7 @@ Welcome
    :glob:
    
    *
+   test
    
 Indices and tables
 ==================
