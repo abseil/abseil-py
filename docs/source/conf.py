@@ -20,7 +20,14 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.coverage',
+    'sphinxcontrib.apidoc',
 ]
+
+# sphinxcontrib.apidoc vars
+apidoc_module_dir = '../../absl'
+apidoc_output_dir = '.'
+apidoc_excluded_paths = ['tests']
+apidoc_separate_modules = True
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
