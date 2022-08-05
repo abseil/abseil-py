@@ -5,12 +5,11 @@ Made some edits to the index.rst file in docs/source/index.rst.  Will they get p
 Welcome
 =======
 
-.. toctree:
+.. toctree::
    :maxdepth: 2
+   :glob:
    
-   absl
-   test
-   api
+   *
    
 
 Indices and tables
