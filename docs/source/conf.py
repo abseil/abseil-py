@@ -3,11 +3,11 @@
 # -- Project information
 
 project = 'abseil/abseil-py'
-copyright = '2021, <fill in copyright info>'
-author = '<fill in author info>'
+copyright = '2022, abseil/abseil-py authors'
+author = 'abseil/abseil-py authors'
 
-release = '0.1'
-version = '0.1.0'
+release = '1.2'
+version = '1.2.0'
 
 # -- General configuration
 
@@ -20,7 +20,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.viewcode',
     'sphinx.ext.coverage',
-    'sphinxcontrib.apidoc',
+    'sphinxcontrib.apidoc', # automatically convert .py sources to .rst docs. 
+    'myst_parser',          # for .md files
 ]
 
 # sphinxcontrib.apidoc vars
@@ -34,6 +35,11 @@ intersphinx_mapping = {
     'sphinx': ('https://www.sphinx-doc.org/en/master/', None),
 }
 intersphinx_disabled_domains = ['std']
+
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown',
+}
 
 templates_path = ['_templates']
 
