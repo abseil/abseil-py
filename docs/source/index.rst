@@ -8,7 +8,6 @@ Welcome to abseil/abseil-py docs!
    :caption: Contents:
    :glob:
 
-   readme_link
    *
 
 
