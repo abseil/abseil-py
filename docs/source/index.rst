@@ -6,7 +6,7 @@ Welcome
    :caption: Contents:
    :glob:
 
-   README
+   README.md
    *
 
 
