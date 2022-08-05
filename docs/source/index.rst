@@ -5,6 +5,8 @@ Made some edits to the index.rst file in docs/source/index.rst.  Will they get p
 Welcome
 =======
 
+.. include:: parent_readme_link.rst
+
 .. toctree::
    :maxdepth: 2
    :glob:
