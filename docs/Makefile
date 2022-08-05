@@ -7,7 +7,7 @@
 #   $ source myproject/bin/activate
 #
 #   Then install sphinx packages (if running locally)
-#   $ pip install myst-parser
+#   $ pip install m2r2
 #   $ pip install sphinxcontrib-apidoc
 #   $ pip install sphinx-rtd-theme
 #
@@ -16,13 +16,18 @@
 # from the environment for the first two.
 SOURCEDIR     = ../absl
 RSTDIR        = source
+# If you change the conf.py apidoc_excluded_paths, you need to update
+# the excluded paths in APIDOC_EXCLUDE too.  The paths are relative
+# to the docs/ directory (if you want to filter out absl/tests you need
+# to use "../*/tests".)
+APIDOC_EXCLUDE = ../*/*/tests/* ../*/tests/*
 HTMLDIR      = build
 SPHINXBUILD   ?= sphinx-build
 SPHINXAPIDOC  ?= sphinx-apidoc
 
 # Build .rst files for all Python sources in SOURCEDIR.
 rstfiles:
-	@$(SPHINXAPIDOC) -o $(RSTDIR) $(SOURCEDIR) tests
+	@$(SPHINXAPIDOC) -o $(RSTDIR) $(SOURCEDIR) tests $(APIDOC_EXCLUDE)
 
 # Run after "make rstfiles"
 # You can review sphinx generated files in docs/build directory.
