@@ -9,6 +9,7 @@ Welcome
    :glob:
    
    *
+   api
    
 
 Indices and tables
