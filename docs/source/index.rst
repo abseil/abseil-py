@@ -9,19 +9,6 @@ Welcome
    :glob:
    
    *
-   test
-   
-.. automodule: absl.flags
-   :members:
-   
-.. automodule: absl.logging
-   :members:
-   
-.. automodule: absl.testing
-   :members:
-
-.. automodule: package_name.module
-   :members:
    
 
 Indices and tables
