@@ -6,9 +6,10 @@ Welcome
 =======
 
 .. toctree:
-   :glob:
+   :maxdepth: 2
    
-   *
+   absl
+   test
    api
    
 
