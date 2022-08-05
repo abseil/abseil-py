@@ -6,7 +6,7 @@ Welcome to abseil/abseil-py docs!
    :caption: Contents:
    :glob:
 
-   README.md
+   readme_link
    *
 
 
