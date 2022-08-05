@@ -1,6 +1,8 @@
 Welcome to abseil/abseil-py docs!
 =================================
 
+.. import:: readme_link
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
