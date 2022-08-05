@@ -1,20 +1,29 @@
 # Minimal makefile for Sphinx documentation
 #
+# To generate html docs locally:
+#   Recommend doing this from a virtual environment:
+#   $ sudo apt-get install virtualenv python3-venv
+#   $ virtualenv myproject  # or python3 -m venv myproject
+#   $ source myproject/bin/activate
+#
+#   Then install sphinx packages (if running locally)
+#   $ pip install myst-parser
+#   $ pip install sphinxcontrib-apidoc
+#   $ pip install sphinx-rtd-theme
+#
 
 # You can set these variables from the command line, and also
 # from the environment for the first two.
-SPHINXOPTS    ?=
+SOURCEDIR     = ../absl
+RSTDIR        = source
+HTMLDIR      = build
 SPHINXBUILD   ?= sphinx-build
-SOURCEDIR     = ..
-BUILDDIR      = build
+SPHINXAPIDOC  ?= sphinx-apidoc
 
-# Put it first so that "make" without argument is like "make help".
-help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+# Build .rst files for all Python sources in SOURCEDIR.
+rstfiles:
+	@$(SPHINXAPIDOC) -o $(RSTDIR) $(SOURCEDIR) tests
 
-.PHONY: help Makefile
-
-# Catch-all target: route all unknown targets to Sphinx using the new
-# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+# Run after "make rstfiles"
+htmlfiles:
+	@$(SPHINXBUILD) -b html -c $(RSTDIR) $(RSTDIR) $(HTMLDIR)

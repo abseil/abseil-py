@@ -1,7 +1,3 @@
-.. Add some text to the index.rst file
-
-Made some edits to the index.rst file in docs/source/index.rst.  Will they get picked up?
-
 Welcome
 =======
 
@@ -9,10 +5,10 @@ Welcome
    :maxdepth: 2
    :caption: Contents:
    :glob:
-   
+
    README.md
    *
-   
+
 
 Indices and tables
 ==================
