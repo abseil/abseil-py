@@ -21,7 +21,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.coverage',
     'sphinxcontrib.apidoc', # automatically convert .py sources to .rst docs. 
-    'myst_parser',          # for .md files
+    'm2r',          # for .md files
 ]
 
 # sphinxcontrib.apidoc vars
