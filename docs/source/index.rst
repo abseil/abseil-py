@@ -5,13 +5,12 @@ Made some edits to the index.rst file in docs/source/index.rst.  Will they get p
 Welcome
 =======
 
-README.md
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
    :glob:
    
+   README.md
    *
    
 
