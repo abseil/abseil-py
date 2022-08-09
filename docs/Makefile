@@ -17,13 +17,14 @@
 SOURCEDIR      = ../absl
 RSTDIR         = source
 HTMLDIR        = build
+HTMLDIR      = build
 # If you change the conf.py apidoc_excluded_paths, you need to update
 # the excluded paths in APIDOC_EXCLUDE too.  The paths are relative
 # to the docs/ directory (if you want to filter out absl/tests you need
 # to use "../*/tests".)
 APIDOC_EXCLUDE = ../*/*/tests/* ../*/tests/*
-SPHINXBUILD    ?= sphinx-build
-SPHINXAPIDOC   ?= sphinx-apidoc
+SPHINXBUILD   ?= sphinx-build
+SPHINXAPIDOC  ?= sphinx-apidoc
 
 # Build .rst files for all Python sources in SOURCEDIR.
 # This rule isn't called by readthedocs, its only used for manual testing.

@@ -27,6 +27,7 @@ extensions = [
 # sphinxcontrib.apidoc vars
 apidoc_module_dir = '../../absl'
 apidoc_output_dir = '.'
+apidoc_toc_file = False
 apidoc_excluded_paths = [
     '*/tests/*',
     'tests/*',
