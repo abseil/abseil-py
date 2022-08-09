@@ -20,9 +20,3 @@ sphinx:
    builder: html
    configuration: docs/source/conf.py
 
-# Optionally declare the Python requirements required to build your docs
-python:
-   install:
-     - method: pip
-       path: .
-
