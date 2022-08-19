@@ -14,11 +14,11 @@
 
 """This module provides argparse integration with absl.flags.
 
-argparse_flags.ArgumentParser is a drop-in replacement for
-argparse.ArgumentParser. It takes care of collecting and defining absl flags
-in argparse.
+``argparse_flags.ArgumentParser`` is a drop-in replacement for
+:class:`argparse.ArgumentParser`. It takes care of collecting and defining absl
+flags in :mod:`argparse`.
 
-Here is a simple example:
+Here is a simple example::
 
     # Assume the following absl.flags is defined in another module:
     #
@@ -40,7 +40,7 @@ Here is a simple example:
     # ./program --header 'A header' --echo 'A message.'
 
 
-Here is another example demonstrates subparsers:
+Here is another example demonstrates subparsers::
 
     parser = argparse_flags.ArgumentParser(description='A subcommands demo.')
     parser.add_argument('--header', help='The header message to print.')
@@ -69,23 +69,25 @@ Here is another example demonstrates subparsers:
     # ./program shuffle --echo='A message.' 1 2 3 4
 
 
-There are several differences between absl.flags and argparse_flags:
+There are several differences between :mod:`absl.flags` and
+:mod:`~absl.flags.argparse_flags`:
 
 1. Flags defined with absl.flags are parsed differently when using the
    argparse parser. Notably:
 
    1) absl.flags allows both single-dash and double-dash for any flag, and
       doesn't distinguish them; argparse_flags only allows double-dash for
-      flag's regular name, and single-dash for flag's `short_name`.
-   2) Boolean flags in absl.flags can be specified with `--bool`, `--nobool`,
-      as well as `--bool=true/false` (though not recommended);
-      in argparse_flags, it only allows `--bool`, `--nobool`.
+      flag's regular name, and single-dash for flag's ``short_name``.
+   2) Boolean flags in absl.flags can be specified with ``--bool``,
+      ``--nobool``, as well as ``--bool=true/false`` (though not recommended);
+      in argparse_flags, it only allows ``--bool``, ``--nobool``.
 
 2. Help related flag differences:
+
    1) absl.flags does not define help flags, absl.app does that; argparse_flags
-      defines help flags unless passed with `add_help=False`.
-   2) absl.app supports `--helpxml`; argparse_flags does not.
-   3) argparse_flags supports `-h`; absl.app does not.
+      defines help flags unless passed with ``add_help=False``.
+   2) absl.app supports ``--helpxml``; argparse_flags does not.
+   3) argparse_flags supports ``-h``; absl.app does not.
 """
 
 import argparse

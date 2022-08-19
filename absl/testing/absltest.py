@@ -103,10 +103,11 @@ __unittest = True  # pylint: disable=invalid-name
 def expectedFailureIf(condition, reason):  # pylint: disable=invalid-name
   """Expects the test to fail if the run condition is True.
 
-  Example usage:
-    @expectedFailureIf(sys.version.major == 2, "Not yet working in py2")
-    def test_foo(self):
-      ...
+  Example usage::
+
+      @expectedFailureIf(sys.version.major == 2, "Not yet working in py2")
+      def test_foo(self):
+        ...
 
   Args:
     condition: bool, whether to expect failure or not.
@@ -623,7 +624,7 @@ class TestCase(unittest.TestCase):
     This creates a named directory on disk that is isolated to this test, and
     will be properly cleaned up by the test. This avoids several pitfalls of
     creating temporary directories for test purposes, as well as makes it easier
-    to setup directories and verify their contents. For example:
+    to setup directories and verify their contents. For example::
 
         def test_foo(self):
           out_dir = self.create_tempdir()
@@ -637,14 +638,14 @@ class TestCase(unittest.TestCase):
           self.assertTrue(os.path.exists(expected_paths[1]))
           self.assertEqual('foo', out_log.read_text())
 
-    See also: `create_tempfile()` for creating temporary files.
+    See also: :meth:`create_tempdir` for creating temporary files.
 
     Args:
       name: Optional name of the directory. If not given, a unique
         name will be generated and used.
       cleanup: Optional cleanup policy on when/if to remove the directory (and
         all its contents) at the end of the test. If None, then uses
-        `self.tempfile_cleanup`.
+        :attr:`tempfile_cleanup`.
 
     Returns:
       A _TempDir representing the created directory; see _TempDir class docs
@@ -678,7 +679,7 @@ class TestCase(unittest.TestCase):
     be properly cleaned up by the test. This avoids several pitfalls of
     creating temporary files for test purposes, as well as makes it easier
     to setup files, their data, read them back, and inspect them when
-    a test fails. For example:
+    a test fails. For example::
 
         def test_foo(self):
           output = self.create_tempfile()
@@ -690,15 +691,15 @@ class TestCase(unittest.TestCase):
     state.
     NOTE: If the file already exists, it will be made writable and overwritten.
 
-    See also: `create_tempdir()` for creating temporary directories, and
-    `_TempDir.create_file` for creating files within a temporary directory.
+    See also: :meth:`create_tempdir` for creating temporary directories, and
+    ``_TempDir.create_file`` for creating files within a temporary directory.
 
     Args:
       file_path: Optional file path for the temp file. If not given, a unique
         file name will be generated and used. Slashes are allowed in the name;
         any missing intermediate directories will be created. NOTE: This path is
         the path that will be cleaned up, including any directories in the path,
-        e.g., 'foo/bar/baz.txt' will `rm -r foo`.
+        e.g., ``'foo/bar/baz.txt'`` will ``rm -r foo``.
       content: Optional string or
         bytes to initially write to the file. If not
         specified, then an empty file is created.
@@ -710,7 +711,7 @@ class TestCase(unittest.TestCase):
         `content` is text.
       cleanup: Optional cleanup policy on when/if to remove the directory (and
         all its contents) at the end of the test. If None, then uses
-        `self.tempfile_cleanup`.
+        :attr:`tempfile_cleanup`.
 
     Returns:
       A _TempFile representing the created file; see _TempFile class docs for
@@ -1075,10 +1076,10 @@ class TestCase(unittest.TestCase):
     """Asserts that two sequences have the same elements (in any order).
 
     This method, unlike assertCountEqual, doesn't care about any
-    duplicates in the expected and actual sequences.
+    duplicates in the expected and actual sequences::
 
-      >> assertSameElements([1, 1, 1, 0, 0, 0], [0, 1])
-      # Doesn't raise an AssertionError
+        # Doesn't raise an AssertionError
+        assertSameElements([1, 1, 1, 0, 0, 0], [0, 1])
 
     If possible, you should use assertCountEqual instead of
     assertSameElements.
@@ -1174,6 +1175,7 @@ class TestCase(unittest.TestCase):
     expression (a string or re compiled object) instead of a list.
 
     Notes:
+
     1. This function uses substring matching, i.e. the matching
        succeeds if *any* substring of the error message matches *any*
        regex in the list.  This is more convenient for the user than
@@ -1523,39 +1525,39 @@ class TestCase(unittest.TestCase):
     """Asserts that total ordering has been implemented correctly.
 
     For example, say you have a class A that compares only on its attribute x.
-    Comparators other than __lt__ are omitted for brevity.
+    Comparators other than ``__lt__`` are omitted for brevity::
 
-    class A(object):
-      def __init__(self, x, y):
-        self.x = x
-        self.y = y
+        class A(object):
+          def __init__(self, x, y):
+            self.x = x
+            self.y = y
 
-      def __hash__(self):
-        return hash(self.x)
+          def __hash__(self):
+            return hash(self.x)
 
-      def __lt__(self, other):
-        try:
-          return self.x < other.x
-        except AttributeError:
-          return NotImplemented
+          def __lt__(self, other):
+            try:
+              return self.x < other.x
+            except AttributeError:
+              return NotImplemented
 
     assertTotallyOrdered will check that instances can be ordered correctly.
-    For example,
+    For example::
 
-    self.assertTotallyOrdered(
-      [None],  # None should come before everything else.
-      [1],     # Integers sort earlier.
-      [A(1, 'a')],
-      [A(2, 'b')],  # 2 is after 1.
-      [A(3, 'c'), A(3, 'd')],  # The second argument is irrelevant.
-      [A(4, 'z')],
-      ['foo'])  # Strings sort last.
+        self.assertTotallyOrdered(
+            [None],  # None should come before everything else.
+            [1],  # Integers sort earlier.
+            [A(1, 'a')],
+            [A(2, 'b')],  # 2 is after 1.
+            [A(3, 'c'), A(3, 'd')],  # The second argument is irrelevant.
+            [A(4, 'z')],
+            ['foo'])  # Strings sort last.
 
     Args:
-     *groups: A list of groups of elements.  Each group of elements is a list
-         of objects that are equal.  The elements in each group must be less
-         than the elements in the group after it.  For example, these groups are
-         totally ordered: [None], [1], [2, 2], [3].
+      *groups: A list of groups of elements.  Each group of elements is a list
+        of objects that are equal.  The elements in each group must be less
+        than the elements in the group after it.  For example, these groups are
+        totally ordered: ``[None]``, ``[1]``, ``[2, 2]``, ``[3]``.
       **kwargs: optional msg keyword argument can be passed.
     """
 
@@ -2040,12 +2042,14 @@ def main(*args, **kwargs):
 
   Usually this function is called without arguments, so the
   unittest.TestProgram instance will get created with the default settings,
-  so it will run all test methods of all TestCase classes in the __main__
+  so it will run all test methods of all TestCase classes in the ``__main__``
   module.
 
   Args:
-    *args: Positional arguments passed through to unittest.TestProgram.__init__.
-    **kwargs: Keyword arguments passed through to unittest.TestProgram.__init__.
+    *args: Positional arguments passed through to
+        ``unittest.TestProgram.__init__``.
+    **kwargs: Keyword arguments passed through to
+        ``unittest.TestProgram.__init__``.
   """
   print_python_version()
   _run_in_app(run_tests, args, kwargs)
@@ -2178,29 +2182,29 @@ def skipThisClass(reason):
   implementations between a number of concrete testcase classes.
 
   Example usage, showing how you can share some common test methods between
-  subclasses. In this example, only 'BaseTest' will be marked as skipped, and
-  not RealTest or SecondRealTest:
+  subclasses. In this example, only ``BaseTest`` will be marked as skipped, and
+  not RealTest or SecondRealTest::
 
-    @absltest.skipThisClass("Shared functionality")
-    class BaseTest(absltest.TestCase):
-      def test_simple_functionality(self):
-        self.assertEqual(self.system_under_test.method(), 1)
+      @absltest.skipThisClass("Shared functionality")
+      class BaseTest(absltest.TestCase):
+        def test_simple_functionality(self):
+          self.assertEqual(self.system_under_test.method(), 1)
 
-    class RealTest(BaseTest):
-      def setUp(self):
-        super().setUp()
-        self.system_under_test = MakeSystem(argument)
+      class RealTest(BaseTest):
+        def setUp(self):
+          super().setUp()
+          self.system_under_test = MakeSystem(argument)
 
-      def test_specific_behavior(self):
-        ...
+        def test_specific_behavior(self):
+          ...
 
-    class SecondRealTest(BaseTest):
-      def setUp(self):
-        super().setUp()
-        self.system_under_test = MakeSystem(other_arguments)
+      class SecondRealTest(BaseTest):
+        def setUp(self):
+          super().setUp()
+          self.system_under_test = MakeSystem(other_arguments)
 
-      def test_other_behavior(self):
-        ...
+        def test_other_behavior(self):
+          ...
 
   Args:
     reason: The reason we have a skip in place. For instance: 'shared test
@@ -2540,11 +2544,14 @@ def run_tests(argv, args, kwargs):  # pylint: disable=line-too-long
 
   Args:
     argv: sys.argv with the command-line flags removed from the front, i.e. the
-      argv with which app.run() has called __main__.main. It is passed to
-      unittest.TestProgram.__init__(argv=), which does its own flag parsing. It
-      is ignored if kwargs contains an argv entry.
-    args: Positional arguments passed through to unittest.TestProgram.__init__.
-    kwargs: Keyword arguments passed through to unittest.TestProgram.__init__.
+      argv with which :func:`app.run()<absl.app.run>` has called
+      ``__main__.main``. It is passed to
+      ``unittest.TestProgram.__init__(argv=)``, which does its own flag parsing.
+      It is ignored if kwargs contains an argv entry.
+    args: Positional arguments passed through to
+      ``unittest.TestProgram.__init__``.
+    kwargs: Keyword arguments passed through to
+      ``unittest.TestProgram.__init__``.
   """
   result = _run_and_get_tests_result(
       argv, args, kwargs, xml_reporter.TextAndXMLTestRunner)

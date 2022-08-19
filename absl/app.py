@@ -14,8 +14,8 @@
 
 """Generic entry point for Abseil Python applications.
 
-To use this module, define a 'main' function with a single 'argv' argument and
-call app.run(main). For example:
+To use this module, define a ``main`` function with a single ``argv`` argument
+and call ``app.run(main)``. For example::
 
     def main(argv):
       if len(argv) > 1:
@@ -336,14 +336,14 @@ _init_callbacks = collections.deque()
 def call_after_init(callback):
   """Calls the given callback only once ABSL has finished initialization.
 
-  If ABSL has already finished initialization when `call_after_init` is
+  If ABSL has already finished initialization when ``call_after_init`` is
   called then the callback is executed immediately, otherwise `callback` is
-  stored to be executed after `app.run` has finished initializing (aka. just
+  stored to be executed after ``app.run`` has finished initializing (aka. just
   before the main function is called).
 
-  If called after `app.run`, this is equivalent to calling `callback()` in the
-  caller thread. If called before `app.run`, callbacks are run sequentially (in
-  an undefined order) in the same thread as `app.run`.
+  If called after ``app.run``, this is equivalent to calling ``callback()`` in
+  the caller thread. If called before ``app.run``, callbacks are run
+  sequentially (in an undefined order) in the same thread as ``app.run``.
 
   Args:
     callback: a callable to be called once ABSL has finished initialization.

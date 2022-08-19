@@ -16,25 +16,26 @@
 
 This converter has to convert (best effort) between three different
 logging level schemes:
-  cpp      = The C++ logging level scheme used in Abseil C++.
-  absl     = The absl.logging level scheme used in Abseil Python.
-  standard = The python standard library logging level scheme.
 
-Here is a handy ascii chart for easy mental mapping.
+  * **cpp**: The C++ logging level scheme used in Abseil C++.
+  * **absl**: The absl.logging level scheme used in Abseil Python.
+  * **standard**: The python standard library logging level scheme.
 
-  LEVEL    | cpp |  absl  | standard |
-  ---------+-----+--------+----------+
-  DEBUG    |  0  |    1   |    10    |
-  INFO     |  0  |    0   |    20    |
-  WARNING  |  1  |   -1   |    30    |
-  ERROR    |  2  |   -2   |    40    |
-  CRITICAL |  3  |   -3   |    50    |
-  FATAL    |  3  |   -3   |    50    |
+Here is a handy ascii chart for easy mental mapping::
 
-Note: standard logging CRITICAL is mapped to absl/cpp FATAL.
-However, only CRITICAL logs from the absl logger (or absl.logging.fatal) will
-terminate the program. CRITICAL logs from non-absl loggers are treated as
-error logs with a message prefix "CRITICAL - ".
+    LEVEL    | cpp |  absl  | standard |
+    ---------+-----+--------+----------+
+    DEBUG    |  0  |    1   |    10    |
+    INFO     |  0  |    0   |    20    |
+    WARNING  |  1  |   -1   |    30    |
+    ERROR    |  2  |   -2   |    40    |
+    CRITICAL |  3  |   -3   |    50    |
+    FATAL    |  3  |   -3   |    50    |
+
+Note: standard logging ``CRITICAL`` is mapped to absl/cpp ``FATAL``.
+However, only ``CRITICAL`` logs from the absl logger (or absl.logging.fatal)
+will terminate the program. ``CRITICAL`` logs from non-absl loggers are treated
+as error logs with a message prefix ``"CRITICAL - "``.
 
 Converting from standard to absl or cpp is a lossy conversion.
 Converting back to standard will lose granularity.  For this reason,
@@ -89,10 +90,11 @@ def get_initial_for_level(level):
   """Gets the initial that should start the log line for the given level.
 
   It returns:
-  - 'I' when: level < STANDARD_WARNING.
-  - 'W' when: STANDARD_WARNING <= level < STANDARD_ERROR.
-  - 'E' when: STANDARD_ERROR <= level < STANDARD_CRITICAL.
-  - 'F' when: level >= STANDARD_CRITICAL.
+
+  * ``'I'`` when: ``level < STANDARD_WARNING``.
+  * ``'W'`` when: ``STANDARD_WARNING <= level < STANDARD_ERROR``.
+  * ``'E'`` when: ``STANDARD_ERROR <= level < STANDARD_CRITICAL``.
+  * ``'F'`` when: ``level >= STANDARD_CRITICAL``.
 
   Args:
     level: int, a Python standard logging level.
@@ -157,7 +159,8 @@ def string_to_standard(level):
   """Converts a string level to standard logging level value.
 
   Args:
-    level: str, case-insensitive 'debug', 'info', 'warning', 'error', 'fatal'.
+    level: str, case-insensitive ``'debug'``, ``'info'``, ``'warning'``,
+        ``'error'``, ``'fatal'``.
 
   Returns:
     The corresponding integer level for use in standard logging.
