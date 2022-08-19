@@ -1336,6 +1336,8 @@ class TestCase(unittest.TestCase):
       if not issubclass(exc_type, self.expected_exception):
         return False
       self.test_func(exc_value)
+      if exc_value:
+        self.exception = exc_value.with_traceback(None)
       return True
 
   @typing.overload
