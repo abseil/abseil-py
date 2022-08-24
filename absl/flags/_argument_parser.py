@@ -93,9 +93,9 @@ class _ArgumentParserCache(type):
 class ArgumentParser(metaclass=_ArgumentParserCache):
   """Base class used to parse and convert arguments.
 
-  The parse() method checks to make sure that the string argument is a
+  The :meth:`parse` method checks to make sure that the string argument is a
   legal value and convert it to a native type.  If the value cannot be
-  converted, it should throw a 'ValueError' exception with a human
+  converted, it should throw a ``ValueError`` exception with a human
   readable explanation of why the value is illegal.
 
   Subclasses should also define a syntactic_help string which may be
@@ -458,7 +458,7 @@ class ListSerializer(ArgumentSerializer):
 
 
 class EnumClassListSerializer(ListSerializer):
-  """A serializer for MultiEnumClass flags.
+  """A serializer for :class:`MultiEnumClass` flags.
 
   This serializer simply joins the output of `EnumClassSerializer` using a
   provided separator.
@@ -521,9 +521,9 @@ class EnumClassSerializer(ArgumentSerializer):
 class BaseListParser(ArgumentParser):
   """Base class for a parser of lists of strings.
 
-  To extend, inherit from this class; from the subclass __init__, call
+  To extend, inherit from this class; from the subclass ``__init__``, call::
 
-      BaseListParser.__init__(self, token, name)
+      super().__init__(token, name)
 
   where token is a character used to tokenize, and name is a description
   of the separator.

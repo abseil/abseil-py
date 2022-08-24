@@ -14,7 +14,7 @@
 
 """Abseil Python logging module implemented on top of standard logging.
 
-Simple usage:
+Simple usage::
 
     from absl import logging
 
@@ -34,29 +34,34 @@ Usage note: Do not pre-format the strings in your program code.
 Instead, let the logging module perform argument interpolation.
 This saves cycles because strings that don't need to be printed
 are never formatted.  Note that this module does not attempt to
-interpolate arguments when no arguments are given.  In other words
+interpolate arguments when no arguments are given.  In other words::
 
     logging.info('Interesting Stuff: %s')
 
 does not raise an exception because logging.info() has only one
 argument, the message string.
 
-"Lazy" evaluation for debugging:
+"Lazy" evaluation for debugging
+-------------------------------
 
-If you do something like this:
+If you do something like this::
+
     logging.debug('Thing: %s', thing.ExpensiveOp())
+
 then the ExpensiveOp will be evaluated even if nothing
-is printed to the log. To avoid this, use the level_debug() function:
+is printed to the log. To avoid this, use the level_debug() function::
+
   if logging.level_debug():
     logging.debug('Thing: %s', thing.ExpensiveOp())
 
 Per file level logging is supported by logging.vlog() and
-logging.vlog_is_on(). For example:
+logging.vlog_is_on(). For example::
 
     if logging.vlog_is_on(2):
       logging.vlog(2, very_expensive_debug_message())
 
-Notes on Unicode:
+Notes on Unicode
+----------------
 
 The log output is encoded as UTF-8.  Don't pass data in other encodings in
 bytes() instances -- instead pass unicode string instances when you need to
@@ -407,9 +412,9 @@ def debug(msg, *args, **kwargs):
   log(DEBUG, msg, *args, **kwargs)
 
 
-def exception(msg, *args):
+def exception(msg, *args, **kwargs):
   """Logs an exception, with traceback and message."""
-  error(msg, *args, exc_info=True)
+  error(msg, *args, **kwargs, exc_info=True)
 
 
 # Counter to keep track of number of log entries per token.
@@ -432,7 +437,7 @@ def _get_next_log_count_per_token(token):
 
 
 def log_every_n(level, msg, n, *args):
-  """Logs 'msg % args' at level 'level' once per 'n' times.
+  """Logs ``msg % args`` at level 'level' once per 'n' times.
 
   Logs the 1st call, (N+1)st call, (2N+1)st call,  etc.
   Not threadsafe.
@@ -479,7 +484,7 @@ def _seconds_have_elapsed(token, num_seconds):
 
 
 def log_every_n_seconds(level, msg, n_seconds, *args):
-  """Logs 'msg % args' at level 'level' iff 'n_seconds' elapsed since last call.
+  """Logs ``msg % args`` at level ``level`` iff ``n_seconds`` elapsed since last call.
 
   Logs the first call, logs subsequent calls if 'n' seconds have elapsed since
   the last logging call from the same call site (file + line). Not thread-safe.
@@ -495,7 +500,7 @@ def log_every_n_seconds(level, msg, n_seconds, *args):
 
 
 def log_first_n(level, msg, n, *args):
-  """Logs 'msg % args' at level 'level' only first 'n' times.
+  """Logs ``msg % args`` at level ``level`` only first ``n`` times.
 
   Not threadsafe.
 
@@ -510,13 +515,13 @@ def log_first_n(level, msg, n, *args):
 
 
 def log_if(level, msg, condition, *args):
-  """Logs 'msg % args' at level 'level' only if condition is fulfilled."""
+  """Logs ``msg % args`` at level ``level`` only if condition is fulfilled."""
   if condition:
     log(level, msg, *args)
 
 
 def log(level, msg, *args, **kwargs):
-  """Logs 'msg % args' at absl logging level 'level'.
+  """Logs ``msg % args`` at absl logging level ``level``.
 
   If no args are given just print msg, ignoring any interpolation specifiers.
 
@@ -550,7 +555,7 @@ def log(level, msg, *args, **kwargs):
 
 
 def vlog(level, msg, *args, **kwargs):
-  """Log 'msg % args' at C++ vlog level 'level'.
+  """Log ``msg % args`` at C++ vlog level ``level``.
 
   Args:
     level: int, the C++ verbose logging level at which to log the message,
@@ -645,13 +650,13 @@ def find_log_dir_and_names(program_name=None, log_dir=None):
   Args:
     program_name: str|None, the filename part of the path to the program that
         is running without its extension.  e.g: if your program is called
-        'usr/bin/foobar.py' this method should probably be called with
-        program_name='foobar' However, this is just a convention, you can
+        ``usr/bin/foobar.py`` this method should probably be called with
+        ``program_name='foobar`` However, this is just a convention, you can
         pass in any string you want, and it will be used as part of the
         log filename. If you don't pass in anything, the default behavior
         is as described in the example.  In python standard logging mode,
-        the program_name will be prepended with py_ if it is the program_name
-        argument is omitted.
+        the program_name will be prepended with ``py_`` if it is the
+        ``program_name`` argument is omitted.
     log_dir: str|None, the desired log directory.
 
   Returns:
@@ -753,10 +758,10 @@ def get_absl_log_prefix(record):
 
 
 def skip_log_prefix(func):
-  """Skips reporting the prefix of a given function or name by ABSLLogger.
+  """Skips reporting the prefix of a given function or name by :class:`~absl.logging.ABSLLogger`.
 
   This is a convenience wrapper function / decorator for
-  `ABSLLogger.register_frame_to_skip`.
+  :meth:`~absl.logging.ABSLLogger.register_frame_to_skip`.
 
   If a callable function is provided, only that function will be skipped.
   If a function name is provided, all functions with the same name in the
@@ -880,13 +885,13 @@ class PythonHandler(logging.StreamHandler):
   def emit(self, record):
     """Prints a record out to some streams.
 
-    If FLAGS.logtostderr is set, it will print to sys.stderr ONLY.
-    If FLAGS.alsologtostderr is set, it will print to sys.stderr.
-    If FLAGS.logtostderr is not set, it will log to the stream
-      associated with the current thread.
+    1. If ``FLAGS.logtostderr`` is set, it will print to ``sys.stderr`` ONLY.
+    2. If ``FLAGS.alsologtostderr`` is set, it will print to ``sys.stderr``.
+    3. If ``FLAGS.logtostderr`` is not set, it will log to the stream
+        associated with the current thread.
 
     Args:
-      record: logging.LogRecord, the record to emit.
+      record: :class:`logging.LogRecord`, the record to emit.
     """
     # People occasionally call logging functions at import time before
     # our flags may have even been defined yet, let alone even parsed, as we
@@ -987,7 +992,7 @@ class ABSLHandler(logging.Handler):
 
 
 class PythonFormatter(logging.Formatter):
-  """Formatter class used by PythonHandler."""
+  """Formatter class used by :class:`~absl.logging.PythonHandler`."""
 
   def format(self, record):
     """Appends the message from the record to the results of the prefix.
@@ -1065,33 +1070,33 @@ class ABSLLogger(logging.getLoggerClass()):
       frame = frame.f_back
 
   def critical(self, msg, *args, **kwargs):
-    """Logs 'msg % args' with severity 'CRITICAL'."""
+    """Logs ``msg % args`` with severity ``CRITICAL``."""
     self.log(logging.CRITICAL, msg, *args, **kwargs)
 
   def fatal(self, msg, *args, **kwargs):
-    """Logs 'msg % args' with severity 'FATAL'."""
+    """Logs ``msg % args`` with severity ``FATAL``."""
     self.log(logging.FATAL, msg, *args, **kwargs)
 
   def error(self, msg, *args, **kwargs):
-    """Logs 'msg % args' with severity 'ERROR'."""
+    """Logs ``msg % args`` with severity ``ERROR``."""
     self.log(logging.ERROR, msg, *args, **kwargs)
 
   def warn(self, msg, *args, **kwargs):
-    """Logs 'msg % args' with severity 'WARN'."""
+    """Logs ``msg % args`` with severity ``WARN``."""
     warnings.warn("The 'warn' method is deprecated, use 'warning' instead",
                   DeprecationWarning, 2)
     self.log(logging.WARN, msg, *args, **kwargs)
 
   def warning(self, msg, *args, **kwargs):
-    """Logs 'msg % args' with severity 'WARNING'."""
+    """Logs ``msg % args`` with severity ``WARNING``."""
     self.log(logging.WARNING, msg, *args, **kwargs)
 
   def info(self, msg, *args, **kwargs):
-    """Logs 'msg % args' with severity 'INFO'."""
+    """Logs ``msg % args`` with severity ``INFO``."""
     self.log(logging.INFO, msg, *args, **kwargs)
 
   def debug(self, msg, *args, **kwargs):
-    """Logs 'msg % args' with severity 'DEBUG'."""
+    """Logs ``msg % args`` with severity ``DEBUG``."""
     self.log(logging.DEBUG, msg, *args, **kwargs)
 
   def log(self, level, msg, *args, **kwargs):
@@ -1114,12 +1119,12 @@ class ABSLLogger(logging.getLoggerClass()):
     super(ABSLLogger, self).log(level, msg, *args, **kwargs)
 
   def handle(self, record):
-    """Calls handlers without checking Logger.disabled.
+    """Calls handlers without checking ``Logger.disabled``.
 
-    Non-root loggers are set to disabled after setup with logging.config if
-    it's not explicitly specified. Historically, absl logging will not be
+    Non-root loggers are set to disabled after setup with :func:`logging.config`
+    if it's not explicitly specified. Historically, absl logging will not be
     disabled by that. To maintaining this behavior, this function skips
-    checking the Logger.disabled bit.
+    checking the ``Logger.disabled`` bit.
 
     This logger can still be disabled by adding a filter that filters out
     everything.
@@ -1134,8 +1139,8 @@ class ABSLLogger(logging.getLoggerClass()):
   def register_frame_to_skip(cls, file_name, function_name, line_number=None):
     """Registers a function name to skip when walking the stack.
 
-    The ABSLLogger sometimes skips method calls on the stack
-    to make the log messages meaningful in their appropriate context.
+    The :class:`~absl.logging.ABSLLogger` sometimes skips method calls on the
+    stack to make the log messages meaningful in their appropriate context.
     This method registers a function from a particular file as one
     which should be skipped.
 
@@ -1193,7 +1198,8 @@ _attempted_to_remove_stderr_stream_handlers = False
 def use_absl_handler():
   """Uses the ABSL logging handler for logging.
 
-  This method is called in app.run() so the absl handler is used in absl apps.
+  This method is called in :func:`app.run()<absl.app.run>` so the absl handler
+  is used in absl apps.
   """
   global _attempted_to_remove_stderr_stream_handlers
   if not _attempted_to_remove_stderr_stream_handlers:
