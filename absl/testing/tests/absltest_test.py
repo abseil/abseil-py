@@ -975,6 +975,29 @@ test case
     with self.assertRaisesWithPredicateMatch(ValueError, lambda e: True):
       raise ValueError
 
+  def test_assert_raises_with_predicate_match_exception_captured(self):
+    def _raise_value_error():
+      raise ValueError
+
+    predicate = lambda e: e is not None
+    with self.assertRaisesWithPredicateMatch(ValueError, predicate) as ctx_mgr:
+      _raise_value_error()
+
+    expected = getattr(ctx_mgr, 'exception', None)
+    self.assertIsInstance(expected, ValueError)
+
+  def test_assert_raises_with_literal_match_exception_captured(self):
+    message = 'some value error'
+    def _raise_value_error():
+      raise ValueError(message)
+
+    # predicate = lambda e: e is not None
+    with self.assertRaisesWithLiteralMatch(ValueError, message) as ctx_mgr:
+      _raise_value_error()
+
+    expected = getattr(ctx_mgr, 'exception', None)
+    self.assertIsInstance(expected, ValueError)
+
   def test_assert_contains_in_order(self):
     # Valids
     self.assertContainsInOrder(

@@ -6,7 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Changed
+
+*   (testing) Assertions `assertRaisesWithPredicateMatch` and
+    `assertRaisesWithLiteralMatch` now capture the raised `Exception` for
+    further analysis when used as a context manager.
 
 ## 1.2.0 (2022-07-18)
 
@@ -241,8 +245,8 @@ Nothing notable unreleased.
 *   (flags) An empty --flagfile value (e.g. "--flagfile=" or "--flagfile=''"
     doesn't raise an error; its not just ignored. This matches Abseil C++
     behavior.
-*   (bazel) Building with Bazel 0.2.0 works without extra incompatibility disable
-    build flags.
+*   (bazel) Building with Bazel 0.2.0 works without extra incompatibility
+    disable build flags.
 
 ### Changed
 

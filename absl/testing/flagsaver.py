@@ -17,40 +17,40 @@
 There are many ways to save and restore.  Always use the most convenient method
 for a given use case.
 
-Here are examples of each method.  They all call do_stuff() while FLAGS.someflag
-is temporarily set to 'foo'.
+Here are examples of each method.  They all call ``do_stuff()`` while
+``FLAGS.someflag`` is temporarily set to ``'foo'``::
 
-  from absl.testing import flagsaver
+    from absl.testing import flagsaver
 
-  # Use a decorator which can optionally override flags via arguments.
-  @flagsaver.flagsaver(someflag='foo')
-  def some_func():
-    do_stuff()
+    # Use a decorator which can optionally override flags via arguments.
+    @flagsaver.flagsaver(someflag='foo')
+    def some_func():
+      do_stuff()
 
-  # Use a decorator which can optionally override flags with flagholders.
-  @flagsaver.flagsaver((module.FOO_FLAG, 'foo'), (other_mod.BAR_FLAG, 23))
-  def some_func():
-    do_stuff()
+    # Use a decorator which can optionally override flags with flagholders.
+    @flagsaver.flagsaver((module.FOO_FLAG, 'foo'), (other_mod.BAR_FLAG, 23))
+    def some_func():
+      do_stuff()
 
-  # Use a decorator which does not override flags itself.
-  @flagsaver.flagsaver
-  def some_func():
-    FLAGS.someflag = 'foo'
-    do_stuff()
+    # Use a decorator which does not override flags itself.
+    @flagsaver.flagsaver
+    def some_func():
+      FLAGS.someflag = 'foo'
+      do_stuff()
 
-  # Use a context manager which can optionally override flags via arguments.
-  with flagsaver.flagsaver(someflag='foo'):
-    do_stuff()
+    # Use a context manager which can optionally override flags via arguments.
+    with flagsaver.flagsaver(someflag='foo'):
+      do_stuff()
 
-  # Save and restore the flag values yourself.
-  saved_flag_values = flagsaver.save_flag_values()
-  try:
-    FLAGS.someflag = 'foo'
-    do_stuff()
-  finally:
-    flagsaver.restore_flag_values(saved_flag_values)
+    # Save and restore the flag values yourself.
+    saved_flag_values = flagsaver.save_flag_values()
+    try:
+      FLAGS.someflag = 'foo'
+      do_stuff()
+    finally:
+      flagsaver.restore_flag_values(saved_flag_values)
 
-We save and restore a shallow copy of each Flag object's __dict__ attribute.
+We save and restore a shallow copy of each Flag object's ``__dict__`` attribute.
 This preserves all attributes of the flag, such as whether or not it was
 overridden from its default value.
 
@@ -102,7 +102,7 @@ def save_flag_values(flag_values=FLAGS):
         be saved. This should almost never need to be overridden.
   Returns:
     Dictionary mapping keys to values. Keys are flag names, values are
-    corresponding __dict__ members. E.g. {'key': value_dict, ...}.
+    corresponding ``__dict__`` members. E.g. ``{'key': value_dict, ...}``.
   """
   return {name: _copy_flag_dict(flag_values[name]) for name in flag_values}
 
@@ -177,16 +177,16 @@ class _FlagOverrider(object):
 
 
 def _copy_flag_dict(flag):
-  """Returns a copy of the flag object's __dict__.
+  """Returns a copy of the flag object's ``__dict__``.
 
-  It's mostly a shallow copy of the __dict__, except it also does a shallow
+  It's mostly a shallow copy of the ``__dict__``, except it also does a shallow
   copy of the validator list.
 
   Args:
     flag: flags.Flag, the flag to copy.
 
   Returns:
-    A copy of the flag object's __dict__.
+    A copy of the flag object's ``__dict__``.
   """
   copy = flag.__dict__.copy()
   copy['_value'] = flag.value  # Ensure correct restore for C++ flags.

@@ -40,6 +40,79 @@ from absl.flags import _flagvalues
 from absl.flags import _helpers
 from absl.flags import _validators
 
+__all__ = (
+    'DEFINE',
+    'DEFINE_flag',
+    'DEFINE_string',
+    'DEFINE_boolean',
+    'DEFINE_bool',
+    'DEFINE_float',
+    'DEFINE_integer',
+    'DEFINE_enum',
+    'DEFINE_enum_class',
+    'DEFINE_list',
+    'DEFINE_spaceseplist',
+    'DEFINE_multi',
+    'DEFINE_multi_string',
+    'DEFINE_multi_integer',
+    'DEFINE_multi_float',
+    'DEFINE_multi_enum',
+    'DEFINE_multi_enum_class',
+    'DEFINE_alias',
+    # Flag validators.
+    'register_validator',
+    'validator',
+    'register_multi_flags_validator',
+    'multi_flags_validator',
+    'mark_flag_as_required',
+    'mark_flags_as_required',
+    'mark_flags_as_mutual_exclusive',
+    'mark_bool_flags_as_mutual_exclusive',
+    # Key flag related functions.
+    'declare_key_flag',
+    'adopt_module_key_flags',
+    'disclaim_key_flags',
+    # Module exceptions.
+    'Error',
+    'CantOpenFlagFileError',
+    'DuplicateFlagError',
+    'IllegalFlagValueError',
+    'UnrecognizedFlagError',
+    'UnparsedFlagAccessError',
+    'ValidationError',
+    'FlagNameConflictsWithMethodError',
+    # Public classes.
+    'Flag',
+    'BooleanFlag',
+    'EnumFlag',
+    'EnumClassFlag',
+    'MultiFlag',
+    'MultiEnumClassFlag',
+    'FlagHolder',
+    'FlagValues',
+    'ArgumentParser',
+    'BooleanParser',
+    'EnumParser',
+    'EnumClassParser',
+    'ArgumentSerializer',
+    'FloatParser',
+    'IntegerParser',
+    'BaseListParser',
+    'ListParser',
+    'ListSerializer',
+    'EnumClassListSerializer',
+    'CsvListSerializer',
+    'WhitespaceSeparatedListParser',
+    'EnumClassSerializer',
+    # Helper functions.
+    'get_help_width',
+    'text_wrap',
+    'flag_dict_to_args',
+    'doc_to_help',
+    # The global FlagValues instance.
+    'FLAGS',
+)
+
 # Initialize the FLAGS_MODULE as early as possible.
 # It's only used by adopt_module_key_flags to take SPECIAL_FLAGS into account.
 _helpers.FLAGS_MODULE = sys.modules[__name__]
@@ -141,5 +214,5 @@ DEFINE_string('undefok', '',
               'arguments MUST use the --flag=value format.',
               _helpers.SPECIAL_FLAGS)  # pytype: disable=wrong-arg-types
 
-# The global FlagValues instance.
+#: The global FlagValues instance.
 FLAGS = _flagvalues.FLAGS
