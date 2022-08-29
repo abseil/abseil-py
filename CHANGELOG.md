@@ -11,6 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (testing) Assertions `assertRaisesWithPredicateMatch` and
     `assertRaisesWithLiteralMatch` now capture the raised `Exception` for
     further analysis when used as a context manager.
+*   (testing) TextAndXMLTestRunner now produces time duration values with
+    millisecond precision in XML test result output.
 
 ## 1.2.0 (2022-07-18)
 
