@@ -412,11 +412,7 @@ class FlagValues:
     fl = self._flags()
     if not isinstance(flag, _flag.Flag):
       raise _exceptions.IllegalFlagValueError(flag)
-    if str is bytes and isinstance(name, unicode):
-      # When using Python 2 with unicode_literals, allow it but encode it
-      # into the bytes type we require.
-      name = name.encode('utf-8')
-    if not isinstance(name, type('')):
+    if not isinstance(name, str):
       raise _exceptions.Error('Flag name must be a string')
     if not name:
       raise _exceptions.Error('Flag name cannot be empty')
@@ -632,7 +628,7 @@ class FlagValues:
        TypeError: Raised on passing wrong type of arguments.
        ValueError: Raised on flag value parsing error.
     """
-    if _helpers.is_bytes_or_string(argv):
+    if isinstance(argv, (str, bytes)):
       raise TypeError(
           'argv should be a tuple/list of strings, not bytes or string.')
     if not argv:
@@ -1006,7 +1002,7 @@ class FlagValues:
 
   def _is_flag_file_directive(self, flag_string):
     """Checks whether flag_string contain a --flagfile=<foo> directive."""
-    if isinstance(flag_string, type('')):
+    if isinstance(flag_string, str):
       if flag_string.startswith('--flagfile='):
         return 1
       elif flag_string == '--flagfile':
