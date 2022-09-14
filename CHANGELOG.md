@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+### Added
+
+*   (flags) The following functions now also accept `FlagHolder` instance(s)
+    in addition to flag name(s) as their first positional argument:
+    -   `flags.register_validator`
+    -   `flags.validator`
+    -   `flags.register_multi_flags_validator`
+    -   `flags.multi_flags_validator`
+    -   `flags.mark_flag_as_required`
+    -   `flags.mark_flags_as_required`
+    -   `flags.mark_flags_as_mutual_exclusive`
+    -   `flags.mark_bool_flags_as_mutual_exclusive`
+    -   `flags.declare_key_flag`
+
 ### Changed
 
 *   (testing) Assertions `assertRaisesWithPredicateMatch` and
@@ -13,6 +27,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     further analysis when used as a context manager.
 *   (testing) TextAndXMLTestRunner now produces time duration values with
     millisecond precision in XML test result output.
+*   (flags) Keyword access to `flag_name` arguments in the following functions
+    is deprecated. This parameter will be renamed in a future 2.0.0 release.
+    -   `flags.register_validator`
+    -   `flags.validator`
+    -   `flags.register_multi_flags_validator`
+    -   `flags.multi_flags_validator`
+    -   `flags.mark_flag_as_required`
+    -   `flags.mark_flags_as_required`
+    -   `flags.mark_flags_as_mutual_exclusive`
+    -   `flags.mark_bool_flags_as_mutual_exclusive`
+    -   `flags.declare_key_flag`
 
 ## 1.2.0 (2022-07-18)
 

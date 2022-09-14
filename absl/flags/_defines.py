@@ -157,8 +157,7 @@ def _internal_declare_key_flags(flag_names,
   adopt_module_key_flags instead.
 
   Args:
-    flag_names: [str], a list of strings that are names of already-registered
-      Flag objects.
+    flag_names: [str], a list of names of already-registered Flag objects.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
       flags listed in flag_names have registered (the value of the flag_values
       argument from the ``DEFINE_*`` calls that defined those flags). This
@@ -176,8 +175,7 @@ def _internal_declare_key_flags(flag_names,
   module = _helpers.get_calling_module()
 
   for flag_name in flag_names:
-    flag = flag_values[flag_name]
-    key_flag_values.register_key_flag_for_module(module, flag)
+    key_flag_values.register_key_flag_for_module(module, flag_values[flag_name])
 
 
 def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
@@ -194,9 +192,10 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
       flags.declare_key_flag('flag_1')
 
   Args:
-    flag_name: str, the name of an already declared flag. (Redeclaring flags as
-      key, including flags implicitly key because they were declared in this
-      module, is a no-op.)
+    flag_name: str | :class:`FlagHolder`, the name or holder of an already
+      declared flag. (Redeclaring flags as key, including flags implicitly key
+      because they were declared in this module, is a no-op.)
+      Positional-only parameter.
     flag_values: :class:`FlagValues`, the FlagValues instance in which the
       flag will be declared as a key flag. This should almost never need to be
       overridden.
@@ -204,6 +203,7 @@ def declare_key_flag(flag_name, flag_values=_flagvalues.FLAGS):
   Raises:
     ValueError: Raised if flag_name not defined as a Python flag.
   """
+  flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
   if flag_name in _helpers.SPECIAL_FLAGS:
     # Take care of the special flags, e.g., --flagfile, --undefok.
     # These flags are defined in SPECIAL_FLAGS, and are treated

@@ -1384,3 +1384,35 @@ class FlagHolder(Generic[_T]):
   def present(self):
     """Returns True if the flag was parsed from command-line flags."""
     return bool(self._flagvalues[self._name].present)
+
+
+def resolve_flag_ref(flag_ref, flag_values):
+  """Helper to validate and resolve a flag reference argument."""
+  if isinstance(flag_ref, FlagHolder):
+    new_flag_values = flag_ref._flagvalues  # pylint: disable=protected-access
+    if flag_values != FLAGS and flag_values != new_flag_values:
+      raise ValueError(
+          'flag_values must not be customized when operating on a FlagHolder')
+    return flag_ref.name, new_flag_values
+  return flag_ref, flag_values
+
+
+def resolve_flag_refs(flag_refs, flag_values):
+  """Helper to validate and resolve flag reference list arguments."""
+  fv = None
+  names = []
+  for ref in flag_refs:
+    if isinstance(ref, FlagHolder):
+      newfv = ref._flagvalues  # pylint: disable=protected-access
+      name = ref.name
+    else:
+      newfv = flag_values
+      name = ref
+    if fv and fv != newfv:
+      raise ValueError(
+          'multiple FlagValues instances used in invocation. '
+          'FlagHolders must be registered to the same FlagValues instance as '
+          'do flag names, if provided.')
+    fv = newfv
+    names.append(name)
+  return names, fv
