@@ -148,6 +148,23 @@ def DEFINE_flag(  # pylint: disable=invalid-name
       fv, flag, ensure_non_none_value=ensure_non_none_value)
 
 
+def set_default(flag_holder, value):
+  """Changes the default value of the provided flag object.
+
+  The flag's current value is also updated if the flag is currently using
+  the default value, i.e. not specified in the command line, and not set
+  by FLAGS.name = value.
+
+  Args:
+    flag_holder: FlagHolder, the flag to modify.
+    value: The new default value.
+
+  Raises:
+    IllegalFlagValueError: Raised when value is not valid.
+  """
+  flag_holder._flagvalues.set_default(flag_holder.name, value)  # pylint: disable=protected-access
+
+
 def _internal_declare_key_flags(flag_names,
                                 flag_values=_flagvalues.FLAGS,
                                 key_flag_values=None):

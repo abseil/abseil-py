@@ -2483,6 +2483,71 @@ class NonGlobalFlagsTest(absltest.TestCase):
       flag_values['flag_name'] = 'flag_value'
 
 
+class SetDefaultTest(absltest.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.flag_values = flags.FlagValues()
+
+  def test_success(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    flags.set_default(int_holder, 2)
+    self.flag_values.mark_as_parsed()
+
+    self.assertEqual(int_holder.value, 2)
+
+  def test_update_after_parse(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+    flags.set_default(int_holder, 2)
+
+    self.assertEqual(int_holder.value, 2)
+
+  def test_overridden_by_explicit_assignment(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+    self.flag_values.an_int = 3
+    flags.set_default(int_holder, 2)
+
+    self.assertEqual(int_holder.value, 3)
+
+  def test_restores_back_to_none(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', None, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+    flags.set_default(int_holder, 3)
+    flags.set_default(int_holder, None)
+
+    self.assertIsNone(int_holder.value)
+
+  def test_failure_on_invalid_type(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.set_default(int_holder, 'a')
+
+  def test_failure_on_type_protected_none_default(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values)
+
+    self.flag_values.mark_as_parsed()
+
+    flags.set_default(int_holder, None)  # NOTE: should be a type failure
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      _ = int_holder.value  # Will also fail on later access.
+
+
 class KeyFlagsTest(absltest.TestCase):
 
   def setUp(self):

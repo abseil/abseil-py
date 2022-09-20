@@ -8,8 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
-*   (flags) The following functions now also accept `FlagHolder` instance(s)
-    in addition to flag name(s) as their first positional argument:
+*   (flags) Added a new `absl.flags.set_default` function that updates the flag
+    default for a provided `FlagHolder`. This parallels the
+    `absl.flags.FlagValues.set_default` interface which takes a flag name.
+*   (flags) The following functions now also accept `FlagHolder` instance(s) in
+    addition to flag name(s) as their first positional argument:
     -   `flags.register_validator`
     -   `flags.validator`
     -   `flags.register_multi_flags_validator`
