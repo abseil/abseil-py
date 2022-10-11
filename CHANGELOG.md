@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 1.3.0 (2022-10-11)
+
 ### Added
 
 *   (flags) Added a new `absl.flags.set_default` function that updates the flag
