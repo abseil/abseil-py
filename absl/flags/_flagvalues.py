@@ -412,11 +412,7 @@ class FlagValues:
     fl = self._flags()
     if not isinstance(flag, _flag.Flag):
       raise _exceptions.IllegalFlagValueError(flag)
-    if str is bytes and isinstance(name, unicode):
-      # When using Python 2 with unicode_literals, allow it but encode it
-      # into the bytes type we require.
-      name = name.encode('utf-8')
-    if not isinstance(name, type('')):
+    if not isinstance(name, str):
       raise _exceptions.Error('Flag name must be a string')
     if not name:
       raise _exceptions.Error('Flag name cannot be empty')
@@ -632,7 +628,7 @@ class FlagValues:
        TypeError: Raised on passing wrong type of arguments.
        ValueError: Raised on flag value parsing error.
     """
-    if _helpers.is_bytes_or_string(argv):
+    if isinstance(argv, (str, bytes)):
       raise TypeError(
           'argv should be a tuple/list of strings, not bytes or string.')
     if not argv:
@@ -1006,7 +1002,7 @@ class FlagValues:
 
   def _is_flag_file_directive(self, flag_string):
     """Checks whether flag_string contain a --flagfile=<foo> directive."""
-    if isinstance(flag_string, type('')):
+    if isinstance(flag_string, str):
       if flag_string.startswith('--flagfile='):
         return 1
       elif flag_string == '--flagfile':
@@ -1388,3 +1384,35 @@ class FlagHolder(Generic[_T]):
   def present(self):
     """Returns True if the flag was parsed from command-line flags."""
     return bool(self._flagvalues[self._name].present)
+
+
+def resolve_flag_ref(flag_ref, flag_values):
+  """Helper to validate and resolve a flag reference argument."""
+  if isinstance(flag_ref, FlagHolder):
+    new_flag_values = flag_ref._flagvalues  # pylint: disable=protected-access
+    if flag_values != FLAGS and flag_values != new_flag_values:
+      raise ValueError(
+          'flag_values must not be customized when operating on a FlagHolder')
+    return flag_ref.name, new_flag_values
+  return flag_ref, flag_values
+
+
+def resolve_flag_refs(flag_refs, flag_values):
+  """Helper to validate and resolve flag reference list arguments."""
+  fv = None
+  names = []
+  for ref in flag_refs:
+    if isinstance(ref, FlagHolder):
+      newfv = ref._flagvalues  # pylint: disable=protected-access
+      name = ref.name
+    else:
+      newfv = flag_values
+      name = ref
+    if fv and fv != newfv:
+      raise ValueError(
+          'multiple FlagValues instances used in invocation. '
+          'FlagHolders must be registered to the same FlagValues instance as '
+          'do flag names, if provided.')
+    fv = newfv
+    names.append(name)
+  return names, fv

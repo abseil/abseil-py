@@ -64,12 +64,12 @@ def xml_escaped_exception_type(exception_type):
 OUTPUT_STRING = '\n'.join([
     r'<\?xml version="1.0"\?>',
     ('<testsuites name="" tests="%(tests)d" failures="%(failures)d"'
-     ' errors="%(errors)d" time="%(run_time).1f" timestamp="%(start_time)s">'),
+     ' errors="%(errors)d" time="%(run_time).3f" timestamp="%(start_time)s">'),
     ('<testsuite name="%(suite_name)s" tests="%(tests)d"'
-     ' failures="%(failures)d" errors="%(errors)d" time="%(run_time).1f"'
+     ' failures="%(failures)d" errors="%(errors)d" time="%(run_time).3f"'
      ' timestamp="%(start_time)s">'),
     ('  <testcase name="%(test_name)s" status="%(status)s" result="%(result)s"'
-     ' time="%(run_time).1f" classname="%(classname)s"'
+     ' time="%(run_time).3f" classname="%(classname)s"'
      ' timestamp="%(start_time)s">%(message)s'),
     '  </testcase>', '</testsuite>',
     '</testsuites>',
@@ -696,8 +696,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     run_time = max(end_time1, end_time2) - min(start_time1, start_time2)
     timestamp = self._iso_timestamp(start_time1)
     expected_prefix = """<?xml version="1.0"?>
-<testsuites name="" tests="2" failures="0" errors="0" time="%.1f" timestamp="%s">
-<testsuite name="MockTest" tests="2" failures="0" errors="0" time="%.1f" timestamp="%s">
+<testsuites name="" tests="2" failures="0" errors="0" time="%.3f" timestamp="%s">
+<testsuite name="MockTest" tests="2" failures="0" errors="0" time="%.3f" timestamp="%s">
 """ % (run_time, timestamp, run_time, timestamp)
     xml_output = self.xml_stream.getvalue()
     self.assertTrue(

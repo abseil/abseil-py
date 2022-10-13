@@ -51,7 +51,8 @@ def register_validator(flag_name,
   change of the corresponding flag's value.
 
   Args:
-    flag_name: str, name of the flag to be checked.
+    flag_name: str | FlagHolder, name or holder of the flag to be checked.
+        Positional-only parameter.
     checker: callable, a function to validate the flag.
 
         * input - A single positional argument: The value of the corresponding
@@ -70,7 +71,10 @@ def register_validator(flag_name,
   Raises:
     AttributeError: Raised when flag_name is not registered as a valid flag
         name.
+    ValueError: Raised when flag_values is non-default and does not match the
+        FlagValues of the provided FlagHolder instance.
   """
+  flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
   v = _validators_classes.SingleFlagValidator(flag_name, checker, message)
   _add_validator(flag_values, v)
 
@@ -88,7 +92,8 @@ def validator(flag_name, message='Flag validation failed',
   See :func:`register_validator` for the specification of checker function.
 
   Args:
-    flag_name: str, name of the flag to be checked.
+    flag_name: str | FlagHolder, name or holder of the flag to be checked.
+        Positional-only parameter.
     message: str, error text to be shown to the user if checker returns False.
         If checker raises flags.ValidationError, message from the raised
         error will be shown.
@@ -119,7 +124,8 @@ def register_multi_flags_validator(flag_names,
   change of the corresponding flag's value.
 
   Args:
-    flag_names: [str], a list of the flag names to be checked.
+    flag_names: [str | FlagHolder], a list of the flag names or holders to be
+        checked. Positional-only parameter.
     multi_flags_checker: callable, a function to validate the flag.
 
         * input - dict, with keys() being flag_names, and value for each key
@@ -136,7 +142,13 @@ def register_multi_flags_validator(flag_names,
 
   Raises:
     AttributeError: Raised when a flag is not registered as a valid flag name.
+    ValueError: Raised when multiple FlagValues are used in the same
+        invocation. This can occur when FlagHolders have different `_flagvalues`
+        or when str-type flag_names entries are present and the `flag_values`
+        argument does not match that of provided FlagHolder(s).
   """
+  flag_names, flag_values = _flagvalues.resolve_flag_refs(
+      flag_names, flag_values)
   v = _validators_classes.MultiFlagsValidator(
       flag_names, multi_flags_checker, message)
   _add_validator(flag_values, v)
@@ -157,7 +169,8 @@ def multi_flags_validator(flag_names,
   function.
 
   Args:
-    flag_names: [str], a list of the flag names to be checked.
+    flag_names: [str | FlagHolder], a list of the flag names or holders to be
+        checked. Positional-only parameter.
     message: str, error text to be shown to the user if checker returns False.
         If checker raises flags.ValidationError, message from the raised
         error will be shown.
@@ -196,13 +209,17 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
         app.run()
 
   Args:
-    flag_name: str, name of the flag
+    flag_name: str | FlagHolder, name or holder of the flag.
+        Positional-only parameter.
     flag_values: flags.FlagValues, optional :class:`~absl.flags.FlagValues`
         instance where the flag is defined.
   Raises:
     AttributeError: Raised when flag_name is not registered as a valid flag
         name.
+    ValueError: Raised when flag_values is non-default and does not match the
+        FlagValues of the provided FlagHolder instance.
   """
+  flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
   if flag_values[flag_name].default is not None:
     warnings.warn(
         'Flag --%s has a non-None default value; therefore, '
@@ -227,7 +244,7 @@ def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
         app.run()
 
   Args:
-    flag_names: Sequence[str], names of the flags.
+    flag_names: Sequence[str | FlagHolder], names or holders of the flags.
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
         are defined.
   Raises:
@@ -248,13 +265,22 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
   includes multi flags with a default value of ``[]`` instead of None.
 
   Args:
-    flag_names: [str], names of the flags.
+    flag_names: [str | FlagHolder], names or holders of flags.
+        Positional-only parameter.
     required: bool. If true, exactly one of the flags must have a value other
         than None. Otherwise, at most one of the flags can have a value other
         than None, and it is valid for all of the flags to be None.
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
         are defined.
+
+  Raises:
+    ValueError: Raised when multiple FlagValues are used in the same
+        invocation. This can occur when FlagHolders have different `_flagvalues`
+        or when str-type flag_names entries are present and the `flag_values`
+        argument does not match that of provided FlagHolder(s).
   """
+  flag_names, flag_values = _flagvalues.resolve_flag_refs(
+      flag_names, flag_values)
   for flag_name in flag_names:
     if flag_values[flag_name].default is not None:
       warnings.warn(
@@ -280,12 +306,21 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
   """Ensures that only one flag among flag_names is True.
 
   Args:
-    flag_names: [str], names of the flags.
+    flag_names: [str | FlagHolder], names or holders of flags.
+        Positional-only parameter.
     required: bool. If true, exactly one flag must be True. Otherwise, at most
         one flag can be True, and it is valid for all flags to be False.
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
         are defined.
+
+  Raises:
+    ValueError: Raised when multiple FlagValues are used in the same
+        invocation. This can occur when FlagHolders have different `_flagvalues`
+        or when str-type flag_names entries are present and the `flag_values`
+        argument does not match that of provided FlagHolder(s).
   """
+  flag_names, flag_values = _flagvalues.resolve_flag_refs(
+      flag_names, flag_values)
   for flag_name in flag_names:
     if not flag_values[flag_name].boolean:
       raise _exceptions.ValidationError(

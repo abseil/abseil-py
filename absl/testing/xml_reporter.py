@@ -202,7 +202,7 @@ class _TestCaseResult(object):
         ('name', '%s' % self.name),
         ('status', '%s' % status),
         ('result', '%s' % result),
-        ('time', '%.1f' % self.run_time),
+        ('time', '%.3f' % self.run_time),
         ('classname', self.full_class_name),
         ('timestamp', _iso8601_timestamp(self.start_time)),
     ]
@@ -263,7 +263,7 @@ class _TestSuiteResult(object):
         ('tests', '%d' % overall_test_count),
         ('failures', '%d' % overall_failures),
         ('errors', '%d' % overall_errors),
-        ('time', '%.1f' % (self.overall_end_time - self.overall_start_time)),
+        ('time', '%.3f' % (self.overall_end_time - self.overall_start_time)),
         ('timestamp', _iso8601_timestamp(self.overall_start_time)),
     ]
     _print_xml_element_header('testsuites', overall_attributes, stream)
@@ -285,7 +285,7 @@ class _TestSuiteResult(object):
           ('tests', '%d' % len(suite)),
           ('failures', '%d' % failures),
           ('errors', '%d' % errors),
-          ('time', '%.1f' % (suite_end_time - suite_start_time)),
+          ('time', '%.3f' % (suite_end_time - suite_start_time)),
           ('timestamp', _iso8601_timestamp(suite_start_time)),
       ]
       _print_xml_element_header('testsuite', suite_attributes, stream)

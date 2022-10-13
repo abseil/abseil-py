@@ -150,20 +150,5 @@ class GetCallingModuleTest(absltest.TestCase):
       sys.modules = orig_sys_modules
 
 
-class IsBytesOrString(absltest.TestCase):
-
-  def test_bytes(self):
-    self.assertTrue(_helpers.is_bytes_or_string(b'bytes'))
-
-  def test_str(self):
-    self.assertTrue(_helpers.is_bytes_or_string('str'))
-
-  def test_unicode(self):
-    self.assertTrue(_helpers.is_bytes_or_string(u'unicode'))
-
-  def test_list(self):
-    self.assertFalse(_helpers.is_bytes_or_string(['str']))
-
-
 if __name__ == '__main__':
   absltest.main()
