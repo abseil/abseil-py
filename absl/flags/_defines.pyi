@@ -650,8 +650,11 @@ def DEFINE_alias(
   ...
 
 
+def set_default(flag_holder: _flagvalues.FlagHolder[_T], value: _T) -> None:
+  ...
 
-def declare_key_flag(flag_name: Text,
+
+def declare_key_flag(flag_name: Union[Text, _flagvalues.FlagHolder],
                      flag_values: _flagvalues.FlagValues = ...) -> None:
   ...
 

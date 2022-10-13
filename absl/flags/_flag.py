@@ -153,7 +153,7 @@ class Flag(object):
         return repr('true')
       else:
         return repr('false')
-    return repr(_helpers.str_or_unicode(value))
+    return repr(str(value))
 
   def parse(self, argument):
     """Parses string and sets flag value.

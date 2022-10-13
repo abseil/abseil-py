@@ -735,7 +735,7 @@ class TestCase(unittest.TestCase):
     (e.g. `TestCase.enter_context`), the context is exited after the test
     class's tearDownClass call.
 
-    Contexts are are exited in the reverse order of entering. They will always
+    Contexts are exited in the reverse order of entering. They will always
     be exited, regardless of test failure/success.
 
     This is useful to eliminate per-test boilerplate when context managers

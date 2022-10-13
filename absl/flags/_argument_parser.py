@@ -147,7 +147,7 @@ class ArgumentSerializer(object):
 
   def serialize(self, value):
     """Returns a serialized string of the value."""
-    return _helpers.str_or_unicode(value)
+    return str(value)
 
 
 class NumericParser(ArgumentParser):
@@ -454,7 +454,7 @@ class ListSerializer(ArgumentSerializer):
 
   def serialize(self, value):
     """See base class."""
-    return self.list_sep.join([_helpers.str_or_unicode(x) for x in value])
+    return self.list_sep.join([str(x) for x in value])
 
 
 class EnumClassListSerializer(ListSerializer):
@@ -498,7 +498,7 @@ class CsvListSerializer(ArgumentSerializer):
 
     # We need the returned value to be pure ascii or Unicodes so that
     # when the xml help is generated they are usefully encodable.
-    return _helpers.str_or_unicode(serialized_value)
+    return str(serialized_value)
 
 
 class EnumClassSerializer(ArgumentSerializer):
@@ -514,7 +514,7 @@ class EnumClassSerializer(ArgumentSerializer):
 
   def serialize(self, value):
     """Returns a serialized string of the Enum class value."""
-    as_string = _helpers.str_or_unicode(value.name)
+    as_string = str(value.name)
     return as_string.lower() if self._lowercase else as_string
 
 
