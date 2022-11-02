@@ -1429,11 +1429,22 @@ class TestCase(unittest.TestCase):
     """
     def Check(err):
       actual_exception_message = str(err)
-      self.assertTrue(expected_exception_message == actual_exception_message,
-                      'Exception message does not match.\n'
-                      'Expected: %r\n'
-                      'Actual: %r' % (expected_exception_message,
-                                      actual_exception_message))
+      self.assertEqual(
+          expected_exception_message,
+          actual_exception_message,
+          'Exception message does not match.\n'
+          'Expected: %r\n'
+          'Actual: %r\n'
+          'Diff: %r\n'
+          % (
+              expected_exception_message,
+              actual_exception_message,
+              difflib.context_diff(
+                  (expected_exception_message,),
+                  (actual_exception_message,),
+              ),
+          ),
+      )
 
     context = self._AssertRaisesContext(expected_exception, self, Check)
     if callable_obj is None:
@@ -1452,6 +1463,7 @@ class TestCase(unittest.TestCase):
           'The quick brown fox jumped over the lazy dog'.
       msg: Optional message to report on failure.
     """
+    # TODO(dlroxe): There is no longer a 'unicode' type.
     if isinstance(strings, (bytes, unicode if str is bytes else str)):
       strings = (strings,)
 
