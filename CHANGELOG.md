@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 Nothing notable unreleased.
 
+### Fixed
+
+*   (flags) Additional kwargs (e.g. `short_name=`) to `DEFINE_multi_enum_class`
+    are now correctly passed to the underlying `Flag` object.
+
 ## 1.3.0 (2022-10-11)
 
 ### Added
