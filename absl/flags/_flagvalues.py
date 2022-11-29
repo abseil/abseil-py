@@ -411,7 +411,9 @@ class FlagValues:
     """Registers a new flag variable."""
     fl = self._flags()
     if not isinstance(flag, _flag.Flag):
-      raise _exceptions.IllegalFlagValueError(flag)
+      raise _exceptions.IllegalFlagValueError(
+          f'Expect Flag instances, found type {type(flag)}. '
+          "Maybe you didn't mean to use FlagValue.__setitem__?")
     if not isinstance(name, str):
       raise _exceptions.Error('Flag name must be a string')
     if not name:
