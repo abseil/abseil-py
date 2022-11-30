@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Decorator and context manager for saving and restoring flag values.
 
 There are many ways to save and restore.  Always use the most convenient method
@@ -60,25 +61,10 @@ and then restore flag values, the added flag will be deleted with no errors.
 
 import functools
 import inspect
-from typing import overload, Any, Callable, Mapping, Tuple, TypeVar
 
 from absl import flags
 
 FLAGS = flags.FLAGS
-
-# The type of pre/post wrapped functions.
-_CallableT = TypeVar('_CallableT', bound=Callable)
-
-
-@overload
-def flagsaver(*args: Tuple[flags.FlagHolder, Any],
-              **kwargs: Any) -> '_FlagOverrider':
-  ...
-
-
-@overload
-def flagsaver(func: _CallableT) -> _CallableT:
-  ...
 
 
 def flagsaver(*args, **kwargs):
@@ -108,14 +94,12 @@ def flagsaver(*args, **kwargs):
   return _FlagOverrider(**kwargs)
 
 
-def save_flag_values(
-    flag_values: flags.FlagValues = FLAGS) -> Mapping[str, Mapping[str, Any]]:
+def save_flag_values(flag_values=FLAGS):
   """Returns copy of flag values as a dict.
 
   Args:
-    flag_values: FlagValues, the FlagValues instance with which the flag will be
-      saved. This should almost never need to be overridden.
-
+    flag_values: FlagValues, the FlagValues instance with which the flag will
+        be saved. This should almost never need to be overridden.
   Returns:
     Dictionary mapping keys to values. Keys are flag names, values are
     corresponding ``__dict__`` members. E.g. ``{'key': value_dict, ...}``.
@@ -123,14 +107,13 @@ def save_flag_values(
   return {name: _copy_flag_dict(flag_values[name]) for name in flag_values}
 
 
-def restore_flag_values(saved_flag_values: Mapping[str, Mapping[str, Any]],
-                        flag_values: flags.FlagValues = FLAGS):
+def restore_flag_values(saved_flag_values, flag_values=FLAGS):
   """Restores flag values based on the dictionary of flag values.
 
   Args:
     saved_flag_values: {'flag_name': value_dict, ...}
-    flag_values: FlagValues, the FlagValues instance from which the flag will be
-      restored. This should almost never need to be overridden.
+    flag_values: FlagValues, the FlagValues instance from which the flag will
+        be restored. This should almost never need to be overridden.
   """
   new_flag_names = list(flag_values)
   for name in new_flag_names:
@@ -144,24 +127,23 @@ def restore_flag_values(saved_flag_values: Mapping[str, Mapping[str, Any]],
       flag_values[name].__dict__ = saved
 
 
-def _wrap(func: _CallableT, overrides: Mapping[str, Any]) -> _CallableT:
+def _wrap(func, overrides):
   """Creates a wrapper function that saves/restores flag values.
 
   Args:
-    func: This will be called between saving flags and restoring flags.
-    overrides: Flag names mapped to their values. These flags will be set after
-      saving the original flag state.
+    func: function object - This will be called between saving flags and
+        restoring flags.
+    overrides: {str: object} - Flag names mapped to their values.  These flags
+        will be set after saving the original flag state.
 
   Returns:
-    A wrapped version of func.
+    return value from func()
   """
-
   @functools.wraps(func)
   def _flagsaver_wrapper(*args, **kwargs):
     """Wrapper function that saves and restores flags."""
     with _FlagOverrider(**overrides):
       return func(*args, **kwargs)
-
   return _flagsaver_wrapper
 
 
@@ -172,11 +154,11 @@ class _FlagOverrider(object):
   completes.
   """
 
-  def __init__(self, **overrides: Any):
+  def __init__(self, **overrides):
     self._overrides = overrides
     self._saved_flag_values = None
 
-  def __call__(self, func: _CallableT) -> _CallableT:
+  def __call__(self, func):
     if inspect.isclass(func):
       raise TypeError('flagsaver cannot be applied to a class.')
     return _wrap(func, self._overrides)
@@ -194,7 +176,7 @@ class _FlagOverrider(object):
     restore_flag_values(self._saved_flag_values, FLAGS)
 
 
-def _copy_flag_dict(flag: flags.Flag) -> Mapping[str, Any]:
+def _copy_flag_dict(flag):
   """Returns a copy of the flag object's ``__dict__``.
 
   It's mostly a shallow copy of the ``__dict__``, except it also does a shallow
