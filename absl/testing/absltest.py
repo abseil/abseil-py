@@ -525,7 +525,7 @@ class _TempFile(object):
                        'file in binary mode'.format(mode))
     if 'b' not in mode:
       mode += 'b'
-    cm = self._open(mode, encoding=None, errors=None)
+    cm = self._open(mode, encoding=None, errors=None)  # pytype: disable=wrong-arg-types
     return cm
 
   # TODO(b/123775699): Once pytype supports typing.Literal, use overload and
