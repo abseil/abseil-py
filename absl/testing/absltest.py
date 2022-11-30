@@ -525,7 +525,7 @@ class _TempFile(object):
                        'file in binary mode'.format(mode))
     if 'b' not in mode:
       mode += 'b'
-    cm = self._open(mode, encoding=None, errors=None)  # pytype: disable=wrong-arg-types
+    cm = self._open(mode, encoding=None, errors=None)
     return cm
 
   # TODO(b/123775699): Once pytype supports typing.Literal, use overload and
@@ -533,7 +533,10 @@ class _TempFile(object):
   # currently `Any` to avoid [bad-return-type] errors in the open_* methods.
   @contextlib.contextmanager
   def _open(
-      self, mode: str, encoding: str = 'utf8', errors: str = 'strict'
+      self,
+      mode: str,
+      encoding: Optional[str] = 'utf8',
+      errors: Optional[str] = 'strict',
   ) -> Iterator[Any]:
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
