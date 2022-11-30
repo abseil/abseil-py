@@ -722,7 +722,7 @@ def find_log_dir(log_dir=None):
   if os.path.isdir(log_dir_candidate) and os.access(log_dir_candidate, os.W_OK):
       return log_dir_candidate
   raise FileNotFoundError(
-      "Can't find a writable directory for logs, tried %s" % dirs)
+      "Can't find a writable directory for logs, tried %s" % log_dir_candidate)
 
 
 def get_absl_log_prefix(record):
