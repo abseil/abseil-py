@@ -641,7 +641,7 @@ class TestCase(unittest.TestCase):
           self.assertTrue(os.path.exists(expected_paths[1]))
           self.assertEqual('foo', out_log.read_text())
 
-    See also: :meth:`create_tempdir` for creating temporary files.
+    See also: :meth:`create_tempfile` for creating temporary files.
 
     Args:
       name: Optional name of the directory. If not given, a unique
