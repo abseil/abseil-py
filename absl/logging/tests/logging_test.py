@@ -706,7 +706,7 @@ class LoggingTest(absltest.TestCase):
       os.path.isdir.return_value = True
       os.access.return_value = True
       log_dir = logging.find_log_dir()
-      self.assertEqual('/tmp/', log_dir)
+      self.assertEqual(tempfile.gettempdir(), log_dir)
 
   @flagsaver.flagsaver(log_dir='')
   def test_find_log_dir_with_tmp(self):
@@ -714,10 +714,10 @@ class LoggingTest(absltest.TestCase):
         mock.patch.object(os.path, 'exists'), \
         mock.patch.object(os.path, 'isdir'):
       os.path.exists.return_value = False
-      os.path.isdir.side_effect = lambda path: path == '/tmp/'
+      os.path.isdir.side_effect = lambda path: path == tempfile.gettempdir()
       os.access.return_value = True
       log_dir = logging.find_log_dir()
-      self.assertEqual('/tmp/', log_dir)
+      self.assertEqual(tempfile.gettempdir(), log_dir)
 
   def test_find_log_dir_with_nothing(self):
     with mock.patch.object(os.path, 'exists'), \
