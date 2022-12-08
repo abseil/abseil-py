@@ -87,6 +87,7 @@ import socket
 import struct
 import sys
 import threading
+import tempfile
 import time
 import timeit
 import traceback
@@ -706,23 +707,22 @@ def find_log_dir(log_dir=None):
     FileNotFoundError: raised in Python 3 when it cannot find a log directory.
     OSError: raised in Python 2 when it cannot find a log directory.
   """
-  # Get a list of possible log dirs (will try to use them in order).
+  # Get a possible log dir.
   if log_dir:
     # log_dir was explicitly specified as an arg, so use it and it alone.
-    dirs = [log_dir]
+    log_dir_candidate = log_dir
   elif FLAGS['log_dir'].value:
     # log_dir flag was provided, so use it and it alone (this mimics the
     # behavior of the same flag in logging.cc).
-    dirs = [FLAGS['log_dir'].value]
+    log_dir_candidate = FLAGS['log_dir'].value
   else:
-    dirs = ['/tmp/', './']
+    log_dir_candidate = tempfile.gettempdir()
 
-  # Find the first usable log dir.
-  for d in dirs:
-    if os.path.isdir(d) and os.access(d, os.W_OK):
-      return d
+  # Test if log dir candidate is usable.
+  if os.path.isdir(log_dir_candidate) and os.access(log_dir_candidate, os.W_OK):
+      return log_dir_candidate
   raise FileNotFoundError(
-      "Can't find a writable directory for logs, tried %s" % dirs)
+      "Can't find a writable directory for logs, tried %s" % log_dir_candidate)
 
 
 def get_absl_log_prefix(record):

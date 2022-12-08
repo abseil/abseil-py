@@ -6,7 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Changed
+
+*   If no log dir is specified `logging.find_log_dir()` now falls back to `tempfile.gettempdir()` instead of `/tmp/`.
 
 ## 1.3.0 (2022-10-11)
 
