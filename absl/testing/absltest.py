@@ -533,7 +533,10 @@ class _TempFile(object):
   # currently `Any` to avoid [bad-return-type] errors in the open_* methods.
   @contextlib.contextmanager
   def _open(
-      self, mode: str, encoding: str = 'utf8', errors: str = 'strict'
+      self,
+      mode: str,
+      encoding: Optional[str] = 'utf8',
+      errors: Optional[str] = 'strict',
   ) -> Iterator[Any]:
     with io.open(
         self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
@@ -638,7 +641,7 @@ class TestCase(unittest.TestCase):
           self.assertTrue(os.path.exists(expected_paths[1]))
           self.assertEqual('foo', out_log.read_text())
 
-    See also: :meth:`create_tempdir` for creating temporary files.
+    See also: :meth:`create_tempfile` for creating temporary files.
 
     Args:
       name: Optional name of the directory. If not given, a unique
