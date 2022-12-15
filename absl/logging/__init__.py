@@ -86,6 +86,7 @@ import os
 import socket
 import struct
 import sys
+import tempfile
 import threading
 import tempfile
 import time
@@ -707,22 +708,26 @@ def find_log_dir(log_dir=None):
     FileNotFoundError: raised in Python 3 when it cannot find a log directory.
     OSError: raised in Python 2 when it cannot find a log directory.
   """
-  # Get a possible log dir.
+  # Get a list of possible log dirs (will try to use them in order).
+  # NOTE: Google's internal implementation has a special handling for Google
+  # machines, which uses a list of directories. Hence the following uses `dirs`
+  # instead of a single directory.
   if log_dir:
     # log_dir was explicitly specified as an arg, so use it and it alone.
-    log_dir_candidate = log_dir
+    dirs = [log_dir]
   elif FLAGS['log_dir'].value:
     # log_dir flag was provided, so use it and it alone (this mimics the
     # behavior of the same flag in logging.cc).
-    log_dir_candidate = FLAGS['log_dir'].value
+    dirs = [FLAGS['log_dir'].value]
   else:
-    log_dir_candidate = tempfile.gettempdir()
+    dirs = [tempfile.gettempdir()]
 
-  # Test if log dir candidate is usable.
-  if os.path.isdir(log_dir_candidate) and os.access(log_dir_candidate, os.W_OK):
-      return log_dir_candidate
+  # Find the first usable log dir.
+  for d in dirs:
+    if os.path.isdir(d) and os.access(d, os.W_OK):
+      return d
   raise FileNotFoundError(
-      "Can't find a writable directory for logs, tried %s" % log_dir_candidate)
+      "Can't find a writable directory for logs, tried %s" % dirs)
 
 
 def get_absl_log_prefix(record):

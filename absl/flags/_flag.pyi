@@ -20,7 +20,7 @@ import functools
 from absl.flags import _argument_parser
 import enum
 
-from typing import Text, TypeVar, Generic, Iterable, Type, List, Optional, Any, Union, Sequence
+from typing import Callable, Text, TypeVar, Generic, Iterable, Type, List, Optional, Any, Union, Sequence
 
 _T = TypeVar('_T')
 _ET = TypeVar('_ET', bound=enum.Enum)
@@ -44,6 +44,7 @@ class Flag(Generic[_T]):
   using_default_value = ... # type: bool
   allow_overwrite = ... # type: bool
   allow_using_method_names = ... # type: bool
+  validators = ... # type: List[Callable[[Any], bool]]
 
   def __init__(self,
                parser: _argument_parser.ArgumentParser[_T],

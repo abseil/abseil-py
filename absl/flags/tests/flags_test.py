@@ -1591,6 +1591,17 @@ class MultiEnumFlagsTest(absltest.TestCase):
 
 class MultiEnumClassFlagsTest(absltest.TestCase):
 
+  def test_short_name(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        None,
+        Fruit,
+        'Enum option that can occur multiple times',
+        flag_values=fv,
+        short_name='me')
+    self.assertEqual(fv['fruit'].short_name, 'me')
+
   def test_define_results_in_registered_flag_with_none(self):
     fv = flags.FlagValues()
     enum_defaults = None
