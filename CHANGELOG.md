@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 ## Unreleased
 
 ### Changed
+*   (testing) Added `@flagsaver.as_parsed`: this allows saving/restoring flags
+    using string values as if parsed from the command line and will also reflect
+    other flag states after command line parsing, e.g. `.present` is set.
 
 *   (logging) If no log dir is specified `logging.find_log_dir()` now falls back
     to `tempfile.gettempdir()` instead of `/tmp/`.
