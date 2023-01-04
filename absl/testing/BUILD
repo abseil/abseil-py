@@ -212,6 +212,7 @@ py_test(
     deps = [
         ":absltest",
         ":flagsaver",
+        ":parameterized",
         "//absl/flags",
     ],
 )
