@@ -24,8 +24,8 @@ except ImportError:
   use_setuptools()
   import setuptools
 
-if sys.version_info < (3, 6):
-  raise RuntimeError('Python version 3.6+ is required.')
+if sys.version_info < (3, 7):
+  raise RuntimeError('Python version 3.7+ is required.')
 
 setuptools_version = tuple(
     int(x) for x in setuptools.__version__.split('.')[:2])
@@ -34,7 +34,7 @@ additional_kwargs = {}
 if setuptools_version >= (24, 2):
   # `python_requires` was added in 24.2, see
   # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-  additional_kwargs['python_requires'] = '>=3.6'
+  additional_kwargs['python_requires'] = '>=3.7'
 
 _README_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), 'README.md')
@@ -43,6 +43,7 @@ with open(_README_PATH, 'rb') as fp:
 
 setuptools.setup(
     name='absl-py',
+    # NOTE: Next release version will be 2.0.0 as we dropped Python 3.6 support.
     version='1.4.0',
     description=(
         'Abseil Python Common Libraries, '
@@ -59,7 +60,6 @@ setuptools.setup(
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',

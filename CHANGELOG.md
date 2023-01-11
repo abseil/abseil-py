@@ -11,6 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (logging) Added support for kwargs (such as exc_info) to more log utility
     functions.
 
+### Changed
+
+*   `absl-py` no longer supports Python 3.6. It has reached end-of-life for more
+     than a year now.
+
 ## 1.4.0 (2023-01-11)
 
 ### New
