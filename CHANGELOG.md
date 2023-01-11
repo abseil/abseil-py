@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### New
+
+*   (logging) Added support for kwargs (such as exc_info) to more log utility
+    functions.
 
 ## 1.4.0 (2023-01-11)
 
