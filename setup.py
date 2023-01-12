@@ -43,8 +43,7 @@ with open(_README_PATH, 'rb') as fp:
 
 setuptools.setup(
     name='absl-py',
-    # NOTE: Next release version will be 2.0.0 as we dropped Python 3.6 support.
-    version='1.4.0',
+    version='2.0.0.dev0',
     description=(
         'Abseil Python Common Libraries, '
         'see https://github.com/abseil/abseil-py.'),
