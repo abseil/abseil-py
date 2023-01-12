@@ -437,7 +437,7 @@ def _get_next_log_count_per_token(token):
   return next(_log_counter_per_token.setdefault(token, itertools.count()))
 
 
-def log_every_n(level, msg, n, *args, **kwargs):
+def log_every_n(level, msg, n, *args):
   """Logs ``msg % args`` at level 'level' once per 'n' times.
 
   Logs the 1st call, (N+1)st call, (2N+1)st call,  etc.
@@ -448,11 +448,9 @@ def log_every_n(level, msg, n, *args, **kwargs):
     msg: str, the message to be logged.
     n: int, the number of times this should be called before it is logged.
     *args: The args to be substituted into the msg.
-    **kwargs: May contain exc_info, stack_info, stacklevel and extra. See
-      https://docs.python.org/3/library/logging.html#logging.Logger.debug.
   """
   count = _get_next_log_count_per_token(get_absl_logger().findCaller())
-  log_if(level, msg, not (count % n), *args, **kwargs)
+  log_if(level, msg, not (count % n), *args)
 
 
 # Keeps track of the last log time of the given token.
@@ -486,7 +484,7 @@ def _seconds_have_elapsed(token, num_seconds):
     return False
 
 
-def log_every_n_seconds(level, msg, n_seconds, *args, **kwargs):
+def log_every_n_seconds(level, msg, n_seconds, *args):
   """Logs ``msg % args`` at level ``level`` iff ``n_seconds`` elapsed since last call.
 
   Logs the first call, logs subsequent calls if 'n' seconds have elapsed since
@@ -497,14 +495,12 @@ def log_every_n_seconds(level, msg, n_seconds, *args, **kwargs):
     msg: str, the message to be logged.
     n_seconds: float or int, seconds which should elapse before logging again.
     *args: The args to be substituted into the msg.
-    **kwargs: May contain exc_info, stack_info, stacklevel and extra. See
-      https://docs.python.org/3/library/logging.html#logging.Logger.debug.
   """
   should_log = _seconds_have_elapsed(get_absl_logger().findCaller(), n_seconds)
-  log_if(level, msg, should_log, *args, **kwargs)
+  log_if(level, msg, should_log, *args)
 
 
-def log_first_n(level, msg, n, *args, **kwargs):
+def log_first_n(level, msg, n, *args):
   """Logs ``msg % args`` at level ``level`` only first ``n`` times.
 
   Not threadsafe.
@@ -514,17 +510,15 @@ def log_first_n(level, msg, n, *args, **kwargs):
     msg: str, the message to be logged.
     n: int, the maximal number of times the message is logged.
     *args: The args to be substituted into the msg.
-    **kwargs: May contain exc_info, stack_info, stacklevel and extra. See
-      https://docs.python.org/3/library/logging.html#logging.Logger.debug.
   """
   count = _get_next_log_count_per_token(get_absl_logger().findCaller())
-  log_if(level, msg, count < n, *args, **kwargs)
+  log_if(level, msg, count < n, *args)
 
 
-def log_if(level, msg, condition, *args, **kwargs):
+def log_if(level, msg, condition, *args):
   """Logs ``msg % args`` at level ``level`` only if condition is fulfilled."""
   if condition:
-    log(level, msg, *args, **kwargs)
+    log(level, msg, *args)
 
 
 def log(level, msg, *args, **kwargs):
@@ -534,13 +528,13 @@ def log(level, msg, *args, **kwargs):
 
   Args:
     level: int, the absl logging level at which to log the message
-      (logging.DEBUG|INFO|WARNING|ERROR|FATAL). While some C++ verbose logging
-      level constants are also supported, callers should prefer explicit
-      logging.vlog() calls for such purpose.
+        (logging.DEBUG|INFO|WARNING|ERROR|FATAL). While some C++ verbose logging
+        level constants are also supported, callers should prefer explicit
+        logging.vlog() calls for such purpose.
+
     msg: str, the message to be logged.
     *args: The args to be substituted into the msg.
-    **kwargs: May contain exc_info, stack_info, stacklevel and extra. See
-      https://docs.python.org/3/library/logging.html#logging.Logger.debug.
+    **kwargs: May contain exc_info to add exception traceback to message.
   """
   if level > converter.ABSL_DEBUG:
     # Even though this function supports level that is greater than 1, users
@@ -565,13 +559,12 @@ def vlog(level, msg, *args, **kwargs):
   """Log ``msg % args`` at C++ vlog level ``level``.
 
   Args:
-    level: int, the C++ verbose logging level at which to log the message, e.g.
-      1, 2, 3, 4... While absl level constants are also supported, callers
-      should prefer logging.log|debug|info|... calls for such purpose.
+    level: int, the C++ verbose logging level at which to log the message,
+        e.g. 1, 2, 3, 4... While absl level constants are also supported,
+        callers should prefer logging.log|debug|info|... calls for such purpose.
     msg: str, the message to be logged.
     *args: The args to be substituted into the msg.
-    **kwargs: May contain exc_info, stack_info, stacklevel and extra. See
-      https://docs.python.org/3/library/logging.html#logging.Logger.debug.
+    **kwargs: May contain exc_info to add exception traceback to message.
   """
   log(level, msg, *args, **kwargs)
 
