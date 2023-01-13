@@ -248,8 +248,7 @@ def _run_main(main, argv):
       atexit.register(profiler.dump_stats, FLAGS.profile_file)
     else:
       atexit.register(profiler.print_stats)
-    retval = profiler.runcall(main, argv)
-    sys.exit(retval)
+    sys.exit(profiler.runcall(main, argv))
   else:
     sys.exit(main(argv))
 
