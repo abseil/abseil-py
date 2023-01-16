@@ -219,6 +219,7 @@ class PythonHandlerTest(absltest.TestCase):
     stream.flush.side_effect = AttributeError
     handler = logging.PythonHandler(stream)
     handler.flush()
+    stream.flush.assert_called_once()
 
   def test_log_to_std_err(self):
     record = std_logging.LogRecord(
