@@ -213,6 +213,13 @@ class PythonHandlerTest(absltest.TestCase):
     with self.assertRaises(AssertionError):
       handler.flush()
 
+  def test_ignore_flush_if_stream_is_none(self):
+    # Happens if creating a Windows executable without console.
+    stream = mock.Mock()
+    stream.flush.side_effect = AttributeError
+    handler = logging.PythonHandler(stream)
+    handler.flush()
+
   def test_log_to_std_err(self):
     record = std_logging.LogRecord(
         'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False)

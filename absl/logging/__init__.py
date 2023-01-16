@@ -863,7 +863,7 @@ class PythonHandler(logging.StreamHandler):
     self.acquire()
     try:
       self.stream.flush()
-    except (EnvironmentError, ValueError):
+    except (EnvironmentError, ValueError, AttributeError):
       # A ValueError is thrown if we try to flush a closed file.
       pass
     finally:
