@@ -862,8 +862,9 @@ class PythonHandler(logging.StreamHandler):
     """Flushes all log files."""
     self.acquire()
     try:
-      self.stream.flush()
-    except (EnvironmentError, ValueError, AttributeError):
+      if self.stream and hasattr(self.stream, 'flush'):
+        self.stream.flush()
+    except (EnvironmentError, ValueError):
       # A ValueError is thrown if we try to flush a closed file.
       pass
     finally:

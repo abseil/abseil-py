@@ -215,11 +215,15 @@ class PythonHandlerTest(absltest.TestCase):
 
   def test_ignore_flush_if_stream_is_none(self):
     # Happens if creating a Windows executable without console.
-    stream = mock.Mock()
-    stream.flush.side_effect = AttributeError
-    handler = logging.PythonHandler(stream)
+    with mock.patch.object(sys, 'stderr', new=None):
+        handler = logging.PythonHandler(None)
+        # Test that this does not fail.
+        handler.flush()
+
+  def test_ignore_flush_if_stream_does_not_support_flushing(self):
+    handler = logging.PythonHandler('stream')
+    # Test that this does not fail.
     handler.flush()
-    stream.flush.assert_called_once()
 
   def test_log_to_std_err(self):
     record = std_logging.LogRecord(
