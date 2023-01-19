@@ -221,7 +221,10 @@ class PythonHandlerTest(absltest.TestCase):
         handler.flush()
 
   def test_ignore_flush_if_stream_does_not_support_flushing(self):
-    handler = logging.PythonHandler('stream')
+    class BadStream:
+      pass
+
+    handler = logging.PythonHandler(BadStream())
     # Test that this does not fail.
     handler.flush()
 
