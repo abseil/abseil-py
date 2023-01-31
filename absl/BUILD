@@ -1,3 +1,12 @@
+load("//tools/build_defs/license:license.bzl", "license")
+
+package(default_applicable_licenses = ["//third_party/py/absl:license"])
+
+license(
+    name = "license",
+    package_name = "absl",
+)
+
 licenses(["notice"])
 
 py_library(
