@@ -197,7 +197,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.passing_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)
+    subtest = unittest.case._SubTest(test, 'msg', None)  # pytype: disable=module-attr
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, None)
@@ -227,7 +227,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.passing_test')
-    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})
+    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})  # pytype: disable=module-attr
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, None)
@@ -334,7 +334,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.failing_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)
+    subtest = unittest.case._SubTest(test, 'msg', None)  # pytype: disable=module-attr
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, self.get_sample_failure())
@@ -397,7 +397,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.error_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)
+    subtest = unittest.case._SubTest(test, 'msg', None)  # pytype: disable=module-attr
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, self.get_sample_error())
@@ -796,8 +796,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
   def test_timing_with_time_stub(self):
     """Make sure that timing is correct even if time.time is stubbed out."""
+    saved_time = time.time
     try:
-      saved_time = time.time
       time.time = lambda: -1
       reporter = xml_reporter._TextAndXMLTestResult(self.xml_stream,
                                                     self.stream,

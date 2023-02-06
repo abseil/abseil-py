@@ -24,6 +24,7 @@ import stat
 import string
 import subprocess
 import tempfile
+from typing import Optional
 import unittest
 
 from absl.testing import _bazelize_command
@@ -32,7 +33,7 @@ from absl.testing import parameterized
 from absl.testing.tests import absltest_env
 
 
-class HelperMixin(object):
+class BaseTestCase(absltest.TestCase):
 
   def _get_helper_exec_path(self):
     helper = 'absl/testing/tests/absltest_test_helper'
@@ -66,7 +67,7 @@ class HelperMixin(object):
     return stdout, stderr
 
 
-class TestCaseTest(absltest.TestCase, HelperMixin):
+class TestCaseTest(BaseTestCase):
   longMessage = True
 
   def run_helper(self, test_id, args, env_overrides, expect_success):
@@ -2011,7 +2012,7 @@ class GetCommandStringTest(parameterized.TestCase):
     self.assertEqual(expected, absltest.get_command_string(command))
 
 
-class TempFileTest(absltest.TestCase, HelperMixin):
+class TempFileTest(BaseTestCase):
 
   def assert_dir_exists(self, temp_dir):
     path = temp_dir.full_path
@@ -2075,12 +2076,13 @@ class TempFileTest(absltest.TestCase, HelperMixin):
 
   def test_temp_file_path_like(self):
     tempdir = self.create_tempdir('foo')
-    self.assertIsInstance(tempdir, os.PathLike)
-
     tempfile_ = tempdir.create_file('bar')
-    self.assertIsInstance(tempfile_, os.PathLike)
 
     self.assertEqual(tempfile_.read_text(), pathlib.Path(tempfile_).read_text())
+    # assertIsInstance causes the types to be narrowed, so calling create_file
+    # and read_text() must be done before these assertions to avoid type errors.
+    self.assertIsInstance(tempdir, os.PathLike)
+    self.assertIsInstance(tempfile_, os.PathLike)
 
   def test_unnamed(self):
     td = self.create_tempdir()
@@ -2210,9 +2212,13 @@ class SkipClassTest(absltest.TestCase):
   def test_incorrect_decorator_call(self):
     with self.assertRaises(TypeError):
 
+      # Disabling type checking because pytype correctly picks up that
+      # @absltest.skipThisClass is being used incorrectly.
+      # pytype: disable=wrong-arg-types
       @absltest.skipThisClass
       class Test(absltest.TestCase):  # pylint: disable=unused-variable
         pass
+      # pytype: enable=wrong-arg-types
 
   def test_incorrect_decorator_subclass(self):
     with self.assertRaises(TypeError):
@@ -2267,6 +2273,8 @@ class SkipClassTest(absltest.TestCase):
     @absltest.skipThisClass('reason')
     class BaseTest(absltest.TestCase):
 
+      foo: int
+
       @classmethod
       def setUpClass(cls):
         super(BaseTest, cls).setUpClass()
@@ -2291,6 +2299,8 @@ class SkipClassTest(absltest.TestCase):
 
     @absltest.skipThisClass('reason')
     class Test(absltest.TestCase):
+      foo: str
+      bar: Optional[str]
 
       @classmethod
       def setUpClass(cls, foo, bar=None):
@@ -2317,6 +2327,7 @@ class SkipClassTest(absltest.TestCase):
       pass
 
     class RequiredBase(absltest.TestCase):
+      foo: str
 
       @classmethod
       def setUpClass(cls):
