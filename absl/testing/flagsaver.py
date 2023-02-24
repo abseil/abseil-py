@@ -137,7 +137,7 @@ def as_parsed(*args, **kwargs):
   flagsaver.flagsaver(). However, where flagsaver.flagsaver() directly sets the
   flags to new values, this function will parse the provided arguments as if
   they were provided on the command line. Among other things, this will cause
-  `FLAGS['flag_name'].parsed == True`.
+  `FLAGS['flag_name'].present == True`.
 
   A note on unparsed input: For many flag types, the unparsed version will be
   a single string. However for multi_x (multi_string, multi_integer, multi_enum)
