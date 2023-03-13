@@ -593,8 +593,9 @@ class TestCase(unittest.TestCase):
   longMessage = True
 
   # Exit stacks for per-test and per-class scopes.
-  _exit_stack = None
-  _cls_exit_stack = None
+  if sys.version_info < (3, 11):
+    _exit_stack = None
+    _cls_exit_stack = None
 
   def __init__(self, *args, **kwargs):
     super(TestCase, self).__init__(*args, **kwargs)
@@ -603,17 +604,22 @@ class TestCase(unittest.TestCase):
 
   def setUp(self):
     super(TestCase, self).setUp()
-    # NOTE: Only Python 3 contextlib has ExitStack
-    if hasattr(contextlib, 'ExitStack'):
+    # NOTE: Only Python 3 contextlib has ExitStack and
+    # Python 3.11+ already has enterContext.
+    if hasattr(contextlib, 'ExitStack') and sys.version_info < (3, 11):
       self._exit_stack = contextlib.ExitStack()
       self.addCleanup(self._exit_stack.close)
 
   @classmethod
   def setUpClass(cls):
     super(TestCase, cls).setUpClass()
-    # NOTE: Only Python 3 contextlib has ExitStack and only Python 3.8+ has
-    # addClassCleanup.
-    if hasattr(contextlib, 'ExitStack') and hasattr(cls, 'addClassCleanup'):
+    # NOTE: Only Python 3 contextlib has ExitStack, only Python 3.8+ has
+    # addClassCleanup and Python 3.11+ already has enterClassContext.
+    if (
+        hasattr(contextlib, 'ExitStack')
+        and hasattr(cls, 'addClassCleanup')
+        and sys.version_info < (3, 11)
+    ):
       cls._cls_exit_stack = contextlib.ExitStack()
       cls.addClassCleanup(cls._cls_exit_stack.close)
 
@@ -752,6 +758,9 @@ class TestCase(unittest.TestCase):
     Args:
       manager: The context manager to enter.
     """
+    if sys.version_info >= (3, 11):
+      return self.enterContext(manager)
+
     if not self._exit_stack:
       raise AssertionError(
           'self._exit_stack is not set: enter_context is Py3-only; also make '
@@ -761,6 +770,9 @@ class TestCase(unittest.TestCase):
   @enter_context.classmethod
   def enter_context(cls, manager):  # pylint: disable=no-self-argument
     # type: (ContextManager[_T]) -> _T
+    if sys.version_info >= (3, 11):
+      return cls.enterClassContext(manager)
+
     if not cls._cls_exit_stack:
       raise AssertionError(
           'cls._cls_exit_stack is not set: cls.enter_context requires '

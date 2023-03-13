@@ -10,6 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 *   `absl-py` no longer supports Python 3.6. It has reached end-of-life for more
      than a year now.
+*   (testing) For Python 3.11+, the calls to `absltest.TestCase.enter_context`
+    are forwarded to `unittest.TestCase.enterContext` (when called via instance)
+    or `unittest.TestCase.enterClassContext` (when called via class) now. As a
+    result, on Python 3.11+, the private `_cls_exit_stack` attribute is not
+    defined on `absltest.TestCase` and `_exit_stack` attribute is not defined on
+    its instances.
 
 ## 1.4.0 (2023-01-11)
 
