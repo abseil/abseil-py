@@ -1398,6 +1398,26 @@ test case
         self.assertSameStructure, dict_a, default_b)
     self.assertEmpty(default_b)
 
+  def test_same_structure_uses_type_equality_func_for_leaves(self):
+    class CustomLeaf(object):
+      def __init__(self, n):
+        self.n = n
+
+      def __repr__(self):
+        return f'CustomLeaf({self.n})'
+
+    def assert_custom_leaf_equal(a, b, msg):
+      del msg
+      assert a.n % 5 == b.n % 5
+    self.addTypeEqualityFunc(CustomLeaf, assert_custom_leaf_equal)
+
+    self.assertSameStructure(CustomLeaf(4), CustomLeaf(9))
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        r'a is CustomLeaf(4) but b is CustomLeaf(8)',
+        self.assertSameStructure, CustomLeaf(4), CustomLeaf(8),
+    )
+
   def test_assert_json_equal_same(self):
     self.assertJsonEqual('{"success": true}', '{"success": true}')
     self.assertJsonEqual('{"success": true}', '{"success":true}')

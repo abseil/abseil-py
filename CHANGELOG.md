@@ -16,6 +16,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     result, on Python 3.11+, the private `_cls_exit_stack` attribute is not
     defined on `absltest.TestCase` and `_exit_stack` attribute is not defined on
     its instances.
+*   `AbslTest.assertSameStructure()` now uses the test case's equality
+     functions (registered with `TestCase.addTypeEqualityFunc()`) for comparing
+     leaves of the structure.
 
 ## 1.4.0 (2023-01-11)
 

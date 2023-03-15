@@ -1777,7 +1777,8 @@ class TestCase(unittest.TestCase):
     # rather than just stopping at the first
     problems = []
 
-    _walk_structure_for_problems(a, b, aname, bname, problems)
+    _walk_structure_for_problems(a, b, aname, bname, problems,
+                                 self.assertEqual, self.failureException)
 
     # Avoid spamming the user toooo much
     if self.maxDiff is not None:
@@ -1908,7 +1909,14 @@ def _are_both_of_mapping_type(a, b):
       b, abc.Mapping)
 
 
-def _walk_structure_for_problems(a, b, aname, bname, problem_list):
+def _default_assert_equal(a, b):
+  assert a == b
+
+
+def _walk_structure_for_problems(
+    a, b, aname, bname, problem_list,
+    leaf_assert_equal_func=_default_assert_equal,
+    failure_exception=AssertionError):
   """The recursive comparison behind assertSameStructure."""
   if type(a) != type(b) and not (  # pylint: disable=unidiomatic-typecheck
       _are_both_of_integer_type(a, b) or _are_both_of_sequence_type(a, b) or
@@ -1936,7 +1944,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
       if k in b:
         _walk_structure_for_problems(
             a[k], b[k], '%s[%r]' % (aname, k), '%s[%r]' % (bname, k),
-            problem_list)
+            problem_list, leaf_assert_equal_func, failure_exception)
       else:
         problem_list.append(
             "%s has [%r] with value %r but it's missing in %s" %
@@ -1954,7 +1962,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
     for i in range(minlen):
       _walk_structure_for_problems(
           a[i], b[i], '%s[%d]' % (aname, i), '%s[%d]' % (bname, i),
-          problem_list)
+          problem_list, leaf_assert_equal_func, failure_exception)
     for i in range(minlen, len(a)):
       problem_list.append('%s has [%i] with value %r but %s does not' %
                           (aname, i, a[i], bname))
@@ -1963,7 +1971,9 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
                           (aname, i, bname, b[i]))
 
   else:
-    if a != b:
+    try:
+      leaf_assert_equal_func(a, b)
+    except failure_exception:
       problem_list.append('%s is %r but %s is %r' % (aname, a, bname, b))
 
 
