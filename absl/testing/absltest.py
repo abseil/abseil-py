@@ -593,8 +593,9 @@ class TestCase(unittest.TestCase):
   longMessage = True
 
   # Exit stacks for per-test and per-class scopes.
-  _exit_stack = None
-  _cls_exit_stack = None
+  if sys.version_info < (3, 11):
+    _exit_stack = None
+    _cls_exit_stack = None
 
   def __init__(self, *args, **kwargs):
     super(TestCase, self).__init__(*args, **kwargs)
@@ -603,17 +604,22 @@ class TestCase(unittest.TestCase):
 
   def setUp(self):
     super(TestCase, self).setUp()
-    # NOTE: Only Python 3 contextlib has ExitStack
-    if hasattr(contextlib, 'ExitStack'):
+    # NOTE: Only Python 3 contextlib has ExitStack and
+    # Python 3.11+ already has enterContext.
+    if hasattr(contextlib, 'ExitStack') and sys.version_info < (3, 11):
       self._exit_stack = contextlib.ExitStack()
       self.addCleanup(self._exit_stack.close)
 
   @classmethod
   def setUpClass(cls):
     super(TestCase, cls).setUpClass()
-    # NOTE: Only Python 3 contextlib has ExitStack and only Python 3.8+ has
-    # addClassCleanup.
-    if hasattr(contextlib, 'ExitStack') and hasattr(cls, 'addClassCleanup'):
+    # NOTE: Only Python 3 contextlib has ExitStack, only Python 3.8+ has
+    # addClassCleanup and Python 3.11+ already has enterClassContext.
+    if (
+        hasattr(contextlib, 'ExitStack')
+        and hasattr(cls, 'addClassCleanup')
+        and sys.version_info < (3, 11)
+    ):
       cls._cls_exit_stack = contextlib.ExitStack()
       cls.addClassCleanup(cls._cls_exit_stack.close)
 
@@ -752,6 +758,9 @@ class TestCase(unittest.TestCase):
     Args:
       manager: The context manager to enter.
     """
+    if sys.version_info >= (3, 11):
+      return self.enterContext(manager)
+
     if not self._exit_stack:
       raise AssertionError(
           'self._exit_stack is not set: enter_context is Py3-only; also make '
@@ -761,6 +770,9 @@ class TestCase(unittest.TestCase):
   @enter_context.classmethod
   def enter_context(cls, manager):  # pylint: disable=no-self-argument
     # type: (ContextManager[_T]) -> _T
+    if sys.version_info >= (3, 11):
+      return cls.enterClassContext(manager)
+
     if not cls._cls_exit_stack:
       raise AssertionError(
           'cls._cls_exit_stack is not set: cls.enter_context requires '
@@ -1765,7 +1777,8 @@ class TestCase(unittest.TestCase):
     # rather than just stopping at the first
     problems = []
 
-    _walk_structure_for_problems(a, b, aname, bname, problems)
+    _walk_structure_for_problems(a, b, aname, bname, problems,
+                                 self.assertEqual, self.failureException)
 
     # Avoid spamming the user toooo much
     if self.maxDiff is not None:
@@ -1896,7 +1909,14 @@ def _are_both_of_mapping_type(a, b):
       b, abc.Mapping)
 
 
-def _walk_structure_for_problems(a, b, aname, bname, problem_list):
+def _default_assert_equal(a, b):
+  assert a == b
+
+
+def _walk_structure_for_problems(
+    a, b, aname, bname, problem_list,
+    leaf_assert_equal_func=_default_assert_equal,
+    failure_exception=AssertionError):
   """The recursive comparison behind assertSameStructure."""
   if type(a) != type(b) and not (  # pylint: disable=unidiomatic-typecheck
       _are_both_of_integer_type(a, b) or _are_both_of_sequence_type(a, b) or
@@ -1924,7 +1944,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
       if k in b:
         _walk_structure_for_problems(
             a[k], b[k], '%s[%r]' % (aname, k), '%s[%r]' % (bname, k),
-            problem_list)
+            problem_list, leaf_assert_equal_func, failure_exception)
       else:
         problem_list.append(
             "%s has [%r] with value %r but it's missing in %s" %
@@ -1942,7 +1962,7 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
     for i in range(minlen):
       _walk_structure_for_problems(
           a[i], b[i], '%s[%d]' % (aname, i), '%s[%d]' % (bname, i),
-          problem_list)
+          problem_list, leaf_assert_equal_func, failure_exception)
     for i in range(minlen, len(a)):
       problem_list.append('%s has [%i] with value %r but %s does not' %
                           (aname, i, a[i], bname))
@@ -1951,7 +1971,9 @@ def _walk_structure_for_problems(a, b, aname, bname, problem_list):
                           (aname, i, bname, b[i]))
 
   else:
-    if a != b:
+    try:
+      leaf_assert_equal_func(a, b)
+    except failure_exception:
       problem_list.append('%s is %r but %s is %r' % (aname, a, bname, b))
 
 
