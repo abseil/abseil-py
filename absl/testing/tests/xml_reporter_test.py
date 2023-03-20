@@ -792,7 +792,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
                                                'foo', 1)
     result1 = runner._makeResult()
     result2 = xml_reporter._TextAndXMLTestResult(None, None, None, 0, None)
-    self.failUnless(type(result1) is type(result2))
+    self.assertIs(type(result1), type(result2))
 
   def test_timing_with_time_stub(self):
     """Make sure that timing is correct even if time.time is stubbed out."""
@@ -804,7 +804,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
                                                     'foo', 0)
       test = MockTest('bar')
       reporter.startTest(test)
-      self.failIf(reporter.start_time == -1)
+      self.assertNotEqual(reporter.start_time, -1)
     finally:
       time.time = saved_time
 
