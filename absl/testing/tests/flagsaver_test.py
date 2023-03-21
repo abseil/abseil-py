@@ -489,7 +489,7 @@ class AsParsedTest(absltest.TestCase):
         r'flagsaver\.as_parsed\(\) cannot parse flagsaver_test_int_flag\. '
         r'Expected a single string or sequence of strings but .*int.* was '
         r'provided\.'):
-      manager = flagsaver.as_parsed(flagsaver_test_int_flag=123)
+      manager = flagsaver.as_parsed(flagsaver_test_int_flag=123)  # pytype: disable=wrong-arg-types
       del manager
 
 
