@@ -290,7 +290,9 @@ class _TestSuiteResult(object):
       ]
       _print_xml_element_header('testsuite', suite_attributes, stream)
 
-      for test_case_result in suite:
+      # test_case_result entries are not guaranteed to be in any user-friendly
+      # order, especially when using subtests. So sort them.
+      for test_case_result in sorted(suite, key=lambda t: t.name):
         test_case_result.print_xml_summary(stream)
       stream.write('</testsuite>\n')
     stream.write('</testsuites>\n')

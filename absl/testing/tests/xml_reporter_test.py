@@ -824,8 +824,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     (testcases,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
                                       re.DOTALL)
     [testcase1, testcase2] = testcases.split('\n  </testcase>\n')
-    self._assert_match(expected_testcase1_re, testcase1)
-    self._assert_match(expected_testcase2_re, testcase2)
+    # Sorting by test name flips the order of the two tests.
+    self._assert_match(expected_testcase2_re, testcase1)
+    self._assert_match(expected_testcase1_re, testcase2)
 
   def test_with_no_suite_name(self):
     start_time = 1000
