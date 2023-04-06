@@ -1909,14 +1909,9 @@ def _are_both_of_mapping_type(a, b):
       b, abc.Mapping)
 
 
-def _default_assert_equal(a, b):
-  assert a == b
-
-
 def _walk_structure_for_problems(
-    a, b, aname, bname, problem_list,
-    leaf_assert_equal_func=_default_assert_equal,
-    failure_exception=AssertionError):
+    a, b, aname, bname, problem_list, leaf_assert_equal_func, failure_exception
+):
   """The recursive comparison behind assertSameStructure."""
   if type(a) != type(b) and not (  # pylint: disable=unidiomatic-typecheck
       _are_both_of_integer_type(a, b) or _are_both_of_sequence_type(a, b) or

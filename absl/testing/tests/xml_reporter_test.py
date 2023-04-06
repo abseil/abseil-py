@@ -61,19 +61,26 @@ def xml_escaped_exception_type(exception_type):
   return xml_reporter._escape_xml_attr(str(exception_type))
 
 
-OUTPUT_STRING = '\n'.join([
-    r'<\?xml version="1.0"\?>',
-    ('<testsuites name="" tests="%(tests)d" failures="%(failures)d"'
-     ' errors="%(errors)d" time="%(run_time).3f" timestamp="%(start_time)s">'),
-    ('<testsuite name="%(suite_name)s" tests="%(tests)d"'
-     ' failures="%(failures)d" errors="%(errors)d" time="%(run_time).3f"'
-     ' timestamp="%(start_time)s">'),
-    ('  <testcase name="%(test_name)s" status="%(status)s" result="%(result)s"'
-     ' time="%(run_time).3f" classname="%(classname)s"'
-     ' timestamp="%(start_time)s">%(message)s'),
-    '  </testcase>', '</testsuite>',
-    '</testsuites>',
-])
+# Matches the entire XML output. Captures all <testcase> tags except for the
+# last closing </testcase> in a single group.
+OUTPUT_STRING = """\
+<\\?xml version="1.0"\\?>
+<testsuites name="" tests="%(tests)d" failures="%(failures)d"\
+ errors="%(errors)d" time="%(run_time).3f" timestamp="%(start_time)s">
+<testsuite name="%(suite_name)s" tests="%(tests)d"\
+ failures="%(failures)d" errors="%(errors)d" time="%(run_time).3f"\
+ timestamp="%(start_time)s">
+(  <testcase .*)
+  </testcase>
+</testsuite>
+</testsuites>"""
+
+# Matches a single <testcase> tag and its contents, without the closing
+# </testcase>, which we use as a separator to split multiple <testcase> tags.
+TESTCASE_STRING = """\
+  <testcase name="%(test_name)s" status="%(status)s" result="%(result)s"\
+ time="%(run_time).3f" classname="%(classname)s" timestamp="%(start_time)s">\
+%(message)s"""
 
 FAILURE_MESSAGE = r"""
   <failure message="e" type="{}"><!\[CDATA\[Traceback \(most recent call last\):
@@ -133,9 +140,12 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     return xml_reporter._TextAndXMLTestResult(self.xml_stream, self.stream,
                                               'foo', 0, timer)
 
-  def _assert_match(self, regex, output):
+  def _assert_match(self, regex, output, flags=0):
     fail_msg = 'Expected regex:\n{}\nTo match:\n{}'.format(regex, output)
-    self.assertRegex(output, regex, fail_msg)
+    result = re.match(regex, output, flags)
+    if result is None:
+      self.fail(fail_msg)
+    return result.groups()
 
   def _assert_valid_xml(self, xml_output):
     try:
@@ -174,6 +184,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -181,7 +192,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'passing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -189,7 +204,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': ''
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_passing_subtest(self):
     start_time = 0
@@ -204,6 +221,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -211,7 +229,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': r'passing_test&#x20;\[msg\]',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -219,7 +241,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': ''
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_passing_subtest_with_dots_in_parameter_name(self):
     start_time = 0
@@ -234,20 +258,19 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
-        'suite_name':
-            'MockTest',
-        'tests':
-            1,
-        'failures':
-            0,
-        'errors':
-            0,
-        'run_time':
-            run_time,
-        'start_time':
-            re.escape(self._iso_timestamp(start_time),),
+        'suite_name': 'MockTest',
+        'tests': 1,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name':
             r'passing_test&#x20;\[msg\]&#x20;\(case=&apos;a.b.c&apos;\)',
         'classname':
@@ -261,7 +284,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'message':
             ''
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def get_sample_error(self):
     try:
@@ -311,6 +336,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -318,7 +344,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 1,
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'failing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -326,7 +356,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': FAILURE_MESSAGE
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_failing_subtest(self):
     start_time = 10
@@ -341,6 +373,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -348,7 +381,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 1,
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': r'failing_test&#x20;\[msg\]',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -356,7 +393,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': FAILURE_MESSAGE
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_error_test(self):
     start_time = 100
@@ -374,6 +413,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -381,7 +421,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 1,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'failing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -389,7 +433,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': ERROR_MESSAGE
     }
-    self._assert_match(expected_re, xml)
+    (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_error_subtest(self):
     start_time = 10
@@ -404,6 +449,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -411,7 +457,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 1,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': r'error_test&#x20;\[msg\]',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -419,7 +469,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': ERROR_MESSAGE
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_fail_and_error_test(self):
     """Tests a failure and subsequent error within a single result."""
@@ -440,6 +492,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -447,7 +500,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 1,  # Only the failure is tallied (because it was first).
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'failing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -456,7 +513,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         # Messages from failure and error should be concatenated in order.
         'message': FAILURE_MESSAGE + ERROR_MESSAGE
     }
-    self._assert_match(expected_re, xml)
+    (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_error_and_fail_test(self):
     """Tests an error and subsequent failure within a single result."""
@@ -476,6 +534,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -483,7 +542,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 1,  # Only the error is tallied (because it was first).
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'failing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -492,7 +555,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         # Messages from error and failure should be concatenated in order.
         'message': ERROR_MESSAGE + FAILURE_MESSAGE
     }
-    self._assert_match(expected_re, xml)
+    (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_newline_error_test(self):
     start_time = 100
@@ -510,6 +574,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -517,15 +582,20 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 1,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    } + '\n'
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'failing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
         'result': 'completed',
         'attributes': '',
         'message': NEWLINE_ERROR_MESSAGE
-    } + '\n'
-    self._assert_match(expected_re, xml)
+    }
+    (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_unicode_error_test(self):
     start_time = 100
@@ -543,6 +613,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -550,7 +621,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 1,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'failing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -558,7 +633,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': UNICODE_ERROR_MESSAGE
     }
-    self._assert_match(expected_re, xml)
+    (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_terminal_escape_error(self):
     start_time = 100
@@ -594,6 +670,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -601,7 +678,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'expected_failing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -609,8 +690,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': ''
     }
-    self._assert_match(re.compile(expected_re, re.DOTALL),
-                       self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase, re.DOTALL)
 
   def test_with_unexpected_success_error_test(self):
     start_time = 100
@@ -625,6 +707,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -632,7 +715,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 1,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'unexpectedly_passing_test',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -640,7 +727,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': UNEXPECTED_SUCCESS_MESSAGE
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_with_skipped_test(self):
     start_time = 100
@@ -655,6 +744,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -662,47 +752,81 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'skipped_test_with_reason',
         'classname': '__main__.MockTest',
         'status': 'notrun',
         'result': 'suppressed',
         'message': ''
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
-  def test_suite_time(self):
+  def test_two_tests_with_time(self):
     start_time1 = 100
     end_time1 = 200
     start_time2 = 400
     end_time2 = 700
-    name = '__main__.MockTest.failing_test'
+    name = '__main__.MockTest.'
     result = self._make_result((start_time1, start_time1, end_time1,
                                 start_time2, end_time2, end_time2))
 
-    test = MockTest('%s1' % name)
+    test = MockTest(f'{name}one_test')
     result.startTestRun()
     result.startTest(test)
     result.addSuccess(test)
     result.stopTest(test)
 
-    test = MockTest('%s2' % name)
+    test = MockTest(f'{name}another_test')
     result.startTest(test)
     result.addSuccess(test)
     result.stopTest(test)
     result.stopTestRun()
     result.printErrors()
 
-    run_time = max(end_time1, end_time2) - min(start_time1, start_time2)
-    timestamp = self._iso_timestamp(start_time1)
-    expected_prefix = """<?xml version="1.0"?>
-<testsuites name="" tests="2" failures="0" errors="0" time="%.3f" timestamp="%s">
-<testsuite name="MockTest" tests="2" failures="0" errors="0" time="%.3f" timestamp="%s">
-""" % (run_time, timestamp, run_time, timestamp)
-    xml_output = self.xml_stream.getvalue()
-    self.assertTrue(
-        xml_output.startswith(expected_prefix),
-        '%s not found in %s' % (expected_prefix, xml_output))
+    start_time = min(start_time1, start_time2)
+    run_time = max(end_time1, end_time2) - start_time
+    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str1 = re.escape(self._iso_timestamp(start_time1))
+    start_time_str2 = re.escape(self._iso_timestamp(start_time2))
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'MockTest',
+        'tests': 2,
+        'failures': 0,
+        'errors': 0,
+        'run_time': run_time,
+        'start_time': start_time_str,
+    }
+    expected_testcase1_re = TESTCASE_STRING % {
+        'run_time': end_time1 - start_time1,
+        'start_time': start_time_str1,
+        'test_name': 'one_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'message': ''
+    }
+    expected_testcase2_re = TESTCASE_STRING % {
+        'run_time': end_time2 - start_time2,
+        'start_time': start_time_str2,
+        'test_name': 'another_test',
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'message': ''
+    }
+
+    (testcases,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                      re.DOTALL)
+    [testcase1, testcase2] = testcases.split('\n  </testcase>\n')
+    # Sorting by test name flips the order of the two tests.
+    self._assert_match(expected_testcase2_re, testcase1)
+    self._assert_match(expected_testcase1_re, testcase2)
 
   def test_with_no_suite_name(self):
     start_time = 1000
@@ -717,6 +841,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -724,7 +849,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': 'bad_name',
         'classname': '__main__.MockTest',
         'status': 'run',
@@ -732,7 +861,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': ''
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def test_unnamed_parameterized_testcase(self):
     """Test unnamed parameterized test cases.
@@ -759,6 +890,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
+    start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     classname = xml_reporter._escape_xml_attr(
         unittest.util.strclass(test.__class__))
@@ -768,7 +900,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'failures': 0,
         'errors': 0,
         'run_time': run_time,
-        'start_time': re.escape(self._iso_timestamp(start_time),),
+        'start_time': start_time_str,
+    }
+    expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
         'test_name': re.escape('test_prefix0&#x20;(&apos;a&#x20;(b.c)&apos;)'),
         'classname': classname,
         'status': 'run',
@@ -776,7 +912,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'attributes': '',
         'message': ''
     }
-    self._assert_match(expected_re, self.xml_stream.getvalue())
+    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
+                                     re.DOTALL)
+    self._assert_match(expected_testcase_re, testcase)
 
   def teststop_test_without_pending_test(self):
     end_time = 1200
