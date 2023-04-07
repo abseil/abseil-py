@@ -18,6 +18,7 @@ import copy
 import functools
 
 from absl.flags import _argument_parser
+from absl.flags import _validators_classes
 import enum
 
 from typing import Callable, Text, TypeVar, Generic, Iterable, Type, List, Optional, Any, Union, Sequence
@@ -44,7 +45,7 @@ class Flag(Generic[_T]):
   using_default_value: bool
   allow_overwrite: bool
   allow_using_method_names: bool
-  validators: List[Callable[[Any], bool]]
+  validators: List[_validators_classes.Validator]
 
   def __init__(self,
                parser: _argument_parser.ArgumentParser[_T],
