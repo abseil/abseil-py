@@ -28,23 +28,23 @@ _ET = TypeVar('_ET', bound=enum.Enum)
 
 class Flag(Generic[_T]):
 
-  name = ... # type: Text
-  default = ... # type: Any
-  default_unparsed = ... # type: Any
-  default_as_str = ... # type: Optional[Text]
-  help = ... # type: Text
-  short_name = ... # type: Text
-  boolean = ... # type: bool
-  present = ... # type: bool
-  parser = ... # type: _argument_parser.ArgumentParser[_T]
-  serializer = ... # type: _argument_parser.ArgumentSerializer[_T]
-  allow_override = ... # type: bool
-  allow_override_cpp = ... # type: bool
-  allow_hide_cpp = ... # type: bool
-  using_default_value = ... # type: bool
-  allow_overwrite = ... # type: bool
-  allow_using_method_names = ... # type: bool
-  validators = ... # type: List[Callable[[Any], bool]]
+  name: Text
+  default: Any
+  default_unparsed: Any
+  default_as_str: Optional[Text]
+  help: Text
+  short_name: Text
+  boolean: bool
+  present: bool
+  parser: _argument_parser.ArgumentParser[_T]
+  serializer: _argument_parser.ArgumentSerializer[_T]
+  allow_override: bool
+  allow_override_cpp: bool
+  allow_hide_cpp: bool
+  using_default_value: bool
+  allow_overwrite: bool
+  allow_using_method_names: bool
+  validators: List[Callable[[Any], bool]]
 
   def __init__(self,
                parser: _argument_parser.ArgumentParser[_T],
