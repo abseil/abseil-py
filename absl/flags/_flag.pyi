@@ -30,8 +30,8 @@ _ET = TypeVar('_ET', bound=enum.Enum)
 class Flag(Generic[_T]):
 
   name: Text
-  default: Any
-  default_unparsed: Any
+  default: Optional[_T]
+  default_unparsed: Union[Optional[_T], Text]
   default_as_str: Optional[Text]
   help: Text
   short_name: Text
@@ -51,7 +51,7 @@ class Flag(Generic[_T]):
                parser: _argument_parser.ArgumentParser[_T],
                serializer: Optional[_argument_parser.ArgumentSerializer[_T]],
                name: Text,
-               default: Any,
+               default: Union[Optional[_T], Text],
                help_string: Optional[Text],
                short_name: Optional[Text] = ...,
                boolean: bool = ...,
@@ -87,7 +87,7 @@ class Flag(Generic[_T]):
 class BooleanFlag(Flag[bool]):
   def __init__(self,
                name: Text,
-               default: Any,
+               default: Union[Optional[bool], Text],
                help: Optional[Text],
                short_name: Optional[Text]=None,
                **args: Any) -> None:
@@ -98,7 +98,7 @@ class BooleanFlag(Flag[bool]):
 class EnumFlag(Flag[Text]):
   def __init__(self,
                name: Text,
-               default: Any,
+               default: Union[Optional[Text], Text],
                help: Optional[Text],
                enum_values: Sequence[Text],
                short_name: Optional[Text] = ...,
@@ -112,7 +112,7 @@ class EnumClassFlag(Flag[_ET]):
 
   def __init__(self,
                name: Text,
-               default: Any,
+               default: Union[Optional[_ET], Text],
                help: Optional[Text],
                enum_class: Type[_ET],
                short_name: Optional[Text]=None,
@@ -128,7 +128,7 @@ class MultiFlag(Flag[List[_T]]):
 class MultiEnumClassFlag(MultiFlag[_ET]):
   def __init__(self,
                name: Text,
-               default: Any,
+               default: Union[Optional[List[_ET]], Text],
                help_string: Optional[Text],
                enum_class: Type[_ET],
                **args: Any):
