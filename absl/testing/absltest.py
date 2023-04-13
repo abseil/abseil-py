@@ -815,6 +815,7 @@ class TestCase(unittest.TestCase):
   ) -> None:
     """Adds `function` as cleanup when the test case succeeds."""
     outcome = self._outcome
+    assert outcome is not None
     previous_failure_count = (
         len(outcome.result.failures)
         + len(outcome.result.errors)
@@ -834,6 +835,7 @@ class TestCase(unittest.TestCase):
     """Returns whether test is passed. Expected to be called during cleanup."""
     outcome = self._outcome
     if sys.version_info[:2] >= (3, 11):
+      assert outcome is not None
       current_failure_count = (
           len(outcome.result.failures)
           + len(outcome.result.errors)
@@ -2301,7 +2303,7 @@ class TestLoader(unittest.TestLoader):
     for name in dir(testCaseClass):
       if _is_suspicious_attribute(testCaseClass, name):
         raise TypeError(TestLoader._ERROR_MSG % name)
-    names = super(TestLoader, self).getTestCaseNames(testCaseClass)
+    names = list(super(TestLoader, self).getTestCaseNames(testCaseClass))
     if self._randomize_ordering_seed is not None:
       logging.info(
           'Randomizing test order with seed: %d', self._randomize_ordering_seed)

@@ -18,6 +18,7 @@ import copy
 import functools
 
 from absl.flags import _argument_parser
+from absl.flags import _validators_classes
 import enum
 
 from typing import Callable, Text, TypeVar, Generic, Iterable, Type, List, Optional, Any, Union, Sequence
@@ -28,29 +29,29 @@ _ET = TypeVar('_ET', bound=enum.Enum)
 
 class Flag(Generic[_T]):
 
-  name = ... # type: Text
-  default = ... # type: Any
-  default_unparsed = ... # type: Any
-  default_as_str = ... # type: Optional[Text]
-  help = ... # type: Text
-  short_name = ... # type: Text
-  boolean = ... # type: bool
-  present = ... # type: bool
-  parser = ... # type: _argument_parser.ArgumentParser[_T]
-  serializer = ... # type: _argument_parser.ArgumentSerializer[_T]
-  allow_override = ... # type: bool
-  allow_override_cpp = ... # type: bool
-  allow_hide_cpp = ... # type: bool
-  using_default_value = ... # type: bool
-  allow_overwrite = ... # type: bool
-  allow_using_method_names = ... # type: bool
-  validators = ... # type: List[Callable[[Any], bool]]
+  name: Text
+  default: Optional[_T]
+  default_unparsed: Union[Optional[_T], Text]
+  default_as_str: Optional[Text]
+  help: Text
+  short_name: Text
+  boolean: bool
+  present: bool
+  parser: _argument_parser.ArgumentParser[_T]
+  serializer: _argument_parser.ArgumentSerializer[_T]
+  allow_override: bool
+  allow_override_cpp: bool
+  allow_hide_cpp: bool
+  using_default_value: bool
+  allow_overwrite: bool
+  allow_using_method_names: bool
+  validators: List[_validators_classes.Validator]
 
   def __init__(self,
                parser: _argument_parser.ArgumentParser[_T],
                serializer: Optional[_argument_parser.ArgumentSerializer[_T]],
                name: Text,
-               default: Any,
+               default: Union[Optional[_T], Text],
                help_string: Optional[Text],
                short_name: Optional[Text] = ...,
                boolean: bool = ...,
@@ -86,7 +87,7 @@ class Flag(Generic[_T]):
 class BooleanFlag(Flag[bool]):
   def __init__(self,
                name: Text,
-               default: Any,
+               default: Union[Optional[bool], Text],
                help: Optional[Text],
                short_name: Optional[Text]=None,
                **args: Any) -> None:
@@ -97,7 +98,7 @@ class BooleanFlag(Flag[bool]):
 class EnumFlag(Flag[Text]):
   def __init__(self,
                name: Text,
-               default: Any,
+               default: Union[Optional[Text], Text],
                help: Optional[Text],
                enum_values: Sequence[Text],
                short_name: Optional[Text] = ...,
@@ -111,7 +112,7 @@ class EnumClassFlag(Flag[_ET]):
 
   def __init__(self,
                name: Text,
-               default: Any,
+               default: Union[Optional[_ET], Text],
                help: Optional[Text],
                enum_class: Type[_ET],
                short_name: Optional[Text]=None,
@@ -127,7 +128,7 @@ class MultiFlag(Flag[List[_T]]):
 class MultiEnumClassFlag(MultiFlag[_ET]):
   def __init__(self,
                name: Text,
-               default: Any,
+               default: Union[Optional[List[_ET]], Text],
                help_string: Optional[Text],
                enum_class: Type[_ET],
                **args: Any):

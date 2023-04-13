@@ -156,7 +156,7 @@ def get_help_width():
   if not sys.stdout.isatty() or termios is None or fcntl is None:
     return _DEFAULT_HELP_WIDTH
   try:
-    data = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, '1234')
+    data = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, b'1234')
     columns = struct.unpack('hh', data)[1]
     # Emacs mode returns 0.
     # Here we assume that any value below 40 is unreasonable.
