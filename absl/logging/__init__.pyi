@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import logging
-from typing import Any, Callable, NoReturn, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, NoReturn, Optional, Tuple, TypeVar, Union
+
+from absl import flags
 
 # Logging levels.
 FATAL: int
@@ -24,6 +26,14 @@ INFO: int
 DEBUG: int
 
 ABSL_LOGGING_PREFIX_REGEX: str
+
+LOGTOSTDERR: flags.FlagHolder[bool]
+ALSOLOGTOSTDERR: flags.FlagHolder[bool]
+LOG_DIR: flags.FlagHolder[str]
+VERBOSITY: flags.FlagHolder[int]
+LOGGER_LEVELS: flags.FlagHolder[Dict[str, str]]
+STDERRTHRESHOLD: flags.FlagHolder[str]
+SHOWPREFIXFORINFO: flags.FlagHolder[bool]
 
 
 def get_verbosity() -> int:
