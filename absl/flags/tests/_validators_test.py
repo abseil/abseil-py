@@ -20,7 +20,6 @@ failed validator will throw an exception, etc.
 
 import warnings
 
-
 from absl.flags import _defines
 from absl.flags import _exceptions
 from absl.flags import _flagvalues
