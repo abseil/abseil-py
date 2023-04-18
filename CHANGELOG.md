@@ -9,16 +9,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Changed
 
 *   `absl-py` no longer supports Python 3.6. It has reached end-of-life for more
-     than a year now.
+    than a year now.
 *   (testing) For Python 3.11+, the calls to `absltest.TestCase.enter_context`
     are forwarded to `unittest.TestCase.enterContext` (when called via instance)
     or `unittest.TestCase.enterClassContext` (when called via class) now. As a
     result, on Python 3.11+, the private `_cls_exit_stack` attribute is not
     defined on `absltest.TestCase` and `_exit_stack` attribute is not defined on
     its instances.
-*   `AbslTest.assertSameStructure()` now uses the test case's equality
-     functions (registered with `TestCase.addTypeEqualityFunc()`) for comparing
-     leaves of the structure.
+*   `AbslTest.assertSameStructure()` now uses the test case's equality functions
+    (registered with `TestCase.addTypeEqualityFunc()`) for comparing leaves of
+    the structure.
+*   `DEFINE_enum`, `DEFINE_multi_enum`, and `EnumParser` now raise errors when
+    `enum_values` is provided as a single string value. Additionally,
+    `EnumParser.enum_values` is now stored as a list copy of the provided
+    `enum_values` parameter.
 
 ## 1.4.0 (2023-01-11)
 

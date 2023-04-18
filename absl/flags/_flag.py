@@ -334,7 +334,7 @@ class EnumFlag(Flag):
     g = _argument_parser.ArgumentSerializer()
     super(EnumFlag, self).__init__(
         p, g, name, default, help, short_name, **args)
-    self.help = '<%s>: %s' % ('|'.join(enum_values), self.help)
+    self.help = '<%s>: %s' % ('|'.join(p.enum_values), self.help)
 
   def _extra_xml_dom_elements(self, doc):
     elements = []

@@ -1468,14 +1468,6 @@ test case
 
 class GetCommandStderrTestCase(absltest.TestCase):
 
-  def setUp(self):
-    super(GetCommandStderrTestCase, self).setUp()
-    self.original_environ = os.environ.copy()
-
-  def tearDown(self):
-    super(GetCommandStderrTestCase, self).tearDown()
-    os.environ = self.original_environ
-
   def test_return_status(self):
     tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     returncode = (

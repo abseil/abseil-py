@@ -1,0 +1,49 @@
+name: Test
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    if:
+      github.event_name == 'push' || github.event.pull_request.head.repo.full_name !=
+      github.repository
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        id: setup_python
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install virtualenv
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade virtualenv
+      - name: Run tests
+        env:
+          ABSL_EXPECTED_PYTHON_VERSION: ${{ matrix.python-version }}
+          ABSL_COPY_TESTLOGS_TO: ci-artifacts
+        shell: bash
+        run: ci/run_tests.sh
+
+      - name: Upload bazel test logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: bazel-testlogs-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ci-artifacts

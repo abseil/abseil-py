@@ -330,8 +330,12 @@ class EnumParser(ArgumentParser):
     if not enum_values:
       raise ValueError(
           'enum_values cannot be empty, found "{}"'.format(enum_values))
+    if isinstance(enum_values, str):
+      raise ValueError(
+          'enum_values cannot be a str, found "{}"'.format(enum_values)
+      )
     super(EnumParser, self).__init__()
-    self.enum_values = enum_values
+    self.enum_values = list(enum_values)
     self.case_sensitive = case_sensitive
 
   def parse(self, argument):

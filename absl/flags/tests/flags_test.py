@@ -1313,6 +1313,16 @@ class FlagsUnitTest(absltest.TestCase):
     with self.assertRaises(ValueError):
       flags.DEFINE_enum('fruit', None, [], 'help', flag_values=fv)
 
+  def test_enum_flag_with_str_values(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_enum('fruit', None, 'option', 'help', flag_values=fv)
+
+  def test_multi_enum_flag_with_str_values(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_multi_enum('fruit', None, 'option', 'help', flag_values=fv)
+
   def test_define_enum_class_flag(self):
     fv = flags.FlagValues()
     flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
