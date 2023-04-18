@@ -18,11 +18,11 @@ import os
 import sys
 
 try:
-  import faulthandler
+  import faulthandler  # pylint: disable=g-import-not-at-top
 except ImportError:
   faulthandler = None
 
-from absl import app
+from absl import app  # pylint: disable=g-import-not-at-top
 from absl import flags
 
 FLAGS = flags.FLAGS

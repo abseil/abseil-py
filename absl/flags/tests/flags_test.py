@@ -993,7 +993,7 @@ class FlagsUnitTest(absltest.TestCase):
     # to be raised.
     try:
       sys.modules.pop('absl.flags.tests.module_baz')
-      import absl.flags.tests.module_baz
+      import absl.flags.tests.module_baz  # pylint: disable=g-import-not-at-top
       del absl
     except flags.DuplicateFlagError:
       raise AssertionError('Module reimport caused flag duplication error')

@@ -386,7 +386,7 @@ class EnumClassParser(ArgumentParser):
     """
     # Users must have an Enum class defined before using EnumClass flag.
     # Therefore this dependency is guaranteed.
-    import enum
+    import enum  # pylint: disable=g-import-not-at-top
 
     if not issubclass(enum_class, enum.Enum):
       raise TypeError('{} is not a subclass of Enum.'.format(enum_class))

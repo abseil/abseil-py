@@ -20,6 +20,7 @@ import re
 import struct
 import sys
 import textwrap
+# pylint: disable=g-import-not-at-top
 try:
   import fcntl
 except ImportError:
@@ -29,6 +30,7 @@ try:
   import termios
 except ImportError:
   termios = None
+# pylint: enable=g-import-not-at-top
 
 
 _DEFAULT_HELP_WIDTH = 80  # Default width of help output.

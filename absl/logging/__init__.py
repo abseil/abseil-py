@@ -97,11 +97,13 @@ import warnings
 from absl import flags
 from absl.logging import converter
 
+# pylint: disable=g-import-not-at-top
 try:
   from typing import NoReturn
 except ImportError:
   pass
 
+# pylint: enable=g-import-not-at-top
 
 FLAGS = flags.FLAGS
 

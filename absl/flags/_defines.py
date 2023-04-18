@@ -27,6 +27,7 @@ from absl.flags import _flagvalues
 from absl.flags import _helpers
 from absl.flags import _validators
 
+# pylint: disable=g-import-not-at-top
 # pylint: disable=unused-import
 try:
   from typing import Text, List, Any
@@ -37,6 +38,7 @@ try:
   import enum
 except ImportError:
   pass
+# pylint: enable=g-import-not-at-top
 # pylint: enable=unused-import
 
 _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
