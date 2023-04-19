@@ -23,6 +23,7 @@ import contextlib
 import difflib
 import enum
 import errno
+import faulthandler
 import getpass
 import inspect
 import io
@@ -42,16 +43,6 @@ import textwrap
 import unittest
 from unittest import mock  # pylint: disable=unused-import Allow absltest.mock.
 from urllib import parse
-
-try:
-  # The faulthandler module isn't always available, and pytype doesn't
-  # understand that we're catching ImportError, so suppress the error.
-  # pytype: disable=import-error
-  import faulthandler  # pylint: disable=g-import-not-at-top
-  # pytype: enable=import-error
-except ImportError:
-  # We use faulthandler if it is available.
-  faulthandler = None
 
 from absl import app  # pylint: disable=g-import-not-at-top
 from absl import flags
@@ -2095,7 +2086,7 @@ def _is_in_app_main():
 def _register_sigterm_with_faulthandler():
   # type: () -> None
   """Have faulthandler dump stacks on SIGTERM.  Useful to diagnose timeouts."""
-  if faulthandler and getattr(faulthandler, 'register', None):
+  if getattr(faulthandler, 'register', None):
     # faulthandler.register is not available on Windows.
     # faulthandler.enable() is already called by app.run.
     try:
