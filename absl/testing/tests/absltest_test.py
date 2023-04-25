@@ -1953,6 +1953,9 @@ class TestLoaderTest(absltest.TestCase):
     def TestHelperWithDefaults(self, a=5):
       pass
 
+    def TestHelperWithKeywordOnly(self, *, arg):
+      pass
+
   class Invalid(absltest.TestCase):
     """Test case containing a suspicious method."""
 
