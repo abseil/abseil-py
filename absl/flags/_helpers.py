@@ -20,7 +20,7 @@ import struct
 import sys
 import textwrap
 import types
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Set
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Sequence, Set
 from xml.dom import minidom
 # pylint: disable=g-import-not-at-top
 try:
@@ -181,7 +181,7 @@ def get_help_width() -> int:
 
 
 def get_flag_suggestions(
-    attempt: Optional[str], longopt_list: List[str]
+    attempt: Optional[str], longopt_list: Sequence[str]
 ) -> List[str]:
   """Returns helpful similar matches for an invalid flag."""
   # Don't suggest on very short strings, or if no longopts are specified.
@@ -302,7 +302,7 @@ def text_wrap(
 
 
 def flag_dict_to_args(
-    flag_map: Dict[str, str], multi_flags: Optional[Set[str]] = None
+    flag_map: Dict[str, Any], multi_flags: Optional[Set[str]] = None
 ) -> Iterable[str]:
   """Convert a dict of values into process call parameters.
 

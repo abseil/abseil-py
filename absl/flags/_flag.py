@@ -513,7 +513,7 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
   def __init__(
       self,
       name: str,
-      default: Union[None, Iterable[_ET], _ET],
+      default: Union[None, Iterable[_ET], _ET, Iterable[Text], Text],
       help_string: str,
       enum_class: Type[_ET],
       case_sensitive: bool = False,

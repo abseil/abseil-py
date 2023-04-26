@@ -179,8 +179,11 @@ class ArgparseFlagsTest(parameterized.TestCase):
     parser.add_argument('--header', help='Header message to print.')
     subparsers = parser.add_subparsers(help='The command to execute.')
 
-    sub_parser = subparsers.add_parser(
-        'sub_cmd', help='Sub command.', inherited_absl_flags=self._absl_flags)
+    # NOTE: The sub parsers don't work well with typing hence `type: ignore`.
+    # See https://github.com/python/typeshed/issues/10082.
+    sub_parser = subparsers.add_parser(  # type: ignore
+        'sub_cmd', help='Sub command.', inherited_absl_flags=self._absl_flags
+    )
     sub_parser.add_argument('--sub_flag', help='Sub command flag.')
 
     def sub_command_func():
@@ -203,11 +206,15 @@ class ArgparseFlagsTest(parameterized.TestCase):
         inherited_absl_flags=self._absl_flags)
     subparsers = parser.add_subparsers(help='The command to execute.')
 
-    subparsers.add_parser(
-        'sub_cmd', help='Sub command.',
+    # NOTE: The sub parsers don't work well with typing hence `type: ignore`.
+    # See https://github.com/python/typeshed/issues/10082.
+    subparsers.add_parser(  # type: ignore
+        'sub_cmd',
+        help='Sub command.',
         # Do not inherit absl flags in the subparser.
         # This is the behavior that this test exercises.
-        inherited_absl_flags=None)
+        inherited_absl_flags=None,
+    )
 
     with self.assertRaises(SystemExit):
       parser.parse_args(['sub_cmd', '--absl_string=new_value'])
@@ -270,10 +277,10 @@ class ArgparseFlagsTest(parameterized.TestCase):
   def test_no_help_flags(self, args):
     parser = argparse_flags.ArgumentParser(
         inherited_absl_flags=self._absl_flags, add_help=False)
-    with mock.patch.object(parser, 'print_help'):
+    with mock.patch.object(parser, 'print_help') as print_help_mock:
       with self.assertRaises(SystemExit):
         parser.parse_args(args)
-      parser.print_help.assert_not_called()
+    print_help_mock.assert_not_called()
 
   def test_helpfull_message(self):
     flags.DEFINE_string(

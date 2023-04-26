@@ -1467,9 +1467,10 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
 @overload
 def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     name: Text,
-    # This is separate from `Union[None, _ET, Text]` to avoid a Pytype issue
-    # inferring the return value to FlagHolder[List[Union[_ET, enum.Enum]]]
-    # when an iterable of concrete enum subclasses are used.
+    # This is separate from `Union[None, _ET, Iterable[Text], Text]` to avoid a
+    # Pytype issue inferring the return value to
+    # FlagHolder[List[Union[_ET, enum.Enum]]] when an iterable of concrete enum
+    # subclasses are used.
     default: Iterable[_ET],
     enum_class: Type[_ET],
     help: Text,  # pylint: disable=redefined-builtin
@@ -1485,7 +1486,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
 @overload
 def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     name: Text,
-    default: Union[None, _ET, Text],
+    default: Union[None, _ET, Iterable[Text], Text],
     enum_class: Type[_ET],
     help: Text,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
@@ -1514,9 +1515,10 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
 @overload
 def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     name: Text,
-    # This is separate from `Union[None, _ET, Text]` to avoid a Pytype issue
-    # inferring the return value to FlagHolder[List[Union[_ET, enum.Enum]]]
-    # when an iterable of concrete enum subclasses are used.
+    # This is separate from `Union[None, _ET, Iterable[Text], Text]` to avoid a
+    # Pytype issue inferring the return value to
+    # FlagHolder[List[Union[_ET, enum.Enum]]] when an iterable of concrete enum
+    # subclasses are used.
     default: Iterable[_ET],
     enum_class: Type[_ET],
     help: Text,  # pylint: disable=redefined-builtin
@@ -1531,7 +1533,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
 @overload
 def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     name: Text,
-    default: Union[_ET, Text],
+    default: Union[_ET, Iterable[Text], Text],
     enum_class: Type[_ET],
     help: Text,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
