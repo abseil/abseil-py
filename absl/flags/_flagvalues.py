@@ -75,6 +75,8 @@ class FlagValues:
   help for all of the registered :class:`~absl.flags.Flag` objects.
   """
 
+  _HAS_DYNAMIC_ATTRIBUTES = True
+
   # A note on collections.abc.Mapping:
   # FlagValues defines __getitem__, __iter__, and __len__. It makes perfect
   # sense to let it be a collections.abc.Mapping class. However, we are not
