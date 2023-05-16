@@ -88,7 +88,6 @@ import struct
 import sys
 import tempfile
 import threading
-import tempfile
 import time
 import timeit
 import traceback
