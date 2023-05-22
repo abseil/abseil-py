@@ -17,12 +17,14 @@
 import os
 import sys
 
+# pylint: disable=g-import-not-at-top
 try:
   import setuptools
 except ImportError:
   from ez_setup import use_setuptools
   use_setuptools()
   import setuptools
+# pylint: enable=g-import-not-at-top
 
 if sys.version_info < (3, 7):
   raise RuntimeError('Python version 3.7+ is required.')

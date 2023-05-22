@@ -47,7 +47,7 @@ def set_kernel_process_name(name):
       proc_comm.write(name[:15])
   except EnvironmentError:
     try:
-      import ctypes
+      import ctypes  # pylint: disable=g-import-not-at-top
     except ImportError:
       return  # No ctypes.
     try:

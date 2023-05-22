@@ -14,12 +14,15 @@
 
 """Internal helper functions for Abseil Python flags library."""
 
-import collections
 import os
 import re
 import struct
 import sys
 import textwrap
+import types
+from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Sequence, Set
+from xml.dom import minidom
+# pylint: disable=g-import-not-at-top
 try:
   import fcntl
 except ImportError:
@@ -29,6 +32,7 @@ try:
   import termios
 except ImportError:
   termios = None
+# pylint: enable=g-import-not-at-top
 
 
 _DEFAULT_HELP_WIDTH = 80  # Default width of help output.
@@ -56,32 +60,37 @@ _ILLEGAL_XML_CHARS_REGEX = re.compile(
 # This is a set of module ids for the modules that disclaim key flags.
 # This module is explicitly added to this set so that we never consider it to
 # define key flag.
-disclaim_module_ids = set([id(sys.modules[__name__])])
+disclaim_module_ids: Set[int] = set([id(sys.modules[__name__])])
 
 
 # Define special flags here so that help may be generated for them.
 # NOTE: Please do NOT use SPECIAL_FLAGS from outside flags module.
 # Initialized inside flagvalues.py.
-SPECIAL_FLAGS = None
+# NOTE: This cannot be annotated as its actual FlagValues type since this would
+# create a circular dependency.
+SPECIAL_FLAGS: Any = None
 
 
 # This points to the flags module, initialized in flags/__init__.py.
 # This should only be used in adopt_module_key_flags to take SPECIAL_FLAGS into
 # account.
-FLAGS_MODULE = None
+FLAGS_MODULE: types.ModuleType = None
 
 
-class _ModuleObjectAndName(
-    collections.namedtuple('_ModuleObjectAndName', 'module module_name')):
+class _ModuleObjectAndName(NamedTuple):
   """Module object and name.
 
   Fields:
   - module: object, module object.
   - module_name: str, module name.
   """
+  module: types.ModuleType
+  module_name: str
 
 
-def get_module_object_and_name(globals_dict):
+def get_module_object_and_name(
+    globals_dict: Dict[str, Any]
+) -> _ModuleObjectAndName:
   """Returns the module that defines a global environment, and its name.
 
   Args:
@@ -99,7 +108,7 @@ def get_module_object_and_name(globals_dict):
                               (sys.argv[0] if name == '__main__' else name))
 
 
-def get_calling_module_object_and_name():
+def get_calling_module_object_and_name() -> _ModuleObjectAndName:
   """Returns the module that's calling into this module.
 
   We generally use this function to get the name of the module calling a
@@ -121,12 +130,14 @@ def get_calling_module_object_and_name():
   raise AssertionError('No module was found')
 
 
-def get_calling_module():
+def get_calling_module() -> str:
   """Returns the name of the module that's calling into this module."""
   return get_calling_module_object_and_name().module_name
 
 
-def create_xml_dom_element(doc, name, value):
+def create_xml_dom_element(
+    doc: minidom.Document, name: str, value: Any
+) -> minidom.Element:
   """Returns an XML DOM element with name and text value.
 
   Args:
@@ -151,7 +162,7 @@ def create_xml_dom_element(doc, name, value):
   return e
 
 
-def get_help_width():
+def get_help_width() -> int:
   """Returns the integer width of help lines that is used in TextWrap."""
   if not sys.stdout.isatty() or termios is None or fcntl is None:
     return _DEFAULT_HELP_WIDTH
@@ -169,7 +180,9 @@ def get_help_width():
     return _DEFAULT_HELP_WIDTH
 
 
-def get_flag_suggestions(attempt, longopt_list):
+def get_flag_suggestions(
+    attempt: Optional[str], longopt_list: Sequence[str]
+) -> List[str]:
   """Returns helpful similar matches for an invalid flag."""
   # Don't suggest on very short strings, or if no longopts are specified.
   if len(attempt) <= 2 or not longopt_list:
@@ -226,7 +239,12 @@ def _damerau_levenshtein(a, b):
   return distance(a, b)
 
 
-def text_wrap(text, length=None, indent='', firstline_indent=None):
+def text_wrap(
+    text: str,
+    length: Optional[int] = None,
+    indent: str = '',
+    firstline_indent: Optional[str] = None,
+) -> str:
   """Wraps a given text to a maximum line length and returns it.
 
   It turns lines that only contain whitespace into empty lines, keeps new lines,
@@ -283,7 +301,9 @@ def text_wrap(text, length=None, indent='', firstline_indent=None):
   return '\n'.join(result)
 
 
-def flag_dict_to_args(flag_map, multi_flags=None):
+def flag_dict_to_args(
+    flag_map: Dict[str, Any], multi_flags: Optional[Set[str]] = None
+) -> Iterable[str]:
   """Convert a dict of values into process call parameters.
 
   This method is used to convert a dictionary into a sequence of parameters
@@ -333,7 +353,7 @@ def flag_dict_to_args(flag_map, multi_flags=None):
         yield '--%s=%s' % (key, value)
 
 
-def trim_docstring(docstring):
+def trim_docstring(docstring: str) -> str:
   """Removes indentation from triple-quoted strings.
 
   This is the function specified in PEP 257 to handle docstrings:
@@ -375,7 +395,7 @@ def trim_docstring(docstring):
   return '\n'.join(trimmed)
 
 
-def doc_to_help(doc):
+def doc_to_help(doc: str) -> str:
   """Takes a __doc__ string and reformats it as help."""
 
   # Get rid of starting and ending white space. Using lstrip() or even

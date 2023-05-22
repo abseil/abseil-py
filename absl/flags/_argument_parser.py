@@ -20,10 +20,17 @@ aliases defined at the package level instead.
 
 import collections
 import csv
+import enum
 import io
 import string
+from typing import Generic, List, Iterable, Optional, Sequence, Text, Type, TypeVar, Union
+from xml.dom import minidom
 
 from absl.flags import _helpers
+
+_T = TypeVar('_T')
+_ET = TypeVar('_ET', bound=enum.Enum)
+_N = TypeVar('_N', int, float)
 
 
 def _is_integer_type(instance):
@@ -72,25 +79,7 @@ class _ArgumentParserCache(type):
         return type.__call__(cls, *args)
 
 
-# NOTE about Genericity and Metaclass of ArgumentParser.
-# (1) In the .py source (this file)
-#     - is not declared as Generic
-#     - has _ArgumentParserCache as a metaclass
-# (2) In the .pyi source (type stub)
-#     - is declared as Generic
-#     - doesn't have a metaclass
-# The reason we need this is due to Generic having a different metaclass
-# (for python versions <= 3.7) and a class can have only one metaclass.
-#
-# * Lack of metaclass in .pyi is not a deal breaker, since the metaclass
-#   doesn't affect any type information. Also type checkers can check the type
-#   parameters.
-# * However, not declaring ArgumentParser as Generic in the source affects
-#   runtime annotation processing. In particular this means, subclasses should
-#   inherit from `ArgumentParser` and not `ArgumentParser[SomeType]`.
-#   The corresponding DEFINE_someType method (the public API) can be annotated
-#   to return FlagHolder[SomeType].
-class ArgumentParser(metaclass=_ArgumentParserCache):
+class ArgumentParser(Generic[_T], metaclass=_ArgumentParserCache):
   """Base class used to parse and convert arguments.
 
   The :meth:`parse` method checks to make sure that the string argument is a
@@ -106,9 +95,9 @@ class ArgumentParser(metaclass=_ArgumentParserCache):
   member variables must be derived from initializer arguments only.
   """
 
-  syntactic_help = ''
+  syntactic_help: Text = ''
 
-  def parse(self, argument):
+  def parse(self, argument: Text) -> Optional[_T]:
     """Parses the string argument and returns the native value.
 
     By default it returns its argument unmodified.
@@ -128,11 +117,13 @@ class ArgumentParser(metaclass=_ArgumentParserCache):
           type(argument)))
     return argument
 
-  def flag_type(self):
+  def flag_type(self) -> Text:
     """Returns a string representing the type of the flag."""
     return 'string'
 
-  def _custom_xml_dom_elements(self, doc):
+  def _custom_xml_dom_elements(
+      self, doc: minidom.Document
+  ) -> List[minidom.Element]:
     """Returns a list of minidom.Element to add additional flag information.
 
     Args:
@@ -142,33 +133,38 @@ class ArgumentParser(metaclass=_ArgumentParserCache):
     return []
 
 
-class ArgumentSerializer(object):
+class ArgumentSerializer(Generic[_T]):
   """Base class for generating string representations of a flag value."""
 
-  def serialize(self, value):
+  def serialize(self, value: _T) -> Text:
     """Returns a serialized string of the value."""
     return str(value)
 
 
-class NumericParser(ArgumentParser):
+class NumericParser(ArgumentParser[_N]):
   """Parser of numeric values.
 
   Parsed value may be bounded to a given upper and lower bound.
   """
 
-  def is_outside_bounds(self, val):
+  lower_bound: Optional[_N]
+  upper_bound: Optional[_N]
+
+  def is_outside_bounds(self, val: _N) -> bool:
     """Returns whether the value is outside the bounds or not."""
     return ((self.lower_bound is not None and val < self.lower_bound) or
             (self.upper_bound is not None and val > self.upper_bound))
 
-  def parse(self, argument):
+  def parse(self, argument: Text) -> _N:
     """See base class."""
     val = self.convert(argument)
     if self.is_outside_bounds(val):
       raise ValueError('%s is not %s' % (val, self.syntactic_help))
     return val
 
-  def _custom_xml_dom_elements(self, doc):
+  def _custom_xml_dom_elements(
+      self, doc: minidom.Document
+  ) -> List[minidom.Element]:
     elements = []
     if self.lower_bound is not None:
       elements.append(_helpers.create_xml_dom_element(
@@ -178,7 +174,7 @@ class NumericParser(ArgumentParser):
           doc, 'upper_bound', self.upper_bound))
     return elements
 
-  def convert(self, argument):
+  def convert(self, argument: Text) -> _N:
     """Returns the correct numeric value of argument.
 
     Subclass must implement this method, and raise TypeError if argument is not
@@ -194,7 +190,7 @@ class NumericParser(ArgumentParser):
     raise NotImplementedError
 
 
-class FloatParser(NumericParser):
+class FloatParser(NumericParser[float]):
   """Parser of floating point values.
 
   Parsed value may be bounded to a given upper and lower bound.
@@ -203,7 +199,11 @@ class FloatParser(NumericParser):
   number_name = 'number'
   syntactic_help = ' '.join((number_article, number_name))
 
-  def __init__(self, lower_bound=None, upper_bound=None):
+  def __init__(
+      self,
+      lower_bound: Optional[float] = None,
+      upper_bound: Optional[float] = None,
+  ) -> None:
     super(FloatParser, self).__init__()
     self.lower_bound = lower_bound
     self.upper_bound = upper_bound
@@ -220,7 +220,7 @@ class FloatParser(NumericParser):
       sh = '%s >= %s' % (self.number_name, lower_bound)
     self.syntactic_help = sh
 
-  def convert(self, argument):
+  def convert(self, argument: Union[int, float, str]) -> float:
     """Returns the float value of argument."""
     if (_is_integer_type(argument) or isinstance(argument, float) or
         isinstance(argument, str)):
@@ -230,12 +230,12 @@ class FloatParser(NumericParser):
           'Expect argument to be a string, int, or float, found {}'.format(
               type(argument)))
 
-  def flag_type(self):
+  def flag_type(self) -> Text:
     """See base class."""
     return 'float'
 
 
-class IntegerParser(NumericParser):
+class IntegerParser(NumericParser[int]):
   """Parser of an integer value.
 
   Parsed value may be bounded to a given upper and lower bound.
@@ -244,7 +244,9 @@ class IntegerParser(NumericParser):
   number_name = 'integer'
   syntactic_help = ' '.join((number_article, number_name))
 
-  def __init__(self, lower_bound=None, upper_bound=None):
+  def __init__(
+      self, lower_bound: Optional[int] = None, upper_bound: Optional[int] = None
+  ) -> None:
     super(IntegerParser, self).__init__()
     self.lower_bound = lower_bound
     self.upper_bound = upper_bound
@@ -265,7 +267,7 @@ class IntegerParser(NumericParser):
       sh = '%s >= %s' % (self.number_name, lower_bound)
     self.syntactic_help = sh
 
-  def convert(self, argument):
+  def convert(self, argument: Union[int, Text]) -> int:
     """Returns the int value of argument."""
     if _is_integer_type(argument):
       return argument
@@ -281,15 +283,15 @@ class IntegerParser(NumericParser):
       raise TypeError('Expect argument to be a string or int, found {}'.format(
           type(argument)))
 
-  def flag_type(self):
+  def flag_type(self) -> Text:
     """See base class."""
     return 'int'
 
 
-class BooleanParser(ArgumentParser):
+class BooleanParser(ArgumentParser[bool]):
   """Parser of boolean values."""
 
-  def parse(self, argument):
+  def parse(self, argument: Union[Text, int]) -> bool:
     """See base class."""
     if isinstance(argument, str):
       if argument.lower() in ('true', 't', '1'):
@@ -309,15 +311,17 @@ class BooleanParser(ArgumentParser):
 
     raise TypeError('Non-boolean argument to boolean flag', argument)
 
-  def flag_type(self):
+  def flag_type(self) -> Text:
     """See base class."""
     return 'bool'
 
 
-class EnumParser(ArgumentParser):
+class EnumParser(ArgumentParser[Text]):
   """Parser of a string enum value (a string value from a given set)."""
 
-  def __init__(self, enum_values, case_sensitive=True):
+  def __init__(
+      self, enum_values: Iterable[Text], case_sensitive: bool = True
+  ) -> None:
     """Initializes EnumParser.
 
     Args:
@@ -330,11 +334,15 @@ class EnumParser(ArgumentParser):
     if not enum_values:
       raise ValueError(
           'enum_values cannot be empty, found "{}"'.format(enum_values))
+    if isinstance(enum_values, str):
+      raise ValueError(
+          'enum_values cannot be a str, found "{}"'.format(enum_values)
+      )
     super(EnumParser, self).__init__()
-    self.enum_values = enum_values
+    self.enum_values = list(enum_values)
     self.case_sensitive = case_sensitive
 
-  def parse(self, argument):
+  def parse(self, argument: Text) -> Text:
     """Determines validity of argument and returns the correct element of enum.
 
     Args:
@@ -360,15 +368,17 @@ class EnumParser(ArgumentParser):
         return [value for value in self.enum_values
                 if value.upper() == argument.upper()][0]
 
-  def flag_type(self):
+  def flag_type(self) -> Text:
     """See base class."""
     return 'string enum'
 
 
-class EnumClassParser(ArgumentParser):
+class EnumClassParser(ArgumentParser[_ET]):
   """Parser of an Enum class member."""
 
-  def __init__(self, enum_class, case_sensitive=True):
+  def __init__(
+      self, enum_class: Type[_ET], case_sensitive: bool = True
+  ) -> None:
     """Initializes EnumParser.
 
     Args:
@@ -380,10 +390,6 @@ class EnumClassParser(ArgumentParser):
       TypeError: When enum_class is not a subclass of Enum.
       ValueError: When enum_class is empty.
     """
-    # Users must have an Enum class defined before using EnumClass flag.
-    # Therefore this dependency is guaranteed.
-    import enum
-
     if not issubclass(enum_class, enum.Enum):
       raise TypeError('{} is not a subclass of Enum.'.format(enum_class))
     if not enum_class.__members__:
@@ -410,11 +416,11 @@ class EnumClassParser(ArgumentParser):
           name.lower() for name in enum_class.__members__)
 
   @property
-  def member_names(self):
+  def member_names(self) -> Sequence[Text]:
     """The accepted enum names, in lowercase if not case sensitive."""
     return self._member_names
 
-  def parse(self, argument):
+  def parse(self, argument: Union[_ET, Text]) -> _ET:
     """Determines validity of argument and returns the correct element of enum.
 
     Args:
@@ -427,7 +433,7 @@ class EnumClassParser(ArgumentParser):
       ValueError: Raised when argument didn't match anything in enum.
     """
     if isinstance(argument, self.enum_class):
-      return argument
+      return argument  # pytype: disable=bad-return-type
     elif not isinstance(argument, str):
       raise ValueError(
           '{} is not an enum member or a name of a member in {}'.format(
@@ -442,29 +448,29 @@ class EnumClassParser(ArgumentParser):
       return next(value for name, value in self.enum_class.__members__.items()
                   if name.lower() == key.lower())
 
-  def flag_type(self):
+  def flag_type(self) -> Text:
     """See base class."""
     return 'enum class'
 
 
-class ListSerializer(ArgumentSerializer):
+class ListSerializer(Generic[_T], ArgumentSerializer[List[_T]]):
 
-  def __init__(self, list_sep):
+  def __init__(self, list_sep: Text) -> None:
     self.list_sep = list_sep
 
-  def serialize(self, value):
+  def serialize(self, value: List[_T]) -> Text:
     """See base class."""
     return self.list_sep.join([str(x) for x in value])
 
 
-class EnumClassListSerializer(ListSerializer):
+class EnumClassListSerializer(ListSerializer[_ET]):
   """A serializer for :class:`MultiEnumClass` flags.
 
   This serializer simply joins the output of `EnumClassSerializer` using a
   provided separator.
   """
 
-  def __init__(self, list_sep, **kwargs):
+  def __init__(self, list_sep: Text, **kwargs) -> None:
     """Initializes EnumClassListSerializer.
 
     Args:
@@ -475,7 +481,7 @@ class EnumClassListSerializer(ListSerializer):
     super(EnumClassListSerializer, self).__init__(list_sep)
     self._element_serializer = EnumClassSerializer(**kwargs)
 
-  def serialize(self, value):
+  def serialize(self, value: Union[_ET, List[_ET]]) -> Text:
     """See base class."""
     if isinstance(value, list):
       return self.list_sep.join(
@@ -484,12 +490,9 @@ class EnumClassListSerializer(ListSerializer):
       return self._element_serializer.serialize(value)
 
 
-class CsvListSerializer(ArgumentSerializer):
+class CsvListSerializer(ListSerializer[Text]):
 
-  def __init__(self, list_sep):
-    self.list_sep = list_sep
-
-  def serialize(self, value):
+  def serialize(self, value: List[Text]) -> Text:
     """Serializes a list as a CSV string or unicode."""
     output = io.StringIO()
     writer = csv.writer(output, delimiter=self.list_sep)
@@ -504,7 +507,7 @@ class CsvListSerializer(ArgumentSerializer):
 class EnumClassSerializer(ArgumentSerializer):
   """Class for generating string representations of an enum class flag value."""
 
-  def __init__(self, lowercase):
+  def __init__(self, lowercase: bool) -> None:
     """Initializes EnumClassSerializer.
 
     Args:
@@ -512,7 +515,7 @@ class EnumClassSerializer(ArgumentSerializer):
     """
     self._lowercase = lowercase
 
-  def serialize(self, value):
+  def serialize(self, value: _ET) -> Text:
     """Returns a serialized string of the Enum class value."""
     as_string = str(value.name)
     return as_string.lower() if self._lowercase else as_string
@@ -529,14 +532,16 @@ class BaseListParser(ArgumentParser):
   of the separator.
   """
 
-  def __init__(self, token=None, name=None):
+  def __init__(
+      self, token: Optional[Text] = None, name: Optional[Text] = None
+  ) -> None:
     assert name
     super(BaseListParser, self).__init__()
     self._token = token
     self._name = name
     self.syntactic_help = 'a %s separated list' % self._name
 
-  def parse(self, argument):
+  def parse(self, argument: Text) -> List[Text]:
     """See base class."""
     if isinstance(argument, list):
       return argument
@@ -545,7 +550,7 @@ class BaseListParser(ArgumentParser):
     else:
       return [s.strip() for s in argument.split(self._token)]
 
-  def flag_type(self):
+  def flag_type(self) -> Text:
     """See base class."""
     return '%s separated list of strings' % self._name
 
@@ -553,10 +558,10 @@ class BaseListParser(ArgumentParser):
 class ListParser(BaseListParser):
   """Parser for a comma-separated list of strings."""
 
-  def __init__(self):
+  def __init__(self) -> None:
     super(ListParser, self).__init__(',', 'comma')
 
-  def parse(self, argument):
+  def parse(self, argument: Union[Text, List[Text]]) -> List[Text]:
     """Parses argument as comma-separated list of strings."""
     if isinstance(argument, list):
       return argument
@@ -574,7 +579,9 @@ class ListParser(BaseListParser):
         raise ValueError('Unable to parse the value %r as a %s: %s'
                          % (argument, self.flag_type(), e))
 
-  def _custom_xml_dom_elements(self, doc):
+  def _custom_xml_dom_elements(
+      self, doc: minidom.Document
+  ) -> List[minidom.Element]:
     elements = super(ListParser, self)._custom_xml_dom_elements(doc)
     elements.append(_helpers.create_xml_dom_element(
         doc, 'list_separator', repr(',')))
@@ -584,7 +591,7 @@ class ListParser(BaseListParser):
 class WhitespaceSeparatedListParser(BaseListParser):
   """Parser for a whitespace-separated list of strings."""
 
-  def __init__(self, comma_compat=False):
+  def __init__(self, comma_compat: bool = False) -> None:
     """Initializer.
 
     Args:
@@ -596,7 +603,7 @@ class WhitespaceSeparatedListParser(BaseListParser):
     name = 'whitespace or comma' if self._comma_compat else 'whitespace'
     super(WhitespaceSeparatedListParser, self).__init__(None, name)
 
-  def parse(self, argument):
+  def parse(self, argument: Union[Text, List[Text]]) -> List[Text]:
     """Parses argument as whitespace-separated list of strings.
 
     It also parses argument as comma-separated list of strings if requested.
@@ -616,7 +623,9 @@ class WhitespaceSeparatedListParser(BaseListParser):
         argument = argument.replace(',', ' ')
       return argument.split()
 
-  def _custom_xml_dom_elements(self, doc):
+  def _custom_xml_dom_elements(
+      self, doc: minidom.Document
+  ) -> List[minidom.Element]:
     elements = super(WhitespaceSeparatedListParser, self
                     )._custom_xml_dom_elements(doc)
     separators = list(string.whitespace)

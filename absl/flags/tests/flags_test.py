@@ -302,7 +302,11 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_integer('l', 0x7fffffff00000000, 'how long to be')
     flags.DEFINE_list('args', 'v=1,"vmodule=a=0,b=2"', 'a list of arguments')
     flags.DEFINE_list('letters', 'a,b,c', 'a list of letters')
-    flags.DEFINE_list('numbers', [1, 2, 3], 'a list of numbers')
+    flags.DEFINE_list(
+        'list_default_list',
+        ['a', 'b', 'c'],
+        'with default being a list of strings',
+    )
     flags.DEFINE_enum('kwery', None, ['who', 'what', 'Why', 'where', 'when'],
                       '?')
     flags.DEFINE_enum(
@@ -346,7 +350,7 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(FLAGS.l, 0x7fffffff00000000)
     self.assertEqual(FLAGS.args, ['v=1', 'vmodule=a=0,b=2'])
     self.assertEqual(FLAGS.letters, ['a', 'b', 'c'])
-    self.assertEqual(FLAGS.numbers, [1, 2, 3])
+    self.assertEqual(FLAGS.list_default_list, ['a', 'b', 'c'])
     self.assertIsNone(FLAGS.kwery)
     self.assertIsNone(FLAGS.sense)
     self.assertIsNone(FLAGS.cases)
@@ -364,7 +368,7 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(flag_values['l'], 0x7fffffff00000000)
     self.assertEqual(flag_values['args'], ['v=1', 'vmodule=a=0,b=2'])
     self.assertEqual(flag_values['letters'], ['a', 'b', 'c'])
-    self.assertEqual(flag_values['numbers'], [1, 2, 3])
+    self.assertEqual(flag_values['list_default_list'], ['a', 'b', 'c'])
     self.assertIsNone(flag_values['kwery'])
     self.assertIsNone(flag_values['sense'])
     self.assertIsNone(flag_values['cases'])
@@ -382,7 +386,7 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(FLAGS['l'].default_as_str, "'9223372032559808512'")
     self.assertEqual(FLAGS['args'].default_as_str, '\'v=1,"vmodule=a=0,b=2"\'')
     self.assertEqual(FLAGS['letters'].default_as_str, "'a,b,c'")
-    self.assertEqual(FLAGS['numbers'].default_as_str, "'1,2,3'")
+    self.assertEqual(FLAGS['list_default_list'].default_as_str, "'a,b,c'")
 
     # Verify that the iterator for flags yields all the keys
     keys = list(FLAGS)
@@ -424,7 +428,7 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertIn('l', FLAGS)
     self.assertIn('args', FLAGS)
     self.assertIn('letters', FLAGS)
-    self.assertIn('numbers', FLAGS)
+    self.assertIn('list_default_list', FLAGS)
 
     # __contains__
     self.assertIn('name', FLAGS)
@@ -787,67 +791,70 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(FLAGS.get_flag_value('repeat', None), 3)
     self.assertEqual(FLAGS.get_flag_value('name', None), 'giants')
     self.assertEqual(FLAGS.get_flag_value('debug', None), 0)
-    self.assertListEqual([
-        '--alsologtostderr',
-        "--args ['v=1', 'vmodule=a=0,b=2']",
-        '--blah None',
-        '--cases None',
-        '--decimal 666',
-        '--float 3.14',
-        '--funny None',
-        '--hexadecimal 1638',
-        '--kwery None',
-        '--l 9223372032559808512',
-        "--letters ['a', 'b', 'c']",
-        '--logger_levels {}',
-        "--m ['str1', 'str2']",
-        "--m_str ['str1', 'str2']",
-        '--name giants',
-        '--no?',
-        '--nodebug',
-        '--noexec',
-        '--nohelp',
-        '--nohelpfull',
-        '--nohelpshort',
-        '--nohelpxml',
-        '--nologtostderr',
-        '--noonly_check_args',
-        '--nopdb_post_mortem',
-        '--noq',
-        '--norun_with_pdb',
-        '--norun_with_profiling',
-        '--notest0',
-        '--notestget2',
-        '--notestget3',
-        '--notestnone',
-        '--numbers [1, 2, 3]',
-        '--octal 438',
-        '--only_once singlevalue',
-        '--pdb False',
-        '--profile_file None',
-        '--quack',
-        '--repeat 3',
-        "--s ['sing1']",
-        "--s_str ['sing1']",
-        '--sense None',
-        '--showprefixforinfo',
-        '--stderrthreshold fatal',
-        '--test1',
-        '--test_random_seed 301',
-        '--test_randomize_ordering_seed ',
-        '--testcomma_list []',
-        '--testget1',
-        '--testget4 None',
-        '--testspace_list []',
-        '--testspace_or_comma_list []',
-        '--tmod_baz_x',
-        '--universe ptolemaic',
-        '--use_cprofile_for_profiling',
-        '--v -1',
-        '--verbosity -1',
-        '--x 10',
-        '--xml_output_file ',
-    ], args_list())
+    self.assertListEqual(
+        [
+            '--alsologtostderr',
+            "--args ['v=1', 'vmodule=a=0,b=2']",
+            '--blah None',
+            '--cases None',
+            '--decimal 666',
+            '--float 3.14',
+            '--funny None',
+            '--hexadecimal 1638',
+            '--kwery None',
+            '--l 9223372032559808512',
+            "--letters ['a', 'b', 'c']",
+            "--list_default_list ['a', 'b', 'c']",
+            '--logger_levels {}',
+            "--m ['str1', 'str2']",
+            "--m_str ['str1', 'str2']",
+            '--name giants',
+            '--no?',
+            '--nodebug',
+            '--noexec',
+            '--nohelp',
+            '--nohelpfull',
+            '--nohelpshort',
+            '--nohelpxml',
+            '--nologtostderr',
+            '--noonly_check_args',
+            '--nopdb_post_mortem',
+            '--noq',
+            '--norun_with_pdb',
+            '--norun_with_profiling',
+            '--notest0',
+            '--notestget2',
+            '--notestget3',
+            '--notestnone',
+            '--octal 438',
+            '--only_once singlevalue',
+            '--pdb False',
+            '--profile_file None',
+            '--quack',
+            '--repeat 3',
+            "--s ['sing1']",
+            "--s_str ['sing1']",
+            '--sense None',
+            '--showprefixforinfo',
+            '--stderrthreshold fatal',
+            '--test1',
+            '--test_random_seed 301',
+            '--test_randomize_ordering_seed ',
+            '--testcomma_list []',
+            '--testget1',
+            '--testget4 None',
+            '--testspace_list []',
+            '--testspace_or_comma_list []',
+            '--tmod_baz_x',
+            '--universe ptolemaic',
+            '--use_cprofile_for_profiling',
+            '--v -1',
+            '--verbosity -1',
+            '--x 10',
+            '--xml_output_file ',
+        ],
+        args_list(),
+    )
 
     argv = ('./program', '--debug', '--m_str=upd1', '-s', 'upd2')
     FLAGS(argv)
@@ -857,67 +864,70 @@ class FlagsUnitTest(absltest.TestCase):
 
     # items appended to existing non-default value lists for --m/--m_str
     # new value overwrites default value (not appended to it) for --s/--s_str
-    self.assertListEqual([
-        '--alsologtostderr',
-        "--args ['v=1', 'vmodule=a=0,b=2']",
-        '--blah None',
-        '--cases None',
-        '--debug',
-        '--decimal 666',
-        '--float 3.14',
-        '--funny None',
-        '--hexadecimal 1638',
-        '--kwery None',
-        '--l 9223372032559808512',
-        "--letters ['a', 'b', 'c']",
-        '--logger_levels {}',
-        "--m ['str1', 'str2', 'upd1']",
-        "--m_str ['str1', 'str2', 'upd1']",
-        '--name giants',
-        '--no?',
-        '--noexec',
-        '--nohelp',
-        '--nohelpfull',
-        '--nohelpshort',
-        '--nohelpxml',
-        '--nologtostderr',
-        '--noonly_check_args',
-        '--nopdb_post_mortem',
-        '--noq',
-        '--norun_with_pdb',
-        '--norun_with_profiling',
-        '--notest0',
-        '--notestget2',
-        '--notestget3',
-        '--notestnone',
-        '--numbers [1, 2, 3]',
-        '--octal 438',
-        '--only_once singlevalue',
-        '--pdb False',
-        '--profile_file None',
-        '--quack',
-        '--repeat 3',
-        "--s ['sing1', 'upd2']",
-        "--s_str ['sing1', 'upd2']",
-        '--sense None',
-        '--showprefixforinfo',
-        '--stderrthreshold fatal',
-        '--test1',
-        '--test_random_seed 301',
-        '--test_randomize_ordering_seed ',
-        '--testcomma_list []',
-        '--testget1',
-        '--testget4 None',
-        '--testspace_list []',
-        '--testspace_or_comma_list []',
-        '--tmod_baz_x',
-        '--universe ptolemaic',
-        '--use_cprofile_for_profiling',
-        '--v -1',
-        '--verbosity -1',
-        '--x 10',
-        '--xml_output_file ',
-    ], args_list())
+    self.assertListEqual(
+        [
+            '--alsologtostderr',
+            "--args ['v=1', 'vmodule=a=0,b=2']",
+            '--blah None',
+            '--cases None',
+            '--debug',
+            '--decimal 666',
+            '--float 3.14',
+            '--funny None',
+            '--hexadecimal 1638',
+            '--kwery None',
+            '--l 9223372032559808512',
+            "--letters ['a', 'b', 'c']",
+            "--list_default_list ['a', 'b', 'c']",
+            '--logger_levels {}',
+            "--m ['str1', 'str2', 'upd1']",
+            "--m_str ['str1', 'str2', 'upd1']",
+            '--name giants',
+            '--no?',
+            '--noexec',
+            '--nohelp',
+            '--nohelpfull',
+            '--nohelpshort',
+            '--nohelpxml',
+            '--nologtostderr',
+            '--noonly_check_args',
+            '--nopdb_post_mortem',
+            '--noq',
+            '--norun_with_pdb',
+            '--norun_with_profiling',
+            '--notest0',
+            '--notestget2',
+            '--notestget3',
+            '--notestnone',
+            '--octal 438',
+            '--only_once singlevalue',
+            '--pdb False',
+            '--profile_file None',
+            '--quack',
+            '--repeat 3',
+            "--s ['sing1', 'upd2']",
+            "--s_str ['sing1', 'upd2']",
+            '--sense None',
+            '--showprefixforinfo',
+            '--stderrthreshold fatal',
+            '--test1',
+            '--test_random_seed 301',
+            '--test_randomize_ordering_seed ',
+            '--testcomma_list []',
+            '--testget1',
+            '--testget4 None',
+            '--testspace_list []',
+            '--testspace_or_comma_list []',
+            '--tmod_baz_x',
+            '--universe ptolemaic',
+            '--use_cprofile_for_profiling',
+            '--v -1',
+            '--verbosity -1',
+            '--x 10',
+            '--xml_output_file ',
+        ],
+        args_list(),
+    )
 
     ####################################
     # Test all kind of error conditions.
@@ -993,7 +1003,7 @@ class FlagsUnitTest(absltest.TestCase):
     # to be raised.
     try:
       sys.modules.pop('absl.flags.tests.module_baz')
-      import absl.flags.tests.module_baz
+      import absl.flags.tests.module_baz  # pylint: disable=g-import-not-at-top
       del absl
     except flags.DuplicateFlagError:
       raise AssertionError('Module reimport caused flag duplication error')
@@ -1236,6 +1246,9 @@ class FlagsUnitTest(absltest.TestCase):
   --letters: a list of letters
     (default: 'a,b,c')
     (a comma separated list)
+  --list_default_list: with default being a list of strings
+    (default: 'a,b,c')
+    (a comma separated list)
   -m,--m_str: string option that can occur multiple times;
     repeat this option to specify a list of values
     (default: "['def1', 'def2']")
@@ -1243,9 +1256,6 @@ class FlagsUnitTest(absltest.TestCase):
     (default: 'Bob')
   --[no]noexec: boolean flag with no as prefix
     (default: 'true')
-  --numbers: a list of numbers
-    (default: '1,2,3')
-    (a comma separated list)
   --octal: using octals
     (default: '438')
     (an integer)
@@ -1290,16 +1300,16 @@ class FlagsUnitTest(absltest.TestCase):
   def test_string_flag_with_wrong_type(self):
     fv = flags.FlagValues()
     with self.assertRaises(flags.IllegalFlagValueError):
-      flags.DEFINE_string('name', False, 'help', flag_values=fv)
+      flags.DEFINE_string('name', False, 'help', flag_values=fv)  # type: ignore
     with self.assertRaises(flags.IllegalFlagValueError):
-      flags.DEFINE_string('name2', 0, 'help', flag_values=fv)
+      flags.DEFINE_string('name2', 0, 'help', flag_values=fv)  # type: ignore
 
   def test_integer_flag_with_wrong_type(self):
     fv = flags.FlagValues()
     with self.assertRaises(flags.IllegalFlagValueError):
-      flags.DEFINE_integer('name', 1e2, 'help', flag_values=fv)
+      flags.DEFINE_integer('name', 1e2, 'help', flag_values=fv)  # type: ignore
     with self.assertRaises(flags.IllegalFlagValueError):
-      flags.DEFINE_integer('name', [], 'help', flag_values=fv)
+      flags.DEFINE_integer('name', [], 'help', flag_values=fv)  # type: ignore
     with self.assertRaises(flags.IllegalFlagValueError):
       flags.DEFINE_integer('name', False, 'help', flag_values=fv)
 
@@ -1312,6 +1322,16 @@ class FlagsUnitTest(absltest.TestCase):
     fv = flags.FlagValues()
     with self.assertRaises(ValueError):
       flags.DEFINE_enum('fruit', None, [], 'help', flag_values=fv)
+
+  def test_enum_flag_with_str_values(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_enum('fruit', None, 'option', 'help', flag_values=fv)  # type: ignore
+
+  def test_multi_enum_flag_with_str_values(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_multi_enum('fruit', None, 'option', 'help', flag_values=fv)  # type: ignore
 
   def test_define_enum_class_flag(self):
     fv = flags.FlagValues()
@@ -1351,13 +1371,14 @@ class FlagsUnitTest(absltest.TestCase):
   def test_enum_class_flag_with_wrong_default_value_type(self):
     fv = flags.FlagValues()
     with self.assertRaises(_exceptions.IllegalFlagValueError):
-      flags.DEFINE_enum_class('fruit', 1, Fruit, 'help', flag_values=fv)
+      flags.DEFINE_enum_class('fruit', 1, Fruit, 'help', flag_values=fv)  # type: ignore
 
   def test_enum_class_flag_requires_enum_class(self):
     fv = flags.FlagValues()
     with self.assertRaises(TypeError):
-      flags.DEFINE_enum_class(
-          'fruit', None, ['apple', 'orange'], 'help', flag_values=fv)
+      flags.DEFINE_enum_class(  # type: ignore
+          'fruit', None, ['apple', 'orange'], 'help', flag_values=fv
+      )
 
   def test_enum_class_flag_requires_non_empty_enum_class(self):
     fv = flags.FlagValues()
@@ -2491,7 +2512,7 @@ class NonGlobalFlagsTest(absltest.TestCase):
   def test_flag_definition_via_setitem(self):
     with self.assertRaises(flags.IllegalFlagValueError):
       flag_values = flags.FlagValues()
-      flag_values['flag_name'] = 'flag_value'
+      flag_values['flag_name'] = 'flag_value'  # type: ignore
 
 
 class SetDefaultTest(absltest.TestCase):
@@ -2545,7 +2566,7 @@ class SetDefaultTest(absltest.TestCase):
     self.flag_values.mark_as_parsed()
 
     with self.assertRaises(flags.IllegalFlagValueError):
-      flags.set_default(int_holder, 'a')
+      flags.set_default(int_holder, 'a')  # type: ignore
 
   def test_failure_on_type_protected_none_default(self):
     int_holder = flags.DEFINE_integer(
@@ -2553,7 +2574,7 @@ class SetDefaultTest(absltest.TestCase):
 
     self.flag_values.mark_as_parsed()
 
-    flags.set_default(int_holder, None)  # NOTE: should be a type failure
+    flags.set_default(int_holder, None)  # type: ignore
 
     with self.assertRaises(flags.IllegalFlagValueError):
       _ = int_holder.value  # Will also fail on later access.
