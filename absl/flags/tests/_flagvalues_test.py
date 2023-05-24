@@ -323,7 +323,7 @@ class FlagValuesTest(absltest.TestCase):
       _defines.DEFINE_boolean('', 0, '')
 
     with self.assertRaises(_exceptions.Error):
-      _defines.DEFINE_boolean(1, 0, '')
+      _defines.DEFINE_boolean(1, 0, '')  # type: ignore
 
   def test_len(self):
     fv = _flagvalues.FlagValues()
@@ -511,11 +511,9 @@ absl.flags.tests.module_foo:
   def test_invalid_argv(self):
     fv = _flagvalues.FlagValues()
     with self.assertRaises(TypeError):
-      fv('./program')
+      fv('./program')  # type: ignore
     with self.assertRaises(TypeError):
-      fv(b'./program')
-    with self.assertRaises(TypeError):
-      fv(u'./program')
+      fv(b'./program')  # type: ignore
 
   def test_flags_dir(self):
     flag_values = _flagvalues.FlagValues()

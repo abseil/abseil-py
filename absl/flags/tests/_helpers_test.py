@@ -73,8 +73,9 @@ class FlagSuggestionTest(absltest.TestCase):
   def test_suggestions_are_sorted(self):
     sorted_flags = sorted(['aab', 'aac', 'aad'])
     misspelt_flag = 'aaa'
-    suggestions = _helpers.get_flag_suggestions(misspelt_flag,
-                                                reversed(sorted_flags))
+    suggestions = _helpers.get_flag_suggestions(
+        misspelt_flag, list(reversed(sorted_flags))
+    )
     self.assertEqual(sorted_flags, suggestions)
 
 

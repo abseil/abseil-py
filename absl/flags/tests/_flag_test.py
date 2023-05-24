@@ -142,7 +142,7 @@ class EnumClassFlagTest(parameterized.TestCase):
 
   def test_requires_enum(self):
     with self.assertRaises(TypeError):
-      _flag.EnumClassFlag('fruit', None, 'help', ['apple', 'orange'])
+      _flag.EnumClassFlag('fruit', None, 'help', ['apple', 'orange'])  # type: ignore
 
   def test_requires_non_empty_enum_class(self):
     with self.assertRaises(ValueError):
@@ -186,7 +186,7 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
 
   def test_requires_enum(self):
     with self.assertRaises(TypeError):
-      _flag.MultiEnumClassFlag('fruit', None, 'help', ['apple', 'orange'])
+      _flag.MultiEnumClassFlag('fruit', None, 'help', ['apple', 'orange'])  # type: ignore
 
   def test_requires_non_empty_enum_class(self):
     with self.assertRaises(ValueError):

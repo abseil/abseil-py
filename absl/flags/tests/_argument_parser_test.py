@@ -33,12 +33,12 @@ class ArgumentParserTest(absltest.TestCase):
   def test_parse_wrong_type(self):
     parser = _argument_parser.ArgumentParser()
     with self.assertRaises(TypeError):
-      parser.parse(0)
+      parser.parse(0)  # type: ignore
 
     if bytes is not str:
       # In PY3, it does not accept bytes.
       with self.assertRaises(TypeError):
-        parser.parse(b'')
+        parser.parse(b'')  # type: ignore
 
 
 class BooleanParserTest(absltest.TestCase):
@@ -49,7 +49,7 @@ class BooleanParserTest(absltest.TestCase):
 
   def test_parse_bytes(self):
     with self.assertRaises(TypeError):
-      self.parser.parse(b'true')
+      self.parser.parse(b'true')  # type: ignore
 
   def test_parse_str(self):
     self.assertTrue(self.parser.parse('true'))
@@ -59,7 +59,7 @@ class BooleanParserTest(absltest.TestCase):
 
   def test_parse_wrong_type(self):
     with self.assertRaises(TypeError):
-      self.parser.parse(1.234)
+      self.parser.parse(1.234)  # type: ignore
 
   def test_parse_str_false(self):
     self.assertFalse(self.parser.parse('false'))
@@ -86,7 +86,7 @@ class FloatParserTest(absltest.TestCase):
 
   def test_parse_wrong_type(self):
     with self.assertRaises(TypeError):
-      self.parser.parse(False)
+      self.parser.parse(False)  # type: ignore
 
 
 class IntegerParserTest(absltest.TestCase):
@@ -99,9 +99,9 @@ class IntegerParserTest(absltest.TestCase):
 
   def test_parse_wrong_type(self):
     with self.assertRaises(TypeError):
-      self.parser.parse(1e2)
+      self.parser.parse(1e2)  # type: ignore
     with self.assertRaises(TypeError):
-      self.parser.parse(False)
+      self.parser.parse(False)  # type: ignore
 
 
 class EnumParserTest(absltest.TestCase):
@@ -139,7 +139,7 @@ class EnumClassParserTest(parameterized.TestCase):
 
   def test_requires_enum(self):
     with self.assertRaises(TypeError):
-      _argument_parser.EnumClassParser(['apple', 'banana'])
+      _argument_parser.EnumClassParser(['apple', 'banana'])  # type: ignore
 
   def test_requires_non_empty_enum_class(self):
     with self.assertRaises(ValueError):
