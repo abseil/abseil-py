@@ -487,6 +487,40 @@ def log_every_n(level, msg, n, *args):
   log_if(level, msg, not (count % n), *args)
 
 
+def log_once(level, msg, *args):
+  """Logs ``msg % args`` at lebel 'lebel' once.
+
+  Logs only the first call.
+  Not threadsafe.
+
+  Args:
+    level: int, the absl logging level at which to log.
+    msg: str, the message to be logged.
+    *args: The args to be substituted into the msg.
+  """
+  log_first_n(level, msg, 1, *args)
+
+
+def error_once(msg, *args):
+  """Logs an error message once."""
+  log_once(ERROR, msg, *args)
+
+
+def warning_once(msg, *args):
+  """Logs a warning message once."""
+  log_once(WARNING, msg, *args)
+
+
+def info_once(msg, *args):
+  """Logs an info message once."""
+  log_once(INFO, msg, *args)
+
+
+def debug_once(msg, *args):
+  """Logs a debug message once."""
+  log_once(DEBUG, msg, *args)
+
+
 # Keeps track of the last log time of the given token.
 # Note: must be a dict since set/get is atomic in CPython.
 # Note: entries are never released as their number is expected to be low.
