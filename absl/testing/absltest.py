@@ -56,7 +56,7 @@ from absl.testing import xml_reporter
 try:
   # pylint: disable=unused-import
   import typing
-  from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Text, TextIO, Tuple, Type, Union
+  from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, NoReturn, Optional, Sequence, Text, TextIO, Tuple, Type, Union
   # pylint: enable=unused-import
 except ImportError:
   pass
@@ -1826,7 +1826,7 @@ class TestCase(unittest.TestCase):
 
     return super(TestCase, self)._getAssertEqualityFunc(first, second)
 
-  def fail(self, msg=None, prefix=None):
+  def fail(self, msg=None, prefix=None) -> NoReturn:
     """Fail immediately with the given message, optionally prefixed."""
     return super(TestCase, self).fail(self._formatMessage(prefix, msg))
 
