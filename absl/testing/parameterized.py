@@ -159,8 +159,8 @@ inside a tuple::
         self.assertEqual(0, sum(arg))
 
 
-Cartesian product of Parameter Values as Parametrized Test Cases
-================================================================
+Cartesian product of Parameter Values as Parameterized Test Cases
+=================================================================
 
 If required to test method over a cartesian product of parameters,
 `parameterized.product` may be used to facilitate generation of parameters
