@@ -40,6 +40,8 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import typing
+from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, NoReturn, Optional, Sequence, Text, TextIO, Tuple, Type, Union
 import unittest
 from unittest import mock  # pylint: disable=unused-import Allow absltest.mock.
 from urllib import parse
@@ -50,25 +52,15 @@ from absl import logging
 from absl.testing import _pretty_print_reporter
 from absl.testing import xml_reporter
 
-# pylint: disable=g-import-not-at-top
-# Make typing an optional import to avoid it being a required dependency
-# in Python 2. Type checkers will still understand the imports.
-try:
-  # pylint: disable=unused-import
-  import typing
-  from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, NoReturn, Optional, Sequence, Text, TextIO, Tuple, Type, Union
-  # pylint: enable=unused-import
-except ImportError:
-  pass
-else:
-  # Use an if-type-checking block to prevent leakage of type-checking only
-  # symbols. We don't want people relying on these at runtime.
-  if typing.TYPE_CHECKING:
-    # Unbounded TypeVar for general usage
-    _T = typing.TypeVar('_T')
+# Use an if-type-checking block to prevent leakage of type-checking only
+# symbols. We don't want people relying on these at runtime.
+if typing.TYPE_CHECKING:
+  # Unbounded TypeVar for general usage
+  _T = typing.TypeVar('_T')
 
-    import unittest.case
-    _OutcomeType = unittest.case._Outcome  # pytype: disable=module-attr
+  import unittest.case  # pylint: disable=g-import-not-at-top,g-bad-import-order
+
+  _OutcomeType = unittest.case._Outcome  # pytype: disable=module-attr
 
 
 # pylint: enable=g-import-not-at-top
