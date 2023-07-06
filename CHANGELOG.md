@@ -16,9 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     result, on Python 3.11+, the private `_cls_exit_stack` attribute is not
     defined on `absltest.TestCase` and `_exit_stack` attribute is not defined on
     its instances.
-*   `AbslTest.assertSameStructure()` now uses the test case's equality functions
-    (registered with `TestCase.addTypeEqualityFunc()`) for comparing leaves of
-    the structure.
+*   (testing) `absltest.TestCase.assertSameStructure()` now uses the test case's
+    equality functions (registered with `TestCase.addTypeEqualityFunc()`) for
+    comparing leaves of the structure.
+*   (testing) `abslTest.TestCase.fail()` now names its arguments
+    `(self, msg=None, user_msg=None)`, and not `(self, msg=None, prefix=None)`,
+    better reflecting the behavior and usage of the two message arguments.
 *   `DEFINE_enum`, `DEFINE_multi_enum`, and `EnumParser` now raise errors when
     `enum_values` is provided as a single string value. Additionally,
     `EnumParser.enum_values` is now stored as a list copy of the provided

@@ -1818,9 +1818,9 @@ class TestCase(unittest.TestCase):
 
     return super(TestCase, self)._getAssertEqualityFunc(first, second)
 
-  def fail(self, msg=None, prefix=None) -> NoReturn:
-    """Fail immediately with the given message, optionally prefixed."""
-    return super(TestCase, self).fail(self._formatMessage(prefix, msg))
+  def fail(self, msg=None, user_msg=None) -> NoReturn:
+    """Fail immediately with the given standard message and user message."""
+    return super(TestCase, self).fail(self._formatMessage(user_msg, msg))
 
 
 def _sorted_list_difference(expected, actual):
