@@ -217,6 +217,7 @@ import itertools
 import re
 import types
 import unittest
+import warnings
 
 from absl.testing import absltest
 
@@ -697,10 +698,27 @@ def CoopTestCase(other_base_class):  # pylint: disable=invalid-name
   Returns:
     A new class object.
   """
-  metaclass = type(
-      'CoopMetaclass',
-      (other_base_class.__metaclass__,
-       TestGeneratorMetaclass), {})
-  return metaclass(
-      'CoopTestCase',
-      (other_base_class, TestCase), {})
+  # If the other base class has a metaclass of 'type' then trying to combine
+  # the metaclasses will result in an MRO error. So simply combine them and
+  # return.
+  if type(other_base_class) == type:  # pylint: disable=unidiomatic-typecheck
+    warnings.warn(
+        'CoopTestCase is only necessary when combining with a class that uses'
+        ' a metaclass. Use multiple inheritance like this instead: class'
+        f' ExampleTest(paramaterized.TestCase, {other_base_class.__name__}):',
+        stacklevel=2,
+    )
+
+    class CoopTestCaseBase(other_base_class, TestCase):
+      pass
+
+    return CoopTestCaseBase
+  else:
+
+    class CoopMetaclass(type(other_base_class), TestGeneratorMetaclass):  # pylint: disable=unused-variable
+      pass
+
+    class CoopTestCaseBase(other_base_class, TestCase, metaclass=CoopMetaclass):
+      pass
+
+    return CoopTestCaseBase
