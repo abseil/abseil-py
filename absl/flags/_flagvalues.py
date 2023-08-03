@@ -810,8 +810,10 @@ class FlagValues:
             # in format of "--flag value".
             get_value()
           logging.error(
-              'Flag "%s" is retired and should no longer '
-              'be specified. See go/totw/90.', name)
+              'Flag "%s" is retired and should no longer be specified. See '
+              'https://abseil.io/tips/90.',
+              name,
+          )
           continue
 
       if flag is not None:
