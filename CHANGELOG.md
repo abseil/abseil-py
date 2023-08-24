@@ -26,11 +26,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     `enum_values` is provided as a single string value. Additionally,
     `EnumParser.enum_values` is now stored as a list copy of the provided
     `enum_values` parameter.
-*   (tesing) Updated `paramaterized.CoopTestCase()` to use Python 3 metaclass
+*   (testing) Updated `paramaterized.CoopTestCase()` to use Python 3 metaclass
     idioms. Most uses of this function continued working during the Python 3
     migration still worked because a Python 2 compatibility `__metaclass__`
     variables also existed. Now pure Python 3 base classes without backwards
     compatibility will work as intended.
+*   `logging.exception` can now take `exc_info` as argument, with default value
+    `True`. Prior to this change setting `exc_info` would raise `KeyError`, this
+    change fixes this behaviour.
 
 ## 1.4.0 (2023-01-11)
 

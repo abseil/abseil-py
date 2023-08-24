@@ -819,6 +819,11 @@ class LoggingTest(absltest.TestCase):
     # Just verify that this doesn't raise a TypeError.
     logging.exception('%(test)s', {'test': 'Hello world!'})
 
+  def test_exception_with_exc_info(self):
+    # Just verify that this doesn't raise a KeyeError.
+    logging.exception('exc_info=True', exc_info=True)
+    logging.exception('exc_info=False', exc_info=False)
+
   def test_logging_levels(self):
     old_level = logging.get_verbosity()
 
