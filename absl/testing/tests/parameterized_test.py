@@ -998,6 +998,35 @@ class ParameterizedTestsTest(absltest.TestCase):
     )
 
 
+# IsolatedAsyncioTestCase is only available in Python 3.8+.
+if sys.version_info[:2] >= (3, 8):
+
+  async def mult(x: float, y: float) -> float:
+    return x * y
+
+  class AsyncTest(unittest.IsolatedAsyncioTestCase, parameterized.TestCase):
+
+    def setUp(self):
+      super().setUp()
+      self.verify_ran = False
+
+    def tearDown(self):
+      super().tearDown()
+
+      # We need the additional check here because originally the test function
+      # would run, but a coroutine results from the execution and is never
+      # awaited, so it looked like a successful test run when in fact the
+      # internal test logic never executed.  If you remove the check for
+      # coroutine and run_until_complete, then set the parameters to fail they
+      # never will.
+      self.assertTrue(self.verify_ran)
+
+    @parameterized.parameters((1, 2, 2), (2, 2, 4), (3, 2, 6))
+    async def test_multiply_expected_matches_actual(self, x, y, expected):
+      self.assertEqual(await mult(x, y), expected)
+      self.verify_ran = True
+
+
 def _decorate_with_side_effects(func, self):
   self.sideeffect = True
   func(self)
