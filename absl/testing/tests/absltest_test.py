@@ -1701,9 +1701,10 @@ class EqualityAssertionTest(absltest.TestCase):
     self._perform_apple_apple_orange_checks(same_a, same_b, different)
 
 
-class AssertSequenceStartsWithTest(absltest.TestCase):
+class AssertSequenceStartsWithTest(parameterized.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.a = [5, 'foo', {'c': 'd'}, None]
 
   def test_empty_sequence_starts_with_empty_prefix(self):
@@ -1745,10 +1746,15 @@ class AssertSequenceStartsWithTest(absltest.TestCase):
     with self.assertRaisesRegex(AssertionError, msg):
       self.assertSequenceStartsWith(['foo', {'c': 'd'}], self.a)
 
-  def test_raise_if_types_ar_not_supported(self):
-    with self.assertRaisesRegex(TypeError, 'unhashable type'):
-      self.assertSequenceStartsWith({'a': 1, 2: 'b'},
-                                    {'a': 1, 2: 'b', 'c': '3'})
+  @parameterized.named_parameters(
+      ('dict', {'a': 1, 2: 'b'}, {'a': 1, 2: 'b', 'c': '3'}),
+      ('set', {1, 2}, {1, 2, 3}),
+  )
+  def test_raise_if_set_or_dict(self, prefix, whole):
+    with self.assertRaisesRegex(
+        AssertionError, 'For whole: Mapping or Set objects are not supported'
+    ):
+      self.assertSequenceStartsWith(prefix, whole)
 
 
 class TestAssertEmpty(absltest.TestCase):

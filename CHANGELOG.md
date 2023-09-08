@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 *   `absl-py` no longer supports Python 3.6. It has reached end-of-life for more
     than a year now.
+*   (logging) `logging.exception` can now take `exc_info` as argument, with
+    default value `True`. Prior to this change setting `exc_info` would raise
+    `KeyError`, this change fixes this behaviour.
 *   (testing) For Python 3.11+, the calls to `absltest.TestCase.enter_context`
     are forwarded to `unittest.TestCase.enterContext` (when called via instance)
     or `unittest.TestCase.enterClassContext` (when called via class) now. As a
@@ -31,9 +34,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     migration still worked because a Python 2 compatibility `__metaclass__`
     variables also existed. Now pure Python 3 base classes without backwards
     compatibility will work as intended.
-*   `logging.exception` can now take `exc_info` as argument, with default value
-    `True`. Prior to this change setting `exc_info` would raise `KeyError`, this
-    change fixes this behaviour.
+*   (testing) `absltest.TestCase.assertSequenceStartsWith` now explicitly fail
+    when passed a `Mapping` or `Set` object as the `whole` argument.
 
 ## 1.4.0 (2023-01-11)
 

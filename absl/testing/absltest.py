@@ -929,6 +929,12 @@ class TestCase(unittest.TestCase):
       prefix = [prefix]
       prefix_len = 1
 
+    if isinstance(whole, abc.Mapping) or isinstance(whole, abc.Set):
+      self.fail(
+          'For whole: Mapping or Set objects are not supported, found type: %s'
+          % type(whole),
+          msg,
+      )
     try:
       whole_len = len(whole)
     except (TypeError, NotImplementedError):
