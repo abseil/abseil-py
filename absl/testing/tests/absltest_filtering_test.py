@@ -156,7 +156,12 @@ class TestFilteringTest(absltest.TestCase):
   def test_not_found_filters_py37(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered('NotExistedClass.not_existed_method',
                                         use_env_variable, use_app_run)
-    self.assertEqual(0, exit_code)
+    if not use_env_variable and sys.version_info[:2] >= (3, 12):
+      # When test filter is requested with the unittest `-k` flag, absltest
+      # respect unittest to fail when no tests run on Python 3.12+.
+      self.assertEqual(5, exit_code)
+    else:
+      self.assertEqual(0, exit_code)
     self.assertIn('Ran 0 tests', out)
 
   @absltest.skipIf(

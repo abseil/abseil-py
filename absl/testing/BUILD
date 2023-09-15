@@ -163,12 +163,16 @@ py_test(
     name = "tests/absltest_sharding_test",
     size = "small",
     srcs = ["tests/absltest_sharding_test.py"],
-    data = [":tests/absltest_sharding_test_helper"],
+    data = [
+        ":tests/absltest_sharding_test_helper",
+        ":tests/absltest_sharding_test_helper_no_tests",
+    ],
     python_version = "PY3",
     srcs_version = "PY3",
     deps = [
         ":_bazelize_command",
         ":absltest",
+        ":parameterized",
         ":tests/absltest_env",
     ],
 )
@@ -179,6 +183,13 @@ py_binary(
     srcs = ["tests/absltest_sharding_test_helper.py"],
     python_version = "PY3",
     srcs_version = "PY3",
+    deps = [":absltest"],
+)
+
+py_binary(
+    name = "tests/absltest_sharding_test_helper_no_tests",
+    testonly = 1,
+    srcs = ["tests/absltest_sharding_test_helper_no_tests.py"],
     deps = [":absltest"],
 )
 

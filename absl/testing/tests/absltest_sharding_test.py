@@ -16,16 +16,18 @@
 
 import os
 import subprocess
+import sys
 
 from absl.testing import _bazelize_command
 from absl.testing import absltest
+from absl.testing import parameterized
 from absl.testing.tests import absltest_env
 
 
 NUM_TEST_METHODS = 8  # Hard-coded, based on absltest_sharding_test_helper.py
 
 
-class TestShardingTest(absltest.TestCase):
+class TestShardingTest(parameterized.TestCase):
   """Integration tests: Runs a test binary with sharding.
 
   This is done by setting the sharding environment variables.
@@ -33,7 +35,6 @@ class TestShardingTest(absltest.TestCase):
 
   def setUp(self):
     super().setUp()
-    self._test_name = 'absl/testing/tests/absltest_sharding_test_helper'
     self._shard_file = None
 
   def tearDown(self):
@@ -41,20 +42,24 @@ class TestShardingTest(absltest.TestCase):
     if self._shard_file is not None and os.path.exists(self._shard_file):
       os.unlink(self._shard_file)
 
-  def _run_sharded(self,
-                   total_shards,
-                   shard_index,
-                   shard_file=None,
-                   additional_env=None):
+  def _run_sharded(
+      self,
+      total_shards,
+      shard_index,
+      shard_file=None,
+      additional_env=None,
+      helper_name='absltest_sharding_test_helper',
+  ):
     """Runs the py_test binary in a subprocess.
 
     Args:
       total_shards: int, the total number of shards.
       shard_index: int, the shard index.
-      shard_file: string, if not 'None', the path to the shard file.
-        This method asserts it is properly created.
+      shard_file: string, if not 'None', the path to the shard file. This method
+        asserts it is properly created.
       additional_env: Additional environment variables to be set for the py_test
         binary.
+      helper_name: The name of the helper binary.
 
     Returns:
       (stdout, exit_code) tuple of (string, int).
@@ -72,12 +77,14 @@ class TestShardingTest(absltest.TestCase):
       if os.path.exists(shard_file):
         os.unlink(shard_file)
 
+    helper = 'absl/testing/tests/' + helper_name
     proc = subprocess.Popen(
-        args=[_bazelize_command.get_executable_path(self._test_name)],
+        args=[_bazelize_command.get_executable_path(helper)],
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        universal_newlines=True)
+        universal_newlines=True,
+    )
     stdout = proc.communicate()[0]
 
     if shard_file:
@@ -140,7 +147,12 @@ class TestShardingTest(absltest.TestCase):
     self._assert_sharding_correctness(1)
 
   def test_with_ten_shards(self):
-    self._assert_sharding_correctness(10)
+    shards = 10
+    # This test relies on the shard count to be greater than the number of
+    # tests, to ensure that the non-zero shards won't fail even if no tests ran
+    # on Python 3.12+.
+    self.assertGreater(shards, NUM_TEST_METHODS)
+    self._assert_sharding_correctness(shards)
 
   def test_sharding_with_randomization(self):
     # If we're both sharding *and* randomizing, we need to confirm that we
@@ -155,6 +167,32 @@ class TestShardingTest(absltest.TestCase):
     first_tests, second_tests = tests_seen  # pylint: disable=unbalanced-tuple-unpacking
     self.assertEqual(set(first_tests), set(second_tests))
     self.assertNotEqual(first_tests, second_tests)
+
+  @parameterized.named_parameters(
+      ('total_1_index_0', 1, 0, None),
+      ('total_2_index_0', 2, 0, None),
+      # The 2nd shard (index=1) should not fail.
+      ('total_2_index_1', 2, 1, 0),
+  )
+  def test_no_tests_ran(
+      self, total_shards, shard_index, override_expected_exit_code
+  ):
+    if override_expected_exit_code is not None:
+      expected_exit_code = override_expected_exit_code
+    elif sys.version_info[:2] >= (3, 12):
+      expected_exit_code = 5
+    else:
+      expected_exit_code = 0
+    out, exit_code = self._run_sharded(
+        total_shards,
+        shard_index,
+        helper_name='absltest_sharding_test_helper_no_tests',
+    )
+    self.assertEqual(
+        expected_exit_code,
+        exit_code,
+        'Unexpected exit code, output:\n{}'.format(out),
+    )
 
 
 if __name__ == '__main__':
