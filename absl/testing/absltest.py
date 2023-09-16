@@ -2317,7 +2317,8 @@ def get_default_xml_output_filename():
         os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.xml')
 
 
-def _setup_filtering(argv: MutableSequence[str]) -> bool:
+def _setup_filtering(argv):
+  # type: (MutableSequence[Text]) -> None
   """Implements the bazel test filtering protocol.
 
   The following environment variable is used in this method:
@@ -2332,20 +2333,16 @@ def _setup_filtering(argv: MutableSequence[str]) -> bool:
 
   Args:
     argv: the argv to mutate in-place.
-
-  Returns:
-    Whether test filtering is requested.
   """
   test_filter = os.environ.get('TESTBRIDGE_TEST_ONLY')
   if argv is None or not test_filter:
-    return False
+    return
 
   filters = shlex.split(test_filter)
   if sys.version_info[:2] >= (3, 7):
     filters = ['-k=' + test_filter for test_filter in filters]
 
   argv[1:1] = filters
-  return True
 
 
 def _setup_test_runner_fail_fast(argv):
@@ -2372,9 +2369,8 @@ def _setup_test_runner_fail_fast(argv):
   argv[1:1] = ['--failfast']
 
 
-def _setup_sharding(
-    custom_loader: Optional[unittest.TestLoader] = None,
-) -> Tuple[unittest.TestLoader, Optional[int]]:
+def _setup_sharding(custom_loader=None):
+  # type: (Optional[unittest.TestLoader]) -> unittest.TestLoader
   """Implements the bazel sharding protocol.
 
   The following environment variables are used in this method:
@@ -2393,10 +2389,8 @@ def _setup_sharding(
     custom_loader: A TestLoader to be made sharded.
 
   Returns:
-    A tuple of ``(test_loader, shard_index)``. ``test_loader`` is for
-    shard-filtering or the standard test loader depending on the sharding
-    environment variables. ``shard_index`` is the shard index, or ``None`` when
-    sharding is not used.
+    The test loader for shard-filtering or the standard test loader, depending
+    on the sharding environment variables.
   """
 
   # It may be useful to write the shard file even if the other sharding
@@ -2414,7 +2408,7 @@ def _setup_sharding(
   base_loader = custom_loader or TestLoader()
   if 'TEST_TOTAL_SHARDS' not in os.environ:
     # Not using sharding, use the expected test loader.
-    return base_loader, None
+    return base_loader
 
   total_shards = int(os.environ['TEST_TOTAL_SHARDS'])
   shard_index = int(os.environ['TEST_SHARD_INDEX'])
@@ -2443,70 +2437,25 @@ def _setup_sharding(
     return [x for x in ordered_names if x in filtered_names]
 
   base_loader.getTestCaseNames = getShardedTestCaseNames
-  return base_loader, shard_index
+  return base_loader
 
 
-def _run_and_get_tests_result(
-    argv: MutableSequence[str],
-    args: Sequence[Any],
-    kwargs: MutableMapping[str, Any],
-    xml_test_runner_class: Type[unittest.TextTestRunner],
-) -> Tuple[unittest.TestResult, bool]:
-  """Same as run_tests, but it doesn't exit.
-
-  Args:
-    argv: sys.argv with the command-line flags removed from the front, i.e. the
-      argv with which :func:`app.run()<absl.app.run>` has called
-      ``__main__.main``. It is passed to
-      ``unittest.TestProgram.__init__(argv=)``, which does its own flag parsing.
-      It is ignored if kwargs contains an argv entry.
-    args: Positional arguments passed through to
-      ``unittest.TestProgram.__init__``.
-    kwargs: Keyword arguments passed through to
-      ``unittest.TestProgram.__init__``.
-    xml_test_runner_class: The type of the test runner class.
-
-  Returns:
-    A tuple of ``(test_result, fail_when_no_tests_ran)``.
-    ``fail_when_no_tests_ran`` indicates whether the test should fail when
-    no tests ran.
-  """
+# pylint: disable=line-too-long
+def _run_and_get_tests_result(argv, args, kwargs, xml_test_runner_class):
+  # type: (MutableSequence[Text], Sequence[Any], MutableMapping[Text, Any], Type) -> unittest.TestResult
+  # pylint: enable=line-too-long
+  """Same as run_tests, except it returns the result instead of exiting."""
 
   # The entry from kwargs overrides argv.
   argv = kwargs.pop('argv', argv)
 
-  if sys.version_info[:2] >= (3, 12):
-    # Python 3.12 unittest changed the behavior from PASS to FAIL in
-    # https://github.com/python/cpython/pull/102051. absltest follows this.
-    fail_when_no_tests_ran = True
-  else:
-    # Historically, absltest and unittest before Python 3.12 passes if no tests
-    # ran.
-    fail_when_no_tests_ran = False
-
   # Set up test filtering if requested in environment.
-  if _setup_filtering(argv):
-    # When test filtering is requested, ideally we also want to fail when no
-    # tests ran. However, the test filters are usually done when running bazel.
-    # When you run multiple targets, e.g. `bazel test //my_dir/...
-    # --test_filter=MyTest`, you don't necessarily want individual tests to fail
-    # because no tests match in that particular target.
-    # Due to this use case, we don't fail when test filtering is requested via
-    # the environment variable from bazel.
-    fail_when_no_tests_ran = False
-
+  _setup_filtering(argv)
   # Set up --failfast as requested in environment
   _setup_test_runner_fail_fast(argv)
 
   # Shard the (default or custom) loader if sharding is turned on.
-  kwargs['testLoader'], shard_index = _setup_sharding(
-      kwargs.get('testLoader', None)
-  )
-  if shard_index is not None and shard_index > 0:
-    # When sharding is requested, all the shards except the first one shall not
-    # fail when no tests ran. This happens when the shard count is greater than
-    # the test case count.
-    fail_when_no_tests_ran = False
+  kwargs['testLoader'] = _setup_sharding(kwargs.get('testLoader', None))
 
   # XML file name is based upon (sorted by priority):
   # --xml_output_file flag, XML_OUTPUT_FILE variable,
@@ -2584,13 +2533,9 @@ def _run_and_get_tests_result(
   # on argv, which is sys.argv without the command-line flags.
   kwargs['argv'] = argv
 
-  # Request unittest.TestProgram to not exit. The exit will be handled by
-  # `absltest.run_tests`.
-  kwargs['exit'] = False
-
   try:
     test_program = unittest.TestProgram(*args, **kwargs)
-    return test_program.result, fail_when_no_tests_ran
+    return test_program.result
   finally:
     if xml_buffer:
       try:
@@ -2600,11 +2545,9 @@ def _run_and_get_tests_result(
         xml_buffer.close()
 
 
-def run_tests(
-    argv: MutableSequence[Text],
-    args: Sequence[Any],
-    kwargs: MutableMapping[Text, Any],
-) -> None:
+def run_tests(argv, args, kwargs):  # pylint: disable=line-too-long
+  # type: (MutableSequence[Text], Sequence[Any], MutableMapping[Text, Any]) -> None
+  # pylint: enable=line-too-long
   """Executes a set of Python unit tests.
 
   Most users should call absltest.main() instead of run_tests.
@@ -2625,13 +2568,8 @@ def run_tests(
     kwargs: Keyword arguments passed through to
       ``unittest.TestProgram.__init__``.
   """
-  result, fail_when_no_tests_ran = _run_and_get_tests_result(
-      argv, args, kwargs, xml_reporter.TextAndXMLTestRunner
-  )
-  if fail_when_no_tests_ran and result.testsRun == 0:
-    # Python 3.12 unittest exits with 5 when no tests ran. The code comes from
-    # pytest which does the same thing.
-    sys.exit(5)
+  result = _run_and_get_tests_result(
+      argv, args, kwargs, xml_reporter.TextAndXMLTestRunner)
   sys.exit(not result.wasSuccessful())
 
 

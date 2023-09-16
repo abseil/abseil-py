@@ -48,20 +48,14 @@ setuptools.setup(
     version='2.0.0.dev0',
     description=(
         'Abseil Python Common Libraries, '
-        'see https://github.com/abseil/abseil-py.'
-    ),
+        'see https://github.com/abseil/abseil-py.'),
     long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
     author='The Abseil Authors',
     url='https://github.com/abseil/abseil-py',
-    packages=setuptools.find_packages(
-        exclude=[
-            '*.tests',
-            '*.tests.*',
-            'tests.*',
-            'tests',
-        ]
-    ),
+    packages=setuptools.find_packages(exclude=[
+        '*.tests', '*.tests.*', 'tests.*', 'tests',
+    ]),
     include_package_data=True,
     license='Apache 2.0',
     classifiers=[
@@ -72,7 +66,6 @@ setuptools.setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
         'License :: OSI Approved :: Apache Software License',
