@@ -1719,10 +1719,15 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
     self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.ORANGE])
 
   def test_bad_multi_enum_class_flags_from_definition(self):
-    with self.assertRaisesRegex(
+    self.assertRaisesRegex(
         flags.IllegalFlagValueError,
-        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>'):
-      flags.DEFINE_multi_enum_class('fruit', ['INVALID'], Fruit, 'desc')
+        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>',
+        flags.DEFINE_multi_enum_class,
+        'fruit',
+        ['INVALID'],
+        Fruit,
+        'desc',
+    )
 
   def test_bad_multi_enum_class_flags_from_commandline(self):
     fv = flags.FlagValues()
