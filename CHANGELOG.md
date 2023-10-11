@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+### Added
+
+*   (flags) Added `absl.flags.override_value` function to provide `FlagHolder`
+    with a construct to modify values. The new interface parallels
+    `absl.flags.FlagValues.__setattr__` but checks that the provided value
+    conforms to the flag's expected type.
+
 ### Fixed
 
 *   The flag `foo` no longer retains the value `bar` after `FLAGS.foo = bar`
@@ -30,9 +37,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (testing) `absltest.TestCase.assertSameStructure()` now uses the test case's
     equality functions (registered with `TestCase.addTypeEqualityFunc()`) for
     comparing leaves of the structure.
-*   (testing) `abslTest.TestCase.fail()` now names its arguments
-    `(self, msg=None, user_msg=None)`, and not `(self, msg=None, prefix=None)`,
-    better reflecting the behavior and usage of the two message arguments.
+*   (testing) `abslTest.TestCase.fail()` now names its arguments `(self,
+    msg=None, user_msg=None)`, and not `(self, msg=None, prefix=None)`, better
+    reflecting the behavior and usage of the two message arguments.
 *   `DEFINE_enum`, `DEFINE_multi_enum`, and `EnumParser` now raise errors when
     `enum_values` is provided as a single string value. Additionally,
     `EnumParser.enum_values` is now stored as a list copy of the provided

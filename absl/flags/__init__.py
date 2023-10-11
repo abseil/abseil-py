@@ -70,6 +70,7 @@ __all__ = (
     'mark_bool_flags_as_mutual_exclusive',
     # Flag modifiers.
     'set_default',
+    'override_value',
     # Key flag related functions.
     'declare_key_flag',
     'adopt_module_key_flags',
@@ -156,6 +157,7 @@ mark_bool_flags_as_mutual_exclusive = _validators.mark_bool_flags_as_mutual_excl
 
 # Flag modifiers.
 set_default = _defines.set_default
+override_value = _defines.override_value
 
 # Key flag related functions.
 declare_key_flag = _defines.declare_key_flag

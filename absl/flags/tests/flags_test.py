@@ -2592,6 +2592,114 @@ class SetDefaultTest(absltest.TestCase):
       _ = int_holder.value  # Will also fail on later access.
 
 
+class OverrideValueTest(absltest.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    self.flag_values = flags.FlagValues()
+
+  def test_success(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
+
+    flags.override_value(int_holder, 2)
+    self.flag_values.mark_as_parsed()
+
+    self.assertEqual(int_holder.value, 2)
+
+  def test_update_after_parse(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
+
+    self.flag_values.mark_as_parsed()
+    flags.override_value(int_holder, 2)
+
+    self.assertEqual(int_holder.value, 2)
+
+  def test_overrides_explicit_assignment(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
+
+    self.flag_values.mark_as_parsed()
+    self.flag_values.an_int = 3
+    flags.override_value(int_holder, 2)
+
+    self.assertEqual(int_holder.value, 2)
+
+  def test_overriden_by_explicit_assignment(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
+
+    self.flag_values.mark_as_parsed()
+    flags.override_value(int_holder, 2)
+    self.flag_values.an_int = 3
+
+    self.assertEqual(int_holder.value, 3)
+
+  def test_multi_flag(self):
+    multi_holder = flags.DEFINE_multi_string(
+        'strs', [], 'some strs', flag_values=self.flag_values
+    )
+
+    flags.override_value(multi_holder, ['a', 'b'])
+    self.flag_values.mark_as_parsed()
+
+    self.assertEqual(multi_holder.value, ['a', 'b'])
+
+  def test_failure_on_invalid_type(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
+
+    self.flag_values.mark_as_parsed()
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.override_value(int_holder, 'a')  # pytype: disable=wrong-arg-types
+
+    self.assertEqual(int_holder.value, 1)
+
+  def test_failure_on_unparsed_value(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
+
+    self.flag_values.mark_as_parsed()
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.override_value(int_holder, '2')  # pytype: disable=wrong-arg-types
+
+  def test_failure_on_parser_rejection(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values, upper_bound=5
+    )
+
+    self.flag_values.mark_as_parsed()
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.override_value(int_holder, 6)
+
+    self.assertEqual(int_holder.value, 1)
+
+  def test_failure_on_validator_rejection(self):
+    int_holder = flags.DEFINE_integer(
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
+    flags.register_validator(
+        int_holder.name, lambda x: x < 5, flag_values=self.flag_values
+    )
+
+    self.flag_values.mark_as_parsed()
+
+    with self.assertRaises(flags.IllegalFlagValueError):
+      flags.override_value(int_holder, 6)
+
+    self.assertEqual(int_holder.value, 1)
+
+
 class KeyFlagsTest(absltest.TestCase):
 
   def setUp(self):
