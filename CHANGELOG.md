@@ -6,7 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Fixed
+
+*   The flag `foo` no longer retains the value `bar` after `FLAGS.foo = bar`
+    fails due to a validation error.
 
 ## 2.0.0 (2023-09-19)
 

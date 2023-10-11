@@ -506,18 +506,30 @@ class FlagValues:
   def _set_attributes(self, **attributes: Any) -> None:
     """Sets multiple flag values together, triggers validators afterwards."""
     fl = self._flags()
-    known_flags = set()
-    for name, value in attributes.items():
-      if name in self.__dict__['__hiddenflags']:
-        raise AttributeError(name)
-      if name in fl:
-        fl[name].value = value
-        known_flags.add(name)
-      else:
-        self._set_unknown_flag(name, value)
-    for name in known_flags:
-      self._assert_validators(fl[name].validators)
-      fl[name].using_default_value = False
+    known_flag_vals = {}
+    known_flag_used_defaults = {}
+    try:
+      for name, value in attributes.items():
+        if name in self.__dict__['__hiddenflags']:
+          raise AttributeError(name)
+        if name in fl:
+          orig = fl[name].value
+          fl[name].value = value
+          known_flag_vals[name] = orig
+        else:
+          self._set_unknown_flag(name, value)
+      for name in known_flag_vals:
+        self._assert_validators(fl[name].validators)
+        known_flag_used_defaults[name] = fl[name].using_default_value
+        fl[name].using_default_value = False
+    except:
+      for name, orig in known_flag_vals.items():
+        fl[name].value = orig
+      for name, orig in known_flag_used_defaults.items():
+        fl[name].using_default_value = orig
+      # NOTE: We do not attempt to undo unknown flag side effects because we
+      # cannot reliably undo the user-configured behavior.
+      raise
 
   def validate_all_flags(self) -> None:
     """Verifies whether all flags pass validation.

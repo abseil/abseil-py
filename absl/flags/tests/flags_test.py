@@ -692,6 +692,13 @@ class FlagsUnitTest(absltest.TestCase):
         'flag --universe=copernicean: already defined as ptolemaic', FLAGS,
         argv)
 
+    # A flag value error shouldn't modify the value:
+    flags.DEFINE_integer('smol', 1, 'smol flag', upper_bound=5)
+    with self.assertRaises(flags.IllegalFlagValueError):
+      FLAGS.smol = 6
+    self.assertEqual(FLAGS.smol, 1)
+    self.assertTrue(FLAGS['smol'].using_default_value)
+
     # Test single-letter flags; should support both single and double dash
     argv = ('./program', '-q')
     argv = FLAGS(argv)
@@ -836,6 +843,7 @@ class FlagsUnitTest(absltest.TestCase):
             "--s_str ['sing1']",
             '--sense None',
             '--showprefixforinfo',
+            '--smol 1',
             '--stderrthreshold fatal',
             '--test1',
             '--test_random_seed 301',
@@ -909,6 +917,7 @@ class FlagsUnitTest(absltest.TestCase):
             "--s_str ['sing1', 'upd2']",
             '--sense None',
             '--showprefixforinfo',
+            '--smol 1',
             '--stderrthreshold fatal',
             '--test1',
             '--test_random_seed 301',
@@ -1271,6 +1280,9 @@ class FlagsUnitTest(absltest.TestCase):
     repeat this option to specify a list of values
     (default: "['sing1']")
   --sense: <Case|case|CASE>: ?
+  --smol: smol flag
+    (default: '1')
+    (integer <= 5)
   --[no]test0: test boolean parsing
   --[no]test1: test boolean parsing
   --testcomma_list: test comma list parsing
