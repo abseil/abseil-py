@@ -16,6 +16,7 @@
 
 import collections
 import contextlib
+import dataclasses
 import io
 import os
 import pathlib
@@ -24,6 +25,7 @@ import stat
 import string
 import subprocess
 import tempfile
+import textwrap
 from typing import Optional
 import unittest
 
@@ -1972,6 +1974,87 @@ class InitNotNecessaryForAssertsTest(absltest.TestCase):
       pass
 
     Subclass().assertEqual({}, {})
+
+
+@dataclasses.dataclass
+class _ExampleDataclass:
+  comparable: str
+  not_comparable: str = dataclasses.field(compare=False)
+  comparable2: str = 'comparable2'
+
+
+@dataclasses.dataclass
+class _ExampleCustomEqualDataclass:
+  value: str
+
+  def __eq__(self, other):
+    return False
+
+
+class TestAssertDataclassEqual(absltest.TestCase):
+
+  def test_assert_dataclass_equal_checks_a_for_dataclass(self):
+    b = _ExampleDataclass('a', 'b')
+
+    message = 'First argument is not a dataclass instance.'
+    with self.assertRaisesWithLiteralMatch(AssertionError, message):
+      self.assertDataclassEqual('a', b)
+
+  def test_assert_dataclass_equal_checks_b_for_dataclass(self):
+    a = _ExampleDataclass('a', 'b')
+
+    message = 'Second argument is not a dataclass instance.'
+    with self.assertRaisesWithLiteralMatch(AssertionError, message):
+      self.assertDataclassEqual(a, 'b')
+
+  def test_assert_dataclass_equal_different_dataclasses(self):
+    a = _ExampleDataclass('a', 'b')
+    b = _ExampleCustomEqualDataclass('c')
+
+    message = """Found different dataclass types: <class '__main__._ExampleDataclass'> != <class '__main__._ExampleCustomEqualDataclass'>"""
+    with self.assertRaisesWithLiteralMatch(AssertionError, message):
+      self.assertDataclassEqual(a, b)
+
+  def test_assert_dataclass_equal(self):
+    a = _ExampleDataclass(comparable='a', not_comparable='b')
+    b = _ExampleDataclass(comparable='a', not_comparable='c')
+
+    self.assertDataclassEqual(a, a)
+    self.assertDataclassEqual(a, b)
+    self.assertDataclassEqual(b, a)
+
+  def test_assert_dataclass_fails_non_equal_classes_assert_dict_passes(self):
+    a = _ExampleCustomEqualDataclass(value='a')
+    b = _ExampleCustomEqualDataclass(value='a')
+
+    message = textwrap.dedent("""\
+        _ExampleCustomEqualDataclass(value='a') != _ExampleCustomEqualDataclass(value='a')
+        Cannot detect difference by examining the fields of the dataclass.""")
+    with self.assertRaisesWithLiteralMatch(AssertionError, message):
+      self.assertDataclassEqual(a, b)
+
+  def test_assert_dataclass_fails_assert_dict_fails_one_field(self):
+    a = _ExampleDataclass(comparable='a', not_comparable='b')
+    b = _ExampleDataclass(comparable='c', not_comparable='d')
+
+    message = textwrap.dedent("""\
+        _ExampleDataclass(comparable='a', not_comparable='b', comparable2='comparable2') != _ExampleDataclass(comparable='c', not_comparable='d', comparable2='comparable2')
+        Fields that differ:
+        comparable: 'a' != 'c'""")
+    with self.assertRaisesWithLiteralMatch(AssertionError, message):
+      self.assertDataclassEqual(a, b)
+
+  def test_assert_dataclass_fails_assert_dict_fails_multiple_fields(self):
+    a = _ExampleDataclass(comparable='a', not_comparable='b', comparable2='c')
+    b = _ExampleDataclass(comparable='c', not_comparable='d', comparable2='e')
+
+    message = textwrap.dedent("""\
+        _ExampleDataclass(comparable='a', not_comparable='b', comparable2='c') != _ExampleDataclass(comparable='c', not_comparable='d', comparable2='e')
+        Fields that differ:
+        comparable: 'a' != 'c'
+        comparable2: 'c' != 'e'""")
+    with self.assertRaisesWithLiteralMatch(AssertionError, message):
+      self.assertDataclassEqual(a, b)
 
 
 class GetCommandStringTest(parameterized.TestCase):

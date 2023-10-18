@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     with a construct to modify values. The new interface parallels
     `absl.flags.FlagValues.__setattr__` but checks that the provided value
     conforms to the flag's expected type.
+*   (testing) Added a new method `absltest.TestCase.assertDataclassEqual` that
+    tests equality of `dataclass.dataclass` objects with better error messages
+    when the assert fails.
 
 ### Fixed
 

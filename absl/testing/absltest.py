@@ -20,6 +20,7 @@ tests.
 
 from collections import abc
 import contextlib
+import dataclasses
 import difflib
 import enum
 import errno
@@ -1729,6 +1730,66 @@ class TestCase(unittest.TestCase):
               ('%s: %s\n' % (safe_repr(k), safe_repr(v)) for k, v in missing)))
 
     raise self.failureException('\n'.join(message))
+
+  def assertDataclassEqual(self, first, second, msg=None):
+    """Asserts two dataclasses are equal with more informative errors.
+
+    Arguments must both be dataclasses. This compares equality of  individual
+    fields and takes care to not compare fields that are marked as
+    non-comparable. It gives per field differences, which are easier to parse
+    than the comparison of the string representations from assertEqual.
+
+    In cases where the dataclass has a custom __eq__, and it is defined in a
+    way that is inconsistent with equality of comparable fields, we raise an
+    exception without further trying to figure out how they are different.
+
+    Args:
+      first: A dataclass, the first value.
+      second: A dataclass, the second value.
+      msg: An optional str, the associated message.
+
+    Raises:
+      AssertionError: if the dataclasses are not equal.
+    """
+
+    if not dataclasses.is_dataclass(first) or isinstance(first, type):
+      raise self.failureException('First argument is not a dataclass instance.')
+    if not dataclasses.is_dataclass(second) or isinstance(second, type):
+      raise self.failureException(
+          'Second argument is not a dataclass instance.'
+      )
+
+    if first == second:
+      return
+
+    if type(first) is not type(second):
+      self.fail(
+          'Found different dataclass types: %s != %s'
+          % (type(first), type(second)),
+          msg,
+      )
+
+    # Make sure to skip fields that are marked compare=False.
+    different = [
+        (f.name, getattr(first, f.name), getattr(second, f.name))
+        for f in dataclasses.fields(first)
+        if f.compare and getattr(first, f.name) != getattr(second, f.name)
+    ]
+
+    safe_repr = unittest.util.safe_repr  # pytype: disable=module-attr
+    message = ['%s != %s' % (safe_repr(first), safe_repr(second))]
+    if different:
+      message.append('Fields that differ:')
+      message.extend(
+          '%s: %s != %s' % (k, safe_repr(first_v), safe_repr(second_v))
+          for k, first_v, second_v in different
+      )
+    else:
+      message.append(
+          'Cannot detect difference by examining the fields of the dataclass.'
+      )
+
+    raise self.fail('\n'.join(message), msg)
 
   def assertUrlEqual(self, a, b, msg=None):
     """Asserts that urls are equal, ignoring ordering of query params."""
