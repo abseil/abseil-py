@@ -16,6 +16,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
     tests equality of `dataclass.dataclass` objects with better error messages
     when the assert fails.
 
+### Changed
+
+*   (flags) `absl.flags.argparse_flags.ArgumentParser` now correctly inherits
+    an empty instance of `FlagValues` to ensure that absl flags, such as
+    `--flagfile`, `--undefok` are supported.
+
 ### Fixed
 
 *   The flag `foo` no longer retains the value `bar` after `FLAGS.foo = bar`

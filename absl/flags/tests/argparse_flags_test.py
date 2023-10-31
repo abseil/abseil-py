@@ -406,6 +406,21 @@ class ArgparseFlagsTest(parameterized.TestCase):
     args = parser.parse_args([])
     self.assertEqual(args.magic_number, 23)
 
+  def test_empty_inherited_absl_flags(self):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=flags.FlagValues()
+    )
+    parser.add_argument('--foo')
+    flagfile = self.create_tempfile(content='--foo=bar').full_path
+    # Make sure these flags are still available when inheriting an empty
+    # FlagValues instance.
+    ns = parser.parse_args([
+        '--undefok=undefined_flag',
+        '--undefined_flag=value',
+        '--flagfile=' + flagfile,
+    ])
+    self.assertEqual(ns.foo, 'bar')
+
 
 class ArgparseWithAppRunTest(parameterized.TestCase):
 

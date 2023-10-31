@@ -145,7 +145,7 @@ class ArgumentParser(argparse.ArgumentParser):
           '--helpfull', action=_HelpFullAction,
           default=argparse.SUPPRESS, help='show full help message and exit')
 
-    if self._inherited_absl_flags:
+    if self._inherited_absl_flags is not None:
       self.add_argument(
           '--undefok', default=argparse.SUPPRESS, help=argparse.SUPPRESS)
       self._define_absl_flags(self._inherited_absl_flags)
@@ -153,7 +153,7 @@ class ArgumentParser(argparse.ArgumentParser):
   def parse_known_args(self, args=None, namespace=None):
     if args is None:
       args = sys.argv[1:]
-    if self._inherited_absl_flags:
+    if self._inherited_absl_flags is not None:
       # Handle --flagfile.
       # Explicitly specify force_gnu=True, since argparse behaves like
       # gnu_getopt: flags can be specified after positional arguments.
@@ -172,7 +172,7 @@ class ArgumentParser(argparse.ArgumentParser):
     if undefok is not undefok_missing:
       namespace.undefok = undefok
 
-    if self._inherited_absl_flags:
+    if self._inherited_absl_flags is not None:
       # Handle --undefok. At this point, `args` only contains unknown flags,
       # so it won't strip defined flags that are also specified with --undefok.
       # For Python <= 2.7.8: https://bugs.python.org/issue9351, a bug where
@@ -350,7 +350,7 @@ class _HelpFullAction(argparse.Action):
     parser.print_help()
 
     absl_flags = parser._inherited_absl_flags  # pylint: disable=protected-access
-    if absl_flags:
+    if absl_flags is not None:
       modules = sorted(absl_flags.flags_by_module_dict())
       main_module = sys.argv[0]
       if main_module in modules:
