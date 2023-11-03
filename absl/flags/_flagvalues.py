@@ -1439,6 +1439,10 @@ class FlagHolder(Generic[_T]):
     """Returns True if the flag was parsed from command-line flags."""
     return bool(self._flagvalues[self._name].present)
 
+  def serialize(self) -> Text:
+    """Returns a serialized representation of the flag."""
+    return self._flagvalues[self._name].serialize()
+
 
 def resolve_flag_ref(
     flag_ref: Union[str, FlagHolder], flag_values: FlagValues

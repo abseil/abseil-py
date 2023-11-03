@@ -899,6 +899,10 @@ class FlagHolderTest(absltest.TestCase):
     self.parse_flags('--name=new_value')
     self.assertTrue(self.name_flag.present)
 
+  def test_serializes_flag(self):
+    self.parse_flags('--name=new_value')
+    self.assertEqual('--name=new_value', self.name_flag.serialize())
+
   def test_allow_override(self):
     first = _defines.DEFINE_integer(
         'int_flag', 1, 'help', flag_values=self.fv, allow_override=1)
