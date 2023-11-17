@@ -59,6 +59,7 @@ __all__ = (
     'DEFINE_multi_enum',
     'DEFINE_multi_enum_class',
     'DEFINE_alias',
+    'DEFINE_doc',
     # Flag validators.
     'register_validator',
     'validator',
@@ -143,6 +144,7 @@ DEFINE_multi_float = _defines.DEFINE_multi_float
 DEFINE_multi_enum = _defines.DEFINE_multi_enum
 DEFINE_multi_enum_class = _defines.DEFINE_multi_enum_class
 DEFINE_alias = _defines.DEFINE_alias
+DEFINE_doc = _defines.DEFINE_doc
 # pylint: enable=invalid-name
 
 # Flag validators.

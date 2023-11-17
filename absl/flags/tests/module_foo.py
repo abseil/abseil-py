@@ -42,6 +42,7 @@ def define_flags(flag_values=FLAGS):
                       flag_values=flag_values)
   flags.DEFINE_integer('tmod_foo_int', 3, 'Sample int flag.',
                        flag_values=flag_values)
+  flags.DEFINE_doc('test module foo', flag_values=flag_values)
 
 
 def declare_key_flags(flag_values=FLAGS):

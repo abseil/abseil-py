@@ -1684,3 +1684,11 @@ def DEFINE_alias(  # pylint: disable=invalid-name
           flag.default,
           help_msg,
           boolean=flag.boolean), flag_values, module_name)
+
+
+def DEFINE_doc(  # pylint: disable=invalid-name
+    doc: Text,
+    flag_values: _flagvalues.FlagValues = _flagvalues.FLAGS,
+) -> None:
+  module = _helpers.get_calling_module()
+  flag_values.register_doc_by_module(module, doc)

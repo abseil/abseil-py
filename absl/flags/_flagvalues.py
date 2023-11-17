@@ -102,6 +102,9 @@ class FlagValues:
     # Dictionary: module id (int) -> list of Flag objects that are defined by
     # that module.
     self.__dict__['__flags_by_module_id'] = {}
+    # Dictionary: module name (string) -> string that is the document defined by
+    # that module.
+    self.__dict__['__doc_by_module'] = {}
     # Dictionary: module name (string) -> list of Flag objects that are
     # key for that module.
     self.__dict__['__key_flags_by_module'] = {}
@@ -167,6 +170,15 @@ class FlagValues:
     """
     return self.__dict__['__flags_by_module_id']
 
+  def doc_by_module_dict(self) -> Dict[Text, Text]:
+    """Returns the dictionary of module_name -> document string.
+
+    Returns:
+      A dictionary. Its keys are module names (strings).  Its values
+      is document (string).
+    """
+    return self.__dict__['__doc_by_module']
+
   def key_flags_by_module_dict(self) -> Dict[Text, List[Flag]]:
     """Returns the dictionary of module_name -> list of key flags.
 
@@ -198,6 +210,16 @@ class FlagValues:
     """
     flags_by_module_id = self.flags_by_module_id_dict()
     flags_by_module_id.setdefault(module_id, []).append(flag)
+
+  def register_doc_by_module(self, module_name: Text, doc: Text) -> None:
+    """Records the module that has a specific doc.
+
+    Args:
+      module_name: str, the name of a Python module.
+      doc: str, the document of the module.
+    """
+    doc_by_module = self.doc_by_module_dict()
+    doc_by_module[module_name] = doc
 
   def register_key_flag_for_module(self, module_name: Text, flag: Flag) -> None:
     """Specifies that a flag is a key flag for a module.
@@ -272,6 +294,22 @@ class FlagValues:
       module = sys.argv[0]
 
     return list(self.flags_by_module_dict().get(module, []))
+
+  def get_doc_for_module(self, module: Union[Text, Any]) -> Text:
+    """Returns the doc defined by a module.
+
+    Args:
+      module: module|str, the module to get document from.
+
+    Returns:
+      str, document of the module.
+    """
+    if not isinstance(module, str):
+      module = module.__name__
+    if module == '__main__':
+      module = sys.argv[0]
+
+    return self.doc_by_module_dict().get(module, '')
 
   def get_key_flags_for_module(self, module: Union[Text, Any]) -> List[Flag]:
     """Returns the list of key flags for a module.
@@ -947,6 +985,12 @@ class FlagValues:
     if not isinstance(module, str):
       module = module.__name__
     output_lines.append('\n%s%s:' % (prefix, module))
+    doc = self.get_doc_for_module(module)
+    if doc:
+      doc = _helpers.text_wrap(
+          doc, indent=prefix + '  ', firstline_indent=prefix
+      )
+      output_lines.append('%s\n' % (doc))
     self._render_flag_list(flags, output_lines, prefix + '  ')
 
   def _render_our_module_flags(self, module, output_lines, prefix=''):

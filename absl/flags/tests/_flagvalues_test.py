@@ -397,7 +397,8 @@ class FlagValuesTest(absltest.TestCase):
   (default: '')''', fv.get_help())
 
     module_foo.define_flags(fv)
-    self.assertMultiLineEqual('''
+    self.assertMultiLineEqual(
+        """
 absl.flags.tests.module_bar:
   --tmod_bar_t: Sample int flag.
     (default: '4')
@@ -416,6 +417,8 @@ absl.flags.tests.module_bar:
     (default: 'false')
 
 absl.flags.tests.module_foo:
+test module foo
+
   --[no]tmod_foo_bool: Boolean flag from module foo.
     (default: 'true')
   --tmod_foo_int: Sample int flag.
@@ -431,9 +434,12 @@ absl.flags:
     the command line even if the program does not define a flag with that name.
     IMPORTANT: flags in this list that have arguments MUST use the --flag=value
     format.
-    (default: '')''', fv.get_help())
+    (default: '')""",
+        fv.get_help(),
+    )
 
-    self.assertMultiLineEqual('''
+    self.assertMultiLineEqual(
+        """
 xxxxabsl.flags.tests.module_bar:
 xxxx  --tmod_bar_t: Sample int flag.
 xxxx    (default: '4')
@@ -452,6 +458,8 @@ xxxx  --[no]tmod_bar_z: Another boolean flag from module bar.
 xxxx    (default: 'false')
 
 xxxxabsl.flags.tests.module_foo:
+xxxxtest module foo
+
 xxxx  --[no]tmod_foo_bool: Boolean flag from module foo.
 xxxx    (default: 'true')
 xxxx  --tmod_foo_int: Sample int flag.
@@ -468,9 +476,12 @@ xxxx  --undefok: comma-separated list of flag names that it is okay to specify
 xxxx    on the command line even if the program does not define a flag with that
 xxxx    name.  IMPORTANT: flags in this list that have arguments MUST use the
 xxxx    --flag=value format.
-xxxx    (default: '')''', fv.get_help(prefix='xxxx'))
+xxxx    (default: '')""",
+        fv.get_help(prefix='xxxx'),
+    )
 
-    self.assertMultiLineEqual('''
+    self.assertMultiLineEqual(
+        """
 absl.flags.tests.module_bar:
   --tmod_bar_t: Sample int flag.
     (default: '4')
@@ -489,13 +500,17 @@ absl.flags.tests.module_bar:
     (default: 'false')
 
 absl.flags.tests.module_foo:
+test module foo
+
   --[no]tmod_foo_bool: Boolean flag from module foo.
     (default: 'true')
   --tmod_foo_int: Sample int flag.
     (default: '3')
     (an integer)
   --tmod_foo_str: String flag.
-    (default: 'default')''', fv.get_help(include_special_flags=False))
+    (default: 'default')""",
+        fv.get_help(include_special_flags=False),
+    )
 
   def test_str(self):
     fv = _flagvalues.FlagValues()
