@@ -549,6 +549,46 @@ def log_first_n(level, msg, n, *args):
   log_if(level, msg, count < n, *args)
 
 
+def log_unique(level, msg, *args):
+  """Logs ``msg % args`` at level ``level`` only once per arguments hash.
+
+  Not threadsafe.
+
+  Args:
+    level: int, the absl logging level at which to log.
+    msg: str, the message to be logged only once.
+    *args: The args to be substituted into the msg.
+  """
+  key = str(get_absl_logger().findCaller()) + str(args)
+  count = _get_next_log_count_per_token(key)
+  log_if(level, msg, count == 0, *args)
+
+
+def fatal_unique(msg, *args):
+  """Logs ``msg % args`` at fatal level only once per message."""
+  log_unique(FATAL, msg, *args)
+
+
+def error_unique(msg, *args):
+  """Logs ``msg % args`` at error level only once per message."""
+  log_unique(ERROR, msg, *args)
+
+
+def warning_unique(msg, *args):
+  """Logs ``msg % args`` at warning level only once per message."""
+  log_unique(WARNING, msg, *args)
+
+
+def info_unique(msg, *args):
+  """Logs ``msg % args`` at info level only once per message."""
+  log_unique(INFO, msg, *args)
+
+
+def debug_unique(msg, *args):
+  """Logs ``msg % args`` at debug level only once per message."""
+  log_unique(DEBUG, msg, *args)
+
+
 def log_if(level, msg, condition, *args):
   """Logs ``msg % args`` at level ``level`` only if condition is fulfilled."""
   if condition:

@@ -688,7 +688,7 @@ class LogCountTest(absltest.TestCase):
     self.assertEqual(counts, {i for i in range(100)})
 
 
-class LoggingTest(absltest.TestCase):
+class LoggingTest(parameterized.TestCase):
 
   def test_fatal(self):
     with mock.patch.object(os, 'abort') as mock_abort:
@@ -900,6 +900,25 @@ class LoggingTest(absltest.TestCase):
     self.assertEqual(logging.get_verbosity(), logging.FATAL)
 
     logging.set_verbosity(old_level)
+
+  @parameterized.parameters([
+      dict(logging_fn=logging.error_unique),
+      dict(logging_fn=logging.warning_unique),
+      dict(logging_fn=logging.info_unique),
+      dict(logging_fn=logging.debug_unique),
+      dict(logging_fn=functools.partial(logging.log_unique, logging.INFO)),
+  ])
+  def test_log_unique(self, logging_fn):
+    logging._log_counter_per_token = {}
+    FLAGS.verbosity = 1  # Needed for testing debug_unique.
+    with mock.patch.object(sys, 'stderr', new=io.StringIO()) as stderr:
+      for i in (1, 1, 2, 3, 3, 3):
+        logging_fn('test msg %d', i)
+      logged_lines = stderr.getvalue().strip().split('\n')
+      self.assertLen(logged_lines, 3)
+      self.assertRegex(logged_lines[0], 'test msg 1')
+      self.assertRegex(logged_lines[1], 'test msg 2')
+      self.assertRegex(logged_lines[2], 'test msg 3')
 
   def test_key_flags(self):
     key_flags = FLAGS.get_key_flags_for_module(logging)
