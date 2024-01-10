@@ -504,7 +504,7 @@ class CsvListSerializer(ListSerializer[Text]):
     return str(serialized_value)
 
 
-class EnumClassSerializer(ArgumentSerializer):
+class EnumClassSerializer(ArgumentSerializer[_ET]):
   """Class for generating string representations of an enum class flag value."""
 
   def __init__(self, lowercase: bool) -> None:
