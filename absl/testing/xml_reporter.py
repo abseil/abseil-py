@@ -361,6 +361,9 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
         test_name = test.id() or str(test)
         sys.stderr.write('No pending test case: %s\n' % test_name)
         return
+      if getattr(self, 'start_time', None) is None:
+        # startTest may not be called for skipped tests since Python 3.12.1.
+        self.start_time = self.time_getter()
       test_id = id(test)
       run_time = self.time_getter() - self.start_time
       result.set_run_time(run_time)
@@ -386,7 +389,7 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
       # reporting here.
       for test_id in self.pending_test_case_results:
         result = self.pending_test_case_results[test_id]
-        if hasattr(self, 'start_time'):
+        if getattr(self, 'start_time', None) is not None:
           run_time = self.suite.overall_end_time - self.start_time
           result.set_run_time(run_time)
           result.set_start_time(self.start_time)

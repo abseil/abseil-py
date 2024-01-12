@@ -26,8 +26,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
-*   The flag `foo` no longer retains the value `bar` after `FLAGS.foo = bar`
-    fails due to a validation error.
+*   (flags) The flag `foo` no longer retains the value `bar` after
+    `FLAGS.foo = bar` fails due to a validation error.
+*   (testing) Fixed an issue caused by
+    [this Python 3.12.1 change](https://github.com/python/cpython/pull/109725)
+    where the test reporter crashes when all tests are skipped.
 
 ## 2.0.0 (2023-09-19)
 
