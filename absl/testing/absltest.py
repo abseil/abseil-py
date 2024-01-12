@@ -2689,9 +2689,9 @@ def run_tests(
   result, fail_when_no_tests_ran = _run_and_get_tests_result(
       argv, args, kwargs, xml_reporter.TextAndXMLTestRunner
   )
-  if fail_when_no_tests_ran and result.testsRun == 0:
-    # Python 3.12 unittest exits with 5 when no tests ran. The code comes from
-    # pytest which does the same thing.
+  if fail_when_no_tests_ran and result.testsRun == 0 and not result.skipped:
+    # Python 3.12 unittest exits with 5 when no tests ran. The exit code 5 comes
+    # from pytest which does the same thing.
     sys.exit(5)
   sys.exit(not result.wasSuccessful())
 

@@ -21,6 +21,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 *   (flags) `absl.flags.argparse_flags.ArgumentParser` now correctly inherits
     an empty instance of `FlagValues` to ensure that absl flags, such as
     `--flagfile`, `--undefok` are supported.
+*   (testing) Do not exit 5 if tests were skipped on Python 3.12. This follows
+    the CPython change in https://github.com/python/cpython/pull/113856.
 
 ### Fixed
 

@@ -197,7 +197,10 @@ py_test(
     name = "tests/absltest_test",
     size = "small",
     srcs = ["tests/absltest_test.py"],
-    data = [":tests/absltest_test_helper"],
+    data = [
+        ":tests/absltest_test_helper",
+        ":tests/absltest_test_helper_skipped",
+    ],
     python_version = "PY3",
     srcs_version = "PY3",
     deps = [
@@ -219,6 +222,13 @@ py_binary(
         "//absl:app",
         "//absl/flags",
     ],
+)
+
+py_binary(
+    name = "tests/absltest_test_helper_skipped",
+    testonly = 1,
+    srcs = ["tests/absltest_test_helper_skipped.py"],
+    deps = [":absltest"],
 )
 
 py_test(

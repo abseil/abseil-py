@@ -24,6 +24,7 @@ import re
 import stat
 import string
 import subprocess
+import sys
 import tempfile
 import textwrap
 from typing import Optional
@@ -37,11 +38,18 @@ from absl.testing.tests import absltest_env
 
 class BaseTestCase(absltest.TestCase):
 
-  def _get_helper_exec_path(self):
-    helper = 'absl/testing/tests/absltest_test_helper'
+  def _get_helper_exec_path(self, helper_name):
+    helper = 'absl/testing/tests/' + helper_name
     return _bazelize_command.get_executable_path(helper)
 
-  def run_helper(self, test_id, args, env_overrides, expect_success):
+  def run_helper(
+      self,
+      test_id,
+      args,
+      env_overrides,
+      expect_success,
+      helper_name=None,
+  ):
     env = absltest_env.inherited_env()
     for key, value in env_overrides.items():
       if value is None:
@@ -50,31 +58,48 @@ class BaseTestCase(absltest.TestCase):
       else:
         env[key] = value
 
-    command = [self._get_helper_exec_path(),
-               '--test_id={}'.format(test_id)] + args
+    if helper_name is None:
+      helper_name = 'absltest_test_helper'
+    command = [self._get_helper_exec_path(helper_name)]
+    if test_id is not None:
+      command.append('--test_id={}'.format(test_id))
+    command.extend(args)
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
         universal_newlines=True)
     stdout, stderr = process.communicate()
     if expect_success:
       self.assertEqual(
-          0, process.returncode,
-          'Expected success, but failed with '
-          'stdout:\n{}\nstderr:\n{}\n'.format(stdout, stderr))
+          0,
+          process.returncode,
+          'Expected success, but failed with exit code {},'
+          ' stdout:\n{}\nstderr:\n{}\n'.format(
+              process.returncode, stdout, stderr
+          ),
+      )
     else:
-      self.assertEqual(
-          1, process.returncode,
+      self.assertGreater(
+          process.returncode,
+          0,
           'Expected failure, but succeeded with '
-          'stdout:\n{}\nstderr:\n{}\n'.format(stdout, stderr))
-    return stdout, stderr
+          'stdout:\n{}\nstderr:\n{}\n'.format(stdout, stderr),
+      )
+    return stdout, stderr, process.returncode
 
 
 class TestCaseTest(BaseTestCase):
   longMessage = True
 
-  def run_helper(self, test_id, args, env_overrides, expect_success):
-    return super(TestCaseTest, self).run_helper(test_id, args + ['HelperTest'],
-                                                env_overrides, expect_success)
+  def run_helper(
+      self, test_id, args, env_overrides, expect_success, helper_name=None
+  ):
+    return super(TestCaseTest, self).run_helper(
+        test_id,
+        args + ['HelperTest'],
+        env_overrides,
+        expect_success,
+        helper_name,
+    )
 
   def test_flags_no_env_var_no_flags(self):
     self.run_helper(
@@ -190,11 +215,12 @@ class TestCaseTest(BaseTestCase):
         expect_success=True)
 
   def test_app_run(self):
-    stdout, _ = self.run_helper(
+    stdout, _, _ = self.run_helper(
         7,
         ['--name=cat', '--name=dog'],
         {'ABSLTEST_TEST_HELPER_USE_APP_RUN': '1'},
-        expect_success=True)
+        expect_success=True,
+    )
     self.assertIn('Names in main() are: cat dog', stdout)
     self.assertIn('Names in test_name_flag() are: cat dog', stdout)
 
@@ -226,7 +252,7 @@ class TestCaseTest(BaseTestCase):
     self.assertEqual(1, 2)  # the expected failure
 
   def test_expected_failure_success(self):
-    _, stderr = self.run_helper(5, ['--', '-v'], {}, expect_success=False)
+    _, stderr, _ = self.run_helper(5, ['--', '-v'], {}, expect_success=False)
     self.assertRegex(stderr, r'FAILED \(.*unexpected successes=1\)')
 
   def test_assert_equal(self):
@@ -2099,8 +2125,9 @@ class TempFileTest(BaseTestCase):
         'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP': cleanup,
         'TEST_TMPDIR': tmpdir.full_path,
         }
-    stdout, stderr = self.run_helper(0, ['TempFileHelperTest'], env,
-                                     expect_success=False)
+    stdout, stderr, _ = self.run_helper(
+        0, ['TempFileHelperTest'], env, expect_success=False
+    )
     output = ('\n=== Helper output ===\n'
               '----- stdout -----\n{}\n'
               '----- end stdout -----\n'
@@ -2471,6 +2498,30 @@ class SkipClassTest(absltest.TestCase):
     self.assertEqual(0, res.testsRun)
     self.assertEmpty(res.failures)
     self.assertEmpty(res.errors)
+
+
+class ExitCodeTest(BaseTestCase):
+
+  def test_exits_5_when_no_tests(self):
+    expect_success = sys.version_info < (3, 12)
+    _, _, exit_code = self.run_helper(
+        None,
+        [],
+        {},
+        expect_success=expect_success,
+        helper_name='absltest_test_helper_skipped',
+    )
+    if not expect_success:
+      self.assertEqual(exit_code, 5)
+
+  def test_exits_5_when_all_skipped(self):
+    self.run_helper(
+        None,
+        [],
+        {'ABSLTEST_TEST_HELPER_DEFINE_CLASS': '1'},
+        expect_success=True,
+        helper_name='absltest_test_helper_skipped',
+    )
 
 
 def _listdir_recursive(path):
