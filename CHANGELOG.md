@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
+Nothing notable unreleased.
+
+## 2.1.0 (2024-01-16)
+
 ### Added
 
 *   (flags) Added `absl.flags.override_value` function to provide `FlagHolder`
