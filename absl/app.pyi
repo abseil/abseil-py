@@ -84,7 +84,6 @@ def call_after_init(callback: Callable[[], Any]) -> None:
 def run(
     main: Callable[[List[Text]], Any],
     argv: Optional[List[Text]] = ...,
-    *,
 ) -> NoReturn:
   ...
 
