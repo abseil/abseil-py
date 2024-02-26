@@ -25,12 +25,7 @@ The specific function used determines how the flag is parsed, checked,
 and optionally type-converted, when it's seen on the command line.
 """
 
-import getopt
-import os
-import re
 import sys
-import types
-import warnings
 
 from absl.flags import _argument_parser
 from absl.flags import _defines
