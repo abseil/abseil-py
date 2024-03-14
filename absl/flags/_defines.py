@@ -862,7 +862,7 @@ def DEFINE_list(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: 'typing.Literal[True]',
-    **args: Any
+    **_FREEZE_WSEZE_WS: Any
 ) -> _flagvalues.FlagHolder[List[Text]]:
   ...
 
