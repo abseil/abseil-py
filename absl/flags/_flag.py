@@ -203,7 +203,8 @@ class Flag(Generic[_T]):
     """
     try:
       return self.parser.parse(argument)
-    except (TypeError, ValueError) as e:  # Recast as IllegalFlagValueError.
+    except (TypeError, ValueError, OverflowError) as e:
+      # Recast as IllegalFlagValueError.
       raise _exceptions.IllegalFlagValueError(
           'flag --%s=%s: %s' % (self.name, argument, e))
 
