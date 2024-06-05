@@ -325,14 +325,15 @@ class TestCaseTest(BaseTestCase):
     self.assertRaises(AssertionError, self.assertDictEqual, [], d)
     self.assertRaises(AssertionError, self.assertDictEqual, 1, 1)
 
-    try:
-      # Ensure we use equality as the sole measure of elements, not type, since
-      # that is consistent with dict equality.
+    # Ensure we use equality as the sole measure of elements, not type, since
+    # that is consistent with dict equality.
+    with self.assertRaises(AssertionError) as error_context:
       self.assertDictEqual({1: 1.0, 2: 2}, {1: 1, 2: 3})
-    except AssertionError as e:
-      self.assertMultiLineEqual('{1: 1.0, 2: 2} != {1: 1, 2: 3}\n'
-                                'repr() of differing entries:\n2: 2 != 3\n',
-                                str(e))
+    self.assertMultiLineEqual(
+        '{1: 1.0, 2: 2} != {1: 1, 2: 3}\n'
+        'repr() of differing entries (expected != actual):\n2: 2 != 3\n',
+        str(error_context.exception),
+    )
 
     try:
       self.assertDictEqual({}, {'x': 1})
@@ -352,22 +353,22 @@ class TestCaseTest(BaseTestCase):
 
     expected = {'a': 1, 'b': 2, 'c': 3}
     seen = {'a': 2, 'c': 3, 'd': 4}
-    try:
+    with self.assertRaises(AssertionError) as error_context:
       self.assertDictEqual(expected, seen)
-    except AssertionError as e:
-      self.assertMultiLineEqual("""\
+    self.assertMultiLineEqual(
+        """\
 {'a': 1, 'b': 2, 'c': 3} != {'a': 2, 'c': 3, 'd': 4}
 Unexpected, but present entries:
 'd': 4
 
-repr() of differing entries:
+repr() of differing entries (expected != actual):
 'a': 1 != 2
 
 Missing entries:
 'b': 2
-""", str(e))
-    else:
-      self.fail('Expecting AssertionError')
+""",
+        str(error_context.exception),
+    )
 
     self.assertRaises(AssertionError, self.assertDictEqual, (1, 2), {})
     self.assertRaises(AssertionError, self.assertDictEqual, {}, (1, 2))
@@ -397,8 +398,11 @@ Missing entries:
           err_str, r'(?ms).*^Unexpected, but present entries:\s+'
           r'^(d: D$\s+^e: E|e: E$\s+^d: D)$')
       self.assertRegex(
-          err_str, r'(?ms).*^repr\(\) of differing entries:\s+'
-          r'^.a.: A != A$', err_str)
+          err_str,
+          r'(?ms).*^repr\(\) of differing entries \(expected != actual\):\s+'
+          r'^.a.: A != A$',
+          err_str,
+      )
       self.assertRegex(
           err_str, r'(?ms).*^Missing entries:\s+'
           r'^(b: B$\s+^c: C|c: C$\s+^b: B)$')

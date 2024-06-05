@@ -1711,10 +1711,13 @@ class TestCase(unittest.TestCase):
 
     if different:
       message.append(
-          'repr() of differing entries:\n%s' % ''.join(
-              '%s: %s != %s\n' % (safe_repr(k), safe_repr(a_value),
-                                  safe_repr(b_value))
-              for k, a_value, b_value in different))
+          'repr() of differing entries (expected != actual):\n%s'
+          % ''.join(
+              '%s: %s != %s\n'
+              % (safe_repr(k), safe_repr(a_value), safe_repr(b_value))
+              for k, a_value, b_value in different
+          )
+      )
 
     if missing:
       message.append(
