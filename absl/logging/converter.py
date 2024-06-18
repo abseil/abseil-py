@@ -83,7 +83,7 @@ ABSL_TO_STANDARD = {ABSL_FATAL: STANDARD_CRITICAL,
                     ABSL_DEBUG: STANDARD_DEBUG}
 
 # Inverts the ABSL_TO_STANDARD
-STANDARD_TO_ABSL = dict((v, k) for (k, v) in ABSL_TO_STANDARD.items())
+STANDARD_TO_ABSL = {v: k for (k, v) in ABSL_TO_STANDARD.items()}
 
 
 def get_initial_for_level(level):
@@ -125,7 +125,7 @@ def absl_to_cpp(level):
     The corresponding integer level for use in Abseil C++.
   """
   if not isinstance(level, int):
-    raise TypeError('Expect an int level, found {}'.format(type(level)))
+    raise TypeError(f'Expect an int level, found {type(level)}')
   if level >= 0:
     # C++ log levels must be >= 0
     return 0
@@ -146,7 +146,7 @@ def absl_to_standard(level):
     The corresponding integer level for use in standard logging.
   """
   if not isinstance(level, int):
-    raise TypeError('Expect an int level, found {}'.format(type(level)))
+    raise TypeError(f'Expect an int level, found {type(level)}')
   if level < ABSL_FATAL:
     level = ABSL_FATAL
   if level <= ABSL_DEBUG:
@@ -181,7 +181,7 @@ def standard_to_absl(level):
     The corresponding integer level for use in absl logging.
   """
   if not isinstance(level, int):
-    raise TypeError('Expect an int level, found {}'.format(type(level)))
+    raise TypeError(f'Expect an int level, found {type(level)}')
   if level < 0:
     level = 0
   if level < STANDARD_DEBUG:

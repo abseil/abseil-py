@@ -21,7 +21,7 @@ private APIs.
 from absl.flags import _exceptions
 
 
-class Validator(object):
+class Validator:
   """Base class for flags validators.
 
   Users should NOT overload these classes, and use flags.Register...
@@ -104,7 +104,7 @@ class SingleFlagValidator(Validator):
       message: str, error message to be shown to the user if validator's
           condition is not satisfied.
     """
-    super(SingleFlagValidator, self).__init__(checker, message)
+    super().__init__(checker, message)
     self.flag_name = flag_name
 
   def get_flags_names(self):
@@ -147,7 +147,7 @@ class MultiFlagsValidator(Validator):
       message: str, error message to be shown to the user if validator's
           condition is not satisfied
     """
-    super(MultiFlagsValidator, self).__init__(checker, message)
+    super().__init__(checker, message)
     self.flag_names = flag_names
 
   def _get_input_to_checker_function(self, flag_values):
@@ -159,7 +159,7 @@ class MultiFlagsValidator(Validator):
       dict, with keys() being self.flag_names, and value for each key
       being the value of the corresponding flag (string, boolean, etc).
     """
-    return dict([key, flag_values[key].value] for key in self.flag_names)
+    return {key: flag_values[key].value for key in self.flag_names}
 
   def print_flags_with_values(self, flag_values):
     prefix = 'flags '

@@ -15,7 +15,6 @@
 """Abseil setup configuration."""
 
 import os
-import sys
 
 # pylint: disable=g-import-not-at-top
 try:
@@ -25,9 +24,6 @@ except ImportError:
   use_setuptools()
   import setuptools
 # pylint: enable=g-import-not-at-top
-
-if sys.version_info < (3, 7):
-  raise RuntimeError('Python version 3.7+ is required.')
 
 setuptools_version = tuple(
     int(x) for x in setuptools.__version__.split('.')[:2])

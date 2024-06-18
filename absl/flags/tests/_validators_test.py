@@ -31,7 +31,7 @@ class SingleFlagValidatorTest(absltest.TestCase):
   """Testing _validators.register_validator() method."""
 
   def setUp(self):
-    super(SingleFlagValidatorTest, self).setUp()
+    super().setUp()
     self.flag_values = _flagvalues.FlagValues()
     self.call_args = []
 
@@ -281,7 +281,7 @@ class MultiFlagsValidatorTest(absltest.TestCase):
   """Test flags multi-flag validators."""
 
   def setUp(self):
-    super(MultiFlagsValidatorTest, self).setUp()
+    super().setUp()
     self.flag_values = _flagvalues.FlagValues()
     self.call_args = []
     self.foo_holder = _defines.DEFINE_integer(
@@ -457,7 +457,7 @@ class MultiFlagsValidatorTest(absltest.TestCase):
 class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
 
   def setUp(self):
-    super(MarkFlagsAsMutualExclusiveTest, self).setUp()
+    super().setUp()
     self.flag_values = _flagvalues.FlagValues()
 
     self.flag_one_holder = _defines.DEFINE_string(
@@ -661,7 +661,7 @@ class MarkFlagsAsMutualExclusiveTest(absltest.TestCase):
 class MarkBoolFlagsAsMutualExclusiveTest(absltest.TestCase):
 
   def setUp(self):
-    super(MarkBoolFlagsAsMutualExclusiveTest, self).setUp()
+    super().setUp()
     self.flag_values = _flagvalues.FlagValues()
 
     self.false_1_holder = _defines.DEFINE_boolean(
@@ -746,7 +746,7 @@ class MarkBoolFlagsAsMutualExclusiveTest(absltest.TestCase):
 class MarkFlagAsRequiredTest(absltest.TestCase):
 
   def setUp(self):
-    super(MarkFlagAsRequiredTest, self).setUp()
+    super().setUp()
     self.flag_values = _flagvalues.FlagValues()
 
   def test_success(self):
@@ -828,7 +828,7 @@ class MarkFlagAsRequiredTest(absltest.TestCase):
 class MarkFlagsAsRequiredTest(absltest.TestCase):
 
   def setUp(self):
-    super(MarkFlagsAsRequiredTest, self).setUp()
+    super().setUp()
     self.flag_values = _flagvalues.FlagValues()
 
   def test_success(self):

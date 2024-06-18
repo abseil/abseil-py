@@ -132,7 +132,7 @@ class ArgumentParser(argparse.ArgumentParser):
     self._inherited_absl_flags = kwargs.pop('inherited_absl_flags', flags.FLAGS)
     # Now call super to initialize argparse.ArgumentParser before calling
     # add_argument in _define_absl_flags.
-    super(ArgumentParser, self).__init__(**kwargs)
+    super().__init__(**kwargs)
 
     if self.add_help:
       # -h and --help are defined in super.
@@ -163,8 +163,7 @@ class ArgumentParser(argparse.ArgumentParser):
     undefok_missing = object()
     undefok = getattr(namespace, 'undefok', undefok_missing)
 
-    namespace, args = super(ArgumentParser, self).parse_known_args(
-        args, namespace)
+    namespace, args = super().parse_known_args(args, namespace)
 
     # For Python <= 2.7.8: https://bugs.python.org/issue9351, a bug where
     # sub-parsers don't preserve existing namespace attributes.
@@ -257,11 +256,12 @@ class _FlagAction(argparse.Action):
     """
     del dest
     self._flag_instance = flag_instance
-    super(_FlagAction, self).__init__(
+    super().__init__(
         option_strings=option_strings,
         dest=argparse.SUPPRESS,
         help=help,
-        metavar=metavar)
+        metavar=metavar,
+    )
 
   def __call__(self, parser, namespace, values, option_string=None):
     """See https://docs.python.org/3/library/argparse.html#action-classes."""
@@ -297,12 +297,13 @@ class _BooleanFlagAction(argparse.Action):
     if self._flag_instance.short_name:
       flag_names.append(self._flag_instance.short_name)
     self._flag_names = frozenset(flag_names)
-    super(_BooleanFlagAction, self).__init__(
+    super().__init__(
         option_strings=option_strings,
         dest=argparse.SUPPRESS,
         nargs=0,  # Does not accept values, only `--bool` or `--nobool`.
         help=help,
-        metavar=metavar)
+        metavar=metavar,
+    )
 
   def __call__(self, parser, namespace, values, option_string=None):
     """See https://docs.python.org/3/library/argparse.html#action-classes."""
@@ -334,12 +335,13 @@ class _HelpFullAction(argparse.Action):
       help: See argparse.Action.
     """
     del dest, default
-    super(_HelpFullAction, self).__init__(
+    super().__init__(
         option_strings=option_strings,
         dest=argparse.SUPPRESS,
         default=argparse.SUPPRESS,
         nargs=0,
-        help=help)
+        help=help,
+    )
 
   def __call__(self, parser, namespace, values, option_string=None):
     """See https://docs.python.org/3/library/argparse.html#action-classes."""
@@ -364,8 +366,8 @@ class _HelpFullAction(argparse.Action):
 def _strip_undefok_args(undefok, args):
   """Returns a new list of args after removing flags in --undefok."""
   if undefok:
-    undefok_names = set(name.strip() for name in undefok.split(','))
-    undefok_names |= set('no' + name for name in undefok_names)
+    undefok_names = {name.strip() for name in undefok.split(',')}
+    undefok_names |= {'no' + name for name in undefok_names}
     # Remove undefok flags.
     args = [arg for arg in args if not _is_undefok(arg, undefok_names)]
   return args

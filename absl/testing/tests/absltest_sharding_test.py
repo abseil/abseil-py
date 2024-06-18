@@ -191,7 +191,7 @@ class TestShardingTest(parameterized.TestCase):
     self.assertEqual(
         expected_exit_code,
         exit_code,
-        'Unexpected exit code, output:\n{}'.format(out),
+        f'Unexpected exit code, output:\n{out}',
     )
 
 

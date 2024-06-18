@@ -33,7 +33,7 @@ class TestOrderRandomizationTest(parameterized.TestCase):
   """
 
   def setUp(self):
-    super(TestOrderRandomizationTest, self).setUp()
+    super().setUp()
     self._test_name = 'absl/testing/tests/absltest_randomization_testcase'
 
   def _run_test(self, extra_argv, extra_env):

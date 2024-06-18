@@ -36,7 +36,8 @@ flags.DEFINE_boolean(
 flags.DEFINE_integer(
     'usage_error_exitcode', None, 'The exitcode if app.UsageError if raised.')
 flags.DEFINE_string(
-    'str_flag_with_unicode_args', u'thumb:\U0001F44D', u'smile:\U0001F604')
+    'str_flag_with_unicode_args', 'thumb:\U0001F44D', 'smile:\U0001F604'
+)
 flags.DEFINE_boolean('print_init_callbacks', False,
                      'print init callbacks and exit')
 
@@ -51,7 +52,7 @@ class MyExceptionHandler(app.ExceptionHandler):
     self.message = message
 
   def handle(self, exc):
-    sys.stdout.write('MyExceptionHandler: {}\n'.format(self.message))
+    sys.stdout.write(f'MyExceptionHandler: {self.message}\n')
 
 
 def real_main(argv):
@@ -75,7 +76,7 @@ def real_main(argv):
   if FLAGS.print_init_callbacks:
     app.call_after_init(lambda: _callback_results.append('during real_main'))
     for value in _callback_results:
-      print('callback: {}'.format(value))
+      print(f'callback: {value}')
     sys.exit(0)
 
   # Ensure that we have a random C++ flag in flags.FLAGS; this shows
@@ -83,10 +84,10 @@ def real_main(argv):
   helper_type = os.environ['APP_TEST_HELPER_TYPE']
   if helper_type == 'clif':
     if 'heap_check_before_constructors' in flags.FLAGS:
-      print('PASS: C++ flag present and helper_type is {}'.format(helper_type))
+      print(f'PASS: C++ flag present and helper_type is {helper_type}')
       sys.exit(0)
     else:
-      print('FAILED: C++ flag absent but helper_type is {}'.format(helper_type))
+      print(f'FAILED: C++ flag absent but helper_type is {helper_type}')
       sys.exit(1)
   elif helper_type == 'pure_python':
     if 'heap_check_before_constructors' in flags.FLAGS:
@@ -96,7 +97,7 @@ def real_main(argv):
       print('PASS: C++ flag absent and helper_type is pure_python')
       sys.exit(0)
   else:
-    print('Unexpected helper_type "{}"'.format(helper_type))
+    print(f'Unexpected helper_type "{helper_type}"')
     sys.exit(1)
 
 
