@@ -42,7 +42,7 @@ import sys
 import tempfile
 import textwrap
 import typing
-from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, NoReturn, Optional, Sequence, Text, TextIO, Tuple, Type, Union
+from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, NoReturn, Optional, Sequence, TextIO, Tuple, Type, Union
 import unittest
 from unittest import mock  # pylint: disable=unused-import Allow absltest.mock.
 import unittest.case
@@ -89,7 +89,8 @@ def expectedFailureIf(condition, reason):  # pylint: disable=invalid-name
 
   Args:
     condition: bool, whether to expect failure or not.
-    reason: Text, the reason to expect failure.
+    reason: str, the reason to expect failure.
+
   Returns:
     Decorator function
   """
@@ -2648,9 +2649,9 @@ def _run_and_get_tests_result(
 
 
 def run_tests(
-    argv: MutableSequence[Text],
+    argv: MutableSequence[str],
     args: Sequence[Any],
-    kwargs: MutableMapping[Text, Any],
+    kwargs: MutableMapping[str, Any],
 ) -> None:
   """Executes a set of Python unit tests.
 

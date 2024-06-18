@@ -192,10 +192,10 @@ def _register_and_parse_flags_with_usage(
 
   Args:
     argv: [str], a non-empty list of the command line arguments including
-        program name, sys.argv is used if None.
-    flags_parser: Callable[[List[Text]], Any], the function used to parse flags.
-        The return value of this function is passed to `main` untouched.
-        It must guarantee FLAGS is parsed after this function is called.
+      program name, sys.argv is used if None.
+    flags_parser: Callable[[List[str]], Any], the function used to parse flags.
+      The return value of this function is passed to `main` untouched. It must
+      guarantee FLAGS is parsed after this function is called.
 
   Returns:
     The return value of `flags_parser`. When using the default `flags_parser`,
@@ -207,6 +207,7 @@ def _register_and_parse_flags_with_usage(
     Error: Raised when flags_parser is called, but FLAGS is not parsed.
     SystemError: Raised when it's called more than once.
   """
+  # fmt: on
   if _register_and_parse_flags_with_usage.done:
     raise SystemError('Flag registration can be done only once.')
 
@@ -286,7 +287,7 @@ def run(
         For more details, see https://docs.python.org/3/library/sys#sys.exit
     argv: A non-empty list of the command line arguments including program name,
         sys.argv is used if None.
-    flags_parser: Callable[[List[Text]], Any], the function used to parse flags.
+    flags_parser: Callable[[List[str]], Any], the function used to parse flags.
         The return value of this function is passed to `main` untouched.
         It must guarantee FLAGS is parsed after this function is called.
         Should be passed as a keyword-only arg which will become mandatory in a
@@ -296,6 +297,7 @@ def run(
   - Calls main() with the remaining arguments.
   - If main() raises a UsageError, prints usage and the error message.
   """
+  # fmt: on
   try:
     args = _run_init(
         sys.argv if argv is None else argv,

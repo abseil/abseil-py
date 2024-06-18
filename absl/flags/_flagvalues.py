@@ -22,7 +22,7 @@ import itertools
 import logging
 import os
 import sys
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Optional, Sequence, Text, TextIO, Generic, TypeVar, Union, Tuple
+from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, Sequence, TextIO, Tuple, TypeVar, Union
 from xml.dom import minidom
 
 from absl.flags import _exceptions
@@ -146,10 +146,10 @@ class FlagValues:
   def is_gnu_getopt(self) -> bool:
     return self.__dict__['__use_gnu_getopt']
 
-  def _flags(self) -> Dict[Text, Flag]:
+  def _flags(self) -> Dict[str, Flag]:
     return self.__dict__['__flags']
 
-  def flags_by_module_dict(self) -> Dict[Text, List[Flag]]:
+  def flags_by_module_dict(self) -> Dict[str, List[Flag]]:
     """Returns the dictionary of module_name -> list of defined flags.
 
     Returns:
@@ -167,7 +167,7 @@ class FlagValues:
     """
     return self.__dict__['__flags_by_module_id']
 
-  def key_flags_by_module_dict(self) -> Dict[Text, List[Flag]]:
+  def key_flags_by_module_dict(self) -> Dict[str, List[Flag]]:
     """Returns the dictionary of module_name -> list of key flags.
 
     Returns:
@@ -176,7 +176,7 @@ class FlagValues:
     """
     return self.__dict__['__key_flags_by_module']
 
-  def register_flag_by_module(self, module_name: Text, flag: Flag) -> None:
+  def register_flag_by_module(self, module_name: str, flag: Flag) -> None:
     """Records the module that defines a specific flag.
 
     We keep track of which flag is defined by which module so that we
@@ -199,7 +199,7 @@ class FlagValues:
     flags_by_module_id = self.flags_by_module_id_dict()
     flags_by_module_id.setdefault(module_id, []).append(flag)
 
-  def register_key_flag_for_module(self, module_name: Text, flag: Flag) -> None:
+  def register_key_flag_for_module(self, module_name: str, flag: Flag) -> None:
     """Specifies that a flag is a key flag for a module.
 
     Args:
@@ -255,7 +255,7 @@ class FlagValues:
         while flag_obj in flags_in_module:
           flags_in_module.remove(flag_obj)
 
-  def get_flags_for_module(self, module: Union[Text, Any]) -> List[Flag]:
+  def get_flags_for_module(self, module: Union[str, Any]) -> List[Flag]:
     """Returns the list of flags defined by a module.
 
     Args:
@@ -273,7 +273,7 @@ class FlagValues:
 
     return list(self.flags_by_module_dict().get(module, []))
 
-  def get_key_flags_for_module(self, module: Union[Text, Any]) -> List[Flag]:
+  def get_key_flags_for_module(self, module: Union[str, Any]) -> List[Flag]:
     """Returns the list of key flags for a module.
 
     Args:
@@ -300,9 +300,9 @@ class FlagValues:
         key_flags.append(flag)
     return key_flags
 
-  # TODO(yileiyang): Restrict default to Optional[Text].
+  # TODO(yileiyang): Restrict default to Optional[str].
   def find_module_defining_flag(
-      self, flagname: Text, default: Optional[_T] = None
+      self, flagname: str, default: Optional[_T] = None
   ) -> Union[str, Optional[_T]]:
     """Return the name of the module defining this flag, or default.
 
@@ -328,9 +328,9 @@ class FlagValues:
           return module
     return default
 
-  # TODO(yileiyang): Restrict default to Optional[Text].
+  # TODO(yileiyang): Restrict default to Optional[str].
   def find_module_id_defining_flag(
-      self, flagname: Text, default: Optional[_T] = None
+      self, flagname: str, default: Optional[_T] = None
   ) -> Union[int, Optional[_T]]:
     """Return the ID of the module defining this flag, or default.
 
@@ -413,7 +413,7 @@ class FlagValues:
               flag_name, self, other_flag_values=flag_values)
 
   def remove_flag_values(
-      self, flag_values: 'Union[FlagValues, Iterable[Text]]'
+      self, flag_values: 'Union[FlagValues, Iterable[str]]'
   ) -> None:
     """Remove flags that were previously appended from another FlagValues.
 
@@ -424,7 +424,7 @@ class FlagValues:
     for flag_name in flag_values:
       self.__delattr__(flag_name)
 
-  def __setitem__(self, name: Text, flag: Flag) -> None:
+  def __setitem__(self, name: str, flag: Flag) -> None:
     """Registers a new flag variable."""
     fl = self._flags()
     if not isinstance(flag, _flag.Flag):
@@ -466,7 +466,7 @@ class FlagValues:
     for f in flags_to_cleanup:
       self._cleanup_unregistered_flag_from_module_dicts(f)
 
-  def __dir__(self) -> List[Text]:
+  def __dir__(self) -> List[str]:
     """Returns list of names of all defined flags.
 
     Useful for TAB-completion in ipython.
@@ -476,7 +476,7 @@ class FlagValues:
     """
     return sorted(self.__dict__['__flags'])
 
-  def __getitem__(self, name: Text) -> Flag:
+  def __getitem__(self, name: str) -> Flag:
     """Returns the Flag object for the flag --name."""
     return self._flags()[name]
 
@@ -484,7 +484,7 @@ class FlagValues:
     """Marks the flag --name as hidden."""
     self.__dict__['__hiddenflags'].add(name)
 
-  def __getattr__(self, name: Text) -> Any:
+  def __getattr__(self, name: str) -> Any:
     """Retrieves the 'value' attribute of the flag --name."""
     fl = self._flags()
     if name not in fl:
@@ -498,7 +498,7 @@ class FlagValues:
       raise _exceptions.UnparsedFlagAccessError(
           'Trying to access flag --%s before flags were parsed.' % name)
 
-  def __setattr__(self, name: Text, value: _T) -> _T:
+  def __setattr__(self, name: str, value: _T) -> _T:
     """Sets the 'value' attribute of the flag --name."""
     self._set_attributes(**{name: value})
     return value
@@ -581,7 +581,7 @@ class FlagValues:
     if messages:
       raise _exceptions.IllegalFlagValueError('\n'.join(messages))
 
-  def __delattr__(self, flag_name: Text) -> None:
+  def __delattr__(self, flag_name: str) -> None:
     """Deletes a previously-defined flag from a flag object.
 
     This method makes sure we can delete a flag by using
@@ -611,7 +611,7 @@ class FlagValues:
 
     self._cleanup_unregistered_flag_from_module_dicts(flag_obj)
 
-  def set_default(self, name: Text, value: Any) -> None:
+  def set_default(self, name: str, value: Any) -> None:
     """Changes the default value of the named flag object.
 
     The flag's current value is also updated if the flag is currently using
@@ -633,19 +633,19 @@ class FlagValues:
     fl[name]._set_default(value)  # pylint: disable=protected-access
     self._assert_validators(fl[name].validators)
 
-  def __contains__(self, name: Text) -> bool:
+  def __contains__(self, name: str) -> bool:
     """Returns True if name is a value (flag) in the dict."""
     return name in self._flags()
 
   def __len__(self) -> int:
     return len(self.__dict__['__flags'])
 
-  def __iter__(self) -> Iterator[Text]:
+  def __iter__(self) -> Iterator[str]:
     return iter(self._flags())
 
   def __call__(
-      self, argv: Sequence[Text], known_only: bool = False
-  ) -> List[Text]:
+      self, argv: Sequence[str], known_only: bool = False
+  ) -> List[str]:
     """Parses flags from argv; stores parsed flags into this FlagValues object.
 
     All unparsed arguments are returned.
@@ -878,7 +878,7 @@ class FlagValues:
     self.__dict__['__flags_parsed'] = False
     self.__dict__['__unparse_flags_called'] = True
 
-  def flag_values_dict(self) -> Dict[Text, Any]:
+  def flag_values_dict(self) -> Dict[str, Any]:
     """Returns a dictionary that maps flag names to flag values."""
     return {name: flag.value for name, flag in self._flags().items()}
 
@@ -887,8 +887,8 @@ class FlagValues:
     return self.get_help()
 
   def get_help(
-      self, prefix: Text = '', include_special_flags: bool = True
-  ) -> Text:
+      self, prefix: str = '', include_special_flags: bool = True
+  ) -> str:
     """Returns a help string for all known flags.
 
     Args:
@@ -968,7 +968,7 @@ class FlagValues:
     if key_flags:
       self._render_module_flags(module, key_flags, output_lines, prefix)
 
-  def module_help(self, module: Any) -> Text:
+  def module_help(self, module: Any) -> str:
     """Describes the key flags of a module.
 
     Args:
@@ -981,7 +981,7 @@ class FlagValues:
     self._render_our_module_key_flags(module, helplist)
     return '\n'.join(helplist)
 
-  def main_module_help(self) -> Text:
+  def main_module_help(self) -> str:
     """Describes the key flags of the main module.
 
     Returns:
@@ -1028,7 +1028,7 @@ class FlagValues:
             '(%s)' % flag.parser.syntactic_help, indent=prefix + '  ')
       output_lines.append(flaghelp)
 
-  def get_flag_value(self, name: Text, default: Any) -> Any:  # pylint: disable=invalid-name
+  def get_flag_value(self, name: str, default: Any) -> Any:  # pylint: disable=invalid-name
     """Returns the value of a flag (if not None) or a default value.
 
     Args:
@@ -1151,8 +1151,8 @@ class FlagValues:
     return flag_line_list
 
   def read_flags_from_files(
-      self, argv: Sequence[Text], force_gnu: bool = True
-  ) -> List[Text]:
+      self, argv: Sequence[str], force_gnu: bool = True
+  ) -> List[str]:
     """Processes command line args, but also allow args to be read from file.
 
     Args:
@@ -1235,7 +1235,7 @@ class FlagValues:
 
     return new_argv
 
-  def flags_into_string(self) -> Text:
+  def flags_into_string(self) -> str:
     """Returns a string with the flags assignments from this FlagValues object.
 
     This function ignores flags whose value is None.  Each flag
@@ -1257,7 +1257,7 @@ class FlagValues:
           s += flag.serialize() + '\n'
     return s
 
-  def append_flags_into_file(self, filename: Text) -> None:
+  def append_flags_into_file(self, filename: str) -> None:
     """Appends all flags assignments from this FlagInfo object to a file.
 
     Output will be in the format of a flagfile.
@@ -1409,7 +1409,7 @@ class FlagHolder(Generic[_T]):
   __nonzero__ = __bool__
 
   @property
-  def name(self) -> Text:
+  def name(self) -> str:
     return self._name
 
   @property
@@ -1439,7 +1439,7 @@ class FlagHolder(Generic[_T]):
     """Returns True if the flag was parsed from command-line flags."""
     return bool(self._flagvalues[self._name].present)
 
-  def serialize(self) -> Text:
+  def serialize(self) -> str:
     """Returns a serialized representation of the flag."""
     return self._flagvalues[self._name].serialize()
 
