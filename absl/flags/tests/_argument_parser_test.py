@@ -202,13 +202,5 @@ class SerializerTest(parameterized.TestCase):
     self.assertEqual(expected, serialized)
 
 
-class HelperFunctionsTest(absltest.TestCase):
-
-  def test_is_integer_type(self):
-    self.assertTrue(_argument_parser._is_integer_type(1))
-    # Note that isinstance(False, int) == True.
-    self.assertFalse(_argument_parser._is_integer_type(False))
-
-
 if __name__ == '__main__':
   absltest.main()

@@ -23,10 +23,12 @@ import types
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Sequence, Set
 from xml.dom import minidom
 # pylint: disable=g-import-not-at-top
+fcntl: Optional[types.ModuleType]
 try:
   import fcntl
 except ImportError:
   fcntl = None
+termios: Optional[types.ModuleType]
 try:
   # Importing termios will fail on non-unix platforms.
   import termios
@@ -74,7 +76,7 @@ SPECIAL_FLAGS: Any = None
 # This points to the flags module, initialized in flags/__init__.py.
 # This should only be used in adopt_module_key_flags to take SPECIAL_FLAGS into
 # account.
-FLAGS_MODULE: types.ModuleType = None
+FLAGS_MODULE: Optional[types.ModuleType] = None
 
 
 class _ModuleObjectAndName(NamedTuple):
@@ -84,7 +86,7 @@ class _ModuleObjectAndName(NamedTuple):
   - module: object, module object.
   - module_name: str, module name.
   """
-  module: types.ModuleType
+  module: Optional[types.ModuleType]
   module_name: str
 
 
@@ -181,7 +183,7 @@ def get_help_width() -> int:
 
 
 def get_flag_suggestions(
-    attempt: Optional[str], longopt_list: Sequence[str]
+    attempt: str, longopt_list: Sequence[str]
 ) -> List[str]:
   """Returns helpful similar matches for an invalid flag."""
   # Don't suggest on very short strings, or if no longopts are specified.
@@ -339,7 +341,7 @@ def flag_dict_to_args(
         yield '--no%s' % key
     elif isinstance(value, (bytes, type(u''))):
       # We don't want strings to be handled like python collections.
-      yield '--%s=%s' % (key, value)
+      yield '--%s=%s' % (key, value)  # type: ignore[str-bytes-safe]
     else:
       # Now we attempt to deal with collections.
       try:

@@ -23,7 +23,7 @@ import csv
 import enum
 import io
 import string
-from typing import Generic, Iterable, List, Optional, Sequence, Type, TypeVar, Union
+from typing import Any, Dict, Generic, Iterable, List, Optional, Sequence, Type, TypeVar, Union
 from xml.dom import minidom
 
 from absl.flags import _helpers
@@ -33,16 +33,10 @@ _ET = TypeVar('_ET', bound=enum.Enum)
 _N = TypeVar('_N', int, float)
 
 
-def _is_integer_type(instance):
-  """Returns True if instance is an integer, and not a bool."""
-  return (isinstance(instance, int) and
-          not isinstance(instance, bool))
-
-
 class _ArgumentParserCache(type):
   """Metaclass used to cache and share argument parsers among flags."""
 
-  _instances = {}
+  _instances: Dict[Any, Any] = {}
 
   def __call__(cls, *args, **kwargs):
     """Returns an instance of the argument parser cls.
@@ -115,7 +109,7 @@ class ArgumentParser(Generic[_T], metaclass=_ArgumentParserCache):
     if not isinstance(argument, str):
       raise TypeError('flag value must be a string, found "{}"'.format(
           type(argument)))
-    return argument
+    return argument  # type: ignore[return-value]
 
   def flag_type(self) -> str:
     """Returns a string representing the type of the flag."""
@@ -155,7 +149,7 @@ class NumericParser(ArgumentParser[_N]):
     return ((self.lower_bound is not None and val < self.lower_bound) or
             (self.upper_bound is not None and val > self.upper_bound))
 
-  def parse(self, argument: str) -> _N:
+  def parse(self, argument: Union[str, _N]) -> _N:
     """See base class."""
     val = self.convert(argument)
     if self.is_outside_bounds(val):
@@ -174,7 +168,7 @@ class NumericParser(ArgumentParser[_N]):
           doc, 'upper_bound', self.upper_bound))
     return elements
 
-  def convert(self, argument: str) -> _N:
+  def convert(self, argument: Union[str, _N]) -> _N:
     """Returns the correct numeric value of argument.
 
     Subclass must implement this method, and raise TypeError if argument is not
@@ -222,8 +216,11 @@ class FloatParser(NumericParser[float]):
 
   def convert(self, argument: Union[int, float, str]) -> float:
     """Returns the float value of argument."""
-    if (_is_integer_type(argument) or isinstance(argument, float) or
-        isinstance(argument, str)):
+    if (
+        (isinstance(argument, int) and not isinstance(argument, bool))
+        or isinstance(argument, float)
+        or isinstance(argument, str)
+    ):
       return float(argument)
     else:
       raise TypeError(
@@ -269,7 +266,7 @@ class IntegerParser(NumericParser[int]):
 
   def convert(self, argument: Union[int, str]) -> int:
     """Returns the int value of argument."""
-    if _is_integer_type(argument):
+    if isinstance(argument, int) and not isinstance(argument, bool):
       return argument
     elif isinstance(argument, str):
       base = 10
@@ -469,6 +466,8 @@ class EnumClassListSerializer(ListSerializer[_ET]):
   This serializer simply joins the output of `EnumClassSerializer` using a
   provided separator.
   """
+
+  _element_serializer: 'EnumClassSerializer'
 
   def __init__(self, list_sep: str, **kwargs) -> None:
     """Initializes EnumClassListSerializer.

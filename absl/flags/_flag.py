@@ -87,6 +87,8 @@ class Flag(Generic[_T]):
   default_as_str: Optional[str]
   default_unparsed: Union[Optional[_T], str]
 
+  parser: _argument_parser.ArgumentParser[_T]
+
   def __init__(
       self,
       parser: _argument_parser.ArgumentParser[_T],
@@ -111,7 +113,7 @@ class Flag(Generic[_T]):
     self.short_name = short_name
     self.boolean = boolean
     self.present = 0
-    self.parser = parser
+    self.parser = parser  # type: ignore[annotation-type-mismatch]
     self.serializer = serializer
     self.allow_override = allow_override
     self.allow_override_cpp = allow_override_cpp
@@ -120,8 +122,8 @@ class Flag(Generic[_T]):
     self.allow_using_method_names = allow_using_method_names
 
     self.using_default_value = True
-    self._value = None
-    self.validators = []
+    self._value: Optional[_T] = None
+    self.validators: List[Any] = []
     if self.allow_hide_cpp and self.allow_override_cpp:
       raise _exceptions.Error(
           "Can't have both allow_hide_cpp (means use Python flag) and "
@@ -177,7 +179,7 @@ class Flag(Generic[_T]):
         return repr('false')
     return repr(str(value))
 
-  def parse(self, argument: Union[str, Optional[_T]]) -> None:
+  def parse(self, argument: Union[str, _T]) -> None:
     """Parses string and sets flag value.
 
     Args:
@@ -202,7 +204,7 @@ class Flag(Generic[_T]):
       The parsed value.
     """
     try:
-      return self.parser.parse(argument)
+      return self.parser.parse(argument)  # type: ignore[arg-type]
     except (TypeError, ValueError, OverflowError) as e:
       # Recast as IllegalFlagValueError.
       raise _exceptions.IllegalFlagValueError(
@@ -298,7 +300,7 @@ class Flag(Generic[_T]):
       else:
         default_serialized = ''
     else:
-      default_serialized = self.default
+      default_serialized = self.default  # type: ignore[assignment]
     element.appendChild(_helpers.create_xml_dom_element(
         doc, 'default', default_serialized))
     value_serialized = self._serialize_value_for_xml(self.value)
@@ -363,6 +365,8 @@ class BooleanFlag(Flag[bool]):
 class EnumFlag(Flag[str]):
   """Basic enum flag; its value can be any string from list of enum_values."""
 
+  parser: _argument_parser.EnumParser
+
   def __init__(
       self,
       name: str,
@@ -374,11 +378,11 @@ class EnumFlag(Flag[str]):
       **args
   ):
     p = _argument_parser.EnumParser(enum_values, case_sensitive)
+    g: _argument_parser.ArgumentSerializer[str]
     g = _argument_parser.ArgumentSerializer()
     super(EnumFlag, self).__init__(
-        p, g, name, default, help, short_name, **args)
-    # NOTE: parser should be typed EnumParser but the constructor
-    # restricts the available interface to ArgumentParser[str].
+        p, g, name, default, help, short_name, **args
+    )
     self.parser = p
     self.help = '<%s>: %s' % ('|'.join(p.enum_values), self.help)
 
@@ -395,6 +399,8 @@ class EnumFlag(Flag[str]):
 class EnumClassFlag(Flag[_ET]):
   """Basic enum flag; its value is an enum class's member."""
 
+  parser: _argument_parser.EnumClassParser
+
   def __init__(
       self,
       name: str,
@@ -406,12 +412,13 @@ class EnumClassFlag(Flag[_ET]):
       **args
   ):
     p = _argument_parser.EnumClassParser(
-        enum_class, case_sensitive=case_sensitive)
+        enum_class, case_sensitive=case_sensitive
+    )
+    g: _argument_parser.EnumClassSerializer[_ET]
     g = _argument_parser.EnumClassSerializer(lowercase=not case_sensitive)
     super(EnumClassFlag, self).__init__(
-        p, g, name, default, help, short_name, **args)
-    # NOTE: parser should be typed EnumClassParser[_ET] but the constructor
-    # restricts the available interface to ArgumentParser[_ET].
+        p, g, name, default, help, short_name, **args
+    )
     self.parser = p
     self.help = '<%s>: %s' % ('|'.join(p.member_names), self.help)
 
@@ -456,23 +463,28 @@ class MultiFlag(Generic[_T], Flag[List[_T]]):
     """
     new_values = self._parse(arguments)
     if self.present:
+      assert self.value is not None
       self.value.extend(new_values)
     else:
       self.value = new_values
     self.present += len(new_values)
 
-  def _parse(self, arguments: Union[str, Optional[Iterable[_T]]]) -> List[_T]:  # pylint: disable=arguments-renamed
-    if (isinstance(arguments, abc.Iterable) and
-        not isinstance(arguments, str)):
-      arguments = list(arguments)
+  def _parse(self, arguments: Union[str, _T, Iterable[_T]]) -> List[_T]:  # pylint: disable=arguments-renamed
+    arguments_list: List[Union[str, _T]]
 
-    if not isinstance(arguments, list):
+    if isinstance(arguments, str):
+      arguments_list = [arguments]
+
+    elif isinstance(arguments, abc.Iterable):
+      arguments_list = list(arguments)
+
+    else:
       # Default value may be a list of values.  Most other arguments
       # will not be, so convert them into a single-item list to make
       # processing simpler below.
-      arguments = [arguments]
+      arguments_list = [arguments]
 
-    return [super(MultiFlag, self)._parse(item) for item in arguments]
+    return [super(MultiFlag, self)._parse(item) for item in arguments_list]  # type: ignore
 
   def _serialize(self, value: Optional[List[_T]]) -> str:
     """See base class."""
@@ -483,7 +495,8 @@ class MultiFlag(Generic[_T], Flag[List[_T]]):
       return ''
 
     serialized_items = [
-        super(MultiFlag, self)._serialize(value_item) for value_item in value
+        super(MultiFlag, self)._serialize(value_item)  # type: ignore[arg-type]
+        for value_item in value
     ]
 
     return '\n'.join(serialized_items)
@@ -511,6 +524,8 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
   type.
   """
 
+  parser: _argument_parser.EnumClassParser[_ET]  # type: ignore[assignment]
+
   def __init__(
       self,
       name: str,
@@ -522,6 +537,7 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
   ):
     p = _argument_parser.EnumClassParser(
         enum_class, case_sensitive=case_sensitive)
+    g: _argument_parser.EnumClassListSerializer
     g = _argument_parser.EnumClassListSerializer(
         list_sep=',', lowercase=not case_sensitive)
     super(MultiEnumClassFlag, self).__init__(

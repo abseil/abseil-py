@@ -22,7 +22,7 @@ import itertools
 import logging
 import os
 import sys
-from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, Sequence, TextIO, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, Sequence, Set, TextIO, Tuple, TypeVar, Union
 from xml.dom import minidom
 
 from absl.flags import _exceptions
@@ -35,6 +35,7 @@ from absl.flags._flag import Flag
 _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
 _T = TypeVar('_T')
+_T_co = TypeVar('_T_co', covariant=True)  # pytype: disable=not-supported-yet
 
 
 class FlagValues:
@@ -246,10 +247,12 @@ class FlagValues:
     """
     if self._flag_is_registered(flag_obj):
       return
-    for flags_by_module_dict in (self.flags_by_module_dict(),
-                                 self.flags_by_module_id_dict(),
-                                 self.key_flags_by_module_dict()):
-      for flags_in_module in flags_by_module_dict.values():
+    for flags_by_module in (
+        self.flags_by_module_dict().values(),
+        self.flags_by_module_id_dict().values(),
+        self.key_flags_by_module_dict().values(),
+    ):
+      for flags_in_module in flags_by_module:
         # While (as opposed to if) takes care of multiple occurrences of a
         # flag in the list for the same module.
         while flag_obj in flags_in_module:
@@ -450,7 +453,7 @@ class FlagValues:
     # If a new flag overrides an old one, we need to cleanup the old flag's
     # modules if it's not registered.
     flags_to_cleanup = set()
-    short_name: str = flag.short_name  # pytype: disable=annotation-type-mismatch
+    short_name: Optional[str] = flag.short_name
     if short_name is not None:
       if (short_name in fl and not flag.allow_override and
           not fl[short_name].allow_override):
@@ -560,7 +563,7 @@ class FlagValues:
           validator.
     """
     messages = []
-    bad_flags = set()
+    bad_flags: Set[str] = set()
     for validator in sorted(
         validators, key=lambda validator: validator.insertion_index):
       try:
@@ -715,7 +718,7 @@ class FlagValues:
 
   def _parse_args(
       self, args: List[str], known_only: bool
-  ) -> Tuple[List[Tuple[Optional[str], Any]], List[str]]:
+  ) -> Tuple[List[Tuple[str, Any]], List[str]]:
     """Helper function to do the main argument parsing.
 
     This function goes through args and does the bulk of the flag parsing.
@@ -736,21 +739,21 @@ class FlagValues:
        Error: Raised on any parsing error.
        ValueError: Raised on flag value parsing error.
     """
-    unparsed_names_and_args = []  # A list of (flag name or None, arg).
-    undefok = set()
+    unparsed_names_and_args: List[Tuple[Optional[str], str]] = []
+    undefok: Set[str] = set()
     retired_flag_func = self.__dict__['__is_retired_flag_func']
 
     flag_dict = self._flags()
-    args = iter(args)
-    for arg in args:
+    args_it = iter(args)
+    del args
+    for arg in args_it:
       value = None
 
-      def get_value():
-        # pylint: disable=cell-var-from-loop
+      def get_value() -> str:
         try:
-          return next(args) if value is None else value
+          return next(args_it) if value is None else value  # pylint: disable=cell-var-from-loop
         except StopIteration:
-          raise _exceptions.Error('Missing value for flag ' + arg)  # pylint: disable=undefined-loop-variable
+          raise _exceptions.Error('Missing value for flag ' + arg) from None  # pylint: disable=cell-var-from-loop
 
       if not arg.startswith('-'):
         # A non-argument: default is break, GNU is skip.
@@ -838,11 +841,11 @@ class FlagValues:
 
     unknown_flags = []
     unparsed_args = []
-    for name, arg in unparsed_names_and_args:
-      if name is None:
+    for arg_name, arg in unparsed_names_and_args:
+      if arg_name is None:
         # Positional arguments.
         unparsed_args.append(arg)
-      elif name in undefok:
+      elif arg_name in undefok:
         # Remove undefok flags.
         continue
       else:
@@ -850,9 +853,9 @@ class FlagValues:
         if known_only:
           unparsed_args.append(arg)
         else:
-          unknown_flags.append((name, arg))
+          unknown_flags.append((arg_name, arg))
 
-    unparsed_args.extend(list(args))
+    unparsed_args.extend(list(args_it))
     return unknown_flags, unparsed_args
 
   def is_parsed(self) -> bool:
@@ -909,12 +912,12 @@ class FlagValues:
         modules = [main_module] + modules
       return self._get_help_for_modules(modules, prefix, include_special_flags)
     else:
-      output_lines = []
+      output_lines: List[str] = []
       # Just print one long list of flags.
-      values = self._flags().values()
+      values: Iterable[Flag] = self._flags().values()
       if include_special_flags:
         values = itertools.chain(
-            values, _helpers.SPECIAL_FLAGS._flags().values()  # pylint: disable=protected-access  # pytype: disable=attribute-error
+            values, _helpers.SPECIAL_FLAGS._flags().values()  # pylint: disable=protected-access
         )
       self._render_flag_list(values, output_lines, prefix)
       return '\n'.join(output_lines)
@@ -977,7 +980,7 @@ class FlagValues:
     Returns:
       str, describing the key flags of a module.
     """
-    helplist = []
+    helplist: List[str] = []
     self._render_our_module_key_flags(module, helplist)
     return '\n'.join(helplist)
 
@@ -1342,7 +1345,7 @@ class FlagValues:
 FLAGS = FlagValues()
 
 
-class FlagHolder(Generic[_T]):
+class FlagHolder(Generic[_T_co]):
   """Holds a defined flag.
 
   This facilitates a cleaner api around global state. Instead of::
@@ -1368,12 +1371,12 @@ class FlagHolder(Generic[_T]):
   since the name of the flag appears only once in the source code.
   """
 
-  value: _T
+  value: _T_co
 
   def __init__(
       self,
       flag_values: FlagValues,
-      flag: Flag[_T],
+      flag: Flag[_T_co],
       ensure_non_none_value: bool = False,
   ):
     """Constructs a FlagHolder instance providing typesafe access to flag.
@@ -1412,8 +1415,8 @@ class FlagHolder(Generic[_T]):
   def name(self) -> str:
     return self._name
 
-  @property
-  def value(self) -> _T:
+  @property  # type: ignore[no-redef]
+  def value(self) -> _T_co:
     """Returns the value of the flag.
 
     If ``_ensure_non_none_value`` is ``True``, then return value is not
@@ -1430,9 +1433,9 @@ class FlagHolder(Generic[_T]):
     return val
 
   @property
-  def default(self) -> _T:
+  def default(self) -> _T_co:
     """Returns the default value of the flag."""
-    return self._flagvalues[self._name].default
+    return self._flagvalues[self._name].default  # type: ignore[return-value]
 
   @property
   def present(self) -> bool:
@@ -1477,4 +1480,6 @@ def resolve_flag_refs(
           'do flag names, if provided.')
     fv = newfv
     names.append(name)
+  if fv is None:
+    raise ValueError('flag_refs argument must not be empty')
   return names, fv

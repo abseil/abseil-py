@@ -280,7 +280,7 @@ class AliasFlagsTest(absltest.TestCase):
 class FlagsUnitTest(absltest.TestCase):
   """Flags Unit Test."""
 
-  maxDiff = None
+  maxDiff = None  # type: ignore[assignment]
 
   def test_flags(self):
     """Test normal usage with no (expected) errors."""
