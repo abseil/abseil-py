@@ -71,7 +71,6 @@ FLAGS = flags.FLAGS
 
 # Private typing symbols.
 _T = typing.TypeVar('_T')  # Unbounded TypeVar for general usage
-_OutcomeType = unittest.case._Outcome  # pytype: disable=module-attr
 _TEXT_OR_BINARY_TYPES = (str, bytes)
 
 # Suppress surplus entries in AssertionError stack traces.
@@ -244,7 +243,7 @@ def _monkey_patch_test_result_for_unexpected_passes() -> None:
   test_result = unittest.TestResult()
   test_result.addUnexpectedSuccess(unittest.FunctionTestCase(lambda: None))
   if test_result.wasSuccessful():  # The bug is present.
-    unittest.TestResult.wasSuccessful = wasSuccessful
+    unittest.TestResult.wasSuccessful = wasSuccessful  # type: ignore[method-assign]
     if test_result.wasSuccessful():  # Warn the user if our hot-fix failed.
       sys.stderr.write('unittest.result.TestResult monkey patch to report'
                        ' unexpected passes as failures did not work.\n')
@@ -373,7 +372,7 @@ class _TempFile(object):
       cls,
       base_path: str,
       file_path: Optional[str],
-      content: AnyStr,
+      content: Optional[AnyStr],
       mode: str,
       encoding: str,
       errors: str,
@@ -531,26 +530,32 @@ class _method(object):
   (e.g. Cls.method(self, ...)) but is still situationally useful.
   """
 
+  _finstancemethod: Any
+  _fclassmethod: Optional[Any]
+
   def __init__(self, finstancemethod: Callable[..., Any]) -> None:
     self._finstancemethod = finstancemethod
     self._fclassmethod = None
 
   def classmethod(self, fclassmethod: Callable[..., Any]) -> '_method':
-    self._fclassmethod = classmethod(fclassmethod)
+    if isinstance(fclassmethod, classmethod):
+      self._fclassmethod = fclassmethod
+    else:
+      self._fclassmethod = classmethod(fclassmethod)
     return self
 
-  def __doc__(self) -> str:
-    if getattr(self._finstancemethod, '__doc__'):
-      return self._finstancemethod.__doc__
-    elif getattr(self._fclassmethod, '__doc__'):
-      return self._fclassmethod.__doc__
-    return ''
+  def __doc__(self) -> str:  # type: ignore[override]
+    return (
+        getattr(self._finstancemethod, '__doc__')
+        or getattr(self._fclassmethod, '__doc__')
+        or ''
+    )
 
   def __get__(
       self, obj: Optional[Any], type_: Optional[Type[Any]]
   ) -> Callable[..., Any]:
     func = self._fclassmethod if obj is None else self._finstancemethod
-    return func.__get__(obj, type_)  # pytype: disable=attribute-error
+    return func.__get__(obj, type_)  # type: ignore[attribute-error]
 
 
 class TestCase(unittest.TestCase):
@@ -572,10 +577,10 @@ class TestCase(unittest.TestCase):
     _exit_stack = None
     _cls_exit_stack = None
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *args, **kwargs) -> None:
     super(TestCase, self).__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
-    self._outcome: Optional[_OutcomeType] = getattr(self, '_outcome')
+    self._outcome: Optional[Any] = getattr(self, '_outcome')
 
   def setUp(self):
     super(TestCase, self).setUp()
@@ -749,7 +754,8 @@ class TestCase(unittest.TestCase):
     return self._exit_stack.enter_context(manager)
 
   @enter_context.classmethod
-  def enter_context(cls, manager: ContextManager[_T]) -> _T:  # pylint: disable=no-self-argument
+  @classmethod
+  def _enter_context_cls(cls, manager: ContextManager[_T]) -> _T:
     if sys.version_info >= (3, 11):
       return cls.enterClassContext(manager)
 
@@ -1355,7 +1361,7 @@ class TestCase(unittest.TestCase):
       *args, **kwargs) -> None:
     # The purpose of this return statement is to work around
     # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
-    return self._AssertRaisesContext(None, None, None)
+    return self._AssertRaisesContext(None, None, None)  # type: ignore[return-value]
 
   def assertRaisesWithPredicateMatch(self, expected_exception, predicate,
                                      callable_obj=None, *args, **kwargs):
@@ -1399,7 +1405,7 @@ class TestCase(unittest.TestCase):
       callable_obj: Callable[..., Any], *args, **kwargs) -> None:
     # The purpose of this return statement is to work around
     # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
-    return self._AssertRaisesContext(None, None, None)
+    return self._AssertRaisesContext(None, None, None)  # type: ignore[return-value]
 
   def assertRaisesWithLiteralMatch(self, expected_exception,
                                    expected_exception_message,
@@ -1782,7 +1788,7 @@ class TestCase(unittest.TestCase):
           'Cannot detect difference by examining the fields of the dataclass.'
       )
 
-    raise self.fail('\n'.join(message), msg)
+    self.fail('\n'.join(message), msg)
 
   def assertUrlEqual(self, a, b, msg=None):
     """Asserts that urls are equal, ignoring ordering of query params."""
@@ -1881,7 +1887,7 @@ class TestCase(unittest.TestCase):
 
   def fail(self, msg=None, user_msg=None) -> NoReturn:
     """Fail immediately with the given standard message and user message."""
-    return super(TestCase, self).fail(self._formatMessage(user_msg, msg))
+    super(TestCase, self).fail(self._formatMessage(user_msg, msg))
 
 
 def _sorted_list_difference(
@@ -1909,12 +1915,12 @@ def _sorted_list_difference(
     try:
       e = expected[i]
       a = actual[j]
-      if e < a:
+      if e < a:  # type: ignore[operator]
         missing.append(e)
         i += 1
         while expected[i] == e:
           i += 1
-      elif e > a:
+      elif e > a:  # type: ignore[operator]
         unexpected.append(a)
         j += 1
         while actual[j] == a:
@@ -2204,12 +2210,12 @@ def _run_in_app(
     # This must be a separate loop since multiple flag names (short_name=) can
     # point to the same flag object.
     for name in FLAGS:
-      FLAGS[name].parse = noop_parse
+      FLAGS[name].parse = noop_parse  # type: ignore[method-assign]
     try:
       argv = FLAGS(sys.argv)
     finally:
       for name in FLAGS:
-        FLAGS[name].parse = stored_parse_methods[name]
+        FLAGS[name].parse = stored_parse_methods[name]  # type: ignore[method-assign]
       sys.stdout.flush()
 
     function(argv, args, kwargs)
@@ -2364,6 +2370,7 @@ def get_default_xml_output_filename() -> Optional[str]:
     return os.path.join(
         os.environ['TEST_XMLOUTPUTDIR'],
         os.path.splitext(os.path.basename(sys.argv[0]))[0] + '.xml')
+  return None
 
 
 def _setup_filtering(argv: MutableSequence[str]) -> bool:
@@ -2490,7 +2497,7 @@ def _setup_sharding(
         filtered_names.append(testcase)
     return [x for x in ordered_names if x in filtered_names]
 
-  base_loader.getTestCaseNames = getShardedTestCaseNames
+  base_loader.getTestCaseNames = getShardedTestCaseNames  # type: ignore[method-assign]
   return base_loader, shard_index
 
 
@@ -2559,9 +2566,12 @@ def _run_and_get_tests_result(
   # XML file name is based upon (sorted by priority):
   # --xml_output_file flag, XML_OUTPUT_FILE variable,
   # TEST_XMLOUTPUTDIR variable or RUNNING_UNDER_TEST_DAEMON variable.
-  if not FLAGS.xml_output_file:
-    FLAGS.xml_output_file = get_default_xml_output_filename()
-  xml_output_file = FLAGS.xml_output_file
+  if FLAGS.xml_output_file:
+    xml_output_file = FLAGS.xml_output_file
+  else:
+    xml_output_file = get_default_xml_output_filename()
+    if xml_output_file:
+      FLAGS.xml_output_file = xml_output_file
 
   xml_buffer = None
   if xml_output_file:

@@ -1059,7 +1059,7 @@ class CoopMetaclassCreationTest(absltest.TestCase):
     # methods.
     pass
 
-  class MyParams(parameterized.CoopTestCase(TestBase)):
+  class MyParams(parameterized.CoopTestCase(TestBase)):  # type: ignore
 
     @parameterized.parameters((1, 2, 3), (4, 5, 9))
     def test_addition(self, op1, op2, result):

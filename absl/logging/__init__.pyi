@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Any, Callable, Dict, NoReturn, Optional, Tuple, TypeVar, Union
+from typing import Any, Callable, Dict, IO, NoReturn, Optional, Tuple, TypeVar, Union
 
 from absl import flags
 
@@ -154,10 +154,10 @@ def skip_log_prefix(func: _SkipLogT) -> _SkipLogT:
   ...
 
 
-_StreamT = TypeVar("_StreamT")
+_StreamT = TypeVar('_StreamT')
 
 
-class PythonHandler(logging.StreamHandler[_StreamT]):
+class PythonHandler(logging.StreamHandler[_StreamT]):  # type: ignore[type-var]
 
   def __init__(
       self,
@@ -241,7 +241,7 @@ class ABSLLogger(logging.Logger):
   def critical(self, msg: Any, *args: Any, **kwargs: Any) -> None:
     ...
 
-  def fatal(self, msg: Any, *args: Any, **kwargs: Any) -> NoReturn:
+  def fatal(self, msg: Any, *args: Any, **kwargs: Any) -> NoReturn:  # type: ignore[override]
     ...
 
   def error(self, msg: Any, *args: Any, **kwargs: Any) -> None:

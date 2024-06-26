@@ -74,15 +74,13 @@ class TextTestRunner(unittest.TextTestRunner):
   # Usually this is set using --pdb_post_mortem.
   run_for_debugging = False
 
-  def run(self, test):
-    # type: (TestCase) -> TestResult
+  def run(self, test) -> unittest.TestResult:
     if self.run_for_debugging:
       return self._run_debug(test)
     else:
       return super(TextTestRunner, self).run(test)
 
-  def _run_debug(self, test):
-    # type: (TestCase) -> TestResult
+  def _run_debug(self, test) -> unittest.TestResult:
     test.debug()
     # Return an empty result to indicate success.
     return self._makeResult()

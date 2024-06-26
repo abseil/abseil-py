@@ -153,8 +153,8 @@ class PythonHandlerTest(absltest.TestCase):
     self.assertEqual(sys.stderr, self.python_handler.stream)
 
   @mock.patch.object(logging, 'find_log_dir_and_names')
-  @mock.patch.object(logging.time, 'localtime')
-  @mock.patch.object(logging.time, 'time')
+  @mock.patch.object(time, 'localtime')
+  @mock.patch.object(time, 'time')
   @mock.patch.object(os.path, 'islink')
   @mock.patch.object(os, 'unlink')
   @mock.patch.object(os, 'getpid')

@@ -2357,7 +2357,7 @@ class SkipClassTest(absltest.TestCase):
     Subclass.setUpClass()
     self.assertEqual(Subclass.foo, 1)
 
-  def test_setup_chain(self):
+  def test_setup_chain(self) -> None:
 
     @absltest.skipThisClass('reason')
     class BaseTest(absltest.TestCase):
@@ -2372,6 +2372,8 @@ class SkipClassTest(absltest.TestCase):
     @absltest.skipThisClass('reason')
     class SecondBaseTest(BaseTest):
 
+      bar: int
+
       @classmethod
       def setUpClass(cls):
         super(SecondBaseTest, cls).setUpClass()
@@ -2384,7 +2386,7 @@ class SkipClassTest(absltest.TestCase):
     self.assertEqual(Subclass.foo, 1)
     self.assertEqual(Subclass.bar, 2)
 
-  def test_setup_args(self):
+  def test_setup_args(self) -> None:
 
     @absltest.skipThisClass('reason')
     class Test(absltest.TestCase):
@@ -2407,7 +2409,7 @@ class SkipClassTest(absltest.TestCase):
     self.assertEqual(Subclass.foo, 'foo')
     self.assertEqual(Subclass.bar, 'baz')
 
-  def test_setup_multiple_inheritance(self):
+  def test_setup_multiple_inheritance(self) -> None:
 
     # Test that skipping this class doesn't break the MRO chain and stop
     # RequiredBase.setUpClass from running.

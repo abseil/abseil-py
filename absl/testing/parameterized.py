@@ -676,7 +676,7 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
 
 
 # This function is kept CamelCase because it's used as a class's base class.
-def CoopTestCase(other_base_class):  # pylint: disable=invalid-name
+def CoopTestCase(other_base_class) -> type:  # pylint: disable=invalid-name, g-bare-generic
   """Returns a new base class with a cooperative metaclass base.
 
   This enables the TestCase to be used in combination
@@ -715,10 +715,10 @@ def CoopTestCase(other_base_class):  # pylint: disable=invalid-name
     return CoopTestCaseBase
   else:
 
-    class CoopMetaclass(type(other_base_class), TestGeneratorMetaclass):  # pylint: disable=unused-variable
+    class CoopMetaclass(type(other_base_class), TestGeneratorMetaclass):  # type: ignore  # pylint: disable=unused-variable
       pass
 
-    class CoopTestCaseBase(other_base_class, TestCase, metaclass=CoopMetaclass):
+    class CoopTestCaseBase(other_base_class, TestCase, metaclass=CoopMetaclass):  # type: ignore
       pass
 
     return CoopTestCaseBase

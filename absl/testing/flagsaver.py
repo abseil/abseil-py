@@ -92,7 +92,7 @@ and then restore flag values, the added flag will be deleted with no errors.
 import collections
 import functools
 import inspect
-from typing import overload, Any, Callable, Mapping, Tuple, TypeVar, Type, Sequence, Union
+from typing import Any, Callable, Dict, Mapping, Sequence, Tuple, Type, TypeVar, Union, overload
 
 from absl import flags
 
@@ -104,19 +104,20 @@ _CallableT = TypeVar('_CallableT', bound=Callable)
 
 
 @overload
-def flagsaver(*args: Tuple[flags.FlagHolder, Any],
-              **kwargs: Any) -> '_FlagOverrider':
+def flagsaver(func: _CallableT) -> _CallableT:
   ...
 
 
 @overload
-def flagsaver(func: _CallableT) -> _CallableT:
+def flagsaver(
+    *args: Tuple[flags.FlagHolder, Any], **kwargs: Any
+) -> '_FlagOverrider':
   ...
 
 
 def flagsaver(*args, **kwargs):
   """The main flagsaver interface. See module doc for usage."""
-  return _construct_overrider(_FlagOverrider, *args, **kwargs)
+  return _construct_overrider(_FlagOverrider, *args, **kwargs)  # type: ignore[bad-return-type]
 
 
 @overload
@@ -167,15 +168,18 @@ def _construct_overrider(
 
 
 @overload
-def _construct_overrider(flag_overrider_cls: Type['_FlagOverrider'],
-                         *args: Tuple[flags.FlagHolder, Any],
-                         **kwargs: Any) -> '_FlagOverrider':
+def _construct_overrider(
+    flag_overrider_cls: Type['_FlagOverrider'], func: _CallableT
+) -> _CallableT:
   ...
 
 
 @overload
-def _construct_overrider(flag_overrider_cls: Type['_FlagOverrider'],
-                         func: _CallableT) -> _CallableT:
+def _construct_overrider(
+    flag_overrider_cls: Type['_FlagOverrider'],
+    *args: Tuple[flags.FlagHolder, Any],
+    **kwargs: Any,
+) -> '_FlagOverrider':
   ...
 
 
@@ -220,7 +224,8 @@ def _construct_overrider(flag_overrider_cls, *args, **kwargs):
 
 
 def save_flag_values(
-    flag_values: flags.FlagValues = FLAGS) -> Mapping[str, Mapping[str, Any]]:
+    flag_values: flags.FlagValues = FLAGS,
+) -> Dict[str, Dict[str, Any]]:
   """Returns copy of flag values as a dict.
 
   Args:
@@ -234,8 +239,10 @@ def save_flag_values(
   return {name: _copy_flag_dict(flag_values[name]) for name in flag_values}
 
 
-def restore_flag_values(saved_flag_values: Mapping[str, Mapping[str, Any]],
-                        flag_values: flags.FlagValues = FLAGS):
+def restore_flag_values(
+    saved_flag_values: Mapping[str, Dict[str, Any]],
+    flag_values: flags.FlagValues = FLAGS,
+) -> None:
   """Restores flag values based on the dictionary of flag values.
 
   Args:
@@ -368,7 +375,7 @@ class _ParsingFlagOverrider(_FlagOverrider):
       raise
 
 
-def _copy_flag_dict(flag: flags.Flag) -> Mapping[str, Any]:
+def _copy_flag_dict(flag: flags.Flag) -> Dict[str, Any]:
   """Returns a copy of the flag object's ``__dict__``.
 
   It's mostly a shallow copy of the ``__dict__``, except it also does a shallow
