@@ -271,7 +271,7 @@ def _open(
   return _open_func(filepath, mode, encoding='utf-8')
 
 
-class _TempDir(object):
+class _TempDir:
   """Represents a temporary directory for tests.
 
   Creation of this class is internal. Using its public methods is OK.
@@ -353,7 +353,7 @@ class _TempDir(object):
     return _TempDir(path)
 
 
-class _TempFile(object):
+class _TempFile:
   """Represents a tempfile for tests.
 
   Creation of this class is internal. Using its public methods is OK.
@@ -516,12 +516,13 @@ class _TempFile(object):
       encoding: Optional[str] = 'utf8',
       errors: Optional[str] = 'strict',
   ) -> Iterator[Any]:
-    with io.open(
-        self.full_path, mode=mode, encoding=encoding, errors=errors) as fp:
+    with open(
+        self.full_path, mode=mode, encoding=encoding, errors=errors
+    ) as fp:
       yield fp
 
 
-class _method(object):
+class _method:
   """A decorator that supports both instance and classmethod invocations.
 
   Using similar semantics to the @property builtin, this decorator can augment
@@ -578,12 +579,12 @@ class TestCase(unittest.TestCase):
     _cls_exit_stack = None
 
   def __init__(self, *args, **kwargs) -> None:
-    super(TestCase, self).__init__(*args, **kwargs)
+    super().__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
     self._outcome: Optional[Any] = getattr(self, '_outcome')
 
   def setUp(self):
-    super(TestCase, self).setUp()
+    super().setUp()
     # NOTE: Only Python 3 contextlib has ExitStack and
     # Python 3.11+ already has enterContext.
     if hasattr(contextlib, 'ExitStack') and sys.version_info < (3, 11):
@@ -592,7 +593,7 @@ class TestCase(unittest.TestCase):
 
   @classmethod
   def setUpClass(cls):
-    super(TestCase, cls).setUpClass()
+    super().setUpClass()
     # NOTE: Only Python 3 contextlib has ExitStack, only Python 3.8+ has
     # addClassCleanup and Python 3.11+ already has enterClassContext.
     if (
@@ -860,7 +861,7 @@ class TestCase(unittest.TestCase):
     #       unittest.TestCase = TestCase
     # Because of this, direct invocation of what we think is the
     # superclass will actually cause infinite recursion.
-    doc_first_line = super(TestCase, self).shortDescription()
+    doc_first_line = super().shortDescription()
     if doc_first_line is not None:
       desc = '\n'.join((desc, doc_first_line))
     return desc
@@ -1110,8 +1111,8 @@ class TestCase(unittest.TestCase):
                 'Did you mean to use assertEqual?\n'
                 'Expected: %s\nActual: %s' % (expected_seq, actual_seq))
     try:
-      expected = dict([(element, None) for element in expected_seq])
-      actual = dict([(element, None) for element in actual_seq])
+      expected = {element: None for element in expected_seq}
+      actual = {element: None for element in actual_seq}
       missing = [element for element in expected if element not in actual]
       unexpected = [element for element in actual if element not in expected]
       missing.sort()
@@ -1227,7 +1228,7 @@ class TestCase(unittest.TestCase):
       regex_type = bytes
 
     if regex_type is str:
-      regex = u'(?:%s)' % u')|(?:'.join(regexes)
+      regex = '(?:%s)' % ')|(?:'.join(regexes)
     elif regex_type is bytes:
       regex = b'(?:' + (b')|(?:'.join(regexes)) + b')'
     else:
@@ -1326,7 +1327,7 @@ class TestCase(unittest.TestCase):
                 _quote_long_string(err),
                 regexes)))
 
-  class _AssertRaisesContext(object):
+  class _AssertRaisesContext:
 
     def __init__(self, expected_exception, test_case, test_func, msg=None):
       self.expected_exception = expected_exception
@@ -1874,20 +1875,20 @@ class TestCase(unittest.TestCase):
       self, first: Any, second: Any
   ) -> Callable[..., None]:
     try:
-      return super(TestCase, self)._getAssertEqualityFunc(first, second)
+      return super()._getAssertEqualityFunc(first, second)
     except AttributeError:
       # This is a workaround if unittest.TestCase.__init__ was never run.
       # It usually means that somebody created a subclass just for the
       # assertions and has overridden __init__. "assertTrue" is a safe
       # value that will not make __init__ raise a ValueError.
       test_method = getattr(self, '_testMethodName', 'assertTrue')
-      super(TestCase, self).__init__(test_method)
+      super().__init__(test_method)
 
-    return super(TestCase, self)._getAssertEqualityFunc(first, second)
+    return super()._getAssertEqualityFunc(first, second)
 
   def fail(self, msg=None, user_msg=None) -> NoReturn:
     """Fail immediately with the given standard message and user message."""
-    super(TestCase, self).fail(self._formatMessage(user_msg, msg))
+    super().fail(self._formatMessage(user_msg, msg))
 
 
 def _sorted_list_difference(
@@ -2336,7 +2337,7 @@ class TestLoader(unittest.TestLoader):
   with 'Test'.""")
 
   def __init__(self, *args, **kwds):
-    super(TestLoader, self).__init__(*args, **kwds)
+    super().__init__(*args, **kwds)
     seed = _get_default_randomize_ordering_seed()
     if seed:
       self._randomize_ordering_seed = seed
@@ -2350,7 +2351,7 @@ class TestLoader(unittest.TestLoader):
     for name in dir(testCaseClass):
       if _is_suspicious_attribute(testCaseClass, name):
         raise TypeError(TestLoader._ERROR_MSG % name)
-    names = list(super(TestLoader, self).getTestCaseNames(testCaseClass))
+    names = list(super().getTestCaseNames(testCaseClass))
     if self._randomize_ordering_seed is not None:
       logging.info(
           'Randomizing test order with seed: %d', self._randomize_ordering_seed)
@@ -2461,7 +2462,7 @@ def _setup_sharding(
     try:
       with open(os.environ['TEST_SHARD_STATUS_FILE'], 'w') as f:
         f.write('')
-    except IOError:
+    except OSError:
       sys.stderr.write('Error opening TEST_SHARD_STATUS_FILE (%s). Exiting.'
                        % os.environ['TEST_SHARD_STATUS_FILE'])
       sys.exit(1)

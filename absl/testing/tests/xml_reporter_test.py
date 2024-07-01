@@ -43,7 +43,7 @@ class MockTest(absltest.TestCase):
   failureException = AssertionError
 
   def __init__(self, name):
-    super(MockTest, self).__init__()
+    super().__init__()
     self.name = name
 
   def id(self):
@@ -99,22 +99,21 @@ ValueError: invalid literal for int\(\) with base 10: '?a'?
 UNICODE_MESSAGE = r"""
   <%s message="{0}" type="{1}"><!\[CDATA\[Traceback \(most recent call last\):
   File ".*xml_reporter_test\.py", line \d+, in get_unicode_sample_failure
-    raise AssertionError\(u'\\xe9'\)
+    raise AssertionError\('\\xe9'\)
 AssertionError: {0}
-\]\]></%s>""".format(
-        r'\xe9',
-        xml_escaped_exception_type(AssertionError))
+\]\]></%s>""".format(r'\xe9', xml_escaped_exception_type(AssertionError))
 
 NEWLINE_MESSAGE = r"""
-  <%s message="{0}" type="{1}"><!\[CDATA\[Traceback \(most recent call last\):
+  <%s message="{}" type="{}"><!\[CDATA\[Traceback \(most recent call last\):
   File ".*xml_reporter_test\.py", line \d+, in get_newline_message_sample_failure
-    raise AssertionError\(\'{2}'\)
-AssertionError: {3}
+    raise AssertionError\(\'{}'\)
+AssertionError: {}
 \]\]></%s>""".format(
     'new&#xA;line',
     xml_escaped_exception_type(AssertionError),
     r'new\\nline',
-    'new\nline')
+    'new\nline',
+)
 
 UNEXPECTED_SUCCESS_MESSAGE = '\n'.join([
     '',
@@ -311,7 +310,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
   def get_unicode_sample_failure(self):
     try:
-      raise AssertionError(u'\xe9')
+      raise AssertionError('\xe9')
     except AssertionError:
       error_values = sys.exc_info()
       return error_values

@@ -17,7 +17,6 @@
 import collections
 import contextlib
 import dataclasses
-import io
 import os
 import pathlib
 import re
@@ -93,7 +92,7 @@ class TestCaseTest(BaseTestCase):
   def run_helper(
       self, test_id, args, env_overrides, expect_success, helper_name=None
   ):
-    return super(TestCaseTest, self).run_helper(
+    return super().run_helper(
         test_id,
         args + ['HelperTest'],
         env_overrides,
@@ -375,7 +374,7 @@ Missing entries:
     # Ensure deterministic output of keys in dictionaries whose sort order
     # doesn't match the lexical ordering of repr -- this is most Python objects,
     # which are keyed by memory address.
-    class Obj(object):
+    class Obj:
 
       def __init__(self, name):
         self.name = name
@@ -406,7 +405,7 @@ Missing entries:
       self.fail('Expecting AssertionError')
 
     # Confirm that safe_repr, not repr, is being used.
-    class RaisesOnRepr(object):
+    class RaisesOnRepr:
 
       def __repr__(self):
         return 1/0  # Intentionally broken __repr__ implementation.
@@ -433,7 +432,7 @@ Missing entries:
 """)
 
     # Confirm that safe_repr, not repr, is being used.
-    class RaisesOnLt(object):
+    class RaisesOnLt:
 
       def __lt__(self, unused_other):
         raise TypeError('Object is unordered.')
@@ -459,23 +458,23 @@ Missing entries:
     self.assertRaises(AssertionError, self.assertSetEqual, set1, None)
     self.assertRaises(AssertionError, self.assertSetEqual, set1, [])
 
-    set1 = set(['a'])
+    set1 = {'a'}
     set2 = set()
     self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
 
-    set1 = set(['a'])
-    set2 = set(['a'])
+    set1 = {'a'}
+    set2 = {'a'}
     self.assertSetEqual(set1, set2)
 
-    set1 = set(['a'])
-    set2 = set(['a', 'b'])
+    set1 = {'a'}
+    set2 = {'a', 'b'}
     self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
 
-    set1 = set(['a'])
+    set1 = {'a'}
     set2 = frozenset(['a', 'b'])
     self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
 
-    set1 = set(['a', 'b'])
+    set1 = {'a', 'b'}
     set2 = frozenset(['a', 'b'])
     self.assertSetEqual(set1, set2)
 
@@ -485,8 +484,8 @@ Missing entries:
     self.assertRaises(AssertionError, self.assertSetEqual, set2, set1)
 
     # make sure any string formatting is tuple-safe
-    set1 = set([(0, 1), (2, 3)])
-    set2 = set([(4, 5)])
+    set1 = {(0, 1), (2, 3)}
+    set2 = {(4, 5)}
     self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
 
   def test_assert_sequence_almost_equal(self):
@@ -640,18 +639,18 @@ Missing entries:
 
   def test_assert_regex_match_unicode_vs_bytes(self):
     """Ensure proper utf-8 encoding or decoding happens automatically."""
-    self.assertRegexMatch(u'str', [b'str'])
-    self.assertRegexMatch(b'str', [u'str'])
+    self.assertRegexMatch('str', [b'str'])
+    self.assertRegexMatch(b'str', ['str'])
 
   def test_assert_regex_match_unicode(self):
-    self.assertRegexMatch(u'foo str', [u'str'])
+    self.assertRegexMatch('foo str', ['str'])
 
   def test_assert_regex_match_bytes(self):
     self.assertRegexMatch(b'foo str', [b'str'])
 
   def test_assert_regex_match_all_the_same_type(self):
     with self.assertRaisesRegex(AssertionError, 'regexes .* same type'):
-      self.assertRegexMatch('foo str', [b'str', u'foo'])
+      self.assertRegexMatch('foo str', [b'str', 'foo'])
 
   def test_assert_command_fails_stderr(self):
     tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
@@ -665,16 +664,13 @@ Missing entries:
         ['false'], [''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_list_of_unicode_string(self):
-    self.assertCommandFails(
-        [u'false'], [''], env=_env_for_command_tests())
+    self.assertCommandFails(['false'], [''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_unicode_string(self):
-    self.assertCommandFails(
-        u'false', [u''], env=_env_for_command_tests())
+    self.assertCommandFails('false', [''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_unicode_string_bytes_regex(self):
-    self.assertCommandFails(
-        u'false', [b''], env=_env_for_command_tests())
+    self.assertCommandFails('false', [b''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_message(self):
     msg = 'This is a useful message'
@@ -683,7 +679,8 @@ Missing entries:
 
     with self.assertRaisesRegex(AssertionError, expected_re):
       self.assertCommandFails(
-          [u'true'], [''], msg=msg, env=_env_for_command_tests())
+          ['true'], [''], msg=msg, env=_env_for_command_tests()
+      )
 
   def test_assert_command_succeeds_stderr(self):
     expected_re = re.compile('No such file or directory')
@@ -696,8 +693,8 @@ Missing entries:
 
   def test_assert_command_succeeds_with_matching_unicode_regexes(self):
     self.assertCommandSucceeds(
-        ['echo', 'SUCCESS'], regexes=[u'SUCCESS'],
-        env=_env_for_command_tests())
+        ['echo', 'SUCCESS'], regexes=['SUCCESS'], env=_env_for_command_tests()
+    )
 
   def test_assert_command_succeeds_with_matching_bytes_regexes(self):
     self.assertCommandSucceeds(
@@ -719,12 +716,10 @@ Missing entries:
         ['true'], env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_list_of_unicode_string(self):
-    self.assertCommandSucceeds(
-        [u'true'], env=_env_for_command_tests())
+    self.assertCommandSucceeds(['true'], env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_unicode_string(self):
-    self.assertCommandSucceeds(
-        u'true', env=_env_for_command_tests())
+    self.assertCommandSucceeds('true', env=_env_for_command_tests())
 
   def test_inequality(self):
     # Try ints
@@ -770,44 +765,44 @@ Missing entries:
     self.assertRaises(AssertionError, self.assertLessEqual, 'bug', 'ant')
 
     # Try Unicode
-    self.assertGreater(u'bug', u'ant')
-    self.assertGreaterEqual(u'bug', u'ant')
-    self.assertGreaterEqual(u'ant', u'ant')
-    self.assertLess(u'ant', u'bug')
-    self.assertLessEqual(u'ant', u'bug')
-    self.assertLessEqual(u'ant', u'ant')
-    self.assertRaises(AssertionError, self.assertGreater, u'ant', u'bug')
-    self.assertRaises(AssertionError, self.assertGreater, u'ant', u'ant')
-    self.assertRaises(AssertionError, self.assertGreaterEqual, u'ant', u'bug')
-    self.assertRaises(AssertionError, self.assertLess, u'bug', u'ant')
-    self.assertRaises(AssertionError, self.assertLess, u'ant', u'ant')
-    self.assertRaises(AssertionError, self.assertLessEqual, u'bug', u'ant')
+    self.assertGreater('bug', 'ant')
+    self.assertGreaterEqual('bug', 'ant')
+    self.assertGreaterEqual('ant', 'ant')
+    self.assertLess('ant', 'bug')
+    self.assertLessEqual('ant', 'bug')
+    self.assertLessEqual('ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreaterEqual, 'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertLess, 'bug', 'ant')
+    self.assertRaises(AssertionError, self.assertLess, 'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertLessEqual, 'bug', 'ant')
 
     # Try Mixed String/Unicode
-    self.assertGreater('bug', u'ant')
-    self.assertGreater(u'bug', 'ant')
-    self.assertGreaterEqual('bug', u'ant')
-    self.assertGreaterEqual(u'bug', 'ant')
-    self.assertGreaterEqual('ant', u'ant')
-    self.assertGreaterEqual(u'ant', 'ant')
-    self.assertLess('ant', u'bug')
-    self.assertLess(u'ant', 'bug')
-    self.assertLessEqual('ant', u'bug')
-    self.assertLessEqual(u'ant', 'bug')
-    self.assertLessEqual('ant', u'ant')
-    self.assertLessEqual(u'ant', 'ant')
-    self.assertRaises(AssertionError, self.assertGreater, 'ant', u'bug')
-    self.assertRaises(AssertionError, self.assertGreater, u'ant', 'bug')
-    self.assertRaises(AssertionError, self.assertGreater, 'ant', u'ant')
-    self.assertRaises(AssertionError, self.assertGreater, u'ant', 'ant')
-    self.assertRaises(AssertionError, self.assertGreaterEqual, 'ant', u'bug')
-    self.assertRaises(AssertionError, self.assertGreaterEqual, u'ant', 'bug')
-    self.assertRaises(AssertionError, self.assertLess, 'bug', u'ant')
-    self.assertRaises(AssertionError, self.assertLess, u'bug', 'ant')
-    self.assertRaises(AssertionError, self.assertLess, 'ant', u'ant')
-    self.assertRaises(AssertionError, self.assertLess, u'ant', 'ant')
-    self.assertRaises(AssertionError, self.assertLessEqual, 'bug', u'ant')
-    self.assertRaises(AssertionError, self.assertLessEqual, u'bug', 'ant')
+    self.assertGreater('bug', 'ant')
+    self.assertGreater('bug', 'ant')
+    self.assertGreaterEqual('bug', 'ant')
+    self.assertGreaterEqual('bug', 'ant')
+    self.assertGreaterEqual('ant', 'ant')
+    self.assertGreaterEqual('ant', 'ant')
+    self.assertLess('ant', 'bug')
+    self.assertLess('ant', 'bug')
+    self.assertLessEqual('ant', 'bug')
+    self.assertLessEqual('ant', 'bug')
+    self.assertLessEqual('ant', 'ant')
+    self.assertLessEqual('ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreater, 'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertGreaterEqual, 'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertGreaterEqual, 'ant', 'bug')
+    self.assertRaises(AssertionError, self.assertLess, 'bug', 'ant')
+    self.assertRaises(AssertionError, self.assertLess, 'bug', 'ant')
+    self.assertRaises(AssertionError, self.assertLess, 'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertLess, 'ant', 'ant')
+    self.assertRaises(AssertionError, self.assertLessEqual, 'bug', 'ant')
+    self.assertRaises(AssertionError, self.assertLessEqual, 'bug', 'ant')
 
   def test_assert_multi_line_equal(self):
     sample_text = """\
@@ -1106,7 +1101,7 @@ test case
     self.assertTotallyOrdered([(1, 1)], [(1, 2)], [(2, 1)])
 
     # From the docstring.
-    class A(object):
+    class A:
 
       def __init__(self, x, y):
         self.x = x
@@ -1248,9 +1243,9 @@ test case
     self.assertSameStructure('', '')
     self.assertSameStructure('hello', 'hello', msg='This Should not fail')
     self.assertSameStructure(set(), set())
-    self.assertSameStructure(set([1, 2]), set([1, 2]))
+    self.assertSameStructure({1, 2}, {1, 2})
     self.assertSameStructure(set(), frozenset())
-    self.assertSameStructure(set([1, 2]), frozenset([1, 2]))
+    self.assertSameStructure({1, 2}, frozenset([1, 2]))
     self.assertSameStructure([], [])
     self.assertSameStructure(['a'], ['a'])
     self.assertSameStructure([], ())
@@ -1305,18 +1300,20 @@ test case
         AssertionError,
         r'AA has 2 but BB does not',
         self.assertSameStructure,
-        set([1, 2]),
-        set([1]),
+        {1, 2},
+        {1},
         aname='AA',
-        bname='BB')
+        bname='BB',
+    )
     self.assertRaisesWithLiteralMatch(
         AssertionError,
         r'AA lacks 2 but BB has it',
         self.assertSameStructure,
-        set([1]),
-        set([1, 2]),
+        {1},
+        {1, 2},
         aname='AA',
-        bname='BB')
+        bname='BB',
+    )
 
     # Different lists
     self.assertRaisesWithLiteralMatch(
@@ -1403,7 +1400,8 @@ test case
     self.assertEmpty(default_b)
 
   def test_same_structure_uses_type_equality_func_for_leaves(self):
-    class CustomLeaf(object):
+
+    class CustomLeaf:
       def __init__(self, n):
         self.n = n
 
@@ -1513,7 +1511,7 @@ class EnterContextTest(absltest.TestCase):
     # This ensures we see state after the stack cleanup runs.
     self.addCleanup(assert_cm_exited)
 
-    super(EnterContextTest, self).setUp()
+    super().setUp()
     self.cm_value = self.enter_context(cm_for_test(self))
 
   def test_enter_context(self):
@@ -1539,7 +1537,7 @@ class EnterContextClassmethodTest(absltest.TestCase):
     # This ensures we see state after the stack cleanup runs.
     cls.addClassCleanup(assert_cm_exited)
 
-    super(EnterContextClassmethodTest, cls).setUpClass()
+    super().setUpClass()
     cls.cm_value = cls.enter_context(cm_for_test(cls))
 
   def test_enter_context(self):
@@ -1556,7 +1554,7 @@ class EqualityAssertionTest(absltest.TestCase):
   their __ne__ method is being tested, it is not.
   """
 
-  class NeverEqual(object):
+  class NeverEqual:
     """Objects of this class behave like NaNs."""
 
     def __eq__(self, unused_other):
@@ -1565,7 +1563,7 @@ class EqualityAssertionTest(absltest.TestCase):
     def __ne__(self, unused_other):
       return False
 
-  class AllSame(object):
+  class AllSame:
     """All objects of this class compare as equal."""
 
     def __eq__(self, unused_other):
@@ -1574,7 +1572,7 @@ class EqualityAssertionTest(absltest.TestCase):
     def __ne__(self, unused_other):
       return False
 
-  class EqualityTestsWithEq(object):
+  class EqualityTestsWithEq:
     """Performs all equality and inequality tests with __eq__."""
 
     def __init__(self, value):
@@ -1586,7 +1584,7 @@ class EqualityAssertionTest(absltest.TestCase):
     def __ne__(self, other):
       return not self.__eq__(other)
 
-  class EqualityTestsWithNe(object):
+  class EqualityTestsWithNe:
     """Performs all equality and inequality tests with __ne__."""
 
     def __init__(self, value):
@@ -1598,7 +1596,7 @@ class EqualityAssertionTest(absltest.TestCase):
     def __ne__(self, other):
       return self._value != other._value
 
-  class EqualityTestsWithCmp(object):
+  class EqualityTestsWithCmp:
 
     def __init__(self, value):
       self._value = value
@@ -1606,7 +1604,7 @@ class EqualityAssertionTest(absltest.TestCase):
     def __cmp__(self, other):
       return cmp(self._value, other._value)
 
-  class EqualityTestsWithLtEq(object):
+  class EqualityTestsWithLtEq:
 
     def __init__(self, value):
       self._value = value
@@ -1772,7 +1770,7 @@ class TestAssertEmpty(absltest.TestCase):
         set(),
         frozenset(),
         b'',
-        u'',
+        '',
         bytearray(),
     ]
     for container in empty_containers:
@@ -1786,7 +1784,7 @@ class TestAssertEmpty(absltest.TestCase):
         {1},
         frozenset([1]),
         b'a',
-        u'a',
+        'a',
         bytearray(b'a'),
     ]
     regexp = r'.* has length of 1\.$'
@@ -1830,7 +1828,7 @@ class TestAssertNotEmpty(absltest.TestCase):
         {1},
         frozenset([1]),
         b'a',
-        u'a',
+        'a',
         bytearray(b'a'),
     ]
     for container in not_empty_containers:
@@ -1844,7 +1842,7 @@ class TestAssertNotEmpty(absltest.TestCase):
         set(),
         frozenset(),
         b'',
-        u'',
+        '',
         bytearray(),
     ]
     regexp = r'.* has length of 0\.$'
@@ -1875,7 +1873,7 @@ class TestAssertLen(absltest.TestCase):
         [{1, 2, 3, 4}, 4],
         [frozenset([1]), 1],
         [b'abc', 3],
-        [u'def', 3],
+        ['def', 3],
         [bytearray(b'ghij'), 4],
     ]
     for container, expected_len in containers:
@@ -1889,7 +1887,7 @@ class TestAssertLen(absltest.TestCase):
         {1, 2, 3, 4},
         frozenset([1]),
         b'abc',
-        u'def',
+        'def',
         bytearray(b'ghij'),
     ]
     for container in containers:
@@ -1991,7 +1989,7 @@ class InitNotNecessaryForAssertsTest(absltest.TestCase):
 
   def test_multiple_inheritance(self):
 
-    class Foo(object):
+    class Foo:
 
       def __init__(self, *args, **kwargs):
         pass
@@ -2089,11 +2087,12 @@ class GetCommandStringTest(parameterized.TestCase):
       ([], '', ''),
       ([''], "''", ''),
       (['command', 'arg-0'], "'command' 'arg-0'", 'command arg-0'),
-      ([u'command', u'arg-0'], "'command' 'arg-0'", u'command arg-0'),
+      (['command', 'arg-0'], "'command' 'arg-0'", 'command arg-0'),
       (["foo'bar"], "'foo'\"'\"'bar'", "foo'bar"),
       (['foo"bar'], "'foo\"bar'", 'foo"bar'),
       ('command arg-0', 'command arg-0', 'command arg-0'),
-      (u'command arg-0', 'command arg-0', 'command arg-0'))
+      ('command arg-0', 'command arg-0', 'command arg-0'),
+  )
   def test_get_command_string(
       self, command, expected_non_windows, expected_windows):
     expected = expected_windows if os.name == 'nt' else expected_non_windows
@@ -2115,7 +2114,7 @@ class TempFileTest(BaseTestCase):
                     'Path {} exists, but is not a file'.format(path))
 
     mode = 'rb' if isinstance(expected_content, bytes) else 'rt'
-    with io.open(path, mode) as fp:
+    with open(path, mode) as fp:
       actual = fp.read()
     self.assertEqual(expected_content, actual)
 
@@ -2225,7 +2224,7 @@ class TempFileTest(BaseTestCase):
       self.assertEqual('text', fp.read())
 
     with tf.open_text('w') as fp:
-      fp.write(u'text-from-open-write')
+      fp.write('text-from-open-write')
     self.assertEqual('text-from-open-write', tf.read_text())
 
     tf.write_text('text-from-write-text')
@@ -2348,7 +2347,7 @@ class SkipClassTest(absltest.TestCase):
 
       @classmethod
       def setUpClass(cls):
-        super(Test, cls).setUpClass()
+        super().setUpClass()
         cls.foo = 1
 
     class Subclass(Test):
@@ -2366,7 +2365,7 @@ class SkipClassTest(absltest.TestCase):
 
       @classmethod
       def setUpClass(cls):
-        super(BaseTest, cls).setUpClass()
+        super().setUpClass()
         cls.foo = 1
 
     @absltest.skipThisClass('reason')
@@ -2376,7 +2375,7 @@ class SkipClassTest(absltest.TestCase):
 
       @classmethod
       def setUpClass(cls):
-        super(SecondBaseTest, cls).setUpClass()
+        super().setUpClass()
         cls.bar = 2
 
     class Subclass(SecondBaseTest):
@@ -2395,7 +2394,7 @@ class SkipClassTest(absltest.TestCase):
 
       @classmethod
       def setUpClass(cls, foo, bar=None):
-        super(Test, cls).setUpClass()
+        super().setUpClass()
         cls.foo = foo
         cls.bar = bar
 
@@ -2403,7 +2402,7 @@ class SkipClassTest(absltest.TestCase):
 
       @classmethod
       def setUpClass(cls):
-        super(Subclass, cls).setUpClass('foo', bar='baz')
+        super().setUpClass('foo', bar='baz')
 
     Subclass.setUpClass()
     self.assertEqual(Subclass.foo, 'foo')
@@ -2422,14 +2421,14 @@ class SkipClassTest(absltest.TestCase):
 
       @classmethod
       def setUpClass(cls):
-        super(RequiredBase, cls).setUpClass()
+        super().setUpClass()
         cls.foo = 'foo'
 
     class Right(RequiredBase):
 
       @classmethod
       def setUpClass(cls):
-        super(Right, cls).setUpClass()
+        super().setUpClass()
 
     # Test will fail unless Left.setUpClass() follows mro properly
     # Right.setUpClass()
@@ -2437,7 +2436,7 @@ class SkipClassTest(absltest.TestCase):
 
       @classmethod
       def setUpClass(cls):
-        super(Subclass, cls).setUpClass()
+        super().setUpClass()
 
     class Test(Subclass):
       pass
@@ -2459,7 +2458,7 @@ class SkipClassTest(absltest.TestCase):
         self.assertEqual(1, 1)
 
     with self.subTest('base class'):
-      ts = unittest.makeSuite(BaseTest)
+      ts = unittest.defaultTestLoader.loadTestsFromTestCase(BaseTest)
       self.assertEqual(1, ts.countTestCases())
 
       res = unittest.TestResult()
@@ -2471,7 +2470,7 @@ class SkipClassTest(absltest.TestCase):
       self.assertEmpty(res.errors)
 
     with self.subTest('real test'):
-      ts = unittest.makeSuite(Test)
+      ts = unittest.defaultTestLoader.loadTestsFromTestCase(Test)
       self.assertEqual(1, ts.countTestCases())
 
       res = unittest.TestResult()
@@ -2490,7 +2489,7 @@ class SkipClassTest(absltest.TestCase):
       def test_foo(self):
         _ = 1 / 0
 
-    ts = unittest.makeSuite(Test)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(Test)
     self.assertEqual(1, ts.countTestCases())
 
     res = unittest.TestResult()

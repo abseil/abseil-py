@@ -57,12 +57,13 @@ _SUGGESTION_ERROR_RATE_THRESHOLD = 0.50
 # document. (See http://www.w3.org/TR/REC-xml/#charsets or
 # https://en.wikipedia.org/wiki/Valid_characters_in_XML#XML_1.0)
 _ILLEGAL_XML_CHARS_REGEX = re.compile(
-    u'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufffe\uffff]')
+    '[\x00-\x08\x0b\x0c\x0e-\x1f\x7f-\x84\x86-\x9f\ud800-\udfff\ufffe\uffff]'
+)
 
 # This is a set of module ids for the modules that disclaim key flags.
 # This module is explicitly added to this set so that we never consider it to
 # define key flag.
-disclaim_module_ids: Set[int] = set([id(sys.modules[__name__])])
+disclaim_module_ids: Set[int] = {id(sys.modules[__name__])}
 
 
 # Define special flags here so that help may be generated for them.
@@ -157,7 +158,7 @@ def create_xml_dom_element(
     # Display boolean values as the C++ flag library does: no caps.
     s = s.lower()
   # Remove illegal xml characters.
-  s = _ILLEGAL_XML_CHARS_REGEX.sub(u'', s)
+  s = _ILLEGAL_XML_CHARS_REGEX.sub('', s)
 
   e = doc.createElement(name)
   e.appendChild(doc.createTextNode(s))
@@ -178,7 +179,7 @@ def get_help_width() -> int:
     # Returning an int as default is fine, int(int) just return the int.
     return int(os.getenv('COLUMNS', _DEFAULT_HELP_WIDTH))
 
-  except (TypeError, IOError, struct.error):
+  except (TypeError, OSError, struct.error):
     return _DEFAULT_HELP_WIDTH
 
 
@@ -339,7 +340,7 @@ def flag_dict_to_args(
         yield '--%s' % key
       else:
         yield '--no%s' % key
-    elif isinstance(value, (bytes, type(u''))):
+    elif isinstance(value, (bytes, str)):
       # We don't want strings to be handled like python collections.
       yield '--%s=%s' % (key, value)  # type: ignore[str-bytes-safe]
     else:
