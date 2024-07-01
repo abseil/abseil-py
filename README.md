@@ -38,6 +38,13 @@ cd abseil-py
 bazel test absl/...
 ```
 
+Please also validate the type annotations against the latest mypy:
+
+```bash
+pip install mypy
+mypy absl
+```
+
 ### Example Code
 
 Please refer to
