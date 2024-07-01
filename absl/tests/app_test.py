@@ -150,15 +150,18 @@ class FunctionalTests(absltest.TestCase):
     stdout = _normalize_newlines(stdout.decode('utf8'))
     stderr = _normalize_newlines(stderr.decode('utf8'))
 
-    message = (u'Command: {command}\n'
-               'Exit Code: {exitcode}\n'
-               '===== stdout =====\n{stdout}'
-               '===== stderr =====\n{stderr}'
-               '=================='.format(
-                   command=' '.join([helper] + list(arguments)),
-                   exitcode=process.returncode,
-                   stdout=stdout or '<no output>\n',
-                   stderr=stderr or '<no output>\n'))
+    message = (
+        'Command: {command}\n'
+        'Exit Code: {exitcode}\n'
+        '===== stdout =====\n{stdout}'
+        '===== stderr =====\n{stderr}'
+        '=================='.format(
+            command=' '.join([helper] + list(arguments)),
+            exitcode=process.returncode,
+            stdout=stdout or '<no output>\n',
+            stderr=stderr or '<no output>\n',
+        )
+    )
     if expect_success:
       self.assertEqual(0, process.returncode, msg=message)
     else:
@@ -191,9 +194,9 @@ class FunctionalTests(absltest.TestCase):
         arguments=['--helpfull'],
         expected_stdout_substring='str_flag_with_unicode_args')
 
-    self.assertIn(u'smile:\U0001F604', stdout)
+    self.assertIn('smile:\U0001F604', stdout)
 
-    self.assertIn(u'thumb:\U0001F44D', stdout)
+    self.assertIn('thumb:\U0001F44D', stdout)
 
   def test_helpshort(self):
     _, _, stderr = self.run_helper(

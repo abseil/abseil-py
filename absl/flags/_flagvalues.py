@@ -1122,8 +1122,8 @@ class FlagValues:
     line_list = []  # All line from flagfile.
     flag_line_list = []  # Subset of lines w/o comments, blanks, flagfile= tags.
     try:
-      file_obj = open(filename, 'r')
-    except IOError as e_msg:
+      file_obj = open(filename)
+    except OSError as e_msg:
       raise _exceptions.CantOpenFlagFileError(
           'ERROR:: Unable to open flagfile: %s' % e_msg)
 

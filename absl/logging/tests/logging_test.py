@@ -54,7 +54,7 @@ class ConfigurationTest(absltest.TestCase):
 class LoggerLevelsTest(parameterized.TestCase):
 
   def setUp(self):
-    super(LoggerLevelsTest, self).setUp()
+    super().setUp()
     # Since these tests muck with the flag, always save/restore in case the
     # tests forget to clean up properly.
     # enter_context() is py3-only, but manually enter/exit should suffice.
@@ -360,7 +360,7 @@ class PythonHandlerTest(absltest.TestCase):
 
   def test_close_fake_file(self):
 
-    class FakeFile(object):
+    class FakeFile:
       """A file-like object that does not implement "isatty"."""
 
       def __init__(self):
@@ -1000,7 +1000,7 @@ class GetLogFileNameTest(parameterized.TestCase):
 
   def test_get_log_file_name_py_no_name(self):
 
-    class FakeFile(object):
+    class FakeFile:
       pass
 
     with override_python_handler_stream(FakeFile()):

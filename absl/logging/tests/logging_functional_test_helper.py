@@ -30,7 +30,7 @@ from absl import logging
 FLAGS = flags.FLAGS
 
 
-class VerboseDel(object):
+class VerboseDel:
   """Dummy class to test __del__ running."""
 
   def __init__(self, msg):
@@ -278,15 +278,17 @@ def _test_unicode():
     logging.info(msg, *args)
     sys.stderr.write('-- end {} --\n'.format(name))
 
-  log('unicode', u'G\u00eete: Ch\u00e2tonnaye')
-  log('unicode % unicode', u'G\u00eete: %s', u'Ch\u00e2tonnaye')
-  log('bytes % bytes', u'G\u00eete: %s'.encode('utf-8'),
-      u'Ch\u00e2tonnaye'.encode('utf-8'))
-  log('unicode % bytes', u'G\u00eete: %s', u'Ch\u00e2tonnaye'.encode('utf-8'))
-  log('bytes % unicode', u'G\u00eete: %s'.encode('utf-8'), u'Ch\u00e2tonnaye')
-  log('unicode % iso8859-15', u'G\u00eete: %s',
-      u'Ch\u00e2tonnaye'.encode('iso-8859-15'))
-  log('str % exception', 'exception: %s', Exception(u'Ch\u00e2tonnaye'))
+  log('unicode', 'G\u00eete: Ch\u00e2tonnaye')
+  log('unicode % unicode', 'G\u00eete: %s', 'Ch\u00e2tonnaye')
+  log('bytes % bytes', 'G\u00eete: %s'.encode(), 'Ch\u00e2tonnaye'.encode())
+  log('unicode % bytes', 'G\u00eete: %s', 'Ch\u00e2tonnaye'.encode())
+  log('bytes % unicode', 'G\u00eete: %s'.encode(), 'Ch\u00e2tonnaye')
+  log(
+      'unicode % iso8859-15',
+      'G\u00eete: %s',
+      'Ch\u00e2tonnaye'.encode('iso-8859-15'),
+  )
+  log('str % exception', 'exception: %s', Exception('Ch\u00e2tonnaye'))
 
 
 def main(argv):
