@@ -391,7 +391,8 @@ class FlagValues:
         return value
       except (TypeError, ValueError):  # Flag value is not valid.
         raise _exceptions.IllegalFlagValueError(
-            '"{1}" is not valid for --{0}'.format(name, value))
+            f'"{value}" is not valid for --{name}'
+        )
       except NameError:  # Flag name is not valid.
         pass
     raise _exceptions.UnrecognizedFlagError(name, value)
@@ -1122,8 +1123,8 @@ class FlagValues:
     line_list = []  # All line from flagfile.
     flag_line_list = []  # Subset of lines w/o comments, blanks, flagfile= tags.
     try:
-      file_obj = open(filename, 'r')
-    except IOError as e_msg:
+      file_obj = open(filename)
+    except OSError as e_msg:
       raise _exceptions.CantOpenFlagFileError(
           'ERROR:: Unable to open flagfile: %s' % e_msg)
 

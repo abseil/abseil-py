@@ -1,4 +1,3 @@
-# -*- coding=utf-8 -*-
 # Copyright 2017 The Abseil Authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,12 +27,12 @@ from absl.testing import absltest
 def _get_kernel_process_name():
   """Returns the Kernel's name for our process or an empty string."""
   try:
-    with open('/proc/self/status', 'rt') as status_file:
+    with open('/proc/self/status') as status_file:
       for line in status_file:
         if line.startswith('Name:'):
           return line.split(':', 2)[1].strip().encode('ascii', 'replace')
       return b''
-  except IOError:
+  except OSError:
     return b''
 
 
@@ -61,13 +60,15 @@ class CommandNameTest(absltest.TestCase):
       new_name = new_name.encode('ascii', 'replace')
     actual_name = _get_kernel_process_name()
     self.assertTrue(actual_name)
-    self.assertTrue(new_name.startswith(actual_name),
-                    msg='set {!r} vs found {!r}'.format(new_name, actual_name))
+    self.assertTrue(
+        new_name.startswith(actual_name),
+        msg=f'set {new_name!r} vs found {actual_name!r}',
+    )
 
   @unittest.skipIf(not os.access('/proc/self/comm', os.W_OK),
                    '/proc/self/comm is not writeable.')
   def test_set_kernel_process_name(self):
-    new_name = u'ProcessNam0123456789abcdefghijklmnöp'
+    new_name = 'ProcessNam0123456789abcdefghijklmnöp'
     command_name.set_kernel_process_name(new_name)
     self.assertProcessNameSimilarTo(new_name)
 

@@ -78,8 +78,7 @@ class HelperTest(absltest.TestCase):
           absltest.TEST_TMPDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
     else:
-      raise unittest.SkipTest(
-          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
+      raise unittest.SkipTest(f'Not asked to run: --test_id={_TEST_ID.value}')
 
   @unittest.expectedFailure
   def test_expected_failure(self):
@@ -94,15 +93,13 @@ class HelperTest(absltest.TestCase):
           FLAGS.xml_output_file,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE'])
     else:
-      raise unittest.SkipTest(
-          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
+      raise unittest.SkipTest(f'Not asked to run: --test_id={_TEST_ID.value}')
 
   def test_name_flag(self):
     if _TEST_ID.value == 7:
       print('Names in test_name_flag() are:', ' '.join(_NAME.value))
     else:
-      raise unittest.SkipTest(
-          'Not asked to run: --test_id={}'.format(_TEST_ID.value))
+      raise unittest.SkipTest(f'Not asked to run: --test_id={_TEST_ID.value}')
 
 
 class TempFileHelperTest(absltest.TestCase):

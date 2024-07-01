@@ -54,7 +54,7 @@ class ConfigurationTest(absltest.TestCase):
 class LoggerLevelsTest(parameterized.TestCase):
 
   def setUp(self):
-    super(LoggerLevelsTest, self).setUp()
+    super().setUp()
     # Since these tests muck with the flag, always save/restore in case the
     # tests forget to clean up properly.
     # enter_context() is py3-only, but manually enter/exit should suffice.
@@ -117,7 +117,7 @@ class LoggerLevelsTest(parameterized.TestCase):
     fl.parse(levels_str)
     expected = levels_str.replace(' ', '')
     actual = fl.serialize()
-    self.assertEqual('--logger_levels={}'.format(expected), actual)
+    self.assertEqual(f'--logger_levels={expected}', actual)
 
   def test_invalid_value(self):
     with self.assertRaisesRegex(ValueError, 'Unknown level.*10'):
@@ -360,7 +360,7 @@ class PythonHandlerTest(absltest.TestCase):
 
   def test_close_fake_file(self):
 
-    class FakeFile(object):
+    class FakeFile:
       """A file-like object that does not implement "isatty"."""
 
       def __init__(self):
@@ -611,7 +611,7 @@ class ABSLLogPrefixTest(parameterized.TestCase):
   def test_default_prefixes(self, levelno, level_prefix):
     self.record.levelno = levelno
     self.record.created = 1494293880.378885
-    thread_id = '{: >5}'.format(logging._get_thread_id())
+    thread_id = f'{logging._get_thread_id(): >5}'
     # Use UTC so the test passes regardless of the local time zone.
     with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
       self.assertEqual(
@@ -647,18 +647,19 @@ class ABSLLogPrefixTest(parameterized.TestCase):
     self.record.levelno = std_logging.CRITICAL
     self.record.created = 1494293880.378885
     self.record._absl_log_fatal = True
-    thread_id = '{: >5}'.format(logging._get_thread_id())
+    thread_id = f'{logging._get_thread_id(): >5}'
     # Use UTC so the test passes regardless of the local time zone.
     with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
       self.assertEqual(
-          'F0509 01:38:00.378885 {} source.py:13] '.format(thread_id),
-          logging.get_absl_log_prefix(self.record))
+          f'F0509 01:38:00.378885 {thread_id} source.py:13] ',
+          logging.get_absl_log_prefix(self.record),
+      )
       time.localtime.assert_called_once_with(self.record.created)
 
   def test_critical_non_absl(self):
     self.record.levelno = std_logging.CRITICAL
     self.record.created = 1494293880.378885
-    thread_id = '{: >5}'.format(logging._get_thread_id())
+    thread_id = f'{logging._get_thread_id(): >5}'
     # Use UTC so the test passes regardless of the local time zone.
     with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
       self.assertEqual(
@@ -1000,7 +1001,7 @@ class GetLogFileNameTest(parameterized.TestCase):
 
   def test_get_log_file_name_py_no_name(self):
 
-    class FakeFile(object):
+    class FakeFile:
       pass
 
     with override_python_handler_stream(FakeFile()):

@@ -51,10 +51,10 @@ class CreateXMLDOMElement(absltest.TestCase):
 
     # Some unicode chars are illegal in xml
     # (http://www.w3.org/TR/REC-xml/#charsets):
-    self._check('tag', u'\x0b\x02\x08\ufffe', b'<tag></tag>\n')
+    self._check('tag', '\x0b\x02\x08\ufffe', b'<tag></tag>\n')
 
     # Valid unicode will be encoded:
-    self._check('tag', u'\xff', b'<tag>\xc3\xbf</tag>\n')
+    self._check('tag', '\xff', b'<tag>\xc3\xbf</tag>\n')
 
 
 def _list_separators_in_xmlformat(separators, indent=''):

@@ -310,12 +310,12 @@ class FunctionalTest(parameterized.TestCase):
     return expected_logs
 
   def setUp(self):
-    super(FunctionalTest, self).setUp()
+    super().setUp()
     self._log_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
 
   def tearDown(self):
     shutil.rmtree(self._log_dir)
-    super(FunctionalTest, self).tearDown()
+    super().tearDown()
 
   def _exec_test(self,
                  verify_exit_fn,
@@ -686,10 +686,11 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
 
     def get_stderr_message(stderr, name):
       match = re.search(
-          '-- begin {} --\n(.*)-- end {} --'.format(name, name),
-          stderr, re.MULTILINE | re.DOTALL)
-      self.assertTrue(
-          match, 'Cannot find stderr message for test {}'.format(name))
+          f'-- begin {name} --\n(.*)-- end {name} --',
+          stderr,
+          re.MULTILINE | re.DOTALL,
+      )
+      self.assertTrue(match, f'Cannot find stderr message for test {name}')
       return match.group(1)
 
     def assert_stderr(stderr):
@@ -710,7 +711,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
 
     expected_logs = [['stderr', None, assert_stderr]]
 
-    info_log = u'''\
+    info_log = """\
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] b'G\\xc3\\xaete: b'Ch\\xc3\\xa2tonnaye''
@@ -718,7 +719,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: b'
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] b'G\\xc3\\xaete: Ch\u00e2tonnaye'
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: b'Ch\\xe2tonnaye'
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] exception: Ch\u00e2tonnaye
-'''
+"""
     expected_logs.append(['absl_log_file', 'INFO', info_log])
 
     self._exec_test(

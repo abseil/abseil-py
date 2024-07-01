@@ -23,7 +23,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 
 
-class MyOwnClass(object):
+class MyOwnClass:
   pass
 
 
@@ -378,7 +378,9 @@ class ParameterizedTestsTest(absltest.TestCase):
       'https://bugs.python.org/issue35767',
   )
   def test_missing_inheritance(self):
-    ts = unittest.makeSuite(self.BadAdditionParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.BadAdditionParams
+    )
     self.assertEqual(1, ts.countTestCases())
 
     res = unittest.TestResult()
@@ -388,11 +390,15 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertIn('without having inherited', str(res.errors[0]))
 
   def test_correct_extraction_numbers(self):
-    ts = unittest.makeSuite(self.GoodAdditionParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.GoodAdditionParams
+    )
     self.assertEqual(2, ts.countTestCases())
 
   def test_successful_execution(self):
-    ts = unittest.makeSuite(self.GoodAdditionParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.GoodAdditionParams
+    )
 
     res = unittest.TestResult()
     ts.run(res)
@@ -400,10 +406,12 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertTrue(res.wasSuccessful())
 
   def test_correct_arguments(self):
-    ts = unittest.makeSuite(self.GoodAdditionParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.GoodAdditionParams
+    )
     res = unittest.TestResult()
 
-    params = set([(1, 2, 3), (4, 5, 9)])
+    params = {(1, 2, 3), (4, 5, 9)}
     for test in ts:
       test(res)
       self.assertIn(test.arguments, params)
@@ -411,7 +419,9 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEmpty(params)
 
   def test_recorded_failures(self):
-    ts = unittest.makeSuite(self.MixedAdditionParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.MixedAdditionParams
+    )
     self.assertEqual(2, ts.countTestCases())
 
     res = unittest.TestResult()
@@ -422,27 +432,32 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEmpty(res.errors)
 
   def test_short_description(self):
-    ts = unittest.makeSuite(self.GoodAdditionParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.GoodAdditionParams
+    )
     short_desc = list(ts)[0].shortDescription()
 
     location = unittest.util.strclass(self.GoodAdditionParams).replace(
         '__main__.', ''
     )
     expected = (
-        '{}.test_addition0 (1, 2, 3)\n'.format(location)
-        + 'test_addition(1, 2, 3)'
+        f'{location}.test_addition0 (1, 2, 3)\n' + 'test_addition(1, 2, 3)'
     )
     self.assertEqual(expected, short_desc)
 
   def test_short_description_addresses_removed(self):
-    ts = unittest.makeSuite(self.ArgumentsWithAddresses)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.ArgumentsWithAddresses
+    )
     short_desc = list(ts)[0].shortDescription().split('\n')
     self.assertEqual('test_something(<object>)', short_desc[1])
     short_desc = list(ts)[1].shortDescription().split('\n')
     self.assertEqual('test_something(<__main__.MyOwnClass>)', short_desc[1])
 
   def test_id(self):
-    ts = unittest.makeSuite(self.ArgumentsWithAddresses)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.ArgumentsWithAddresses
+    )
     self.assertEqual(
         (
             unittest.util.strclass(self.ArgumentsWithAddresses)
@@ -450,7 +465,9 @@ class ParameterizedTestsTest(absltest.TestCase):
         ),
         list(ts)[0].id(),
     )
-    ts = unittest.makeSuite(self.GoodAdditionParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.GoodAdditionParams
+    )
     self.assertEqual(
         (
             unittest.util.strclass(self.GoodAdditionParams)
@@ -460,7 +477,9 @@ class ParameterizedTestsTest(absltest.TestCase):
     )
 
   def test_str(self):
-    ts = unittest.makeSuite(self.GoodAdditionParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.GoodAdditionParams
+    )
     test = list(ts)[0]
 
     expected = 'test_addition0 (1, 2, 3) ({})'.format(
@@ -469,24 +488,28 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEqual(expected, str(test))
 
   def test_dict_parameters(self):
-    ts = unittest.makeSuite(self.DictionaryArguments)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.DictionaryArguments
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(2, res.testsRun)
     self.assertTrue(res.wasSuccessful())
 
   def test_no_parameterized_tests(self):
-    ts = unittest.makeSuite(self.NoParameterizedTests)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.NoParameterizedTests
+    )
     self.assertEqual(4, ts.countTestCases())
     short_descs = [x.shortDescription() for x in list(ts)]
     full_class_name = unittest.util.strclass(self.NoParameterizedTests)
     full_class_name = full_class_name.replace('__main__.', '')
     self.assertSameElements(
         [
-            '{}.testGenerator'.format(full_class_name),
-            '{}.test_generator'.format(full_class_name),
-            '{}.testNormal'.format(full_class_name),
-            '{}.test_normal'.format(full_class_name),
+            f'{full_class_name}.testGenerator',
+            f'{full_class_name}.test_generator',
+            f'{full_class_name}.testNormal',
+            f'{full_class_name}.test_normal',
         ],
         short_descs,
     )
@@ -498,7 +521,7 @@ class ParameterizedTestsTest(absltest.TestCase):
       def testModuloResult(self, num, modulo, expected):
         self.assertEqual(expected, num % modulo)
 
-    ts = unittest.makeSuite(GoodProductTestCase)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(GoodProductTestCase)
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(ts.countTestCases(), 6)
@@ -516,7 +539,7 @@ class ParameterizedTestsTest(absltest.TestCase):
       def testModuloResult(self, num, modulo, expected):
         self.assertEqual(expected, num % modulo)
 
-    ts = unittest.makeSuite(GoodProductTestCase)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(GoodProductTestCase)
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(ts.countTestCases(), 6)
@@ -536,7 +559,7 @@ class ParameterizedTestsTest(absltest.TestCase):
       def testModuloResult(self, num, dtype, modulo, expected):
         self.assertEqual(expected, dtype(num) % modulo)
 
-    ts = unittest.makeSuite(GoodProductTestCase)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(GoodProductTestCase)
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(ts.countTestCases(), 4)
@@ -588,7 +611,7 @@ class ParameterizedTestsTest(absltest.TestCase):
       def testModuloResult(self, num, modulo, expected):
         self.assertEqual(expected, num % modulo)
 
-    ts = unittest.makeSuite(MixedProductTestCase)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(MixedProductTestCase)
     self.assertEqual(6, ts.countTestCases())
 
     res = unittest.TestResult()
@@ -606,7 +629,9 @@ class ParameterizedTestsTest(absltest.TestCase):
       def test_something(self, a, b):
         pass
 
-    ts = unittest.makeSuite(MismatchedProductParam)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        MismatchedProductParam
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(res.testsRun, 4)
@@ -638,7 +663,7 @@ class ParameterizedTestsTest(absltest.TestCase):
         test_generator_method = (lambda self: None for _ in range(10))
 
   def test_named_parameters_run(self):
-    ts = unittest.makeSuite(self.NamedTests)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(self.NamedTests)
     self.assertEqual(9, ts.countTestCases())
     res = unittest.TestResult()
     ts.run(res)
@@ -647,7 +672,10 @@ class ParameterizedTestsTest(absltest.TestCase):
 
   def test_named_parameters_id(self):
     ts = sorted(
-        unittest.makeSuite(self.CamelCaseNamedTests), key=lambda t: t.id()
+        unittest.defaultTestLoader.loadTestsFromTestCase(
+            self.CamelCaseNamedTests
+        ),
+        key=lambda t: t.id(),
     )
     self.assertLen(ts, 9)
     full_class_name = unittest.util.strclass(self.CamelCaseNamedTests)
@@ -666,7 +694,10 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEqual(full_class_name + '.testWithoutParameters', ts[8].id())
 
   def test_named_parameters_id_with_underscore_case(self):
-    ts = sorted(unittest.makeSuite(self.NamedTests), key=lambda t: t.id())
+    ts = sorted(
+        unittest.defaultTestLoader.loadTestsFromTestCase(self.NamedTests),
+        key=lambda t: t.id(),
+    )
     self.assertLen(ts, 9)
     full_class_name = unittest.util.strclass(self.NamedTests)
     self.assertEqual(
@@ -692,7 +723,10 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertEqual(full_class_name + '.test_without_parameters', ts[8].id())
 
   def test_named_parameters_short_description(self):
-    ts = sorted(unittest.makeSuite(self.NamedTests), key=lambda t: t.id())
+    ts = sorted(
+        unittest.defaultTestLoader.loadTestsFromTestCase(self.NamedTests),
+        key=lambda t: t.id(),
+    )
     actual = {t._testMethodName: t.shortDescription() for t in ts}
     expected = {
         'test_dict_single_interesting': 'case=0',
@@ -706,7 +740,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     for test_name, param_repr in expected.items():
       short_desc = actual[test_name].split('\n')
       self.assertIn(test_name, short_desc[0])
-      self.assertEqual('{}({})'.format(test_name, param_repr), short_desc[1])
+      self.assertEqual(f'{test_name}({param_repr})', short_desc[1])
 
   def test_load_tuple_named_test(self):
     loader = unittest.TestLoader()
@@ -806,7 +840,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertCountEqual(expected_testcases, test_something.testcases)
 
   def test_chained_decorator(self):
-    ts = unittest.makeSuite(self.ChainedTests)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(self.ChainedTests)
     self.assertEqual(1, ts.countTestCases())
     test = next(t for t in ts)
     self.assertTrue(hasattr(test, 'test_chained_flavor_strawberry_cone_waffle'))
@@ -817,42 +851,52 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertTrue(res.wasSuccessful())
 
   def test_singleton_list_extraction(self):
-    ts = unittest.makeSuite(self.SingletonListExtraction)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.SingletonListExtraction
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(10, res.testsRun)
     self.assertTrue(res.wasSuccessful())
 
   def test_singleton_argument_extraction(self):
-    ts = unittest.makeSuite(self.SingletonArgumentExtraction)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.SingletonArgumentExtraction
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(9, res.testsRun)
     self.assertTrue(res.wasSuccessful())
 
   def test_singleton_dict_argument(self):
-    ts = unittest.makeSuite(self.SingletonDictArgument)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.SingletonDictArgument
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(1, res.testsRun)
     self.assertTrue(res.wasSuccessful())
 
   def test_decorated_bare_class(self):
-    ts = unittest.makeSuite(self.DecoratedBareClass)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.DecoratedBareClass
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(2, res.testsRun)
     self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
 
   def test_decorated_class(self):
-    ts = unittest.makeSuite(self.DecoratedClass)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(self.DecoratedClass)
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(4, res.testsRun)
     self.assertLen(res.failures, 2)
 
   def test_generator_decorated_class(self):
-    ts = unittest.makeSuite(self.GeneratorDecoratedClass)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.GeneratorDecoratedClass
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(32, res.testsRun)
@@ -884,7 +928,9 @@ class ParameterizedTestsTest(absltest.TestCase):
       del SubclassWithClassDecorator
 
   def test_other_decorator_ordering_unnamed(self):
-    ts = unittest.makeSuite(self.OtherDecoratorUnnamed)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.OtherDecoratorUnnamed
+    )
     res = unittest.TestResult()
     ts.run(res)
     # Two for when the parameterized tests call the skip wrapper.
@@ -896,7 +942,9 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertLen(res.errors, 1)
 
   def test_other_decorator_ordering_named(self):
-    ts = unittest.makeSuite(self.OtherDecoratorNamed)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.OtherDecoratorNamed
+    )
     # Verify it generates the test method names from the original test method.
     for test in ts:  # There is only one test.
       ts_attributes = dir(test)
@@ -914,7 +962,9 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertLen(res.errors, 1)
 
   def test_other_decorator_ordering_named_with_dict(self):
-    ts = unittest.makeSuite(self.OtherDecoratorNamedWithDict)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.OtherDecoratorNamedWithDict
+    )
     # Verify it generates the test method names from the original test method.
     for test in ts:  # There is only one test.
       ts_attributes = dir(test)
@@ -943,7 +993,7 @@ class ParameterizedTestsTest(absltest.TestCase):
   def test_no_test_error_empty_generator(self):
     with self.assertRaises(parameterized.NoTestsError):
 
-      @parameterized.parameters((i for i in []))
+      @parameterized.parameters(i for i in [])
       def test_something():
         pass
 
@@ -953,13 +1003,15 @@ class ParameterizedTestsTest(absltest.TestCase):
     class RecordSuccessTestsResult(unittest.TestResult):
 
       def __init__(self, *args, **kwargs):
-        super(RecordSuccessTestsResult, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.successful_tests = []
 
       def addSuccess(self, test):
         self.successful_tests.append(test)
 
-    ts = unittest.makeSuite(self.UniqueDescriptiveNamesTest)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.UniqueDescriptiveNamesTest
+    )
     res = RecordSuccessTestsResult()
     ts.run(res)
     self.assertTrue(res.wasSuccessful())
@@ -974,14 +1026,18 @@ class ParameterizedTestsTest(absltest.TestCase):
     self.assertCountEqual(expected_test_ids, test_ids)
 
   def test_multi_generators(self):
-    ts = unittest.makeSuite(self.MultiGeneratorsTestCase)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.MultiGeneratorsTestCase
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(2, res.testsRun)
     self.assertTrue(res.wasSuccessful(), msg=str(res.failures))
 
   def test_named_parameters_reusable(self):
-    ts = unittest.makeSuite(self.NamedParametersReusableTestCase)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.NamedParametersReusableTestCase
+    )
     res = unittest.TestResult()
     ts.run(res)
     self.assertEqual(8, res.testsRun)
@@ -1072,7 +1128,7 @@ class CoopMetaclassCreationTest(absltest.TestCase):
     _cleanup = False
 
   def test_successful_execution(self):
-    ts = unittest.makeSuite(self.MyParams)
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(self.MyParams)
 
     res = unittest.TestResult()
     ts.run(res)

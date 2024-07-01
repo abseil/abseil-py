@@ -43,8 +43,8 @@ def get_executable_path(py_binary_name):
     py_binary_name += '.exe'
     manifest_file = os.path.join(FLAGS.test_srcdir, 'MANIFEST')
     workspace_name = os.environ['TEST_WORKSPACE']
-    manifest_entry = '{}/{}'.format(workspace_name, py_binary_name)
-    with open(manifest_file, 'r') as manifest_fd:
+    manifest_entry = f'{workspace_name}/{py_binary_name}'
+    with open(manifest_file) as manifest_fd:
       for line in manifest_fd:
         tokens = line.strip().split(' ')
         if len(tokens) != 2:

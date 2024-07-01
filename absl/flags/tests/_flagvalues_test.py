@@ -632,7 +632,7 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
 class SettingUnknownFlagTest(absltest.TestCase):
 
   def setUp(self):
-    super(SettingUnknownFlagTest, self).setUp()
+    super().setUp()
     self.setter_called = 0
 
   def set_undef(self, unused_name, unused_val):
@@ -675,7 +675,7 @@ class SettingUnknownFlagTest(absltest.TestCase):
 class SetAttributesTest(absltest.TestCase):
 
   def setUp(self):
-    super(SetAttributesTest, self).setUp()
+    super().setUp()
     self.new_flags = _flagvalues.FlagValues()
     _defines.DEFINE_boolean(
         'defined_flag', None, '', flag_values=self.new_flags)
@@ -704,7 +704,7 @@ class SetAttributesTest(absltest.TestCase):
 class FlagsDashSyntaxTest(absltest.TestCase):
 
   def setUp(self):
-    super(FlagsDashSyntaxTest, self).setUp()
+    super().setUp()
     self.fv = _flagvalues.FlagValues()
     _defines.DEFINE_string(
         'long_name', 'default', 'help', flag_values=self.fv, short_name='s')
@@ -864,7 +864,7 @@ class UnparsedFlagAccessTest(absltest.TestCase):
 class FlagHolderTest(absltest.TestCase):
 
   def setUp(self):
-    super(FlagHolderTest, self).setUp()
+    super().setUp()
     self.fv = _flagvalues.FlagValues()
     self.name_flag = _defines.DEFINE_string(
         'name', 'default', 'help', flag_values=self.fv)

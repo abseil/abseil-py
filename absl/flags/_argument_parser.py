@@ -198,7 +198,7 @@ class FloatParser(NumericParser[float]):
       lower_bound: Optional[float] = None,
       upper_bound: Optional[float] = None,
   ) -> None:
-    super(FloatParser, self).__init__()
+    super().__init__()
     self.lower_bound = lower_bound
     self.upper_bound = upper_bound
     sh = self.syntactic_help
@@ -244,7 +244,7 @@ class IntegerParser(NumericParser[int]):
   def __init__(
       self, lower_bound: Optional[int] = None, upper_bound: Optional[int] = None
   ) -> None:
-    super(IntegerParser, self).__init__()
+    super().__init__()
     self.lower_bound = lower_bound
     self.upper_bound = upper_bound
     sh = self.syntactic_help
@@ -329,13 +329,10 @@ class EnumParser(ArgumentParser[str]):
       ValueError: When enum_values is empty.
     """
     if not enum_values:
-      raise ValueError(
-          'enum_values cannot be empty, found "{}"'.format(enum_values))
+      raise ValueError(f'enum_values cannot be empty, found "{enum_values}"')
     if isinstance(enum_values, str):
-      raise ValueError(
-          'enum_values cannot be a str, found "{}"'.format(enum_values)
-      )
-    super(EnumParser, self).__init__()
+      raise ValueError(f'enum_values cannot be a str, found "{enum_values}"')
+    super().__init__()
     self.enum_values = list(enum_values)
     self.case_sensitive = case_sensitive
 
@@ -388,7 +385,7 @@ class EnumClassParser(ArgumentParser[_ET]):
       ValueError: When enum_class is empty.
     """
     if not issubclass(enum_class, enum.Enum):
-      raise TypeError('{} is not a subclass of Enum.'.format(enum_class))
+      raise TypeError(f'{enum_class} is not a subclass of Enum.')
     if not enum_class.__members__:
       raise ValueError('enum_class cannot be empty, but "{}" is empty.'
                        .format(enum_class))
@@ -403,7 +400,7 @@ class EnumClassParser(ArgumentParser[_ET]):
             'Duplicate enum values for {} using case_sensitive=False'.format(
                 duplicate_keys))
 
-    super(EnumClassParser, self).__init__()
+    super().__init__()
     self.enum_class = enum_class
     self._case_sensitive = case_sensitive
     if case_sensitive:
@@ -477,7 +474,7 @@ class EnumClassListSerializer(ListSerializer[_ET]):
       **kwargs: Keyword arguments to the `EnumClassSerializer` used to serialize
         individual values.
     """
-    super(EnumClassListSerializer, self).__init__(list_sep)
+    super().__init__(list_sep)
     self._element_serializer = EnumClassSerializer(**kwargs)
 
   def serialize(self, value: Union[_ET, List[_ET]]) -> str:
@@ -535,7 +532,7 @@ class BaseListParser(ArgumentParser):
       self, token: Optional[str] = None, name: Optional[str] = None
   ) -> None:
     assert name
-    super(BaseListParser, self).__init__()
+    super().__init__()
     self._token = token
     self._name = name
     self.syntactic_help = 'a %s separated list' % self._name
@@ -558,7 +555,7 @@ class ListParser(BaseListParser):
   """Parser for a comma-separated list of strings."""
 
   def __init__(self) -> None:
-    super(ListParser, self).__init__(',', 'comma')
+    super().__init__(',', 'comma')
 
   def parse(self, argument: Union[str, List[str]]) -> List[str]:
     """Parses argument as comma-separated list of strings."""
@@ -581,7 +578,7 @@ class ListParser(BaseListParser):
   def _custom_xml_dom_elements(
       self, doc: minidom.Document
   ) -> List[minidom.Element]:
-    elements = super(ListParser, self)._custom_xml_dom_elements(doc)
+    elements = super()._custom_xml_dom_elements(doc)
     elements.append(_helpers.create_xml_dom_element(
         doc, 'list_separator', repr(',')))
     return elements
@@ -600,7 +597,7 @@ class WhitespaceSeparatedListParser(BaseListParser):
     """
     self._comma_compat = comma_compat
     name = 'whitespace or comma' if self._comma_compat else 'whitespace'
-    super(WhitespaceSeparatedListParser, self).__init__(None, name)
+    super().__init__(None, name)
 
   def parse(self, argument: Union[str, List[str]]) -> List[str]:
     """Parses argument as whitespace-separated list of strings.
@@ -625,8 +622,7 @@ class WhitespaceSeparatedListParser(BaseListParser):
   def _custom_xml_dom_elements(
       self, doc: minidom.Document
   ) -> List[minidom.Element]:
-    elements = super(WhitespaceSeparatedListParser, self
-                    )._custom_xml_dom_elements(doc)
+    elements = super()._custom_xml_dom_elements(doc)
     separators = list(string.whitespace)
     if self._comma_compat:
       separators.append(',')
