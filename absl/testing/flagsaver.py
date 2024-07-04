@@ -297,7 +297,7 @@ def _wrap(flag_overrider_cls, func, overrides):
   return _flagsaver_wrapper
 
 
-class _FlagOverrider(object):
+class _FlagOverrider:
   """Overrides flags for the duration of the decorated function call.
 
   It also restores all original values of flags after decorated method

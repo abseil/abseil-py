@@ -166,10 +166,9 @@ class _VerbosityFlag(flags.Flag):
   """Flag class for -v/--verbosity."""
 
   def __init__(self, *args, **kwargs):
-    super(_VerbosityFlag, self).__init__(
-        flags.IntegerParser(),
-        flags.ArgumentSerializer(),
-        *args, **kwargs)
+    super().__init__(
+        flags.IntegerParser(), flags.ArgumentSerializer(), *args, **kwargs
+    )
 
   @property
   def value(self):
@@ -208,10 +207,9 @@ class _LoggerLevelsFlag(flags.Flag):
   """Flag class for --logger_levels."""
 
   def __init__(self, *args, **kwargs):
-    super(_LoggerLevelsFlag, self).__init__(
-        _LoggerLevelsParser(),
-        _LoggerLevelsSerializer(),
-        *args, **kwargs)
+    super().__init__(
+        _LoggerLevelsParser(), _LoggerLevelsSerializer(), *args, **kwargs
+    )
 
   @property
   def value(self):
@@ -252,7 +250,7 @@ class _LoggerLevelsParser(flags.ArgumentParser):
     return levels
 
 
-class _LoggerLevelsSerializer(object):
+class _LoggerLevelsSerializer:
   """Serializer for --logger_levels flag."""
 
   def serialize(self, value):
@@ -266,10 +264,9 @@ class _StderrthresholdFlag(flags.Flag):
   """Flag class for --stderrthreshold."""
 
   def __init__(self, *args, **kwargs):
-    super(_StderrthresholdFlag, self).__init__(
-        flags.ArgumentParser(),
-        flags.ArgumentSerializer(),
-        *args, **kwargs)
+    super().__init__(
+        flags.ArgumentParser(), flags.ArgumentSerializer(), *args, **kwargs
+    )
 
   @property
   def value(self):
@@ -852,7 +849,7 @@ class PythonHandler(logging.StreamHandler):
   """The handler class used by Abseil Python logging implementation."""
 
   def __init__(self, stream=None, formatter=None):
-    super(PythonHandler, self).__init__(stream)
+    super().__init__(stream)
     self.setFormatter(formatter or PythonFormatter())
 
   def start_logging_to_file(self, program_name=None, log_dir=None):
@@ -878,7 +875,7 @@ class PythonHandler(logging.StreamHandler):
         if os.path.islink(symlink):
           os.unlink(symlink)
         os.symlink(os.path.basename(filename), symlink)
-      except EnvironmentError:
+      except OSError:
         # If it fails, we're sad but it's no error.  Commonly, this
         # fails because the symlink was created by another user and so
         # we can't modify it
@@ -897,7 +894,7 @@ class PythonHandler(logging.StreamHandler):
     try:
       if self.stream and hasattr(self.stream, 'flush'):
         self.stream.flush()
-    except (EnvironmentError, ValueError):
+    except (OSError, ValueError):
       # A ValueError is thrown if we try to flush a closed file.
       pass
     finally:
@@ -917,7 +914,7 @@ class PythonHandler(logging.StreamHandler):
     old_stream = self.stream
     self.stream = sys.stderr
     try:
-      super(PythonHandler, self).emit(record)
+      super().emit(record)
     finally:
       self.stream = old_stream
 
@@ -949,7 +946,7 @@ class PythonHandler(logging.StreamHandler):
     elif FLAGS['logtostderr'].value:
       self._log_to_stderr(record)
     else:
-      super(PythonHandler, self).emit(record)
+      super().emit(record)
       stderr_threshold = converter.string_to_standard(
           FLAGS['stderrthreshold'].value)
       if ((FLAGS['alsologtostderr'].value or level >= stderr_threshold) and
@@ -979,7 +976,7 @@ class PythonHandler(logging.StreamHandler):
       except ValueError:
         # A ValueError is thrown if we try to run isatty() on a closed file.
         pass
-      super(PythonHandler, self).close()
+      super().close()
     finally:
       self.release()
 
@@ -988,7 +985,7 @@ class ABSLHandler(logging.Handler):
   """Abseil Python logging module's log handler."""
 
   def __init__(self, python_logging_formatter):
-    super(ABSLHandler, self).__init__()
+    super().__init__()
 
     self._python_handler = PythonHandler(formatter=python_logging_formatter)
     self.activate_python_handler()
@@ -1006,7 +1003,7 @@ class ABSLHandler(logging.Handler):
     self._current_handler.flush()
 
   def close(self):
-    super(ABSLHandler, self).close()
+    super().close()
     self._current_handler.close()
 
   def handle(self, record):
@@ -1049,7 +1046,7 @@ class PythonFormatter(logging.Formatter):
       prefix = ''
     else:
       prefix = get_absl_log_prefix(record)
-    return prefix + super(PythonFormatter, self).format(record)
+    return prefix + super().format(record)
 
 
 class ABSLLogger(logging.getLoggerClass()):
@@ -1102,9 +1099,9 @@ class ABSLLogger(logging.getLoggerClass()):
         sinfo = None
         if stack_info:
           out = io.StringIO()
-          out.write(u'Stack (most recent call last):\n')
+          out.write('Stack (most recent call last):\n')
           traceback.print_stack(frame, file=out)
-          sinfo = out.getvalue().rstrip(u'\n')
+          sinfo = out.getvalue().rstrip('\n')
         return (code.co_filename, frame.f_lineno, code.co_name, sinfo)
       frame = frame.f_back
 
@@ -1155,7 +1152,7 @@ class ABSLLogger(logging.getLoggerClass()):
       # treat CRITICAL/FATAL logs as really FATAL.
       extra = kwargs.setdefault('extra', {})
       extra[_ABSL_LOG_FATAL] = True
-    super(ABSLLogger, self).log(level, msg, *args, **kwargs)
+    super().log(level, msg, *args, **kwargs)
 
   def handle(self, record):
     """Calls handlers without checking ``Logger.disabled``.

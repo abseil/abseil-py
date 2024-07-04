@@ -23,7 +23,7 @@ from absl.testing import absltest
 class NumericFlagBoundsTest(absltest.TestCase):
 
   def setUp(self):
-    super(NumericFlagBoundsTest, self).setUp()
+    super().setUp()
     self.flag_values = flags.FlagValues()
 
   def test_no_validator_if_no_bounds(self):

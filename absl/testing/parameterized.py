@@ -236,12 +236,14 @@ class DuplicateTestNameError(Exception):
   """Raised when a parameterized test has the same test name multiple times."""
 
   def __init__(self, test_class_name, new_test_name, original_test_name):
-    super(DuplicateTestNameError, self).__init__(
+    super().__init__(
         'Duplicate parameterized test name in {}: generated test name {!r} '
         '(generated from {!r}) already exists. Consider using '
         'named_parameters() to give your tests unique names and/or renaming '
         'the conflicting test method.'.format(
-            test_class_name, new_test_name, original_test_name))
+            test_class_name, new_test_name, original_test_name
+        )
+    )
 
 
 def _clean_repr(obj):
@@ -270,7 +272,7 @@ def _async_wrapped(func):
   return wrapper
 
 
-class _ParameterizedTestIter(object):
+class _ParameterizedTestIter:
   """Callable and iterable class for producing new test cases."""
 
   def __init__(self, test_method, testcases, naming_type, original_name=None):
@@ -663,7 +665,7 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
     Returns:
       The test id.
     """
-    base = super(TestCase, self).id()
+    base = super().id()
     params_repr = self._get_params_repr()
     if params_repr:
       # We include the params in the id so that, when reported in the

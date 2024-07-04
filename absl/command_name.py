@@ -45,14 +45,14 @@ def set_kernel_process_name(name):
     # This is preferred to using ctypes to try and call prctl() when possible.
     with open('/proc/self/comm', 'wb') as proc_comm:
       proc_comm.write(name[:15])
-  except EnvironmentError:
+  except OSError:
     try:
       import ctypes  # pylint: disable=g-import-not-at-top
     except ImportError:
       return  # No ctypes.
     try:
       libc = ctypes.CDLL('libc.so.6')
-    except EnvironmentError:
+    except OSError:
       return  # No libc.so.6.
     pr_set_name = ctypes.c_ulong(15)  # linux/prctl.h PR_SET_NAME value.
     zero = ctypes.c_ulong(0)

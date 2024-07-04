@@ -85,7 +85,7 @@ class UsageError(Error):
   """
 
   def __init__(self, message, exitcode=1):
-    super(UsageError, self).__init__(message)
+    super().__init__(message)
     self.exitcode = exitcode
 
 
@@ -95,9 +95,13 @@ class HelpFlag(flags.BooleanFlag):
   SHORT_NAME = '?'
 
   def __init__(self):
-    super(HelpFlag, self).__init__(
-        self.NAME, False, 'show this help',
-        short_name=self.SHORT_NAME, allow_hide_cpp=True)
+    super().__init__(
+        self.NAME,
+        False,
+        'show this help',
+        short_name=self.SHORT_NAME,
+        allow_hide_cpp=True,
+    )
 
   def parse(self, arg):
     if self._parse(arg):
@@ -118,8 +122,7 @@ class HelpfullFlag(flags.BooleanFlag):
   """Display help for flags in the main module and all dependent modules."""
 
   def __init__(self):
-    super(HelpfullFlag, self).__init__(
-        'helpfull', False, 'show full help', allow_hide_cpp=True)
+    super().__init__('helpfull', False, 'show full help', allow_hide_cpp=True)
 
   def parse(self, arg):
     if self._parse(arg):
@@ -131,9 +134,12 @@ class HelpXMLFlag(flags.BooleanFlag):
   """Similar to HelpfullFlag, but generates output in XML format."""
 
   def __init__(self):
-    super(HelpXMLFlag, self).__init__(
-        'helpxml', False, 'like --helpfull, but generates XML output',
-        allow_hide_cpp=True)
+    super().__init__(
+        'helpxml',
+        False,
+        'like --helpfull, but generates XML output',
+        allow_hide_cpp=True,
+    )
 
   def parse(self, arg):
     if self._parse(arg):
@@ -428,7 +434,7 @@ def usage(shorthelp=False, writeto_stdout=False, detailed_error=None,
     stdfile.write('\n')
     if detailed_error is not None:
       stdfile.write('\n%s\n' % detailed_error)
-  except IOError as e:
+  except OSError as e:
     # We avoid printing a huge backtrace if we get EPIPE, because
     # "foo.par --help | less" is a frequent use case.
     if e.errno != errno.EPIPE:
@@ -437,7 +443,7 @@ def usage(shorthelp=False, writeto_stdout=False, detailed_error=None,
     sys.exit(exitcode)
 
 
-class ExceptionHandler(object):
+class ExceptionHandler:
   """Base exception handler from which other may inherit."""
 
   def wants(self, exc):

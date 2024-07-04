@@ -83,7 +83,7 @@ ABSL_TO_STANDARD = {ABSL_FATAL: STANDARD_CRITICAL,
                     ABSL_DEBUG: STANDARD_DEBUG}
 
 # Inverts the ABSL_TO_STANDARD
-STANDARD_TO_ABSL = dict((v, k) for (k, v) in ABSL_TO_STANDARD.items())
+STANDARD_TO_ABSL = {v: k for (k, v) in ABSL_TO_STANDARD.items()}
 
 
 def get_initial_for_level(level):

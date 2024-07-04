@@ -357,9 +357,7 @@ class BooleanFlag(Flag[bool]):
       **args
   ) -> None:
     p = _argument_parser.BooleanParser()
-    super(BooleanFlag, self).__init__(
-        p, None, name, default, help, short_name, True, **args
-    )
+    super().__init__(p, None, name, default, help, short_name, True, **args)
 
 
 class EnumFlag(Flag[str]):
@@ -380,9 +378,7 @@ class EnumFlag(Flag[str]):
     p = _argument_parser.EnumParser(enum_values, case_sensitive)
     g: _argument_parser.ArgumentSerializer[str]
     g = _argument_parser.ArgumentSerializer()
-    super(EnumFlag, self).__init__(
-        p, g, name, default, help, short_name, **args
-    )
+    super().__init__(p, g, name, default, help, short_name, **args)
     self.parser = p
     self.help = '<%s>: %s' % ('|'.join(p.enum_values), self.help)
 
@@ -416,9 +412,7 @@ class EnumClassFlag(Flag[_ET]):
     )
     g: _argument_parser.EnumClassSerializer[_ET]
     g = _argument_parser.EnumClassSerializer(lowercase=not case_sensitive)
-    super(EnumClassFlag, self).__init__(
-        p, g, name, default, help, short_name, **args
-    )
+    super().__init__(p, g, name, default, help, short_name, **args)
     self.parser = p
     self.help = '<%s>: %s' % ('|'.join(p.member_names), self.help)
 
@@ -450,7 +444,7 @@ class MultiFlag(Generic[_T], Flag[List[_T]]):
   """
 
   def __init__(self, *args, **kwargs):
-    super(MultiFlag, self).__init__(*args, **kwargs)
+    super().__init__(*args, **kwargs)
     self.help += ';\n    repeat this option to specify a list of values'
 
   def parse(self, arguments: Union[str, _T, Iterable[_T]]):  # pylint: disable=arguments-renamed
@@ -540,8 +534,7 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
     g: _argument_parser.EnumClassListSerializer
     g = _argument_parser.EnumClassListSerializer(
         list_sep=',', lowercase=not case_sensitive)
-    super(MultiEnumClassFlag, self).__init__(
-        p, g, name, default, help_string, **args)
+    super().__init__(p, g, name, default, help_string, **args)
     # NOTE: parser should be typed EnumClassParser[_ET] but the constructor
     # restricts the available interface to ArgumentParser[str].
     self.parser = p

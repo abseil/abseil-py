@@ -87,7 +87,7 @@ class EmptyEnum(enum.Enum):
 class AliasFlagsTest(absltest.TestCase):
 
   def setUp(self):
-    super(AliasFlagsTest, self).setUp()
+    super().setUp()
     self.flags = flags.FlagValues()
 
   @property

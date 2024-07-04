@@ -55,7 +55,7 @@ class BooleanParserTest(absltest.TestCase):
     self.assertTrue(self.parser.parse('true'))
 
   def test_parse_unicode(self):
-    self.assertTrue(self.parser.parse(u'true'))
+    self.assertTrue(self.parser.parse('true'))
 
   def test_parse_wrong_type(self):
     with self.assertRaises(TypeError):
