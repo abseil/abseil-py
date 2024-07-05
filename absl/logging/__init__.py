@@ -80,6 +80,7 @@ import collections
 from collections import abc
 import getpass
 import io
+import inspect
 import itertools
 import logging
 import os
@@ -449,6 +450,29 @@ def exception(msg, *args, exc_info=True, **kwargs):
   error(msg, *args, exc_info=exc_info, **kwargs)
 
 
+def _fast_stack_trace():
+  """A fast stack trace that gets us the minimal information we need.
+
+  Compared to using `get_absl_logger().findCaller(stack_info=True)`, this
+  function is ~100x faster.
+
+  Returns:
+    A tuple of tuples of (filename, line_number, last_instruction_offset).
+  """
+  cur_stack = inspect.currentframe()
+  if cur_stack is None or cur_stack.f_back is None:
+    return tuple()
+  # We drop the first frame, which is this function itself.
+  cur_stack = cur_stack.f_back
+  call_stack = []
+  while cur_stack.f_back:
+    cur_stack = cur_stack.f_back
+    call_stack.append(
+        (cur_stack.f_code.co_filename, cur_stack.f_lineno, cur_stack.f_lasti)
+    )
+  return tuple(call_stack)
+
+
 # Counter to keep track of number of log entries per token.
 _log_counter_per_token = {}
 
@@ -468,7 +492,7 @@ def _get_next_log_count_per_token(token):
   return next(_log_counter_per_token.setdefault(token, itertools.count()))
 
 
-def log_every_n(level, msg, n, *args):
+def log_every_n(level, msg, n, *args, use_call_stack=False):
   """Logs ``msg % args`` at level 'level' once per 'n' times.
 
   Logs the 1st call, (N+1)st call, (2N+1)st call,  etc.
@@ -479,8 +503,14 @@ def log_every_n(level, msg, n, *args):
     msg: str, the message to be logged.
     n: int, the number of times this should be called before it is logged.
     *args: The args to be substituted into the msg.
+    use_call_stack: bool, whether to include the call stack when counting the
+      number of times the message is logged.
   """
-  count = _get_next_log_count_per_token(get_absl_logger().findCaller())
+  caller_info = get_absl_logger().findCaller()
+  if use_call_stack:
+    # To reduce storage costs, we hash the call stack.
+    caller_info = (*caller_info[0:3], hash(_fast_stack_trace()))
+  count = _get_next_log_count_per_token(caller_info)
   log_if(level, msg, not (count % n), *args)
 
 
@@ -515,7 +545,7 @@ def _seconds_have_elapsed(token, num_seconds):
     return False
 
 
-def log_every_n_seconds(level, msg, n_seconds, *args):
+def log_every_n_seconds(level, msg, n_seconds, *args, use_call_stack=False):
   """Logs ``msg % args`` at level ``level`` iff ``n_seconds`` elapsed since last call.
 
   Logs the first call, logs subsequent calls if 'n' seconds have elapsed since
@@ -526,12 +556,18 @@ def log_every_n_seconds(level, msg, n_seconds, *args):
     msg: str, the message to be logged.
     n_seconds: float or int, seconds which should elapse before logging again.
     *args: The args to be substituted into the msg.
+    use_call_stack: bool, whether to include the call stack when counting the
+      number of times the message is logged.
   """
-  should_log = _seconds_have_elapsed(get_absl_logger().findCaller(), n_seconds)
+  caller_info = get_absl_logger().findCaller()
+  if use_call_stack:
+    # To reduce storage costs, we hash the call stack.
+    caller_info = (*caller_info[0:3], hash(_fast_stack_trace()))
+  should_log = _seconds_have_elapsed(caller_info, n_seconds)
   log_if(level, msg, should_log, *args)
 
 
-def log_first_n(level, msg, n, *args):
+def log_first_n(level, msg, n, *args, use_call_stack=False):
   """Logs ``msg % args`` at level ``level`` only first ``n`` times.
 
   Not threadsafe.
@@ -541,8 +577,14 @@ def log_first_n(level, msg, n, *args):
     msg: str, the message to be logged.
     n: int, the maximal number of times the message is logged.
     *args: The args to be substituted into the msg.
+    use_call_stack: bool, whether to include the call stack when counting the
+      number of times the message is logged.
   """
-  count = _get_next_log_count_per_token(get_absl_logger().findCaller())
+  caller_info = get_absl_logger().findCaller()
+  if use_call_stack:
+    # To reduce storage costs, we hash the call stack.
+    caller_info = (*caller_info[0:3], hash(_fast_stack_trace()))
+  count = _get_next_log_count_per_token(caller_info)
   log_if(level, msg, count < n, *args)
 
 

@@ -60,6 +60,18 @@ I1231 23:59:59.000000 12345 logging_functional_test_helper.py:76] Info first 1 o
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:77] Info 1 (every 3)
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:76] Info first 2 of 2
 I1231 23:59:59.000000 12345 logging_functional_test_helper.py:77] Info 4 (every 3)
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info first 1 of 2
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info 1 (every 3)
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info first 2 of 2
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info 4 (every 3)
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info first 1 of 2
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info 1 (every 3)
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info first 2 of 2
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info 4 (every 3)
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info first 1 of 2
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info 1 (every 3)
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info first 2 of 2
+I1231 23:59:59.000000 12345 logging_functional_test_helper.py:123] Callstack aware info 4 (every 3)
 """
 
 _PY_INFO_LOG_MESSAGE_NOPREFIX = """\
@@ -77,6 +89,18 @@ Info first 1 of 2
 Info 1 (every 3)
 Info first 2 of 2
 Info 4 (every 3)
+Callstack aware info first 1 of 2
+Callstack aware info 1 (every 3)
+Callstack aware info first 2 of 2
+Callstack aware info 4 (every 3)
+Callstack aware info first 1 of 2
+Callstack aware info 1 (every 3)
+Callstack aware info first 2 of 2
+Callstack aware info 4 (every 3)
+Callstack aware info first 1 of 2
+Callstack aware info 1 (every 3)
+Callstack aware info first 2 of 2
+Callstack aware info 4 (every 3)
 """
 
 _PY_WARNING_LOG_MESSAGE = """\

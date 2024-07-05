@@ -71,6 +71,27 @@ def _test_do_logging():
     logging.log_first_n(logging.INFO, 'Info first %d of %d', 2, i, 2)
     logging.log_every_n(logging.INFO, 'Info %d (every %d)', 3, i, 3)
 
+  for i in range(1, 5):
+    logging.log_first_n(
+        logging.INFO,
+        'Callstack aware info first %d of %d',
+        2,
+        i,
+        2,
+        use_call_stack=True,
+    )
+    logging.log_every_n(
+        logging.INFO,
+        'Callstack aware info %d (every %d)',
+        3,
+        i,
+        3,
+        use_call_stack=True,
+    )
+  # We call this twice on the same line to make sure the call stack is
+  # distinguishing function calls on the same line.
+  _ = [_test_do_logging_subfunc(), _test_do_logging_subfunc()]
+
   logging.vlog(-1, 'This line is VLOG level -1')
   logging.log(-1, 'This line is log level -1')
   logging.warning('Worrying Stuff')
@@ -103,6 +124,26 @@ def _test_do_logging():
     logging.log_first_n(logging.ERROR, 'Error first %d of %d', 2, i, 2)
     logging.log_every_n(logging.ERROR, 'Error %d (every %d)', 3, i, 3)
   logging.flush()
+
+
+def _test_do_logging_subfunc():
+  for i in range(1, 5):
+    logging.log_first_n(
+        logging.INFO,
+        'Callstack aware info first %d of %d',
+        2,
+        i,
+        2,
+        use_call_stack=True,
+    )
+    logging.log_every_n(
+        logging.INFO,
+        'Callstack aware info %d (every %d)',
+        3,
+        i,
+        3,
+        use_call_stack=True,
+    )
 
 
 def _test_fatal_main_thread_only():
