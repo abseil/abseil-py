@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 Nothing notable unreleased.
 
+*   (testing) Added a new method `absltest.TestCase.assertMappingEqual` that
+    tests equality of Mapping objects not requiring them to be dicts. Similar
+    to `assertSequenceEqual` but for mappings.
+
 ## 2.1.0 (2024-01-16)
 
 ### Added

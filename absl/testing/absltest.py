@@ -1673,6 +1673,24 @@ class TestCase(unittest.TestCase):
         msg,
         'Second argument is not a dictionary'
     ))
+    self.assertMappingEqual(a, b, msg)
+
+  def assertMappingEqual(self, a, b, msg=None):
+    """Raises AssertionError if a and b are not equal mappings.
+
+    Args:
+      a: A mapping, the expected value.
+      b: A mapping, the actual value.
+      msg: An optional str, the associated message.
+
+    Raises:
+      AssertionError: if the dictionaries are not equal.
+    """
+
+    if not isinstance(a, abc.Mapping):
+      self.fail('a should be a mapping, found type: %s' % type(a), msg)
+    if not isinstance(b, abc.Mapping):
+      self.fail('b should be a mapping, found type: %s' % type(b), msg)
 
     def Sorted(list_of_items):
       try:

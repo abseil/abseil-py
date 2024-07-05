@@ -15,6 +15,7 @@
 """Tests for absltest."""
 
 import collections
+from collections.abc import Mapping
 import contextlib
 import dataclasses
 import os
@@ -35,7 +36,22 @@ from absl.testing import parameterized
 from absl.testing.tests import absltest_env
 
 
-class BaseTestCase(absltest.TestCase):
+class TestMapping(Mapping):
+
+  def __init__(self, *args, **kwargs):
+    self._dict = dict(*args, **kwargs)
+
+  def __getitem__(self, key):
+    return self._dict[key]
+
+  def __len__(self):
+    return len(self._dict)
+
+  def __iter__(self):
+    return iter(self._dict)
+
+
+class BaseTestCase(parameterized.TestCase):
 
   def _get_helper_exec_path(self, helper_name):
     helper = 'absl/testing/tests/' + helper_name
@@ -305,36 +321,112 @@ class TestCaseTest(BaseTestCase):
       self.assertIn('First has 1, Second has 0:  4', error_message)
       self.assertIn('First has 0, Second has 1:  2', error_message)
 
-  def test_assert_dict_equal(self):
-    self.assertDictEqual({}, {})
+  @parameterized.product(
+      class1=[dict, TestMapping],
+      class2=[dict, TestMapping],
+  )
+  def test_assert_mapping_equal(self, class1, class2):
+    self.assertMappingEqual(class1(), class2())
+
+    self.assertRaisesRegex(
+        absltest.TestCase.failureException,
+        r' [!][=] ',
+        self.assertMappingEqual,
+        class1(x=1),
+        class2(),
+        'These are unequal',
+    )
+    self.assertRaisesRegex(
+        absltest.TestCase.failureException,
+        r' [!][=] ',
+        self.assertMappingEqual,
+        class1(x=1, y=2),
+        class2(x=1, y=3),
+    )
+
+    self.assertRaisesRegex(
+        AssertionError,
+        'should be a mapping',
+        self.assertMappingEqual,
+        class1(),
+        (),
+    )
+    self.assertRaisesRegex(
+        AssertionError,
+        'should be a mapping',
+        self.assertMappingEqual,
+        (),
+        class2(),
+    )
+
+  def test_assert_dict_equal_requires_dict(self):
+    self.assertDictEqual(dict(one=1, two=2), dict(one=1, two=2))
+
+    self.assertRaisesRegex(
+        AssertionError,
+        'not a dictionary',
+        self.assertDictEqual,
+        dict(one=1, two=2),
+        TestMapping(one=1, two=2),
+    )
+    self.assertRaisesRegex(
+        AssertionError,
+        'not a dictionary',
+        self.assertDictEqual,
+        TestMapping(one=1, two=2),
+        dict(one=1, two=2),
+    )
+    self.assertRaisesRegex(
+        AssertionError,
+        'not a dictionary',
+        self.assertDictEqual,
+        TestMapping(one=1, two=2),
+        TestMapping(one=1, two=2),
+    )
+
+  @parameterized.named_parameters(
+      dict(testcase_name='dict', use_mapping=False),
+      dict(testcase_name='mapping', use_mapping=True),
+  )
+  def test_assert_dict_equal(self, use_mapping: bool):
+    assert_dict_equal = (
+        self.assertMappingEqual if use_mapping else self.assertDictEqual
+    )
+    assert_dict_equal({}, {})
 
     c = {'x': 1}
-    d = {}
-    self.assertRaises(absltest.TestCase.failureException,
-                      self.assertDictEqual, c, d)
+    d: dict[str, int] = {}
+    self.assertRaises(
+        absltest.TestCase.failureException, assert_dict_equal, c, d
+    )
 
     d.update(c)
-    self.assertDictEqual(c, d)
+    assert_dict_equal(c, d)
 
     d['x'] = 0
-    self.assertRaises(absltest.TestCase.failureException,
-                      self.assertDictEqual, c, d, 'These are unequal')
+    self.assertRaises(
+        absltest.TestCase.failureException,
+        assert_dict_equal,
+        c,
+        d,
+        'These are unequal',
+    )
 
-    self.assertRaises(AssertionError, self.assertDictEqual, None, d)
-    self.assertRaises(AssertionError, self.assertDictEqual, [], d)
-    self.assertRaises(AssertionError, self.assertDictEqual, 1, 1)
+    self.assertRaises(AssertionError, assert_dict_equal, None, d)
+    self.assertRaises(AssertionError, assert_dict_equal, [], d)
+    self.assertRaises(AssertionError, assert_dict_equal, 1, 1)
 
     try:
       # Ensure we use equality as the sole measure of elements, not type, since
       # that is consistent with dict equality.
-      self.assertDictEqual({1: 1.0, 2: 2}, {1: 1, 2: 3})
+      assert_dict_equal({1: 1.0, 2: 2}, {1: 1, 2: 3})
     except AssertionError as e:
       self.assertMultiLineEqual('{1: 1.0, 2: 2} != {1: 1, 2: 3}\n'
                                 'repr() of differing entries:\n2: 2 != 3\n',
                                 str(e))
 
     try:
-      self.assertDictEqual({}, {'x': 1})
+      assert_dict_equal({}, {'x': 1})
     except AssertionError as e:
       self.assertMultiLineEqual("{} != {'x': 1}\n"
                                 "Unexpected, but present entries:\n'x': 1\n",
@@ -343,7 +435,7 @@ class TestCaseTest(BaseTestCase):
       self.fail('Expecting AssertionError')
 
     try:
-      self.assertDictEqual({}, {'x': 1}, 'a message')
+      assert_dict_equal({}, {'x': 1}, 'a message')
     except AssertionError as e:
       self.assertIn('a message', str(e))
     else:
@@ -352,7 +444,7 @@ class TestCaseTest(BaseTestCase):
     expected = {'a': 1, 'b': 2, 'c': 3}
     seen = {'a': 2, 'c': 3, 'd': 4}
     try:
-      self.assertDictEqual(expected, seen)
+      assert_dict_equal(expected, seen)
     except AssertionError as e:
       self.assertMultiLineEqual("""\
 {'a': 1, 'b': 2, 'c': 3} != {'a': 2, 'c': 3, 'd': 4}
@@ -368,8 +460,8 @@ Missing entries:
     else:
       self.fail('Expecting AssertionError')
 
-    self.assertRaises(AssertionError, self.assertDictEqual, (1, 2), {})
-    self.assertRaises(AssertionError, self.assertDictEqual, {}, (1, 2))
+    self.assertRaises(AssertionError, assert_dict_equal, (1, 2), {})
+    self.assertRaises(AssertionError, assert_dict_equal, {}, (1, 2))
 
     # Ensure deterministic output of keys in dictionaries whose sort order
     # doesn't match the lexical ordering of repr -- this is most Python objects,
@@ -383,9 +475,10 @@ Missing entries:
         return self.name
 
     try:
-      self.assertDictEqual(
+      assert_dict_equal(
           {'a': Obj('A'), Obj('b'): Obj('B'), Obj('c'): Obj('C')},
-          {'a': Obj('A'), Obj('d'): Obj('D'), Obj('e'): Obj('E')})
+          {'a': Obj('A'), Obj('d'): Obj('D'), Obj('e'): Obj('E')},
+      )
     except AssertionError as e:
       # Do as best we can not to be misleading when objects have the same repr
       # but aren't equal.
@@ -411,10 +504,10 @@ Missing entries:
         return 1/0  # Intentionally broken __repr__ implementation.
 
     try:
-      self.assertDictEqual(
+      assert_dict_equal(
           {RaisesOnRepr(): RaisesOnRepr()},
-          {RaisesOnRepr(): RaisesOnRepr()}
-          )
+          {RaisesOnRepr(): RaisesOnRepr()},
+      )
       self.fail('Expected dicts not to match')
     except AssertionError as e:
       # Depending on the testing environment, the object may get a __main__
@@ -441,9 +534,10 @@ Missing entries:
         return '<RaisesOnLt object>'
 
     try:
-      self.assertDictEqual(
+      assert_dict_equal(
           {RaisesOnLt(): RaisesOnLt()},
-          {RaisesOnLt(): RaisesOnLt()})
+          {RaisesOnLt(): RaisesOnLt()},
+      )
     except AssertionError as e:
       self.assertIn('Unexpected, but present entries:\n<RaisesOnLt', str(e))
       self.assertIn('Missing entries:\n<RaisesOnLt', str(e))
