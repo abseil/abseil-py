@@ -346,17 +346,39 @@ class TestCaseTest(BaseTestCase):
 
     self.assertRaisesRegex(
         AssertionError,
-        'should be a mapping',
+        'should be a Mapping',
         self.assertMappingEqual,
         class1(),
         (),
     )
     self.assertRaisesRegex(
         AssertionError,
-        'should be a mapping',
+        'should be a Mapping',
         self.assertMappingEqual,
         (),
         class2(),
+    )
+
+  def test_assert_mapping_equal_mapping_type(self):
+    d1 = dict(one=1, two=2)
+    d2 = TestMapping(one=1, two=2)
+
+    self.assertMappingEqual(d1, d2, mapping_type=Mapping)
+    self.assertRaisesRegex(
+        AssertionError,
+        'b should be a dict, found type: TestMapping',
+        self.assertMappingEqual,
+        d1,
+        d2,
+        mapping_type=dict,
+    )
+    self.assertRaisesRegex(
+        AssertionError,
+        'a should be a TestMapping, found type: dict',
+        self.assertMappingEqual,
+        d1,
+        d2,
+        mapping_type=TestMapping,
     )
 
   def test_assert_dict_equal_requires_dict(self):
@@ -364,21 +386,21 @@ class TestCaseTest(BaseTestCase):
 
     self.assertRaisesRegex(
         AssertionError,
-        'not a dictionary',
+        'should be a dict',
         self.assertDictEqual,
         dict(one=1, two=2),
         TestMapping(one=1, two=2),
     )
     self.assertRaisesRegex(
         AssertionError,
-        'not a dictionary',
+        'should be a dict',
         self.assertDictEqual,
         TestMapping(one=1, two=2),
         dict(one=1, two=2),
     )
     self.assertRaisesRegex(
         AssertionError,
-        'not a dictionary',
+        'should be a dict',
         self.assertDictEqual,
         TestMapping(one=1, two=2),
         TestMapping(one=1, two=2),
@@ -389,9 +411,13 @@ class TestCaseTest(BaseTestCase):
       dict(testcase_name='mapping', use_mapping=True),
   )
   def test_assert_dict_equal(self, use_mapping: bool):
-    assert_dict_equal = (
-        self.assertMappingEqual if use_mapping else self.assertDictEqual
-    )
+
+    def assert_dict_equal(a, b, msg=None):
+      if use_mapping:
+        self.assertMappingEqual(a, b, msg=msg)
+      else:
+        self.assertDictEqual(a, b, msg=msg)
+
     assert_dict_equal({}, {})
 
     c = {'x': 1}

@@ -19,6 +19,7 @@ tests.
 """
 
 from collections import abc
+import collections
 import contextlib
 import dataclasses
 import difflib
@@ -1665,17 +1666,11 @@ class TestCase(unittest.TestCase):
     Raises:
       AssertionError: if the dictionaries are not equal.
     """
-    self.assertIsInstance(a, dict, self._formatMessage(
-        msg,
-        'First argument is not a dictionary'
-    ))
-    self.assertIsInstance(b, dict, self._formatMessage(
-        msg,
-        'Second argument is not a dictionary'
-    ))
-    self.assertMappingEqual(a, b, msg)
+    self.assertMappingEqual(a, b, msg, mapping_type=dict)
 
-  def assertMappingEqual(self, a, b, msg=None):
+  def assertMappingEqual(
+      self, a, b, msg=None, mapping_type=collections.abc.Mapping
+  ):
     """Raises AssertionError if a and b are not equal mappings.
 
     Args:
@@ -1687,10 +1682,18 @@ class TestCase(unittest.TestCase):
       AssertionError: if the dictionaries are not equal.
     """
 
-    if not isinstance(a, abc.Mapping):
-      self.fail('a should be a mapping, found type: %s' % type(a), msg)
-    if not isinstance(b, abc.Mapping):
-      self.fail('b should be a mapping, found type: %s' % type(b), msg)
+    if not isinstance(a, mapping_type):
+      self.fail(
+          'a should be a %s, found type: %s'
+          % (mapping_type.__name__, type(a).__name__),
+          msg,
+      )
+    if not isinstance(b, mapping_type):
+      self.fail(
+          'b should be a %s, found type: %s'
+          % (mapping_type.__name__, type(b).__name__),
+          msg,
+      )
 
     def Sorted(list_of_items):
       try:
