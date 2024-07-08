@@ -31,7 +31,8 @@ _bad_control_character_codes = set(range(0, 0x20)) - {0x9, 0xA, 0xD}
 
 
 _control_character_conversions = {
-    chr(i): '\\x{:02x}'.format(i) for i in _bad_control_character_codes}
+    chr(i): f'\\x{i:02x}' for i in _bad_control_character_codes
+}
 
 
 _escape_xml_attr_conversions = {

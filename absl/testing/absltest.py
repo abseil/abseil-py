@@ -187,8 +187,7 @@ def _get_default_randomize_ordering_seed() -> int:
       return seed
   except ValueError:
     pass
-  raise ValueError(
-      'Unknown test randomization seed value: {}'.format(randomize))
+  raise ValueError(f'Unknown test randomization seed value: {randomize}')
 
 
 TEST_SRCDIR = flags.DEFINE_string(
@@ -793,7 +792,7 @@ class TestCase(unittest.TestCase):
     elif cleanup == TempFileCleanup.SUCCESS:
       self._internal_add_cleanup_on_success(_rmtree_ignore_errors, path)
     else:
-      raise AssertionError('Unexpected cleanup value: {}'.format(cleanup))
+      raise AssertionError(f'Unexpected cleanup value: {cleanup}')
 
   def _internal_add_cleanup_on_success(
       self,
@@ -973,7 +972,7 @@ class TestCase(unittest.TestCase):
     # explicitly check the length since some Sized objects (e.g. numpy.ndarray)
     # have strange __nonzero__/__bool__ behavior.
     if len(container):  # pylint: disable=g-explicit-length-test
-      self.fail('{!r} has length of {}.'.format(container, len(container)), msg)
+      self.fail(f'{container!r} has length of {len(container)}.', msg)
 
   def assertNotEmpty(self, container, msg=None):
     """Asserts that an object has non-zero length.
@@ -989,7 +988,7 @@ class TestCase(unittest.TestCase):
     # explicitly check the length since some Sized objects (e.g. numpy.ndarray)
     # have strange __nonzero__/__bool__ behavior.
     if not len(container):  # pylint: disable=g-explicit-length-test
-      self.fail('{!r} has length of 0.'.format(container), msg)
+      self.fail(f'{container!r} has length of 0.', msg)
 
   def assertLen(self, container, expected_len, msg=None):
     """Asserts that an object has the expected length.
@@ -1044,7 +1043,7 @@ class TestCase(unittest.TestCase):
                                delta=delta)
         # pytype: enable=wrong-keyword-args
       except self.failureException as err:
-        err_list.append('At index {}: {}'.format(idx, err))
+        err_list.append(f'At index {idx}: {err}')
 
     if err_list:
       if len(err_list) > 30:
@@ -1146,7 +1145,7 @@ class TestCase(unittest.TestCase):
                       str), ('Second argument is not a string: %r' % (second,))
     line_limit = kwargs.pop('line_limit', 0)
     if kwargs:
-      raise TypeError('Unexpected keyword args {}'.format(tuple(kwargs)))
+      raise TypeError(f'Unexpected keyword args {tuple(kwargs)}')
 
     if first == second:
       return
@@ -2307,12 +2306,13 @@ def skipThisClass(reason: str) -> Callable[[_T], _T]:
     Decorator function that will cause a class to be skipped.
   """
   if isinstance(reason, type):
-    raise TypeError('Got {!r}, expected reason as string'.format(reason))
+    raise TypeError(f'Got {reason!r}, expected reason as string')
 
   def _skip_class(test_case_class):
     if not issubclass(test_case_class, unittest.TestCase):
       raise TypeError(
-          'Decorating {!r}, expected TestCase subclass'.format(test_case_class))
+          f'Decorating {test_case_class!r}, expected TestCase subclass'
+      )
 
     # Only shadow the setUpClass method if it is directly defined. If it is
     # in the parent class we invoke it via a super() call instead of holding

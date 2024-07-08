@@ -672,7 +672,7 @@ class TestCase(absltest.TestCase, metaclass=TestGeneratorMetaclass):
       # test.xml file, the value is more informative than just "test_foo0".
       # Use a space to separate them so that it's copy/paste friendly and
       # easy to identify the actual test id.
-      return '{} {}'.format(base, params_repr)
+      return f'{base} {params_repr}'
     else:
       return base
 

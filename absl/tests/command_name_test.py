@@ -60,8 +60,10 @@ class CommandNameTest(absltest.TestCase):
       new_name = new_name.encode('ascii', 'replace')
     actual_name = _get_kernel_process_name()
     self.assertTrue(actual_name)
-    self.assertTrue(new_name.startswith(actual_name),
-                    msg='set {!r} vs found {!r}'.format(new_name, actual_name))
+    self.assertTrue(
+        new_name.startswith(actual_name),
+        msg=f'set {new_name!r} vs found {actual_name!r}',
+    )
 
   @unittest.skipIf(not os.access('/proc/self/comm', os.W_OK),
                    '/proc/self/comm is not writeable.')

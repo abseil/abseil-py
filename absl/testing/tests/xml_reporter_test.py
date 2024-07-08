@@ -140,7 +140,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
                                               'foo', 0, timer)
 
   def _assert_match(self, regex, output, flags=0):
-    fail_msg = 'Expected regex:\n{}\nTo match:\n{}'.format(regex, output)
+    fail_msg = f'Expected regex:\n{regex}\nTo match:\n{output}'
     result = re.match(regex, output, flags)
     if result is None:
       self.fail(fail_msg)
@@ -150,7 +150,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     try:
       expat.ParserCreate().Parse(xml_output)
     except expat.ExpatError as e:
-      raise AssertionError('Bad XML output: {}\n{}'.format(e, xml_output))
+      raise AssertionError(f'Bad XML output: {e}\n{xml_output}')
 
   def _simulate_error_test(self, test, result):
     result.startTest(test)

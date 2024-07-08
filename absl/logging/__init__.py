@@ -257,8 +257,7 @@ class _LoggerLevelsSerializer:
   def serialize(self, value):
     if isinstance(value, str):
       return value
-    return ','.join(
-        '{}:{}'.format(name, level) for name, level in value.items())
+    return ','.join(f'{name}:{level}' for name, level in value.items())
 
 
 class _StderrthresholdFlag(flags.Flag):
@@ -709,7 +708,7 @@ def get_log_file_name(level=INFO):
     ValueError: Raised when `level` has an invalid value.
   """
   if level not in converter.ABSL_LEVELS:
-    raise ValueError('Invalid absl.logging level {}'.format(level))
+    raise ValueError(f'Invalid absl.logging level {level}')
   stream = get_absl_handler().python_handler.stream
   if (stream == sys.stderr or stream == sys.stdout or
       not hasattr(stream, 'name')):

@@ -329,12 +329,9 @@ class EnumParser(ArgumentParser[str]):
       ValueError: When enum_values is empty.
     """
     if not enum_values:
-      raise ValueError(
-          'enum_values cannot be empty, found "{}"'.format(enum_values))
+      raise ValueError(f'enum_values cannot be empty, found "{enum_values}"')
     if isinstance(enum_values, str):
-      raise ValueError(
-          'enum_values cannot be a str, found "{}"'.format(enum_values)
-      )
+      raise ValueError(f'enum_values cannot be a str, found "{enum_values}"')
     super().__init__()
     self.enum_values = list(enum_values)
     self.case_sensitive = case_sensitive
@@ -388,7 +385,7 @@ class EnumClassParser(ArgumentParser[_ET]):
       ValueError: When enum_class is empty.
     """
     if not issubclass(enum_class, enum.Enum):
-      raise TypeError('{} is not a subclass of Enum.'.format(enum_class))
+      raise TypeError(f'{enum_class} is not a subclass of Enum.')
     if not enum_class.__members__:
       raise ValueError('enum_class cannot be empty, but "{}" is empty.'
                        .format(enum_class))

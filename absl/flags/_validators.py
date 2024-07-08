@@ -229,8 +229,9 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
   register_validator(
       flag_name,
       lambda value: value is not None,
-      message='Flag --{} must have a value other than None.'.format(flag_name),
-      flag_values=flag_values)
+      message=f'Flag --{flag_name} must have a value other than None.',
+      flag_values=flag_values,
+  )
 
 
 def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):

@@ -77,7 +77,7 @@ class BaseTestCase(parameterized.TestCase):
       helper_name = 'absltest_test_helper'
     command = [self._get_helper_exec_path(helper_name)]
     if test_id is not None:
-      command.append('--test_id={}'.format(test_id))
+      command.append(f'--test_id={test_id}')
     command.extend(args)
     process = subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
@@ -145,15 +145,20 @@ class TestCaseTest(BaseTestCase):
     srcdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         3,
-        ['--test_random_seed=123', '--test_srcdir={}'.format(srcdir),
-         '--test_tmpdir={}'.format(tmpdir)],
-        {'TEST_RANDOM_SEED': None,
-         'TEST_SRCDIR': None,
-         'TEST_TMPDIR': None,
-         'ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR': srcdir,
-         'ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR': tmpdir,
+        [
+            '--test_random_seed=123',
+            f'--test_srcdir={srcdir}',
+            f'--test_tmpdir={tmpdir}',
+        ],
+        {
+            'TEST_RANDOM_SEED': None,
+            'TEST_SRCDIR': None,
+            'TEST_TMPDIR': None,
+            'ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR': srcdir,
+            'ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR': tmpdir,
         },
-        expect_success=True)
+        expect_success=True,
+    )
 
   def test_flags_env_var_flags(self):
     tmpdir_from_flag = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
@@ -162,15 +167,20 @@ class TestCaseTest(BaseTestCase):
     srcdir_from_env_var = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         4,
-        ['--test_random_seed=221', '--test_srcdir={}'.format(srcdir_from_flag),
-         '--test_tmpdir={}'.format(tmpdir_from_flag)],
-        {'TEST_RANDOM_SEED': '123',
-         'TEST_SRCDIR': srcdir_from_env_var,
-         'TEST_TMPDIR': tmpdir_from_env_var,
-         'ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR': srcdir_from_flag,
-         'ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR': tmpdir_from_flag,
+        [
+            '--test_random_seed=221',
+            f'--test_srcdir={srcdir_from_flag}',
+            f'--test_tmpdir={tmpdir_from_flag}',
+        ],
+        {
+            'TEST_RANDOM_SEED': '123',
+            'TEST_SRCDIR': srcdir_from_env_var,
+            'TEST_TMPDIR': tmpdir_from_env_var,
+            'ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR': srcdir_from_flag,
+            'ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR': tmpdir_from_flag,
         },
-        expect_success=True)
+        expect_success=True,
+    )
 
   def test_xml_output_file_from_xml_output_file_env(self):
     xml_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
@@ -2223,15 +2233,17 @@ class TempFileTest(BaseTestCase):
 
   def assert_dir_exists(self, temp_dir):
     path = temp_dir.full_path
-    self.assertTrue(os.path.exists(path), 'Dir {} does not exist'.format(path))
-    self.assertTrue(os.path.isdir(path),
-                    'Path {} exists, but is not a directory'.format(path))
+    self.assertTrue(os.path.exists(path), f'Dir {path} does not exist')
+    self.assertTrue(
+        os.path.isdir(path), f'Path {path} exists, but is not a directory'
+    )
 
   def assert_file_exists(self, temp_file, expected_content=b''):
     path = temp_file.full_path
-    self.assertTrue(os.path.exists(path), 'File {} does not exist'.format(path))
-    self.assertTrue(os.path.isfile(path),
-                    'Path {} exists, but is not a file'.format(path))
+    self.assertTrue(os.path.exists(path), f'File {path} does not exist')
+    self.assertTrue(
+        os.path.isfile(path), f'Path {path} exists, but is not a file'
+    )
 
     mode = 'rb' if isinstance(expected_content, bytes) else 'rt'
     with open(path, mode) as fp:

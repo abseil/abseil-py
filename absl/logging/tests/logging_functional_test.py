@@ -710,10 +710,11 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
 
     def get_stderr_message(stderr, name):
       match = re.search(
-          '-- begin {} --\n(.*)-- end {} --'.format(name, name),
-          stderr, re.MULTILINE | re.DOTALL)
-      self.assertTrue(
-          match, 'Cannot find stderr message for test {}'.format(name))
+          f'-- begin {name} --\n(.*)-- end {name} --',
+          stderr,
+          re.MULTILINE | re.DOTALL,
+      )
+      self.assertTrue(match, f'Cannot find stderr message for test {name}')
       return match.group(1)
 
     def assert_stderr(stderr):

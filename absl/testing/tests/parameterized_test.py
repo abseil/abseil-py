@@ -441,8 +441,7 @@ class ParameterizedTestsTest(absltest.TestCase):
         '__main__.', ''
     )
     expected = (
-        '{}.test_addition0 (1, 2, 3)\n'.format(location)
-        + 'test_addition(1, 2, 3)'
+        f'{location}.test_addition0 (1, 2, 3)\n' + 'test_addition(1, 2, 3)'
     )
     self.assertEqual(expected, short_desc)
 
@@ -507,10 +506,10 @@ class ParameterizedTestsTest(absltest.TestCase):
     full_class_name = full_class_name.replace('__main__.', '')
     self.assertSameElements(
         [
-            '{}.testGenerator'.format(full_class_name),
-            '{}.test_generator'.format(full_class_name),
-            '{}.testNormal'.format(full_class_name),
-            '{}.test_normal'.format(full_class_name),
+            f'{full_class_name}.testGenerator',
+            f'{full_class_name}.test_generator',
+            f'{full_class_name}.testNormal',
+            f'{full_class_name}.test_normal',
         ],
         short_descs,
     )
@@ -741,7 +740,7 @@ class ParameterizedTestsTest(absltest.TestCase):
     for test_name, param_repr in expected.items():
       short_desc = actual[test_name].split('\n')
       self.assertIn(test_name, short_desc[0])
-      self.assertEqual('{}({})'.format(test_name, param_repr), short_desc[1])
+      self.assertEqual(f'{test_name}({param_repr})', short_desc[1])
 
   def test_load_tuple_named_test(self):
     loader = unittest.TestLoader()

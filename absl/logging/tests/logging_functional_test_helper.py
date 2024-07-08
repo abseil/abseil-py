@@ -315,9 +315,9 @@ def _test_unicode():
 
     # Add line separators so that tests can verify the output for each log
     # message.
-    sys.stderr.write('-- begin {} --\n'.format(name))
+    sys.stderr.write(f'-- begin {name} --\n')
     logging.info(msg, *args)
-    sys.stderr.write('-- end {} --\n'.format(name))
+    sys.stderr.write(f'-- end {name} --\n')
 
   log('unicode', 'G\u00eete: Ch\u00e2tonnaye')
   log('unicode % unicode', 'G\u00eete: %s', 'Ch\u00e2tonnaye')

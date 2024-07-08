@@ -97,8 +97,7 @@ class UnitTests(absltest.TestCase):
       with mock.patch.object(
           sys, 'stderr', new=io.StringIO()) as mock_stderr:
         app.usage()
-    self.assertIn('Name: {}, %s'.format(sys.argv[0]),
-                  mock_stderr.getvalue())
+    self.assertIn(f'Name: {sys.argv[0]}, %s', mock_stderr.getvalue())
 
   def test_usage_does_not_expand_bad_docstring(self):
     with patch_main_module_docstring('Name: %s, %%s, %@'):
@@ -138,7 +137,7 @@ class FunctionalTests(absltest.TestCase):
     if env_overrides:
       env.update(env_overrides)
 
-    helper = 'absl/tests/app_test_helper_{}'.format(self.helper_type)
+    helper = f'absl/tests/app_test_helper_{self.helper_type}'
     process = subprocess.Popen(
         [_bazelize_command.get_executable_path(helper)] + list(arguments),
         stdout=subprocess.PIPE,
