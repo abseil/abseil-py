@@ -20,8 +20,7 @@ aliases defined at the package level instead.
 import enum
 import sys
 import types
-import typing
-from typing import Any, Iterable, List, Optional, Type, TypeVar, Union, overload
+from typing import Any, Iterable, List, Literal, Optional, Type, TypeVar, Union, overload
 
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
@@ -65,7 +64,7 @@ def DEFINE(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = ...,
     module_name: Optional[str] = ...,
-    required: 'typing.Literal[True]' = ...,
+    required: Literal[True] = ...,
     **args: Any
 ) -> _flagvalues.FlagHolder[_T]:
   ...
@@ -134,7 +133,7 @@ def DEFINE_flag(  # pylint: disable=invalid-name
     flag: _flag.Flag[_T],
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[str] = ...,
-    required: 'typing.Literal[True]' = ...,
+    required: Literal[True] = ...,
 ) -> _flagvalues.FlagHolder[_T]:
   ...
 
@@ -374,7 +373,7 @@ def DEFINE_string(  # pylint: disable=invalid-name
     help: Optional[str],  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[str]:
   ...
@@ -434,7 +433,7 @@ def DEFINE_boolean(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[str] = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[bool]:
   ...
@@ -516,7 +515,7 @@ def DEFINE_float(  # pylint: disable=invalid-name
     upper_bound: Optional[float] = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[float]:
   ...
@@ -604,7 +603,7 @@ def DEFINE_integer(  # pylint: disable=invalid-name
     upper_bound: Optional[int] = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[int]:
   ...
@@ -692,7 +691,7 @@ def DEFINE_enum(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[str] = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[str]:
   ...
@@ -776,7 +775,7 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name
     module_name: Optional[str] = ...,
     case_sensitive: bool = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[_ET]:
   ...
@@ -861,7 +860,7 @@ def DEFINE_list(  # pylint: disable=invalid-name
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[str]]:
   ...
@@ -938,7 +937,7 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name
     comma_compat: bool = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[str]]:
   ...
@@ -1024,7 +1023,7 @@ def DEFINE_multi(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[str] = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[_T]]:
   ...
@@ -1040,7 +1039,7 @@ def DEFINE_multi(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[str] = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[_T]]:
   ...
@@ -1147,7 +1146,7 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[str]]:
   ...
@@ -1230,7 +1229,7 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name
     upper_bound: Optional[int] = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[int]]:
   ...
@@ -1320,7 +1319,7 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name
     upper_bound: Optional[float] = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[float]]:
   ...
@@ -1409,7 +1408,7 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[str]]:
   ...
@@ -1502,7 +1501,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[str] = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[_ET]]:
   ...
@@ -1517,7 +1516,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     module_name: Optional[str] = ...,
     *,
-    required: 'typing.Literal[True]',
+    required: Literal[True],
     **args: Any
 ) -> _flagvalues.FlagHolder[List[_ET]]:
   ...

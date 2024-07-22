@@ -26,8 +26,8 @@ except ImportError:
   import setuptools
 # pylint: enable=g-import-not-at-top
 
-if sys.version_info < (3, 7):
-  raise RuntimeError('Python version 3.7+ is required.')
+if sys.version_info < (3, 8):
+  raise RuntimeError('Python version 3.8+ is required.')
 
 setuptools_version = tuple(
     int(x) for x in setuptools.__version__.split('.')[:2])
@@ -36,7 +36,7 @@ additional_kwargs = {}
 if setuptools_version >= (24, 2):
   # `python_requires` was added in 24.2, see
   # https://packaging.python.org/guides/distributing-packages-using-setuptools/#python-requires
-  additional_kwargs['python_requires'] = '>=3.7'
+  additional_kwargs['python_requires'] = '>=3.8'
 
 _README_PATH = os.path.join(
     os.path.dirname(os.path.realpath(__file__)), 'README.md')
@@ -67,7 +67,6 @@ setuptools.setup(
     classifiers=[
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',

@@ -22,7 +22,7 @@ import itertools
 import logging
 import os
 import sys
-from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, Sequence, Set, TextIO, Tuple, TypeVar, Union
+from typing import Any, Callable, Collection, Dict, Generic, Iterable, Iterator, List, Optional, Sequence, Set, Text, TextIO, Tuple, TypeVar, TypedDict, Union
 from xml.dom import minidom
 
 from absl.flags import _exceptions
@@ -36,6 +36,24 @@ _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
 _T = TypeVar('_T')
 _T_co = TypeVar('_T_co', covariant=True)  # pytype: disable=not-supported-yet
+
+_FlagValuesDict = TypedDict(
+    '_FlagValuesDict',
+    {
+        '__flags': Dict[str, Flag[Any]],
+        '__hiddenflags': Set[str],
+        '__flags_by_module': Dict[Text, List[Flag[Any]]],
+        '__flags_by_module_id': Dict[int, List[Flag[Any]]],
+        '__key_flags_by_module': Dict[Text, List[Flag[Any]]],
+        '__flags_parsed': bool,
+        '__unparse_flags_called': bool,
+        '__set_unknown': Optional[Callable[[str, Any], None]],
+        '__banned_flag_names': Collection[str],
+        '__use_gnu_getopt': bool,
+        '__use_gnu_getopt_explicitly_set': bool,
+        '__is_retired_flag_func': Optional[Callable[[str], Tuple[bool, bool]]],
+    },
+)
 
 
 class FlagValues:
@@ -84,7 +102,7 @@ class FlagValues:
   # able to do so. The mixin methods, e.g. keys, values, are not uncommon flag
   # names. Those flag values would not be accessible via the FLAGS.xxx form.
 
-  __dict__: Dict[str, Any]
+  __dict__: _FlagValuesDict
 
   def __init__(self):
     # Since everything in this class is so heavily overloaded, the only
