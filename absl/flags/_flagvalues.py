@@ -247,16 +247,16 @@ class FlagValues:
     """
     if self._flag_is_registered(flag_obj):
       return
-    for flags_by_module in (
-        self.flags_by_module_dict().values(),
-        self.flags_by_module_id_dict().values(),
-        self.key_flags_by_module_dict().values(),
-    ):
-      for flags_in_module in flags_by_module:
-        # While (as opposed to if) takes care of multiple occurrences of a
-        # flag in the list for the same module.
-        while flag_obj in flags_in_module:
-          flags_in_module.remove(flag_obj)
+    # Materialize dict values to list to avoid concurrent modification.
+    for flags_in_module in [
+        *self.flags_by_module_dict().values(),
+        *self.flags_by_module_id_dict().values(),
+        *self.key_flags_by_module_dict().values(),
+    ]:
+      # While (as opposed to if) takes care of multiple occurrences of a
+      # flag in the list for the same module.
+      while flag_obj in flags_in_module:
+        flags_in_module.remove(flag_obj)
 
   def get_flags_for_module(self, module: Union[str, Any]) -> List[Flag]:
     """Returns the list of flags defined by a module.
