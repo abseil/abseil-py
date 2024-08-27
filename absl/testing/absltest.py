@@ -550,6 +550,10 @@ class TestCase(unittest.TestCase):
     super().__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
     self._outcome: Optional[Any] = getattr(self, '_outcome')
+    # A dict[str, Any] of properties for the test itself.
+    self.__recorded_properties = {}
+    # A dict of properties dicts per subtest, keyed by the subtest's id().
+    self.__subtest_properties = collections.defaultdict(dict)
 
   def setUp(self):
     super().setUp()
@@ -571,6 +575,47 @@ class TestCase(unittest.TestCase):
     ):
       cls._cls_exit_stack = contextlib.ExitStack()
       cls.addClassCleanup(cls._cls_exit_stack.close)
+
+  def getRecordedProperties(self, subtest=None):
+    """Returns any properties that the user has recorded.
+
+    If called from within a subtest and subtest is None, returns a dict made up
+    of *both* the subtest's properties *and* the outer test's properties. (The
+    subtest's properties take precedence in the event of a conflict.)
+
+    Args:
+      subtest: the subtest whose properties should be returned (default: None)
+        Unlike the default case, if subtest is set, *only* that subtest's
+        properties are returned, not those of the enclosing test.
+    """
+    if subtest:
+      # Return *only* subtest properties
+      return self.__subtest_properties[subtest.id()].copy()
+    ret = self.__recorded_properties.copy()
+    if hasattr(self, '_subtest') and self._subtest:
+      ret |= self.__subtest_properties[self._subtest.id()]
+    return ret
+
+  def recordProperty(self, property_name, property_value):
+    """Record an arbitrary property for later use.
+
+    The property is attributed to the currently active subtest, if any,
+    or the test itself, otherwise.
+
+    Args:
+      property_name: str, name of property to record; must be a valid XML
+        attribute name.
+      property_value: value of property; must be valid XML attribute value.
+    """
+    # The following avoids breakage due to a two-arg call to
+    # getRecordedProperties in subclasses of absltest.TestCase that override it
+    # with the legacy one-arg signature but don't override recordProperty, so
+    # long as tests based on those subclasses have no subTests.
+    if hasattr(self, '_subtest') and self._subtest:
+      recorded_properties = self.__subtest_properties[self._subtest.id()]
+    else:
+      recorded_properties = self.__recorded_properties
+    recorded_properties[property_name] = property_value
 
   def create_tempdir(
       self,

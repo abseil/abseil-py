@@ -186,6 +186,50 @@ class TestCaseTest(BaseTestCase):
         expect_success=True,
     )
 
+  def testRecordedProperties(self):
+    """Tests that a test can record a property and then retrieve it."""
+    self.recordProperty('test_property', 'test_value')
+    self.assertEqual(
+        self.getRecordedProperties(), {'test_property': 'test_value'}
+    )
+
+  def testRecordedPropertiesSubTest(self):
+    """Tests that a test can record a subtest's property and retrieve it."""
+    self.recordProperty('test_property1', 'test_value1')
+    subtest1 = None
+    with self.subTest(name='sub1'):
+      assert hasattr(self, '_subtest')
+      subtest1 = self._subtest
+      self.assertIsNotNone(subtest1)
+      self.recordProperty('subtest_property', 'sub_value1')
+      self.assertEqual(
+          self.getRecordedProperties(),
+          {'test_property1': 'test_value1', 'subtest_property': 'sub_value1'},
+      )
+    subtest2 = None
+    with self.subTest(name='sub2'):
+      assert hasattr(self, '_subtest')
+      subtest2 = self._subtest
+      self.assertIsNotNone(subtest2)
+      self.recordProperty('subtest_property', 'sub_value2')
+      self.assertEqual(
+          self.getRecordedProperties(),
+          {'test_property1': 'test_value1', 'subtest_property': 'sub_value2'},
+      )
+    self.recordProperty('test_property2', 'test_value2')
+    self.assertEqual(
+        self.getRecordedProperties(),
+        {'test_property1': 'test_value1', 'test_property2': 'test_value2'},
+    )
+    # Verify that subtest1 and subtest2 have different dict entries and don't
+    # overwrite each others' values.
+    self.assertEqual(
+        self.getRecordedProperties(subtest1), {'subtest_property': 'sub_value1'}
+    )
+    self.assertEqual(
+        self.getRecordedProperties(subtest2), {'subtest_property': 'sub_value2'}
+    )
+
   def test_xml_output_file_from_xml_output_file_env(self):
     xml_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     xml_output_file_env = os.path.join(xml_dir, 'xml_output_file.xml')
