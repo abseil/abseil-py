@@ -26,12 +26,15 @@ class TextTestResult(unittest.TextTestResult):
     super().__init__(stream, descriptions, 0)
     self._per_test_output = verbosity > 0
 
-  def _print_status(self, tag, test):
+  def _print_status(self, tag, test, reason=None):
     if self._per_test_output:
       test_id = test.id()
       if test_id.startswith('__main__.'):
         test_id = test_id[len('__main__.'):]
-      print('[%s] %s' % (tag, test_id), file=self.stream)
+      if reason:
+        print('[%s] %s - %s' % (tag, test_id, reason), file=self.stream)
+      else:
+        print('[%s] %s' % (tag, test_id), file=self.stream)
       self.stream.flush()
 
   def startTest(self, test):
@@ -52,7 +55,7 @@ class TextTestResult(unittest.TextTestResult):
 
   def addSkip(self, test, reason):
     super().addSkip(test, reason)
-    self._print_status('  SKIPPED ', test)
+    self._print_status('  SKIPPED ', test, reason)
 
   def addExpectedFailure(self, test, err):
     super().addExpectedFailure(test, err)
