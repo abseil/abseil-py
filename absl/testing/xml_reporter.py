@@ -111,11 +111,16 @@ def _print_xml_element_header(element, attributes, stream, indentation=''):
 # This prevents bad interactions with tests that stub out time.
 _time_copy = time.time
 
-if hasattr(traceback, '_some_str'):
-  # Use the traceback module str function to format safely.
-  _safe_str = traceback._some_str
-else:
-  _safe_str = str  # pylint: disable=invalid-name
+
+def _safe_str(obj: object) -> str:
+  """Returns a string representation of an object."""
+  try:
+    return str(obj)
+  except Exception:  # pylint: disable=broad-except
+    return '<unprintable %s.%s object>' % (
+        type(obj).__module__,
+        type(obj).__name__,
+    )
 
 
 class _TestCaseResult:

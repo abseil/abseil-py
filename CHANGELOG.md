@@ -12,6 +12,11 @@ Nothing notable unreleased.
     tests equality of Mapping objects not requiring them to be dicts. Similar
     to `assertSequenceEqual` but for mappings.
 
+### Fixed
+
+*  (testing) Fixed an issue where the test reporter crashes with exceptions with
+   no string representation, starting with Python 3.11.
+
 ## 2.1.0 (2024-01-16)
 
 ### Added
