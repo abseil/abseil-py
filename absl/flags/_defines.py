@@ -404,13 +404,14 @@ def DEFINE_string(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_string(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_string(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value can be any string."""
   parser = _argument_parser.ArgumentParser[str]()
   serializer = _argument_parser.ArgumentSerializer[str]()
@@ -466,14 +467,15 @@ def DEFINE_boolean(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_boolean(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_boolean(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     module_name=None,
     required=False,
-    **args):
+    **args
+):
   """Registers a boolean flag.
 
   Such a boolean flag does not take an argument.  If a user wants to
@@ -550,15 +552,16 @@ def DEFINE_float(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_float(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value must be a float.
 
   If ``lower_bound`` or ``upper_bound`` are set, then this flag must be
@@ -585,7 +588,7 @@ def DEFINE_float(  # pylint: disable=invalid-name,redefined-builtin
       parser,
       name,
       default,
-      help,
+      help,  # pylint: disable=redefined-builtin
       flag_values,
       serializer,
       required=True if required else False,
@@ -638,15 +641,16 @@ def DEFINE_integer(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_integer(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value must be an integer.
 
   If ``lower_bound``, or ``upper_bound`` are set, then this flag must be
@@ -673,7 +677,7 @@ def DEFINE_integer(  # pylint: disable=invalid-name,redefined-builtin
       parser,
       name,
       default,
-      help,
+      help,  # pylint: disable=redefined-builtin
       flag_values,
       serializer,
       required=True if required else False,
@@ -726,15 +730,16 @@ def DEFINE_enum(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_enum(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_enum(  # pylint: disable=invalid-name
     name,
     default,
     enum_values,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     module_name=None,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value can be any string from enum_values.
 
   Instead of a string enum, prefer `DEFINE_enum_class`, which allows
@@ -812,16 +817,17 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_enum_class(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_enum_class(  # pylint: disable=invalid-name
     name,
     default,
     enum_class,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     module_name=None,
     case_sensitive=False,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value can be the name of enum members.
 
   Args:
@@ -891,13 +897,14 @@ def DEFINE_list(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_list(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_list(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value is a comma-separated list of strings.
 
   The flag value is parsed with a CSV parser.
@@ -970,14 +977,15 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_spaceseplist(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_spaceseplist(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     comma_compat=False,
     flag_values=_flagvalues.FLAGS,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value is a whitespace-separated list of strings.
 
   Any whitespace can be used as a separator.
@@ -1091,16 +1099,17 @@ def DEFINE_multi(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_multi(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_multi(  # pylint: disable=invalid-name
     parser,
     serializer,
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     module_name=None,
     required=False,
-    **args):
+    **args
+):
   """Registers a generic MultiFlag that parses its args with a given parser.
 
   Auxiliary function.  Normal users should NOT use it directly.
@@ -1177,13 +1186,14 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_multi_string(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value can be a list of any strings.
 
   Use the flag on the command line multiple times to place multiple
@@ -1214,7 +1224,7 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name,redefined-builtin
       serializer,
       name,
       default,
-      help,
+      help,  # pylint: disable=redefined-builtin
       flag_values,
       required=True if required else False,
       **args,
@@ -1264,15 +1274,16 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_multi_integer(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value can be a list of arbitrary integers.
 
   Use the flag on the command line multiple times to place multiple
@@ -1304,7 +1315,7 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name,redefined-builtin
       serializer,
       name,
       default,
-      help,
+      help,  # pylint: disable=redefined-builtin
       flag_values,
       required=True if required else False,
       **args,
@@ -1354,15 +1365,16 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_multi_float(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_multi_float(  # pylint: disable=invalid-name
     name,
     default,
-    help,
+    help,  # pylint: disable=redefined-builtin
     lower_bound=None,
     upper_bound=None,
     flag_values=_flagvalues.FLAGS,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value can be a list of arbitrary floats.
 
   Use the flag on the command line multiple times to place multiple
@@ -1441,15 +1453,16 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_multi_enum(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_multi_enum(  # pylint: disable=invalid-name
     name,
     default,
     enum_values,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     case_sensitive=True,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value can be a list strings from enum_values.
 
   Use the flag on the command line multiple times to place multiple
@@ -1569,16 +1582,17 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
   ...
 
 
-def DEFINE_multi_enum_class(  # pylint: disable=invalid-name,redefined-builtin
+def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     name,
     default,
     enum_class,
-    help,
+    help,  # pylint: disable=redefined-builtin
     flag_values=_flagvalues.FLAGS,
     module_name=None,
     case_sensitive=False,
     required=False,
-    **args):
+    **args
+):
   """Registers a flag whose value can be a list of enum members.
 
   Use the flag on the command line multiple times to place multiple
