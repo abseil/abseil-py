@@ -2088,16 +2088,28 @@ def get_command_stderr(command, env=None, close_fds=True):
     close_fds = False
 
   use_shell = isinstance(command, str)
-  process = subprocess.Popen(
+  # Pass the shell command as stdin to /bin/sh rather than using Python's
+  # behavior of passing it in as a command line argument. That can save us when
+  # the shell command exceeds the maximum command line length but the actual
+  # individual process invocations within it don't.
+  if os.name != 'nt' and use_shell:
+    stdin_input = command.encode()
+    command = ['/bin/sh']
+    use_shell = False
+  else:
+    stdin_input = None
+
+  result = subprocess.run(
       command,
       close_fds=close_fds,
       env=env,
       shell=use_shell,
+      input=stdin_input,
       stderr=subprocess.STDOUT,
-      stdout=subprocess.PIPE)
-  output = process.communicate()[0]
-  exit_status = process.wait()
-  return (exit_status, output)
+      stdout=subprocess.PIPE,
+      check=False,
+  )
+  return (result.returncode, result.stdout)
 
 
 def _quote_long_string(s: Union[str, bytes, bytearray]) -> str:
