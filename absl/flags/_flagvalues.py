@@ -226,11 +226,15 @@ class FlagValues:
     flag_dict = self._flags()
     # Check whether flag_obj is registered under its long name.
     name = flag_obj.name
-    if flag_dict.get(name, None) == flag_obj:
+    if name in flag_dict and flag_dict[name] == flag_obj:
       return True
     # Check whether flag_obj is registered under its short name.
     short_name = flag_obj.short_name
-    if (short_name is not None and flag_dict.get(short_name, None) == flag_obj):
+    if (
+        short_name is not None
+        and short_name in flag_dict
+        and flag_dict[short_name] == flag_obj
+    ):
       return True
     return False
 
@@ -478,7 +482,7 @@ class FlagValues:
     Returns:
       [str], a list of names of all defined flags.
     """
-    return sorted(self.__dict__['__flags'])
+    return sorted(self._flags())
 
   def __getitem__(self, name: str) -> Flag:
     """Returns the Flag object for the flag --name."""
@@ -490,14 +494,14 @@ class FlagValues:
 
   def __getattr__(self, name: str) -> Any:
     """Retrieves the 'value' attribute of the flag --name."""
-    fl = self._flags()
-    if name not in fl:
+    flag_entry = self._flags().get(name)
+    if flag_entry is None:
       raise AttributeError(name)
     if name in self.__dict__['__hiddenflags']:
       raise AttributeError(name)
 
-    if self.__dict__['__flags_parsed'] or fl[name].present:
-      return fl[name].value
+    if self.__dict__['__flags_parsed'] or flag_entry.present:
+      return flag_entry.value
     else:
       raise _exceptions.UnparsedFlagAccessError(
           'Trying to access flag --%s before flags were parsed.' % name)
@@ -1307,11 +1311,9 @@ class FlagValues:
     # Get list of key flags for the main module.
     key_flags = self.get_key_flags_for_module(sys.argv[0])
 
-    # Sort flags by declaring module name and next by flag name.
     flags_by_module = self.flags_by_module_dict()
-    all_module_names = list(flags_by_module.keys())
-    all_module_names.sort()
-    for module_name in all_module_names:
+    # Sort flags by declaring module name and next by flag name.
+    for module_name in sorted(flags_by_module.keys()):
       flag_list = [(f.name, f) for f in flags_by_module[module_name]]
       flag_list.sort()
       for unused_flag_name, flag in flag_list:
