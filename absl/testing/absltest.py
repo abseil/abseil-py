@@ -556,7 +556,7 @@ class _method:
       self, obj: Optional[Any], type_: Optional[Type[Any]]
   ) -> Callable[..., Any]:
     func = self._fclassmethod if obj is None else self._finstancemethod
-    return func.__get__(obj, type_)  # type: ignore[attribute-error]
+    return func.__get__(obj, type_)  # type: ignore[attribute-error, union-attr]
 
 
 class TestCase(unittest.TestCase):
