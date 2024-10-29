@@ -520,9 +520,10 @@ class FlagValues:
       for name, value in attributes.items():
         if name in self.__dict__['__hiddenflags']:
           raise AttributeError(name)
-        if name in fl:
-          orig = fl[name].value
-          fl[name].value = value
+        flag_entry = fl.get(name)
+        if flag_entry is not None:
+          orig = flag_entry.value
+          flag_entry.value = value
           known_flag_vals[name] = orig
         else:
           self._set_unknown_flag(name, value)
@@ -635,11 +636,12 @@ class FlagValues:
       IllegalFlagValueError: Raised when value is not valid.
     """
     fl = self._flags()
-    if name not in fl:
+    flag_entry = fl.get(name)
+    if flag_entry is None:
       self._set_unknown_flag(name, value)
       return
-    fl[name]._set_default(value)  # pylint: disable=protected-access
-    self._assert_validators(fl[name].validators)
+    flag_entry._set_default(value)  # pylint: disable=protected-access
+    self._assert_validators(flag_entry.validators)
 
   def __contains__(self, name: str) -> bool:
     """Returns True if name is a value (flag) in the dict."""
