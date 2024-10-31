@@ -612,13 +612,12 @@ class FlagValues:
       AttributeError: Raised when there is no registered flag named flag_name.
     """
     fl = self._flags()
-    if flag_name not in fl:
+    flag_entry = fl.get(flag_name)
+    if flag_entry is None:
       raise AttributeError(flag_name)
-
-    flag_obj = fl[flag_name]
     del fl[flag_name]
 
-    self._cleanup_unregistered_flag_from_module_dicts(flag_obj)
+    self._cleanup_unregistered_flag_from_module_dicts(flag_entry)
 
   def set_default(self, name: str, value: Any) -> None:
     """Changes the default value of the named flag object.
