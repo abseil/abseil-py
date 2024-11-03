@@ -289,8 +289,9 @@ class _TempDir:
   def full_path(self) -> str:
     """Returns the path, as a string, for the directory.
 
-    TIP: Instead of e.g. `os.path.join(temp_dir.full_path)`, you can simply
-    do `os.path.join(temp_dir)` because `__fspath__()` is implemented.
+    TIP: Instead of e.g. `os.path.join(temp_dir.full_path, some_file_name)`,
+    you can simply do `os.path.join(temp_dir, some_file_name)` because
+    `__fspath__()` is implemented.
     """
     return self._path
 
@@ -410,8 +411,9 @@ class _TempFile:
   def full_path(self) -> str:
     """Returns the path, as a string, for the file.
 
-    TIP: Instead of e.g. `os.path.join(temp_file.full_path)`, you can simply
-    do `os.path.join(temp_file)` because `__fspath__()` is implemented.
+    TIP: Instead of e.g. `os.path.join(temp_file.full_path, some_file_name)`,
+    you can simply do `os.path.join(temp_file, some_file_name)` because
+    `__fspath__()` is implemented.
     """
     return self._path
 
