@@ -18,7 +18,6 @@ aliases defined at the package level instead.
 """
 
 import copy
-import itertools
 import logging
 import os
 import sys
@@ -889,7 +888,7 @@ class FlagValues:
 
   def flag_values_dict(self) -> Dict[str, Any]:
     """Returns a dictionary that maps flag names to flag values."""
-    return {name: flag.value for name, flag in self._flags().items()}
+    return {name: flag.value for name, flag in list(self._flags().items())}
 
   def __str__(self):
     """Returns a help string for all known flags."""
@@ -920,11 +919,9 @@ class FlagValues:
     else:
       output_lines: List[str] = []
       # Just print one long list of flags.
-      values: Iterable[Flag] = self._flags().values()
+      values = list(self._flags().values())
       if include_special_flags:
-        values = itertools.chain(
-            values, _helpers.SPECIAL_FLAGS._flags().values()  # pylint: disable=protected-access
-        )
+        values.extend(_helpers.SPECIAL_FLAGS._flags().values())  # pylint: disable=protected-access
       self._render_flag_list(values, output_lines, prefix)
       return '\n'.join(output_lines)
 
