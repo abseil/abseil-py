@@ -2432,9 +2432,7 @@ def _setup_filtering(argv: MutableSequence[str]) -> bool:
   if argv is None or not test_filter:
     return False
 
-  filters = shlex.split(test_filter)
-  if sys.version_info[:2] >= (3, 7):
-    filters = ['-k=' + test_filter for test_filter in filters]
+  filters = ['-k=' + test_filter for test_filter in shlex.split(test_filter)]
 
   argv[1:1] = filters
   return True

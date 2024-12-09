@@ -56,12 +56,7 @@ trap 'deactivate' EXIT
 # When running macOS <= 10.12, pip 9.0.3 is required to connect to PyPI.
 # So we need to manually use the latest pip to install absl-py. See:
 # https://mail.python.org/pipermail/distutils-sig/2018-April/032114.html
-if [[ "$(python -c "import sys; print(sys.version_info.major, sys.version_info.minor)")" == "3 6" ]]; then
-  # Latest get-pip.py no longer supports Python 3.6.
-  curl https://bootstrap.pypa.io/pip/3.6/get-pip.py | python
-else
-  curl https://bootstrap.pypa.io/get-pip.py | python
-fi
+curl https://bootstrap.pypa.io/get-pip.py | python
 pip --version
 
 python --version

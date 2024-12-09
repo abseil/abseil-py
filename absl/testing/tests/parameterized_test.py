@@ -372,11 +372,6 @@ class ParameterizedTestsTest(absltest.TestCase):
   class SubclassTestCase(SuperclassTestCase):
     pass
 
-  @unittest.skipIf(
-      (sys.version_info[:2] == (3, 7) and sys.version_info[2] in {0, 1, 2}),
-      'Python 3.7.0 to 3.7.2 have a bug that breaks this test, see '
-      'https://bugs.python.org/issue35767',
-  )
   def test_missing_inheritance(self):
     ts = unittest.defaultTestLoader.loadTestsFromTestCase(
         self.BadAdditionParams
@@ -1054,33 +1049,31 @@ class ParameterizedTestsTest(absltest.TestCase):
     )
 
 
-# IsolatedAsyncioTestCase is only available in Python 3.8+.
-if sys.version_info[:2] >= (3, 8):
+async def mult(x: float, y: float) -> float:
+  return x * y
 
-  async def mult(x: float, y: float) -> float:
-    return x * y
 
-  class AsyncTest(unittest.IsolatedAsyncioTestCase, parameterized.TestCase):
+class AsyncTest(unittest.IsolatedAsyncioTestCase, parameterized.TestCase):
 
-    def setUp(self):
-      super().setUp()
-      self.verify_ran = False
+  def setUp(self):
+    super().setUp()
+    self.verify_ran = False
 
-    def tearDown(self):
-      super().tearDown()
+  def tearDown(self):
+    super().tearDown()
 
-      # We need the additional check here because originally the test function
-      # would run, but a coroutine results from the execution and is never
-      # awaited, so it looked like a successful test run when in fact the
-      # internal test logic never executed.  If you remove the check for
-      # coroutine and run_until_complete, then set the parameters to fail they
-      # never will.
-      self.assertTrue(self.verify_ran)
+    # We need the additional check here because originally the test function
+    # would run, but a coroutine results from the execution and is never
+    # awaited, so it looked like a successful test run when in fact the
+    # internal test logic never executed.  If you remove the check for
+    # coroutine and run_until_complete, then set the parameters to fail they
+    # never will.
+    self.assertTrue(self.verify_ran)
 
-    @parameterized.parameters((1, 2, 2), (2, 2, 4), (3, 2, 6))
-    async def test_multiply_expected_matches_actual(self, x, y, expected):
-      self.assertEqual(await mult(x, y), expected)
-      self.verify_ran = True
+  @parameterized.parameters((1, 2, 2), (2, 2, 4), (3, 2, 6))
+  async def test_multiply_expected_matches_actual(self, x, y, expected):
+    self.assertEqual(await mult(x, y), expected)
+    self.verify_ran = True
 
 
 def _decorate_with_side_effects(func, self):

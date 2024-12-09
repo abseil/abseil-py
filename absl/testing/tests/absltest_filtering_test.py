@@ -60,12 +60,9 @@ class TestFilteringTest(absltest.TestCase):
       if use_env_variable:
         env['TESTBRIDGE_TEST_ONLY'] = test_filter
       elif test_filter:
-        if sys.version_info[:2] >= (3, 7):
-          # The -k flags are passed as positional arguments to absl.flags.
-          additional_args.append('--')
-          additional_args.extend(['-k=' + f for f in test_filter.split(' ')])
-        else:
-          additional_args.extend(test_filter.split(' '))
+        # The -k flags are passed as positional arguments to absl.flags.
+        additional_args.append('--')
+        additional_args.extend(['-k=' + f for f in test_filter.split(' ')])
 
     proc = subprocess.Popen(
         args=([_bazelize_command.get_executable_path(self._test_name)] +
@@ -117,9 +114,6 @@ class TestFilteringTest(absltest.TestCase):
     self.assertIn('class B test C', out)
     self.assertNotIn('class B test A', out)
 
-  @absltest.skipIf(
-      sys.version_info[:2] < (3, 7),
-      'Only Python 3.7+ does glob and substring matching.')
   def test_substring(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered(
         'testA', use_env_variable, use_app_run)
@@ -128,9 +122,6 @@ class TestFilteringTest(absltest.TestCase):
     self.assertIn('ClassA.testA', out)
     self.assertIn('ClassB.testA', out)
 
-  @absltest.skipIf(
-      sys.version_info[:2] < (3, 7),
-      'Only Python 3.7+ does glob and substring matching.')
   def test_glob_pattern(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered(
         '__main__.Class*.testA', use_env_variable, use_app_run)
@@ -139,20 +130,6 @@ class TestFilteringTest(absltest.TestCase):
     self.assertIn('ClassA.testA', out)
     self.assertIn('ClassB.testA', out)
 
-  @absltest.skipIf(
-      sys.version_info[:2] >= (3, 7),
-      "Python 3.7+ uses unittest's -k flag and doesn't fail if no tests match.")
-  def test_not_found_filters_py36(self, use_env_variable, use_app_run):
-    out, exit_code = self._run_filtered('NotExistedClass.not_existed_method',
-                                        use_env_variable, use_app_run)
-    self.assertEqual(1, exit_code)
-    self.assertIn("has no attribute 'NotExistedClass'", out)
-
-  @absltest.skipIf(
-      sys.version_info[:2] < (3, 7),
-      'Python 3.6 passes the filter as positional arguments and fails if no '
-      'tests match.'
-  )
   def test_not_found_filters_py37(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered('NotExistedClass.not_existed_method',
                                         use_env_variable, use_app_run)
@@ -164,10 +141,6 @@ class TestFilteringTest(absltest.TestCase):
       self.assertEqual(0, exit_code)
     self.assertIn('Ran 0 tests', out)
 
-  @absltest.skipIf(
-      sys.version_info[:2] < (3, 7),
-      'Python 3.6 passes the filter as positional arguments and matches by name'
-  )
   def test_parameterized_unnamed(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered('ParameterizedTest.test_unnamed',
                                         use_env_variable, use_app_run)
@@ -176,10 +149,6 @@ class TestFilteringTest(absltest.TestCase):
     self.assertIn('parameterized unnamed 1', out)
     self.assertIn('parameterized unnamed 2', out)
 
-  @absltest.skipIf(
-      sys.version_info[:2] < (3, 7),
-      'Python 3.6 passes the filter as positional arguments and matches by name'
-  )
   def test_parameterized_named(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered('ParameterizedTest.test_named',
                                         use_env_variable, use_app_run)

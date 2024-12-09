@@ -113,15 +113,6 @@ W0000 23:59:59.000000 12345 logging_functional_test_helper.py:81] Warn first 2 o
 W0000 23:59:59.000000 12345 logging_functional_test_helper.py:82] Warn 4 (every 3)
 """
 
-if sys.version_info[0:2] == (3, 4):
-  _FAKE_ERROR_EXTRA_MESSAGE = """\
-Traceback (most recent call last):
-  File "logging_functional_test_helper.py", line 456, in _test_do_logging
-    raise OSError('Fake Error')
-"""
-else:
-  _FAKE_ERROR_EXTRA_MESSAGE = ''
-
 _PY_ERROR_LOG_MESSAGE = """\
 E1231 23:59:59.000000 12345 logging_functional_test_helper.py:65] This line is VLOG level -2
 E1231 23:59:59.000000 12345 logging_functional_test_helper.py:65] This line is log level -2
@@ -147,13 +138,13 @@ Traceback (most recent call last):
     raise OSError('Fake Error')
 OSError: Fake Error
 E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] No traceback
-{fake_error_extra}OSError: Fake Error
+OSError: Fake Error
 E1231 23:59:59.000000 12345 logging_functional_test_helper.py:90] Alarming Stuff
 E0000 23:59:59.000000 12345 logging_functional_test_helper.py:92] Error first 1 of 2
 E0000 23:59:59.000000 12345 logging_functional_test_helper.py:93] Error 1 (every 3)
 E0000 23:59:59.000000 12345 logging_functional_test_helper.py:92] Error first 2 of 2
 E0000 23:59:59.000000 12345 logging_functional_test_helper.py:93] Error 4 (every 3)
-""".format(fake_error_extra=_FAKE_ERROR_EXTRA_MESSAGE)
+"""
 
 
 _CRITICAL_DOWNGRADE_TO_ERROR_MESSAGE = """\

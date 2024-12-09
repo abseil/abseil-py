@@ -1649,8 +1649,6 @@ class EnterContextTest(absltest.TestCase):
     self.assertEqual(self.cm_state, 'yielded')
 
 
-@absltest.skipIf(not hasattr(absltest.TestCase, 'addClassCleanup'),
-                 'Python 3.8 required for class-level enter_context')
 class EnterContextClassmethodTest(absltest.TestCase):
 
   cm_state = 'unset'
