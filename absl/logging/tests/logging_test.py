@@ -593,6 +593,76 @@ class ABSLLoggerTest(absltest.TestCase):
       self.logger.handle(record)
     mock_call_handlers.assert_called_once()
 
+  def test_find_caller_respects_stacklevel(self):
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method1')
+    # Frame 0 is filtered out due to being in the logging file.
+    # Frame 1 is filtered out due to being registered to be skipped.
+    # Frame 2 is the topmost unfiltered frame on the stack.
+    self.assertEqual(
+        self.logger.findCaller(stacklevel=1),
+        ('myfile.py', 125, 'Method2', None),
+    )
+    self.assertEqual(
+        self.logger.findCaller(stacklevel=2),
+        ('myfile.py', 125, 'Method3', None),
+    )
+    self.assertEqual(
+        self.logger.findCaller(stacklevel=3),
+        ('myfile.py', 249, 'Method2', None),
+    )
+
+  def test_find_caller_handles_skipped_bottom_of_stack(self):
+    self.set_up_mock_frames()
+    self.logger.register_frame_to_skip('myfile.py', 'Method2')
+    # Frame 0 is filtered out due to being in the logging file.
+    # Frame 1 is unfiltered.
+    # Frame 2 is filtered due to regiser_frame_to_skip.
+    # Frame 3 is unfiltered.
+    # Frame 4 is filtered due to regiser_frame_to_skip.
+    self.assertEqual(
+        self.logger.findCaller(stacklevel=1),
+        ('myfile.py', 125, 'Method1', None),
+    )
+    self.assertEqual(
+        self.logger.findCaller(stacklevel=2),
+        ('myfile.py', 125, 'Method3', None),
+    )
+    # 3 exceeds the unfiltered stack depth, so it returns the bottom unfiltered frame.
+    self.assertEqual(
+        self.logger.findCaller(stacklevel=3),
+        ('myfile.py', 125, 'Method3', None),
+    )
+
+  def test_log_respects_stacklevel(self):
+    self.set_up_mock_frames()
+    original_logger_class = std_logging.getLoggerClass()
+    std_logging.setLoggerClass(logging.ABSLLogger)
+    absl_logger = std_logging.getLogger('absl')
+    with self.assertLogs() as cm:
+      absl_logger.info('lol', stacklevel=2)
+    std_logging.setLoggerClass(original_logger_class)
+    self.assertLen(cm.records, 1)
+    self.assertEqual(cm.records[0].lineno, 125)
+    self.assertEqual(cm.records[0].funcName, 'Method2')
+    self.assertEqual(cm.records[0].filename, 'myfile.py')
+
+  def test_handles_negative_stacklevel(self):
+    """If stacklevel is negative, return the top unfiltered frame."""
+    self.set_up_mock_frames()
+    self.assertEqual(
+        self.logger.findCaller(stacklevel=-1),
+        ('myfile.py', 125, 'Method1', None),
+    )
+
+  def test_handles_excess_stacklevel(self):
+    """If stacklevel exceeds the stack depth, return the bottom frame."""
+    self.set_up_mock_frames()
+    self.assertEqual(
+        self.logger.findCaller(stacklevel=1000),
+        ('myfile.py', 249, 'Method2', None),
+    )
+
 
 class ABSLLogPrefixTest(parameterized.TestCase):
 

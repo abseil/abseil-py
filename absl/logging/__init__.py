@@ -1118,10 +1118,11 @@ class ABSLLogger(logging.getLoggerClass()):
 
     Args:
       stack_info: bool, when True, include the stack trace as a fourth item
-          returned.  On Python 3 there are always four items returned - the
-          fourth will be None when this is False.  On Python 2 the stdlib
-          base class API only returns three items.  We do the same when this
-          new parameter is unspecified or False for compatibility.
+        returned.  On Python 3 there are always four items returned - the fourth
+        will be None when this is False.  On Python 2 the stdlib base class API
+        only returns three items.  We do the same when this new parameter is
+        unspecified or False for compatibility.
+      stacklevel: int, if greater than 1, that number of frames will be skipped.
 
     Returns:
       (filename, lineno, methodname[, sinfo]) of the calling method.
@@ -1130,6 +1131,7 @@ class ABSLLogger(logging.getLoggerClass()):
     # Use sys._getframe(2) instead of logging.currentframe(), it's slightly
     # faster because there is one less frame to traverse.
     frame = sys._getframe(2)  # pylint: disable=protected-access
+    frame_to_return = None
 
     while frame:
       code = frame.f_code
@@ -1137,14 +1139,27 @@ class ABSLLogger(logging.getLoggerClass()):
           (code.co_filename, code.co_name,
            code.co_firstlineno) not in f_to_skip and
           (code.co_filename, code.co_name) not in f_to_skip):
-        sinfo = None
-        if stack_info:
-          out = io.StringIO()
-          out.write('Stack (most recent call last):\n')
-          traceback.print_stack(frame, file=out)
-          sinfo = out.getvalue().rstrip('\n')
-        return (code.co_filename, frame.f_lineno, code.co_name, sinfo)
+        frame_to_return = frame
+        stacklevel -= 1
+        if stacklevel <= 0:
+          break
       frame = frame.f_back
+
+    if frame_to_return is not None:
+      sinfo = None
+      if stack_info:
+        out = io.StringIO()
+        out.write('Stack (most recent call last):\n')
+        traceback.print_stack(frame, file=out)
+        sinfo = out.getvalue().rstrip('\n')
+      return (
+          frame_to_return.f_code.co_filename,
+          frame_to_return.f_lineno,
+          frame_to_return.f_code.co_name,
+          sinfo,
+      )
+
+    return None
 
   def critical(self, msg, *args, **kwargs):
     """Logs ``msg % args`` with severity ``CRITICAL``."""
