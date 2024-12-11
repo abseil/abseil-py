@@ -85,14 +85,16 @@ TESTCASE_STRING = """\
 FAILURE_MESSAGE = r"""
   <failure message="e" type="{}"><!\[CDATA\[Traceback \(most recent call last\):
   File ".*xml_reporter_test\.py", line \d+, in get_sample_failure
-    self.fail\(\'e\'\)
+    self.fail\(\'e\'\)(
+    ~~~~~~~~~\^\^\^\^\^)?
 AssertionError: e
 \]\]></failure>""".format(xml_escaped_exception_type(AssertionError))
 
 ERROR_MESSAGE = r"""
   <error message="invalid&#x20;literal&#x20;for&#x20;int\(\)&#x20;with&#x20;base&#x20;10:&#x20;(&apos;)?a(&apos;)?" type="{}"><!\[CDATA\[Traceback \(most recent call last\):
   File ".*xml_reporter_test\.py", line \d+, in get_sample_error
-    int\('a'\)
+    int\('a'\)(
+    ~~~\^\^\^\^\^)?
 ValueError: invalid literal for int\(\) with base 10: '?a'?
 \]\]></error>""".format(xml_escaped_exception_type(ValueError))
 

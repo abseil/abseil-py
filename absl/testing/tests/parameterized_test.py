@@ -1128,6 +1128,9 @@ class CoopMetaclassCreationTest(absltest.TestCase):
     self.assertEqual(2, res.testsRun)
     self.assertTrue(res.wasSuccessful())
 
+  @unittest.skipIf(
+      sys.version_info >= (3, 13), 'makeSuite was removed in Python 3.13'
+  )
   def test_metaclass_side_effects(self):
     ts = unittest.makeSuite(self.MyParams, suiteClass=self.MySuite)
 

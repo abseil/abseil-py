@@ -227,7 +227,10 @@ class ArgparseFlagsTest(parameterized.TestCase):
     # Only the short name is shown in the usage string.
     self.assertIn('[-s ABSL_STRING]', help_message)
     # Both names are included in the options section.
-    self.assertIn('-s ABSL_STRING, --absl_string ABSL_STRING', help_message)
+    if sys.version_info >= (3, 13):
+      self.assertIn(' -s, --absl_string ABSL_STRING', help_message)
+    else:
+      self.assertIn(' -s ABSL_STRING, --absl_string ABSL_STRING', help_message)
     # Verify help messages.
     self.assertIn('help for --absl_string=%.', help_message)
     self.assertIn('<apple|orange>: help for --absl_enum.', help_message)
