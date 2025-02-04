@@ -1656,6 +1656,25 @@ class TestCase(unittest.TestCase):
       for a, b in itertools.product(group, group):
         CheckEqual(a, b)
 
+  def assertDictContainsSubset(
+      self, subset: Mapping[Any, Any], dictionary: Mapping[Any, Any], msg=None
+  ):
+    """Raises AssertionError if dictionary is not a superset of subset.
+
+    Args:
+      subset: A dict, the expected subset of the `dictionary`.
+      dictionary: A dict, the actual value.
+      msg: An optional str, the associated message.
+
+    Raises:
+      AssertionError: if dictionary is not a superset of subset.
+    """
+    if not isinstance(subset, dict):
+      subset = dict(subset)
+    if not isinstance(dictionary, dict):
+      dictionary = dict(dictionary)
+    self.assertDictEqual(dictionary, {**dictionary, **subset}, msg)
+
   def assertDictEqual(self, a, b, msg=None):
     """Raises AssertionError if a and b are not equal dictionaries.
 

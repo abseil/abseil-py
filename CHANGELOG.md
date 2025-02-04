@@ -12,6 +12,10 @@ Nothing notable unreleased.
     tests equality of Mapping objects not requiring them to be dicts. Similar
     to `assertSequenceEqual` but for mappings.
 
+*   (testing) Added a new method `absltest.assertDictContainsSubset` that
+    checks that a dictionary contains a subset of keys and values. Similar
+    to a removed method `unittest.assertDictContainsSubset` (existed until Python 3.11).
+
 ### Fixed
 
 *  (testing) Fixed an issue where the test reporter crashes with exceptions with
