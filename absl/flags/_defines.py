@@ -466,6 +466,7 @@ def DEFINE_boolean(  # pylint: disable=invalid-name
   ...
 
 
+# pytype: disable=bad-return-type
 def DEFINE_boolean(  # pylint: disable=invalid-name
     name,
     default,
