@@ -18,8 +18,8 @@ This module contains base classes and high-level functions for Abseil-style
 tests.
 """
 
-from collections import abc
 import collections
+from collections import abc
 import contextlib
 import dataclasses
 import difflib
@@ -1684,15 +1684,58 @@ class TestCase(unittest.TestCase):
     """
     self.assertMappingEqual(a, b, msg, mapping_type=dict)
 
+  def assertDictAlmostEqual(self, a, b, places=None, msg=None, delta=None):
+    """Raises AssertionError if a and b are not equal or almost equal dicts.
+
+    Almost equality is determined for float values by:
+      - have numeric difference less than the given delta,
+        or
+      - have numeric difference rounded to the given number of decimal places
+        (default 7).
+
+    Args:
+      a: A dict, the expected value.
+      b: A dict, the actual value.
+      places: The number of decimal places to compare.
+      msg: An optional str, the associated message.
+      delta: The OK difference between compared values.
+
+    Raises:
+      AssertionError: if the dictionaries are not equal or almost equal.
+    """
+    self.assertMappingEqual(
+        a,
+        b,
+        msg,
+        mapping_type=dict,
+        places=places,
+        delta=delta,
+    )
+
   def assertMappingEqual(
-      self, a, b, msg=None, mapping_type=collections.abc.Mapping
+      self,
+      a,
+      b,
+      msg=None,
+      mapping_type=collections.abc.Mapping,
+      places=None,
+      delta=None,
   ):
-    """Raises AssertionError if a and b are not equal mappings.
+    """Raises AssertionError if a and b are not equal or almost equal mappings.
+
+    Almost equality is determined for float values by:
+      - have numeric difference less than the given delta,
+        or
+      - have numeric difference rounded to the given number of decimal places
+        (default 7).
 
     Args:
       a: A mapping, the expected value.
       b: A mapping, the actual value.
       msg: An optional str, the associated message.
+      mapping_type: The expected type of the mappings.
+      places: The number of decimal places to compare.
+      delta: The OK difference between compared values.
 
     Raises:
       AssertionError: if the dictionaries are not equal.
@@ -1700,14 +1743,14 @@ class TestCase(unittest.TestCase):
 
     if not isinstance(a, mapping_type):
       self.fail(
-          'a should be a %s, found type: %s'
-          % (mapping_type.__name__, type(a).__name__),
+          f'a should be a {mapping_type.__name__}, found type:'
+          f' {type(a).__name__}',
           msg,
       )
     if not isinstance(b, mapping_type):
       self.fail(
-          'b should be a %s, found type: %s'
-          % (mapping_type.__name__, type(b).__name__),
+          f'b should be a {mapping_type.__name__}, found type:'
+          f' {type(b).__name__}',
           msg,
       )
 
@@ -1733,9 +1776,9 @@ class TestCase(unittest.TestCase):
       # Sort the entries based on their repr, not based on their sort order,
       # which will be non-deterministic across executions, for many types.
       entries = sorted((safe_repr(k), safe_repr(v)) for k, v in dikt.items())
-      return '{%s}' % (', '.join('%s: %s' % pair for pair in entries))
+      return '{' + ', '.join(f'{k}: {v}' for k, v in entries) + '}'
 
-    message = ['%s != %s%s' % (Repr(a), Repr(b), ' (%s)' % msg if msg else '')]
+    message = [f'{Repr(a)} != {Repr(b)}{"("+msg+")" if msg else ""}']
 
     # The standard library default output confounds lexical difference with
     # value difference; treat them separately.
@@ -1743,7 +1786,24 @@ class TestCase(unittest.TestCase):
       if a_key not in b:
         missing.append((a_key, a_value))
       elif a_value != b[a_key]:
-        different.append((a_key, a_value, b[a_key]))
+        if places is None and delta is None:
+          different.append((a_key, a_value, b[a_key], ''))
+        else:
+          try:
+            # assertAlmostEqual should be called with at most one of `places`
+            # and `delta`. However, it's okay for assertMappingEqual to pass
+            # both because we want the latter to fail if the former does.
+            # pytype: disable=wrong-keyword-args
+            self.assertAlmostEqual(
+                a_value,
+                b[a_key],
+                places=places,
+                msg=msg,
+                delta=delta,
+            )
+          # pytype: enable=wrong-keyword-args
+          except self.failureException as err:
+            different.append((a_key, a_value, b[a_key], err))
 
     for b_key, b_value in b_items:
       if b_key not in a:
@@ -1751,20 +1811,25 @@ class TestCase(unittest.TestCase):
 
     if unexpected:
       message.append(
-          'Unexpected, but present entries:\n%s' % ''.join(
-              '%s: %s\n' % (safe_repr(k), safe_repr(v)) for k, v in unexpected))
+          'Unexpected, but present entries:\n'
+          + ''.join(f'{safe_repr(k)}: {safe_repr(v)}\n' for k, v in unexpected)
+      )
 
     if different:
       message.append(
-          'repr() of differing entries:\n%s' % ''.join(
-              '%s: %s != %s\n' % (safe_repr(k), safe_repr(a_value),
-                                  safe_repr(b_value))
-              for k, a_value, b_value in different))
+          'repr() of differing entries:\n'
+          + ''.join(
+              f'{safe_repr(k)}: {safe_repr(a_value)} != '
+              f'{safe_repr(b_value)}{err if err else ""}\n'
+              for k, a_value, b_value, err in different
+          )
+      )
 
     if missing:
       message.append(
-          'Missing entries:\n%s' % ''.join(
-              ('%s: %s\n' % (safe_repr(k), safe_repr(v)) for k, v in missing)))
+          'Missing entries:\n'
+          + ''.join(f'{safe_repr(k)}: {safe_repr(v)}\n' for k, v in missing)
+      )
 
     raise self.failureException('\n'.join(message))
 
