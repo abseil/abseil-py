@@ -618,6 +618,70 @@ Missing entries:
     set2 = {(4, 5)}
     self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
 
+  @parameterized.named_parameters(
+      dict(testcase_name='empty', a={}, b={}),
+      dict(testcase_name='equal_non_float', a={'a': 1}, b={'a': 1}),
+      dict(testcase_name='equal_float', a={'a': 1.01}, b={'a': 1.01}),
+      dict(
+          testcase_name='equal_mixed_elements',
+          a={'a': 'A', 'b': 1.01},
+          b={'a': 'A', 'b': 1.01},
+      ),
+      dict(
+          testcase_name='almost_equal',
+          a={'a': 1.0},
+          b={'a': 1.0000001},
+      ),
+      dict(
+          testcase_name='almost_equal_many_elements',
+          a={'a': 1.0, 'b': 2.0},
+          b={'a': 1.0000001, 'b': 1.9999999},
+      ),
+  )
+  def test_assert_dict_almost_equal(self, a, b):
+    self.assertDictAlmostEqual(a, b)
+
+  @parameterized.named_parameters(
+      dict(
+          testcase_name='places',
+          a={'a': 1.001},
+          b={'a': 1.002},
+          places=3,
+          delta=None,
+      ),
+      dict(
+          testcase_name='delta',
+          a={'a': 1.01},
+          b={'a': 1.02},
+          places=None,
+          delta=0.01,
+      ),
+  )
+  def test_assert_dict_almost_equal_with_tolerance(self, a, b, places, delta):
+    self.assertDictAlmostEqual(a, b, places=places, delta=delta)
+
+  @parameterized.named_parameters(
+      dict(
+          testcase_name='places',
+          a={'a': 1.001},
+          b={'a': 1.002},
+          places=4,
+          delta=None,
+      ),
+      dict(
+          testcase_name='delta',
+          a={'a': 1.01},
+          b={'a': 1.02},
+          places=None,
+          delta=0.001,
+      ),
+  )
+  def test_assert_dict_almost_equal_fails_with_tolerance(
+      self, a, b, places, delta
+  ):
+    with self.assertRaises(self.failureException):
+      self.assertDictAlmostEqual(a, b, places=places, delta=delta)
+
   def test_assert_sequence_almost_equal(self):
     actual = (1.1, 1.2, 1.4)
 
