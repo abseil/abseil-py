@@ -175,8 +175,9 @@ def DEFINE_flag(  # pylint: disable=invalid-name
     a handle to defined flag.
   """
   if required and flag.default is not None:
-    raise ValueError('Required flag --%s cannot have a non-None default' %
-                     flag.name)
+    raise ValueError(
+        'Required flag --%s needs to have None as default' % flag.name
+    )
   # Copying the reference to flag_values prevents pychecker warnings.
   fv = flag_values
   fv[flag.name] = flag
