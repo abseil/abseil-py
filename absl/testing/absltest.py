@@ -18,8 +18,8 @@ This module contains base classes and high-level functions for Abseil-style
 tests.
 """
 
-from collections import abc
 import collections
+from collections import abc
 import contextlib
 import dataclasses
 import difflib
@@ -1700,14 +1700,14 @@ class TestCase(unittest.TestCase):
 
     if not isinstance(a, mapping_type):
       self.fail(
-          'a should be a %s, found type: %s'
-          % (mapping_type.__name__, type(a).__name__),
+          f'a should be a {mapping_type.__name__}, found type:'
+          f' {type(a).__name__}',
           msg,
       )
     if not isinstance(b, mapping_type):
       self.fail(
-          'b should be a %s, found type: %s'
-          % (mapping_type.__name__, type(b).__name__),
+          f'b should be a {mapping_type.__name__}, found type:'
+          f' {type(b).__name__}',
           msg,
       )
 
@@ -1733,9 +1733,9 @@ class TestCase(unittest.TestCase):
       # Sort the entries based on their repr, not based on their sort order,
       # which will be non-deterministic across executions, for many types.
       entries = sorted((safe_repr(k), safe_repr(v)) for k, v in dikt.items())
-      return '{%s}' % (', '.join('%s: %s' % pair for pair in entries))
+      return '{' + ', '.join(f'{k}: {v}' for k, v in entries) + '}'
 
-    message = ['%s != %s%s' % (Repr(a), Repr(b), ' (%s)' % msg if msg else '')]
+    message = [f'{Repr(a)} != {Repr(b)}{"("+msg+")" if msg else ""}']
 
     # The standard library default output confounds lexical difference with
     # value difference; treat them separately.
@@ -1751,20 +1751,24 @@ class TestCase(unittest.TestCase):
 
     if unexpected:
       message.append(
-          'Unexpected, but present entries:\n%s' % ''.join(
-              '%s: %s\n' % (safe_repr(k), safe_repr(v)) for k, v in unexpected))
+          'Unexpected, but present entries:\n'
+          + ''.join(f'{safe_repr(k)}: {safe_repr(v)}\n' for k, v in unexpected)
+      )
 
     if different:
       message.append(
-          'repr() of differing entries:\n%s' % ''.join(
-              '%s: %s != %s\n' % (safe_repr(k), safe_repr(a_value),
-                                  safe_repr(b_value))
-              for k, a_value, b_value in different))
+          'repr() of differing entries:\n'
+          + ''.join(
+              f'{safe_repr(k)}: {safe_repr(a_value)} != {safe_repr(b_value)}\n'
+              for k, a_value, b_value in different
+          )
+      )
 
     if missing:
       message.append(
-          'Missing entries:\n%s' % ''.join(
-              ('%s: %s\n' % (safe_repr(k), safe_repr(v)) for k, v in missing)))
+          'Missing entries:\n'
+          + ''.join(f'{safe_repr(k)}: {safe_repr(v)}\n' for k, v in missing)
+      )
 
     raise self.failureException('\n'.join(message))
 
