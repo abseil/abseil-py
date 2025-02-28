@@ -422,11 +422,13 @@ class TestCaseTest(BaseTestCase):
   )
   def test_assert_dict_equal(self, use_mapping: bool):
 
-    def assert_dict_equal(a, b, msg=None):
+    def assert_dict_equal(a, b, msg=None, places=None, delta=None):
       if use_mapping:
         self.assertMappingEqual(a, b, msg=msg)
-      else:
+      elif places is None and delta is None:
         self.assertDictEqual(a, b, msg=msg)
+      else:
+        self.assertDictAlmostEqual(a, b, msg=msg, places=places, delta=delta)
 
     assert_dict_equal({}, {})
 
@@ -482,7 +484,8 @@ class TestCaseTest(BaseTestCase):
     try:
       assert_dict_equal(expected, seen)
     except AssertionError as e:
-      self.assertMultiLineEqual("""\
+      self.assertMultiLineEqual(
+          """\
 {'a': 1, 'b': 2, 'c': 3} != {'a': 2, 'c': 3, 'd': 4}
 Unexpected, but present entries:
 'd': 4
@@ -492,7 +495,9 @@ repr() of differing entries:
 
 Missing entries:
 'b': 2
-""", str(e))
+""",
+          str(e),
+      )
     else:
       self.fail('Expecting AssertionError')
 
@@ -617,6 +622,121 @@ Missing entries:
     set1 = {(0, 1), (2, 3)}
     set2 = {(4, 5)}
     self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
+
+  @parameterized.named_parameters(
+      dict(testcase_name='empty', a={}, b={}),
+      dict(testcase_name='equal_float', a={'a': 1.01}, b={'a': 1.01}),
+      dict(testcase_name='int_and_float', a={'a': 0}, b={'a': 0.000_000_01}),
+      dict(testcase_name='float_and_int', a={'a': 0.000_000_01}, b={'a': 0}),
+      dict(
+          testcase_name='mixed_elements',
+          a={'a': 'A', 'b': 1, 'c': 0.999_999_99},
+          b={'a': 'A', 'b': 1, 'c': 1},
+      ),
+      dict(
+          testcase_name='float_artifacts',
+          a={'a': 0.15000000000000002},
+          b={'a': 0.15},
+      ),
+      dict(
+          testcase_name='multiple_floats',
+          a={'a': 1.0, 'b': 2.0},
+          b={'a': 1.000_000_01, 'b': 1.999_999_99},
+      ),
+  )
+  def test_assert_dict_almost_equal(self, a, b):
+    self.assertDictAlmostEqual(a, b)
+
+  @parameterized.named_parameters(
+      dict(
+          testcase_name='default_places_is_7',
+          a={'a': 1.0},
+          b={'a': 1.000_000_01},
+          places=None,
+          delta=None,
+      ),
+      dict(
+          testcase_name='places',
+          a={'a': 1.011},
+          b={'a': 1.009},
+          places=2,
+          delta=None,
+      ),
+      dict(
+          testcase_name='delta',
+          a={'a': 1.00},
+          b={'a': 1.09},
+          places=None,
+          delta=0.1,
+      ),
+  )
+  def test_assert_dict_almost_equal_with_tolerance(self, a, b, places, delta):
+    self.assertDictAlmostEqual(a, b, places=places, delta=delta)
+
+  @parameterized.named_parameters(
+      dict(
+          testcase_name='default_places_is_7',
+          a={'a': 1.0},
+          b={'a': 1.000_000_1},
+          places=None,
+          delta=None,
+      ),
+      dict(
+          testcase_name='places',
+          a={'a': 1.001},
+          b={'a': 1.002},
+          places=3,
+          delta=None,
+      ),
+      dict(
+          testcase_name='delta',
+          a={'a': 1.01},
+          b={'a': 1.02},
+          places=None,
+          delta=0.01,
+      ),
+  )
+  def test_assert_dict_almost_equal_fails_with_tolerance(
+      self, a, b, places, delta
+  ):
+    with self.assertRaises(self.failureException):
+      self.assertDictAlmostEqual(a, b, places=places, delta=delta)
+
+  def test_assert_dict_almost_equal_assertion_message(self):
+    with self.assertRaises(AssertionError) as e:
+      self.assertDictAlmostEqual({'a': 0.6}, {'a': 1.0}, delta=0.1)
+    self.assertMultiLineEqual(
+        """\
+{'a': 0.6} != {'a': 1.0}
+repr() of differing entries:
+'a': 0.6 != 1.0 within 0.1 delta (0.4 difference)
+""",
+        str(e.exception),
+    )
+
+  def test_assert_dict_almost_equal_fails_with_custom_message(self):
+    with self.assertRaises(AssertionError) as e:
+      self.assertDictAlmostEqual(
+          {'a': 0.6}, {'a': 1.0}, delta=0.1, msg='custom message'
+      )
+    self.assertMultiLineEqual(
+        """\
+{'a': 0.6} != {'a': 1.0}(custom message)
+repr() of differing entries:
+'a': 0.6 != 1.0 within 0.1 delta (0.4 difference)
+""",
+        str(e.exception),
+    )
+
+  def test_assert_dict_almost_equal_fails_with_both_places_and_delta(self):
+    with self.assertRaises(ValueError) as e:
+      self.assertDictAlmostEqual({'a': 1.0}, {'a': 1.0}, places=2, delta=0.01)
+    self.assertMultiLineEqual(
+        """\
+specify delta or places not both
+""",
+        str(e.exception),
+    )
 
   def test_assert_sequence_almost_equal(self):
     actual = (1.1, 1.2, 1.4)

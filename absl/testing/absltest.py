@@ -1684,15 +1684,87 @@ class TestCase(unittest.TestCase):
     """
     self.assertMappingEqual(a, b, msg, mapping_type=dict)
 
-  def assertMappingEqual(
-      self, a, b, msg=None, mapping_type=collections.abc.Mapping
+  def assertDictAlmostEqual(
+      self,
+      a,
+      b,
+      places=None,
+      msg=None,
+      delta=None,
   ):
-    """Raises AssertionError if a and b are not equal mappings.
+    """Raises AssertionError if a and b are not equal or almost equal dicts.
+
+    This is like assertDictEqual, except for float values which are compared
+    using assertAlmostEqual. Almost equality is determined for float values by:
+      - have numeric difference less than the given delta,
+        or
+      - equal if rounded to the given number of decimal places after the decimal
+        point (default 7).
+
+    Args:
+      a: A dict, the expected value.
+      b: A dict, the actual value.
+      places: The number of decimal places to compare for floats.
+      msg: An optional str, the associated message.
+      delta: The OK difference between compared values for floats.
+
+    Raises:
+      AssertionError: if the dictionaries are not equal or almost equal.
+      ValueError: if both places and delta are specified.
+    """
+
+    # Almost equality with preset places and delta.
+    def almost_equal_compare(a_value, b_value):
+      if isinstance(a_value, float) or isinstance(b_value, float):
+        try:
+          # assertAlmostEqual should be called with at most one of `places`
+          # and `delta`. However, it's okay for assertMappingEqual to pass
+          # both because we want the latter to fail if the former does.
+          # pytype: disable=wrong-keyword-args
+          self.assertAlmostEqual(
+              a_value,
+              b_value,
+              places=places,
+              delta=delta,
+          )
+        # pytype: enable=wrong-keyword-args
+        except self.failureException as err:
+          return False, err
+      return True, None
+
+    if delta is not None and places is not None:
+      raise ValueError('specify delta or places not both\n')
+
+    self.assertMappingEqual(
+        a,
+        b,
+        msg,
+        mapping_type=dict,
+        check_values_equality=almost_equal_compare,
+    )
+
+  def assertMappingEqual(
+      self,
+      a,
+      b,
+      msg=None,
+      mapping_type=collections.abc.Mapping,
+      check_values_equality=lambda x, y: (x == y, None),
+  ):
+    """Raises AssertionError if a and b differ in keys or values.
+
+    Key sets must be exectly the same, the corresponding values should satisfy
+    the provided equality function.
 
     Args:
       a: A mapping, the expected value.
       b: A mapping, the actual value.
       msg: An optional str, the associated message.
+      mapping_type: The expected type of the mappings.
+      check_values_equality: A function that takes two values and returns a
+        tuple of (bool, BaseException), where the bool is True if the values are
+        equal and the BaseException is an optional exception occured during the
+        equality check.
 
     Raises:
       AssertionError: if the dictionaries are not equal.
@@ -1710,6 +1782,8 @@ class TestCase(unittest.TestCase):
           f' {type(b).__name__}',
           msg,
       )
+    if a == b:
+      return
 
     def Sorted(list_of_items):
       try:
@@ -1717,14 +1791,31 @@ class TestCase(unittest.TestCase):
       except TypeError:
         return list_of_items
 
-    if a == b:
-      return
     a_items = Sorted(list(a.items()))
     b_items = Sorted(list(b.items()))
 
     unexpected = []
     missing = []
     different = []
+
+    # The standard library default output confounds lexical difference with
+    # value difference; treat them separately.
+    for a_key, a_value in a_items:
+      if a_key not in b:
+        missing.append((a_key, a_value))
+        continue
+      b_value = b[a_key]
+      is_equal, err = check_values_equality(a_value, b_value)
+      if not is_equal:
+        different.append((a_key, a_value, b_value, err))
+
+    for b_key, b_value in b_items:
+      if b_key not in a:
+        unexpected.append((b_key, b_value))
+
+    # If all difference buckets are empty, then mappings are considered equal.
+    if not unexpected and not different and not missing:
+      return
 
     safe_repr = unittest.util.safe_repr  # pytype: disable=module-attr
 
@@ -1737,18 +1828,6 @@ class TestCase(unittest.TestCase):
 
     message = [f'{Repr(a)} != {Repr(b)}{"("+msg+")" if msg else ""}']
 
-    # The standard library default output confounds lexical difference with
-    # value difference; treat them separately.
-    for a_key, a_value in a_items:
-      if a_key not in b:
-        missing.append((a_key, a_value))
-      elif a_value != b[a_key]:
-        different.append((a_key, a_value, b[a_key]))
-
-    for b_key, b_value in b_items:
-      if b_key not in a:
-        unexpected.append((b_key, b_value))
-
     if unexpected:
       message.append(
           'Unexpected, but present entries:\n'
@@ -1759,8 +1838,9 @@ class TestCase(unittest.TestCase):
       message.append(
           'repr() of differing entries:\n'
           + ''.join(
-              f'{safe_repr(k)}: {safe_repr(a_value)} != {safe_repr(b_value)}\n'
-              for k, a_value, b_value in different
+              f'{safe_repr(k)}: '
+              f'{err if err else f"{safe_repr(a_value)} != {safe_repr(b_value)}"}\n'
+              for k, a_value, b_value, err in different
           )
       )
 
