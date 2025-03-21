@@ -101,6 +101,26 @@ def expectedFailureIf(condition, reason):  # pylint: disable=invalid-name
     return lambda f: f
 
 
+class MyProtocol(typing.Protocol):
+
+  def blop(self) -> int:
+    ...
+
+  def __call__(self) -> int:
+    ...
+
+
+def foo() -> int:
+  return 42
+
+
+def requires_blop(obj: MyProtocol):
+  obj.blop()
+
+
+requires_blop(foo)
+
+
 class TempFileCleanup(enum.Enum):
   # Always cleanup temp files when the test completes.
   ALWAYS = 'always'
