@@ -1730,7 +1730,7 @@ class TestCase(unittest.TestCase):
         # pytype: enable=wrong-keyword-args
         except self.failureException as err:
           return False, err
-      return True, None
+      return a_value == b_value, None
 
     if delta is not None and places is not None:
       raise ValueError('specify delta or places not both\n')
