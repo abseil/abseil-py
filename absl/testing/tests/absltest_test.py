@@ -702,6 +702,12 @@ Missing entries:
     with self.assertRaises(self.failureException):
       self.assertDictAlmostEqual(a, b, places=places, delta=delta)
 
+  def test_assert_dict_almost_equal_fails_if_non_float_comparison_fails(self):
+    a = {'a': 'b'}
+    b = {'a': 'c'}
+    with self.assertRaises(self.failureException):
+      self.assertDictAlmostEqual(a, b)
+
   def test_assert_dict_almost_equal_assertion_message(self):
     with self.assertRaises(AssertionError) as e:
       self.assertDictAlmostEqual({'a': 0.6}, {'a': 1.0}, delta=0.1)
