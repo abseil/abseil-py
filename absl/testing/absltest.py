@@ -31,6 +31,7 @@ import inspect
 import io
 import itertools
 import json
+import numbers
 import os
 import random
 import re
@@ -1715,7 +1716,9 @@ class TestCase(unittest.TestCase):
 
     # Almost equality with preset places and delta.
     def almost_equal_compare(a_value, b_value):
-      if isinstance(a_value, float) or isinstance(b_value, float):
+      if isinstance(a_value, numbers.Number) and isinstance(
+          b_value, numbers.Number
+      ):
         try:
           # assertAlmostEqual should be called with at most one of `places`
           # and `delta`. However, it's okay for assertMappingEqual to pass
@@ -1730,7 +1733,14 @@ class TestCase(unittest.TestCase):
         # pytype: enable=wrong-keyword-args
         except self.failureException as err:
           return False, err
-      return True, None
+        return True, None
+      else:
+        # Fall back to regular equality check if the values are not numbers.
+        try:
+          self.assertEqual(a_value, b_value)
+        except self.failureException as err:
+          return False, err
+        return True, None
 
     if delta is not None and places is not None:
       raise ValueError('specify delta or places not both\n')

@@ -624,15 +624,7 @@ Missing entries:
     self.assertRaises(AssertionError, self.assertSetEqual, set1, set2)
 
   @parameterized.named_parameters(
-      dict(testcase_name='empty', a={}, b={}),
       dict(testcase_name='equal_float', a={'a': 1.01}, b={'a': 1.01}),
-      dict(testcase_name='int_and_float', a={'a': 0}, b={'a': 0.000_000_01}),
-      dict(testcase_name='float_and_int', a={'a': 0.000_000_01}, b={'a': 0}),
-      dict(
-          testcase_name='mixed_elements',
-          a={'a': 'A', 'b': 1, 'c': 0.999_999_99},
-          b={'a': 'A', 'b': 1, 'c': 1},
-      ),
       dict(
           testcase_name='float_artifacts',
           a={'a': 0.15000000000000002},
@@ -644,7 +636,7 @@ Missing entries:
           b={'a': 1.000_000_01, 'b': 1.999_999_99},
       ),
   )
-  def test_assert_dict_almost_equal(self, a, b):
+  def test_assert_dict_almost_equal_on_floats(self, a, b):
     self.assertDictAlmostEqual(a, b)
 
   @parameterized.named_parameters(
@@ -701,6 +693,42 @@ Missing entries:
   ):
     with self.assertRaises(self.failureException):
       self.assertDictAlmostEqual(a, b, places=places, delta=delta)
+
+  @parameterized.named_parameters(
+      dict(testcase_name='empty', a={}, b={}),
+      dict(testcase_name='int_and_float', a={'a': 0}, b={'a': 0.000_000_01}),
+      dict(testcase_name='float_and_int', a={'a': 1e-8}, b={'a': 0}),
+      dict(testcase_name='float_and_bool', a={'a': 1.0}, b={'a': True}),
+      dict(testcase_name='complex_and_float', a={'a': 1j * 1j}, b={'a': -1.0}),
+      dict(
+          testcase_name='mixed_elements',
+          a={'a': 'A', 'b': 1, 'c': False, 'd': 0.999_999_99, 'e': 1j},
+          b={'a': 'A', 'b': 1, 'c': False, 'd': 1, 'e': 0.999_999_99j},
+      ),
+      dict(testcase_name='list_values', a={'a': [0.1]}, b={'a': [0.1]}),
+      dict(testcase_name='dict_values', a={'a': {'b': 1}}, b={'a': {'b': 1}}),
+  )
+  def test_assert_dict_almost_equal_non_float_comparison_succeeds(self, a, b):
+    self.assertDictAlmostEqual(a, b)
+
+  @parameterized.named_parameters(
+      dict(testcase_name='different_strings', a={'a': 'b'}, b={'a': 'c'}),
+      dict(testcase_name='string_and_float', a={'a': 'b'}, b={'a': 0.1}),
+      dict(testcase_name='complex_and_float', a={'a': 1j}, b={'a': 1.0}),
+      dict(
+          testcase_name='different_bools',
+          a={'a': False},
+          b={'a': True},
+      ),
+      dict(
+          testcase_name='no_recursion',
+          a={'a': {'b': 0}},
+          b={'a': {'b': 1e-8}},
+      ),
+  )
+  def test_assert_dict_almost_equal_non_float_comparison_fails(self, a, b):
+    with self.assertRaises(self.failureException):
+      self.assertDictAlmostEqual(a, b)
 
   def test_assert_dict_almost_equal_assertion_message(self):
     with self.assertRaises(AssertionError) as e:
