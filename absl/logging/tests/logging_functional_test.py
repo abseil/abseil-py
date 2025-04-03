@@ -220,9 +220,11 @@ def _munge_log(buf):
                buf)
 
   # Verify thread id is logged as a non-negative quantity.
-  matched = re.match(r'(?m)^(\w)(\d\d\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d) '
-                     r'([ ]*-?[0-9a-fA-f]+ )?([a-zA-Z<][\w._<>-]+):(\d+)',
-                     buf)
+  matched = re.match(
+      r'(?m)^(\w)(\d\d\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d) '
+      r'([ ]*-?[0-9a-fA-F]+ )?([a-zA-Z<][\w._<>-]+):(\d+)',
+      buf,
+  )
   if matched:
     threadid = matched.group(3)
     if int(threadid) < 0:
