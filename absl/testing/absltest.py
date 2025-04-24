@@ -26,6 +26,7 @@ import difflib
 import enum
 import errno
 import faulthandler
+import functools
 import getpass
 import inspect
 import io
@@ -2505,6 +2506,37 @@ class TestLoader(unittest.TestLoader):
       self._random.shuffle(names)
     return names
 
+  def shardTestCaseNames(
+      self,
+      iterator: Iterator[Any],
+      ordered_names: Sequence[str],
+      shard_index: int,
+  ) -> Sequence[str]:
+    """Filters and returns test case names for a specific shard.
+
+    This method is intended to be used in conjunction with test sharding
+    (e.g., when running tests on a distributed system or when running tests
+    with bazel's test sharding feature). It will return a subset of the
+    input test case names, based on the shard index and total shard count.
+
+    Args:
+      names: A sequence of test case names.
+      shard_index: The index of the current shard.
+      total_shards: The total number of shards.
+
+    Returns:
+      A sequence of test case names for the current shard.
+    """
+    filtered_names = []
+    # We need to sort the list of tests in order to determine which tests this
+    # shard is responsible for; however, it's important to preserve the order
+    # returned by the base loader, e.g. in the case of randomized test ordering.
+    for testcase in sorted(ordered_names):
+      bucket = next(iterator)
+      if bucket == shard_index:
+        filtered_names.append(testcase)
+    return [x for x in ordered_names if x in filtered_names]
+
 
 def get_default_xml_output_filename() -> Optional[str]:
   if os.environ.get('XML_OUTPUT_FILE'):
@@ -2628,19 +2660,19 @@ def _setup_sharding(
 
   bucket_iterator = itertools.cycle(range(total_shards))
 
-  def getShardedTestCaseNames(testCaseClass):
-    filtered_names = []
-    # We need to sort the list of tests in order to determine which tests this
-    # shard is responsible for; however, it's important to preserve the order
-    # returned by the base loader, e.g. in the case of randomized test ordering.
-    ordered_names = delegate_get_names(testCaseClass)
-    for testcase in sorted(ordered_names):
-      bucket = next(bucket_iterator)
-      if bucket == shard_index:
-        filtered_names.append(testcase)
-    return [x for x in ordered_names if x in filtered_names]
+  def getSharedTestCaseNames(testCaseClass):
+    has_shard_test_case_names = hasattr(base_loader, 'shardTestCaseNames')
+    if has_shard_test_case_names:
+      sharder = getattr(base_loader, 'shardTestCaseNames')
+    else:
+      sharder = lambda *args: TestLoader.shardTestCaseNames(base_loader, *args)
 
-  base_loader.getTestCaseNames = getShardedTestCaseNames  # type: ignore[method-assign]
+    names = sharder(
+        bucket_iterator, delegate_get_names(testCaseClass), shard_index
+    )
+    return names
+
+  base_loader.getTestCaseNames = getSharedTestCaseNames  # type: ignore[method-assign]
   return base_loader, shard_index
 
 
