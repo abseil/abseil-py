@@ -1607,7 +1607,7 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
       of that Enum value. If it is an iterable, text values within the iterable
       will be converted to the equivalent Enum objects.
     enum_class: class, the Enum class with all the possible values for the flag.
-        help: str, the help message.
+    help: str, the help message.
     flag_values: :class:`FlagValues`, the FlagValues instance with which the
       flag will be registered. This should almost never need to be overridden.
     module_name: A string, the name of the Python module declaring this flag. If
