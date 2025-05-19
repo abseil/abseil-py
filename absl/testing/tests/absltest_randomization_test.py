@@ -60,7 +60,8 @@ class TestOrderRandomizationTest(parameterized.TestCase):
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        universal_newlines=True)
+        text=True,
+    )
 
     stdout, _ = proc.communicate()
 
