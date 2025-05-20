@@ -47,10 +47,6 @@ def patch_main_module_docstring(docstring):
   sys.modules['__main__'].__doc__ = old_doc
 
 
-def _normalize_newlines(s):
-  return re.sub('(\r\n)|\r', '\n', s)
-
-
 class UnitTests(absltest.TestCase):
 
   def test_install_exception_handler(self):
@@ -141,13 +137,12 @@ class FunctionalTests(absltest.TestCase):
     process = subprocess.Popen(
         [_bazelize_command.get_executable_path(helper)] + list(arguments),
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE, env=env, universal_newlines=False)
+        stderr=subprocess.PIPE,
+        env=env,
+        text=True,
+        encoding='utf8',
+    )
     stdout, stderr = process.communicate()
-    # In Python 2, we can't control the encoding used by universal_newline
-    # mode, which can cause UnicodeDecodeErrors when subprocess tries to
-    # convert the bytes to unicode, so we have to decode it manually.
-    stdout = _normalize_newlines(stdout.decode('utf8'))
-    stderr = _normalize_newlines(stderr.decode('utf8'))
 
     message = (
         'Command: {command}\n'

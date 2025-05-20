@@ -58,7 +58,8 @@ class TestFailFastTest(parameterized.TestCase):
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        universal_newlines=True)
+        text=True,
+    )
     stdout = proc.communicate()[0]
 
     logging.info('output: %s', stdout)
