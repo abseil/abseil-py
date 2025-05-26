@@ -2520,9 +2520,10 @@ class TestLoader(unittest.TestLoader):
     input test case names, based on the shard index and total shard count.
 
     Args:
-      names: A sequence of test case names.
+      iterator: An iterator over the shards, where each iteration returns the
+        next shard index.
+      ordered_names: A sequence of test case names.
       shard_index: The index of the current shard.
-      total_shards: The total number of shards.
 
     Returns:
       A sequence of test case names for the current shard.
