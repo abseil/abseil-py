@@ -6,15 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## Unreleased
 
-Nothing notable unreleased.
+### Added
 
-*   (testing) Added a new method `absltest.TestCase.assertMappingEqual` that
-    tests equality of Mapping objects not requiring them to be dicts. Similar
-    to `assertSequenceEqual` but for mappings.
+*  (testing) Add extension point for letting `TestLoader` specify a custom
+   sharding scheme.
 
-*   (testing) Added a new method `absltest.assertDictContainsSubset` that
-    checks that a dictionary contains a subset of keys and values. Similar
-    to a removed method `unittest.assertDictContainsSubset` (existed until Python 3.11).
+### Changed
+
+*  Update package build and release process. Switched to using `pyproject.toml`,
+   `hatch`, and GitHub Actions.
+
+### Fixed
+
+## 2.2.2 (2025-04-03)
+
+### Added
+
+*  (testing) Added a new method `absltest.TestCase.assertMappingEqual` that
+   tests equality of Mapping objects not requiring them to be dicts. Similar to
+   `assertSequenceEqual` but for mappings.
+*  (testing) Added a new method `absltest.assertDictContainsSubset` that checks
+   that a dictionary contains a subset of keys and values. Similar to a removed
+   method `unittest.assertDictContainsSubset` (existed until Python 3.11).
+*  Added type annotations that are compliant with MyPy.
+
+### Changed
+
+*  Removed support for Python 3.7.
 
 ### Fixed
 
