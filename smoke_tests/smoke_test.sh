@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Smoke test to verify setup.py works as expected.
+# Smoke test to verify pyproject.toml works as expected.
 # Note on Windows, this must run via msys.
 
 # Fail on any error. Treat unset variables an error. Print commands as executed.
@@ -60,6 +60,6 @@ curl https://bootstrap.pypa.io/get-pip.py | python
 pip --version
 
 python --version
-python setup.py install
+pip install .
 python smoke_tests/sample_app.py --echo smoke 2>&1 |grep 'echo is smoke.'
 python smoke_tests/sample_test.py 2>&1 | grep 'msg_for_test'

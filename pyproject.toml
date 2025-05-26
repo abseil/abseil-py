@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling >= 1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "absl-py"
+dynamic = ["version"]
+description = "Abseil Python Common Libraries, see https://github.com/abseil/abseil-py."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.8"
+authors = [
+    { name = "The Abseil Authors" },
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/abseil/abseil-py"
+
+[tool.hatch.version]
+path = "absl/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/absl",
+]
+exclude = [
+    "**/BUILD",
+    "**/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "/absl",
+]
+exclude = [
+    "**/BUILD",
+    "**/tests",
+]

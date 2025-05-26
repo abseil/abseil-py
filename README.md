@@ -24,7 +24,7 @@ pip install absl-py
 Or install from source:
 
 ```bash
-python setup.py install
+pip install .
 ```
 
 ### Running Tests
