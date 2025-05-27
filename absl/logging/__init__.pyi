@@ -35,53 +35,41 @@ LOGGER_LEVELS: flags.FlagHolder[Dict[str, str]]
 STDERRTHRESHOLD: flags.FlagHolder[str]
 SHOWPREFIXFORINFO: flags.FlagHolder[bool]
 
-
 def get_verbosity() -> int:
   ...
-
 
 def set_verbosity(v: Union[int, str]) -> None:
   ...
 
-
 def set_stderrthreshold(s: Union[int, str]) -> None:
   ...
-
 
 # TODO(b/277607978): Provide actual args+kwargs shadowing stdlib's logging functions.
 def fatal(msg: Any, *args: Any, **kwargs: Any) -> NoReturn:
   ...
 
-
 def error(msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
-
 
 def warning(msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
 
-
 def warn(msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
-
 
 def info(msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
 
-
 def debug(msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
 
-
 def exception(msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
-
 
 def log_every_n(
     level: int, msg: Any, n: int, *args: Any, use_call_stack: bool = ...
 ) -> None:
   ...
-
 
 def log_every_n_seconds(
     level: int,
@@ -92,78 +80,60 @@ def log_every_n_seconds(
 ) -> None:
   ...
 
-
 def log_first_n(
     level: int, msg: Any, n: int, *args: Any, use_call_stack: bool = ...
 ) -> None:
   ...
 
-
 def log_if(level: int, msg: Any, condition: Any, *args: Any) -> None:
   ...
-
 
 def log(level: int, msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
 
-
 def vlog(level: int, msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
-
 
 def vlog_is_on(level: int) -> bool:
   ...
 
-
 def flush() -> None:
   ...
-
 
 def level_debug() -> bool:
   ...
 
-
 def level_info() -> bool:
   ...
-
 
 def level_warning() -> bool:
   ...
 
-
 level_warn = level_warning  # Deprecated function.
-
 
 def level_error() -> bool:
   ...
 
-
 def get_log_file_name(level: int = ...) -> str:
   ...
-
 
 def find_log_dir_and_names(
     program_name: Optional[str] = ..., log_dir: Optional[str] = ...
 ) -> Tuple[str, str, str]:
   ...
 
-
 def find_log_dir(log_dir: Optional[str] = ...) -> str:
   ...
 
-
 def get_absl_log_prefix(record: logging.LogRecord) -> str:
   ...
-
 
 _SkipLogT = TypeVar('_SkipLogT', str, Callable[..., Any])
 
 def skip_log_prefix(func: _SkipLogT) -> _SkipLogT:
   ...
 
-
 _StreamT = TypeVar('_StreamT')
-
 
 class PythonHandler(logging.StreamHandler[_StreamT]):  # type: ignore[type-var]
 
@@ -192,7 +162,6 @@ class PythonHandler(logging.StreamHandler[_StreamT]):  # type: ignore[type-var]
 
   def close(self) -> None:
     ...
-
 
 class ABSLHandler(logging.Handler):
 
@@ -232,12 +201,10 @@ class ABSLHandler(logging.Handler):
   def start_logging_to_file(self, program_name=None, log_dir=None) -> None:
     ...
 
-
 class PythonFormatter(logging.Formatter):
 
   def format(self, record: logging.LogRecord) -> str:
     ...
-
 
 class ABSLLogger(logging.Logger):
 
@@ -279,20 +246,16 @@ class ABSLLogger(logging.Logger):
   ) -> None:
     ...
 
-
 # NOTE: Returns None before _initialize called but shouldn't occur after import.
 def get_absl_logger() -> ABSLLogger:
   ...
-
 
 # NOTE: Returns None before _initialize called but shouldn't occur after import.
 def get_absl_handler() -> ABSLHandler:
   ...
 
-
 def use_python_logging(quiet: bool = ...) -> None:
   ...
-
 
 def use_absl_handler() -> None:
   ...

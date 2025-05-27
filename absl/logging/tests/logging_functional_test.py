@@ -388,8 +388,12 @@ class FunctionalTest(parameterized.TestCase):
     print('env: %s' % env, file=sys.stderr)
     print('cmd: %s' % cmd, file=sys.stderr)
     process = subprocess.Popen(
-        cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=env,
-        universal_newlines=True)
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        env=env,
+        text=True,
+    )
     output, _ = process.communicate()
     status = process.returncode
 
