@@ -1,3 +1,10 @@
+[![Package version](https://img.shields.io/pypi/v/absl-py)](https://pypi.org/project/absl-py)
+[![Supported Python versions](https://img.shields.io/pypi/pyversions/absl-py.svg?style=flat-square)](https://pypi.org/project/absl-py)
+[![License](https://img.shields.io/github/license/abseil/abseil-py)](https://github.com/abseil/abseil-py/blob/main/LICENSE)
+[![Build Status](https://github.com/abseil/abseil-py/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/abseil/abseil-py/actions)
+[![Overall downloads](https://pepy.tech/badge/absl-py)](https://pepy.tech/project/absl-py)
+[![Last month downloads](https://pepy.tech/badge/absl-py/month)](https://pepy.tech/project/absl-py)
+
 # Abseil Python Common Libraries
 
 This repository is a collection of Python library code for building Python

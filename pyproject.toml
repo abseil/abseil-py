@@ -28,7 +28,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/abseil/abseil-py"
+Changelog = "https://github.com/abseil/abseil-py/blob/main/CHANGELOG.md"
+Documentation = "https://abseil.io/docs/python/"
+Issues = "https://github.com/abseil/abseil-py/issues"
+Source = "https://github.com/abseil/abseil-py"
 
 [tool.hatch.version]
 path = "absl/__init__.py"
