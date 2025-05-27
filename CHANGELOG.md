@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+### Changed
+
+### Fixed
+
+## 2.3.0 (2025-05-26)
+
+### Added
+
 *  (testing) Add extension point for letting `TestLoader` specify a custom
    sharding scheme.
 
@@ -15,8 +23,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 *  Update package build and release process. Switched to using `pyproject.toml`,
    `hatch`, and GitHub Actions.
-
-### Fixed
 
 ## 2.2.2 (2025-04-03)
 
