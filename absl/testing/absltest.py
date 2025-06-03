@@ -2746,7 +2746,7 @@ def _run_and_get_tests_result(
   else:
     xml_output_file = get_default_xml_output_filename()
     if xml_output_file:
-      FLAGS.xml_output_file = xml_output_file
+      FLAGS.xml_output_file = xml_output_file  # type: ignore[assignment]
 
   xml_buffer = None
   if xml_output_file:

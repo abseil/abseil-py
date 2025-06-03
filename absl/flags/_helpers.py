@@ -87,13 +87,13 @@ class _ModuleObjectAndName(NamedTuple):
   - module: object, module object.
   - module_name: str, module name.
   """
-  module: Optional[types.ModuleType]
+  module: types.ModuleType
   module_name: str
 
 
 def get_module_object_and_name(
-    globals_dict: Dict[str, Any]
-) -> _ModuleObjectAndName:
+    globals_dict: Dict[str, Any],
+) -> Optional[_ModuleObjectAndName]:
   """Returns the module that defines a global environment, and its name.
 
   Args:
@@ -102,10 +102,13 @@ def get_module_object_and_name(
 
   Returns:
     _ModuleObjectAndName - pair of module object & module name.
-    Returns (None, None) if the module could not be identified.
+    Returns None if the module could not be identified.
   """
-  name = globals_dict.get('__name__', None)
-  module = sys.modules.get(name, None)
+  try:
+    name = globals_dict['__name__']
+    module = sys.modules[name]
+  except KeyError:
+    return None
   # Pick a more informative name for the main module.
   return _ModuleObjectAndName(module,
                               (sys.argv[0] if name == '__main__' else name))
@@ -127,9 +130,9 @@ def get_calling_module_object_and_name() -> _ModuleObjectAndName:
     # sys._getframe is the right thing to use here, as it's the best
     # way to walk up the call stack.
     globals_for_frame = sys._getframe(depth).f_globals  # pylint: disable=protected-access
-    module, module_name = get_module_object_and_name(globals_for_frame)
-    if id(module) not in disclaim_module_ids and module_name is not None:
-      return _ModuleObjectAndName(module, module_name)
+    module = get_module_object_and_name(globals_for_frame)
+    if module is not None and id(module.module) not in disclaim_module_ids:
+      return module
   raise AssertionError('No module was found')
 
 
