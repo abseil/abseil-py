@@ -721,23 +721,21 @@ def find_log_dir_and_names(program_name=None, log_dir=None):
   """Computes the directory and filename prefix for log file.
 
   Args:
-    program_name: str|None, the filename part of the path to the program that
-        is running without its extension.  e.g: if your program is called
-        ``usr/bin/foobar.py`` this method should probably be called with
-        ``program_name='foobar`` However, this is just a convention, you can
-        pass in any string you want, and it will be used as part of the
-        log filename. If you don't pass in anything, the default behavior
-        is as described in the example.  In python standard logging mode,
-        the program_name will be prepended with ``py_`` if it is the
-        ``program_name`` argument is omitted.
+    program_name: str|None, the filename part of the path to the program that is
+      running without its extension.  e.g: if your program is called
+      ``usr/bin/foobar.py`` this method should probably be called with
+      ``program_name='foobar`` However, this is just a convention, you can pass
+      in any string you want, and it will be used as part of the log filename.
+      If you don't pass in anything, the default behavior is as described in the
+      example.  In python standard logging mode, the program_name will be
+      prepended with ``py_`` if it is the ``program_name`` argument is omitted.
     log_dir: str|None, the desired log directory.
 
   Returns:
     (log_dir, file_prefix, symlink_prefix)
 
   Raises:
-    FileNotFoundError: raised in Python 3 when it cannot find a log directory.
-    OSError: raised in Python 2 when it cannot find a log directory.
+    FileNotFoundError: raised when it cannot find a log directory.
   """
   if not program_name:
     # Strip the extension (foobar.par becomes foobar, and
@@ -771,13 +769,12 @@ def find_log_dir(log_dir=None):
 
   Args:
     log_dir: str|None, if specified, the logfile(s) will be created in that
-        directory.  Otherwise if the --log_dir command-line flag is provided,
-        the logfile will be created in that directory.  Otherwise the logfile
-        will be created in a standard location.
+      directory.  Otherwise if the --log_dir command-line flag is provided, the
+      logfile will be created in that directory.  Otherwise the logfile will be
+      created in a standard location.
 
   Raises:
-    FileNotFoundError: raised in Python 3 when it cannot find a log directory.
-    OSError: raised in Python 2 when it cannot find a log directory.
+    FileNotFoundError: raised when it cannot find a log directory.
   """
   # Get a list of possible log dirs (will try to use them in order).
   # NOTE: Google's internal implementation has a special handling for Google

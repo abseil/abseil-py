@@ -83,7 +83,7 @@ class TestShardingTest(parameterized.TestCase):
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        universal_newlines=True,
+        text=True,
     )
     stdout = proc.communicate()[0]
 

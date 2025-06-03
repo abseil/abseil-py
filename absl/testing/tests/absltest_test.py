@@ -80,8 +80,12 @@ class BaseTestCase(parameterized.TestCase):
       command.append(f'--test_id={test_id}')
     command.extend(args)
     process = subprocess.Popen(
-        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
-        universal_newlines=True)
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=env,
+        text=True,
+    )
     stdout, stderr = process.communicate()
     if expect_success:
       self.assertEqual(

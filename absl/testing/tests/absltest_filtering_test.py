@@ -65,12 +65,15 @@ class TestFilteringTest(absltest.TestCase):
         additional_args.extend(['-k=' + f for f in test_filter.split(' ')])
 
     proc = subprocess.Popen(
-        args=([_bazelize_command.get_executable_path(self._test_name)] +
-              additional_args),
+        args=(
+            [_bazelize_command.get_executable_path(self._test_name)]
+            + additional_args
+        ),
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        universal_newlines=True)
+        text=True,
+    )
     stdout = proc.communicate()[0]
 
     logging.info('output: %s', stdout)

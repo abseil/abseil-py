@@ -278,9 +278,8 @@ class _TempDir:
 
   Creation of this class is internal. Using its public methods is OK.
 
-  This class implements the `os.PathLike` interface (specifically,
-  `os.PathLike[str]`). This means, in Python 3, it can be directly passed
-  to e.g. `os.path.join()`.
+  This class implements the `os.PathLike[str]` interface. This means it can
+  be directly passed to e.g. `os.path.join()`.
   """
 
   def __init__(self, path: str) -> None:
@@ -361,9 +360,8 @@ class _TempFile:
 
   Creation of this class is internal. Using its public methods is OK.
 
-  This class implements the `os.PathLike` interface (specifically,
-  `os.PathLike[str]`). This means, in Python 3, it can be directly passed
-  to e.g. `os.path.join()`.
+  This class implements the `os.PathLike[str]` interface. This means it can
+  be directly passed to e.g. `os.path.join()`.
   """
 
   def __init__(self, path: str) -> None:
@@ -443,9 +441,7 @@ class _TempFile:
     """Write text to the file.
 
     Args:
-      text: Text to write. In Python 2, it can be bytes, which will be
-        decoded using the `encoding` arg (this is as an aid for code that
-        is 2 and 3 compatible).
+      text: Text to write.
       mode: The mode to open the file for writing.
       encoding: The encoding to use when writing the text to the file.
       errors: The error handling strategy to use when converting text to bytes.
