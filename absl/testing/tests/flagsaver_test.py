@@ -528,46 +528,7 @@ class SetUpTearDownTest(absltest.TestCase):
     ),
 )
 class BadUsageTest(parameterized.TestCase):
-  """Tests that improper usage (such as decorating a class) raise errors."""
-
-  def test_flag_saver_on_class(self, flagsaver_method):
-    with self.assertRaises(TypeError):
-
-      # WRONG. Don't do this.
-      # Consider the correct usage example in FlagSaverSetUpTearDownUsageTest.
-      @flagsaver_method
-      class FooTest(absltest.TestCase):
-
-        def test_tautology(self):
-          pass
-
-      del FooTest
-
-  def test_flag_saver_call_on_class(self, flagsaver_method):
-    with self.assertRaises(TypeError):
-
-      # WRONG. Don't do this.
-      # Consider the correct usage example in FlagSaverSetUpTearDownUsageTest.
-      @flagsaver_method()
-      class FooTest(absltest.TestCase):
-
-        def test_tautology(self):
-          pass
-
-      del FooTest
-
-  def test_flag_saver_with_overrides_on_class(self, flagsaver_method):
-    with self.assertRaises(TypeError):
-
-      # WRONG. Don't do this.
-      # Consider the correct usage example in FlagSaverSetUpTearDownUsageTest.
-      @flagsaver_method(foo='bar')
-      class FooTest(absltest.TestCase):
-
-        def test_tautology(self):
-          pass
-
-      del FooTest
+  """Tests that improper usage raise errors."""
 
   def test_multiple_positional_parameters(self, flagsaver_method):
     with self.assertRaises(ValueError):
@@ -620,6 +581,187 @@ class BadUsageTest(parameterized.TestCase):
         # We don't expect to get here. A type error should happen when
         # attempting to enter the context manager.
         pass
+
+
+@parameterized.named_parameters(
+    dict(
+        testcase_name='flagsaver',
+        flagsaver_method=flagsaver.flagsaver,
+        expected_flag_value='new value',
+        expected_int_value=555,
+    ),
+    dict(
+        testcase_name='as_parsed',
+        flagsaver_method=flagsaver.as_parsed,
+        expected_flag_value='new parsed value',
+        expected_int_value='555',  # as_parsed expects string input
+    ),
+)
+class ClassDecoratorTest(parameterized.TestCase):
+
+  def test_decorating_class_applies_to_test_methods(
+      self, flagsaver_method, expected_flag_value, expected_int_value
+  ):
+    FLAGS.flagsaver_test_flag0 = 'original_value'
+    FLAGS.flagsaver_test_int_flag = 1  # Reset to default
+
+    @flagsaver_method(
+        flagsaver_test_flag0=expected_flag_value,
+        flagsaver_test_int_flag=expected_int_value,
+    )
+    class DecoratedTestClass(absltest.TestCase):
+
+      def test_method_one(self):
+        self.assertEqual(expected_flag_value, FLAGS.flagsaver_test_flag0)
+        # For as_parsed, the value will be parsed to int
+        self.assertEqual(
+            int(expected_int_value)
+            if isinstance(expected_int_value, str)
+            else expected_int_value,
+            INT_FLAG.value,
+        )
+        # Modify a flag to check restoration
+        FLAGS.flagsaver_test_flag1 = 'method_one_change'
+
+      def test_method_two(self):
+        self.assertEqual(expected_flag_value, FLAGS.flagsaver_test_flag0)
+        self.assertEqual(
+            int(expected_int_value)
+            if isinstance(expected_int_value, str)
+            else expected_int_value,
+            INT_FLAG.value,
+        )
+        FLAGS.flagsaver_test_flag1 = 'method_two_change'
+
+      def non_test_method(self):
+        # This method should not be decorated, so flags should be original
+        # if called directly. However, it's hard to test this isolation
+        # perfectly without complex runner setups.
+        # We primarily care that test_ methods are decorated.
+        self.assertEqual(
+            'original_value_for_nontest', FLAGS.flagsaver_test_flag0
+        )
+
+      def helper_method_for_non_test(self):
+        FLAGS.flagsaver_test_flag0 = 'original_value_for_nontest'
+        self.non_test_method()
+
+    test_instance = DecoratedTestClass()
+    test_instance.test_method_one()
+    # Check restoration after test_method_one
+    self.assertEqual('original_value', FLAGS.flagsaver_test_flag0)
+    self.assertEqual('unchanged1', FLAGS.flagsaver_test_flag1)  # Restored
+    self.assertEqual(1, FLAGS.flagsaver_test_int_flag)
+
+    test_instance.test_method_two()
+    # Check restoration after test_method_two
+    self.assertEqual('original_value', FLAGS.flagsaver_test_flag0)
+    self.assertEqual('unchanged1', FLAGS.flagsaver_test_flag1)  # Restored
+    self.assertEqual(1, FLAGS.flagsaver_test_int_flag)
+
+    # Reset for next parameterized run
+    FLAGS.flagsaver_test_flag0 = 'unchanged0'
+    FLAGS.flagsaver_test_flag1 = 'unchanged1'
+    FLAGS.flagsaver_test_int_flag = 1
+
+  def test_decorating_class_without_args_applies_to_test_methods(
+      self, flagsaver_method, expected_flag_value, expected_int_value
+  ):
+    # expected_flag_value and expected_int_value are not used here
+    # as we are testing the no-arg decorator case.
+    del expected_flag_value, expected_int_value
+
+    FLAGS.flagsaver_test_flag0 = 'original_value'
+    FLAGS.flagsaver_test_int_flag = 1
+
+    @flagsaver_method
+    class DecoratedTestClassNoArgs(absltest.TestCase):
+
+      def test_method_one(self):
+        self.assertEqual('original_value', FLAGS.flagsaver_test_flag0)
+        self.assertEqual(1, FLAGS.flagsaver_test_int_flag)
+        FLAGS.flagsaver_test_flag0 = 'method_one_override'
+        FLAGS.flagsaver_test_int_flag = 111
+
+      def test_method_two(self):
+        self.assertEqual('original_value', FLAGS.flagsaver_test_flag0)
+        self.assertEqual(1, FLAGS.flagsaver_test_int_flag)
+        FLAGS.flagsaver_test_flag0 = 'method_two_override'
+        FLAGS.flagsaver_test_int_flag = 222
+
+    test_instance = DecoratedTestClassNoArgs()
+    test_instance.test_method_one()
+    self.assertEqual('original_value', FLAGS.flagsaver_test_flag0)
+    self.assertEqual(1, FLAGS.flagsaver_test_int_flag)
+
+    test_instance.test_method_two()
+    self.assertEqual('original_value', FLAGS.flagsaver_test_flag0)
+    self.assertEqual(1, FLAGS.flagsaver_test_int_flag)
+
+    # Reset for next parameterized run or other tests
+    FLAGS.flagsaver_test_flag0 = 'unchanged0'
+    FLAGS.flagsaver_test_int_flag = 1
+
+  def test_non_test_method_in_decorated_class_is_not_wrapped(
+      self, flagsaver_method, expected_flag_value, expected_int_value
+  ):
+    # These parameters are from the class-level parameterization,
+    # not strictly needed for this specific test's core logic but harmless.
+    del expected_flag_value, expected_int_value
+
+    FLAGS.flagsaver_test_flag1 = (  # Unique global state
+        'initial_global_state_for_non_test_T1'
+    )
+
+    @flagsaver_method  # e.g. @flagsaver.flagsaver() or @flagsaver.as_parsed()
+    class InnerDecoratedClassT1(absltest.TestCase):
+      # This method is decorated by the class flagsaver.
+      def test_method_a_t1(self):
+        # On entry, flagsaver_test_flag1 should be what it was just before this
+        # method was called, as the flagsaver context saves that state.
+        # In this test, it's 'before_test_method_A_call_T1'.
+        self.assertEqual(
+            'before_test_method_A_call_T1', FLAGS.flagsaver_test_flag1
+        )
+        FLAGS.flagsaver_test_flag1 = 'value_from_test_method_A_T1'
+        # On exit, flagsaver should restore flagsaver_test_flag1 to
+        # 'before_test_method_A_call_T1'.
+
+      def non_test_method_modifier_t1(self):
+        # This method is NOT decorated by the class flagsaver.
+        FLAGS.flagsaver_test_flag1 = 'value_from_non_test_method_modifier_T1'
+
+    instance_t1 = InnerDecoratedClassT1()
+
+    # 1. Test non-decorated method behavior
+    FLAGS.flagsaver_test_flag1 = 'before_non_test_call_T1'
+    instance_t1.non_test_method_modifier_t1()
+    # Change should persist as non_test_method_modifier_T1 is not wrapped by
+    # class decorator
+    self.assertEqual(
+        'value_from_non_test_method_modifier_T1',
+        FLAGS.flagsaver_test_flag1,
+        'Change by non-test method did not persist.',
+    )
+
+    # 2. Test decorated method behavior and its restoration
+    FLAGS.flagsaver_test_flag1 = (  # Set a known state
+        'before_test_method_A_call_T1'
+    )
+    instance_t1.test_method_a_t1()  # Run the decorated method
+
+    # After test_method_A_T1 returns, flagsaver_test_flag1 should be restored
+    # to the value it had *before* test_method_A_T1 was called.
+    self.assertEqual(
+        'before_test_method_A_call_T1',
+        FLAGS.flagsaver_test_flag1,
+        'Flag was not restored after decorated test_method_A_T1',
+    )
+
+    # Cleanup global state for other tests
+    FLAGS.flagsaver_test_flag1 = 'unchanged1'
+    FLAGS.flagsaver_test_flag0 = 'unchanged0'  # From original test setup
+    FLAGS.flagsaver_test_int_flag = 1  # From original test setup
 
 
 if __name__ == '__main__':
