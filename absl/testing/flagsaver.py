@@ -38,6 +38,12 @@ Here are examples of each method.  They all call ``do_stuff()`` while
       FLAGS.someflag = 'foo'
       do_stuff()
 
+    # Decorating a TestCase decorates all test methods.
+    @flagsaver.flagsaver(someflag='foo')
+    class SomeTestClass(absltest.TestCase)
+      def test_something():
+        do_stuff()
+
     # Use a context manager which can optionally override flags via arguments.
     with flagsaver.flagsaver(someflag='foo'):
       do_stuff()
@@ -93,6 +99,7 @@ import collections
 import functools
 import inspect
 from typing import Any, Callable, Dict, Mapping, Sequence, Tuple, Type, TypeVar, Union, overload
+import unittest.mock
 
 from absl import flags
 
@@ -184,43 +191,80 @@ def _construct_overrider(
 
 
 def _construct_overrider(flag_overrider_cls, *args, **kwargs):
-  """Handles the args/kwargs returning an instance of flag_overrider_cls.
+  """Handles the args/kwargs returning an instance of flag_overrider_cls or a decorated class/function.
 
   If flag_overrider_cls is _FlagOverrider then values should be native python
   types matching the python types. Otherwise if flag_overrider_cls is
   _ParsingFlagOverrider the values should be strings or sequences of strings.
 
   Args:
-    flag_overrider_cls: The class that will do the overriding.
-    *args: Tuples of FlagHolder and the new flag value.
-    **kwargs: Keword args mapping flag name to new flag value.
+    flag_overrider_cls: The class that will do the overriding (_FlagOverrider or
+      _ParsingFlagOverrider).
+    *args: Positional arguments. If decorating without arguments (e.g.,
+      @flagsaver), args will be (decorated_function_or_class,). If providing
+      FlagHolder tuples, args will be ((flag_holder1, value1), ...).
+    **kwargs: Keyword arguments. If decorating with keyword arguments (e.g.
+      @flagsaver(foo='bar')), these are the overrides.
 
   Returns:
-    A _FlagOverrider to be used as a decorator or context manager.
+    - If called as @flagsaver(foo='bar') or @flagsaver(): returns an instance of
+      flag_overrider_cls. This instance's __call__ method will then be invoked
+      with the function/class to be decorated, or if the instance is used as a
+      context manager, its __enter__ and __exit__ methods will be invoked.
+    - If called as @flagsaver (no parens) on a function: returns the wrapped
+      function.
+    - If called as @flagsaver (no parens) on a class: returns the modified class
+      with test methods wrapped.
   """
-  if not args:
-    return flag_overrider_cls(**kwargs)
-  # args can be [func] if used as `@flagsaver` instead of `@flagsaver(...)`
-  if len(args) == 1 and callable(args[0]):
-    if kwargs:
-      raise ValueError(
-          "It's invalid to specify both positional and keyword parameters.")
-    func = args[0]
-    if inspect.isclass(func):
-      raise TypeError('@flagsaver.flagsaver cannot be applied to a class.')
-    return _wrap(flag_overrider_cls, func, {})
-  # args can be a list of (FlagHolder, value) pairs.
-  # In which case they augment any specified kwargs.
-  for arg in args:
-    if not isinstance(arg, tuple) or len(arg) != 2:
-      raise ValueError('Expected (FlagHolder, value) pair, found %r' % (arg,))
-    holder, value = arg
-    if not isinstance(holder, flags.FlagHolder):
-      raise ValueError('Expected (FlagHolder, value) pair, found %r' % (arg,))
-    if holder.name in kwargs:
-      raise ValueError('Cannot set --%s multiple times' % holder.name)
-    kwargs[holder.name] = value
-  return flag_overrider_cls(**kwargs)
+  # Case 1: Decorator called with arguments, e.g., @flagsaver(foo='bar') or
+  # @flagsaver(). Here, args will be empty if only kwargs are present, or else
+  # args will contain FlagHolder tuples. The first argument will NOT be the
+  # function/class to decorate yet. We return an instance of the overrider,
+  # whose __call__ will handle the actual decoration.
+  if not (len(args) == 1 and callable(args[0]) and not kwargs):
+    # This path handles:
+    # - @flagsaver() -> args=(), kwargs={}. Returns flag_overrider_cls()
+    # - @flagsaver(foo=1) -> args=(), kwargs={'foo':1}.
+    #   Returns flag_overrider_cls(foo=1)
+    # - @flagsaver((FH, val)) -> args=((FH,val),), kwargs={}.
+    #   The loop below processes FlagHolder tuples from args into kwargs.
+    #   Then returns flag_overrider_cls(**processed_kwargs).
+
+    # Convert any FlagHolder tuples from *args into kwargs
+    # This is for the @flagsaver((FH1, val1), (FH2, val2), kwarg1=val3) style
+    processed_kwargs = dict(kwargs)
+    for arg_tuple in args:
+      if not isinstance(arg_tuple, tuple) or len(arg_tuple) != 2:
+        # This error might also be hit if @flagsaver(func, some_other_arg) was
+        # attempted, which is invalid. The primary check for
+        # (len(args)==1 and callable(args[0])) handles the simple @flagsaver
+        # func case.
+        raise ValueError(
+            'Positional arguments must be (FlagHolder, value) pairs, found %r'
+            % (arg_tuple,)
+        )
+      holder, value = arg_tuple
+      if not isinstance(holder, flags.FlagHolder):
+        raise ValueError(
+            'Expected (FlagHolder, value) pair, found %r' % (arg_tuple,)
+        )
+      if holder.name in processed_kwargs:
+        raise ValueError('Cannot set --%s multiple times' % holder.name)
+      processed_kwargs[holder.name] = value
+    return flag_overrider_cls(**processed_kwargs)
+
+  # Case 2: Decorator used without arguments, e.g., @flagsaver (no parens)
+  # Here, args is (decorated_function_or_class,) and kwargs is {}.
+  func_or_class = args[0]
+
+  if inspect.isclass(func_or_class):
+    # @flagsaver applied to a class (no arguments to the decorator itself)
+    # Decorate its test methods. Overrides are implicitly {}.
+    return _wrap_class(flag_overrider_cls, func_or_class, {})
+  else:
+    # @flagsaver applied to a function (no arguments to the decorator itself)
+    # This is standard function wrapping. Overrides are implicitly {}.
+    return _wrap_function(flag_overrider_cls, func_or_class, {})
 
 
 def save_flag_values(
@@ -263,18 +307,24 @@ def restore_flag_values(
 
 
 @overload
-def _wrap(flag_overrider_cls: Type['_FlagOverrider'], func: _CallableT,
-          overrides: Mapping[str, Any]) -> _CallableT:
+def _wrap_function(
+    flag_overrider_cls: Type['_FlagOverrider'],
+    func: _CallableT,
+    overrides: Mapping[str, Any],
+) -> _CallableT:
   ...
 
 
 @overload
-def _wrap(flag_overrider_cls: Type['_ParsingFlagOverrider'], func: _CallableT,
-          overrides: Mapping[str, Union[str, Sequence[str]]]) -> _CallableT:
+def _wrap_function(
+    flag_overrider_cls: Type['_ParsingFlagOverrider'],
+    func: _CallableT,
+    overrides: Mapping[str, Union[str, Sequence[str]]],
+) -> _CallableT:
   ...
 
 
-def _wrap(flag_overrider_cls, func, overrides):
+def _wrap_function(flag_overrider_cls, func, overrides):
   """Creates a wrapper function that saves/restores flag values.
 
   Args:
@@ -297,6 +347,27 @@ def _wrap(flag_overrider_cls, func, overrides):
   return _flagsaver_wrapper
 
 
+def _wrap_class(flag_overrider_cls, cls, overrides):
+  """Wraps each of the class's test methods and returns the modified class.
+
+  Args:
+    flag_overrider_cls: The class that will be used as a context manager.
+    cls: The class whose test methods to wrap.
+    overrides: Flag names mapped to their values, as in _wrap_function.
+
+  Returns:
+    cls itself, with its test methods replaced by wrapped versions.
+  """
+  # Apply the decorator to all test methods of the class.
+  # unittest.mock.patch.TEST_PREFIX is 'test' by default.
+  test_prefix = getattr(unittest.mock.patch, 'TEST_PREFIX', 'test')
+  for name, member in inspect.getmembers(cls):
+    if name.startswith(test_prefix) and callable(member):
+      decorated_method = _wrap_function(flag_overrider_cls, member, overrides)
+      setattr(cls, name, decorated_method)
+  return cls
+
+
 class _FlagOverrider:
   """Overrides flags for the duration of the decorated function call.
 
@@ -308,10 +379,11 @@ class _FlagOverrider:
     self._overrides = overrides
     self._saved_flag_values = None
 
-  def __call__(self, func: _CallableT) -> _CallableT:
-    if inspect.isclass(func):
-      raise TypeError('flagsaver cannot be applied to a class.')
-    return _wrap(self.__class__, func, self._overrides)
+  def __call__(self, func_or_class: _CallableT) -> _CallableT:
+    if inspect.isclass(func_or_class):
+      return _wrap_class(self.__class__, func_or_class, self._overrides)
+    else:
+      return _wrap_function(self.__class__, func_or_class, self._overrides)
 
   def __enter__(self):
     self._saved_flag_values = save_flag_values(FLAGS)
