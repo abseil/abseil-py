@@ -12,6 +12,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## 2.3.1 (2025-07-03)
+
+### Changed
+
+*  (cleanup) Removed leftover code supporting Python < 3.8, as well as other
+  references to older Python versions.
+
+### Fixed
+
+*  (typechecking) Fixed typechecking errors that appeared under mypy release 1.16
+
 ## 2.3.0 (2025-05-26)
 
 ### Added
