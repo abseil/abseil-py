@@ -27,6 +27,7 @@ and call ``app.run(main)``. For example::
 
 import collections
 import errno
+import importlib
 import os
 import pdb
 import sys
@@ -44,10 +45,21 @@ except ImportError:
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_boolean('run_with_pdb', False, 'Set to true for PDB debug mode')
-flags.DEFINE_boolean('pdb_post_mortem', False,
-                     'Set to true to handle uncaught exceptions with PDB '
-                     'post mortem.')
+flags.DEFINE_boolean(
+    'run_with_pdb',
+    False,
+    'Set to true for debug mode. PDB is used by default; $PYTHONBREAKPOINT '
+    '(https://docs.python.org/3/using/cmdline.html#envvar-PYTHONBREAKPOINT) '
+    'can be used to specify a custom debugger.',
+)
+flags.DEFINE_boolean(
+    'pdb_post_mortem',
+    False,
+    'Set to true to handle uncaught exceptions with the post mortem debugger.'
+    'PDB is used by default; $PYTHONBREAKPOINT '
+    '(https://docs.python.org/3/using/cmdline.html#envvar-PYTHONBREAKPOINT) '
+    'can be used to specify a custom one.',
+)
 flags.DEFINE_alias('pdb', 'pdb_post_mortem')
 flags.DEFINE_boolean('run_with_profiling', False,
                      'Set to true for profiling the script. '
@@ -63,6 +75,45 @@ flags.DEFINE_boolean('use_cprofile_for_profiling', True,
 flags.DEFINE_boolean('only_check_args', False,
                      'Set to true to validate args and exit.',
                      allow_hide_cpp=True)
+
+
+def _get_debugger_module_with_function(function_name):
+  """Provides the `$PYTHONBREAKPOINT` module if it contains `function_name`.
+
+  Falls back to `pdb` otherwise.
+
+  Args:
+    function_name: The name of the function required.
+
+  Returns:
+    A debugger module providing `function_name`.
+  """
+  python_breakpoint = os.getenv('PYTHONBREAKPOINT')
+  # The special value '0' for `$PYTHONBREAKPOINT` means "do not use a debugger".
+  # We don't respect it (if the user explicitly asks to debug) but shouldn't try
+  # to import a module with this name.
+  if python_breakpoint and python_breakpoint != '0':
+    debugger_module_import = python_breakpoint.rsplit('.', 1)[0]
+    try:
+      debugger_module = importlib.import_module(debugger_module_import)
+    except ImportError:
+      logging.warning(
+          (
+              'Could not import $PYTHONBREAKPOINT debugger module %r, '
+              'falling back to PDB'
+          ),
+          debugger_module_import,
+      )
+    else:
+      if hasattr(debugger_module, function_name):
+        return debugger_module
+      logging.warning(
+          '$PYTHONBREAKPOINT debugger %r has no function %r, '
+          'falling back to PDB',
+          debugger_module_import,
+          function_name,
+      )
+  return pdb
 
 
 # If main() exits via an abnormal exception, call into these
@@ -239,9 +290,9 @@ _register_and_parse_flags_with_usage.done = False
 
 
 def _run_main(main, argv):
-  """Calls main, optionally with pdb or profiler."""
+  """Calls main, optionally with a debugger or profiler."""
   if FLAGS.run_with_pdb:
-    sys.exit(pdb.runcall(main, argv))
+    sys.exit(_get_debugger_module_with_function('runcall').runcall(main, argv))
   elif FLAGS.run_with_profiling or FLAGS.profile_file:
     # Avoid import overhead since most apps (including performance-sensitive
     # ones) won't be run with profiling.
@@ -331,7 +382,7 @@ def run(
         print()
         print(' *** Entering post-mortem debugging ***')
         print()
-        pdb.post_mortem()
+        _get_debugger_module_with_function('post_mortem').post_mortem()
       raise
   except Exception as e:
     _call_exception_handlers(e)

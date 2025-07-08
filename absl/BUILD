@@ -55,6 +55,7 @@ py_test(
         "//absl/testing:_bazelize_command",
         "//absl/testing:absltest",
         "//absl/testing:flagsaver",
+        "//absl/testing:parameterized",
     ],
 )
 

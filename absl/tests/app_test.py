@@ -17,8 +17,10 @@
 import contextlib
 import copy
 import enum
+import importlib
 import io
 import os
+import pdb
 import re
 import subprocess
 import sys
@@ -30,6 +32,7 @@ from absl import flags
 from absl.testing import _bazelize_command
 from absl.testing import absltest
 from absl.testing import flagsaver
+from absl.testing import parameterized
 from absl.tests import app_test_helper
 
 
@@ -116,6 +119,89 @@ class UnitTests(absltest.TestCase):
   def test_register_and_parse_flags_with_usage_exits_on_second_run(self):
     with self.assertRaises(SystemError):
       app._register_and_parse_flags_with_usage()
+
+
+class _MyDebuggerModule:
+  """Imitates some aspects of the `pdb` interface."""
+
+  def post_mortem(self):
+    pass
+
+  def runcall(self, *args, **kwargs):
+    del args, kwargs
+
+
+class _IncompleteDebuggerModule:
+  """Provides `post_mortem` but not `runcall`."""
+
+  def post_mortem(self):
+    pass
+
+
+def _pythonbreakpoint_variable(value):
+  """Returns a context manager setting the $PYTHONBREAKPOINT env. variable."""
+  new_environment = {} if value is None else {'PYTHONBREAKPOINT': value}
+  return mock.patch.object(os, 'environ', new_environment)
+
+
+class PythonBreakpointTest(parameterized.TestCase):
+
+  def setUp(self):
+    super().setUp()
+
+    importlib_import_module = importlib.import_module
+
+    def my_import_module(module, *args, **kwargs):
+      if module == 'my.debugger':
+        return _MyDebuggerModule()
+      if module == 'incomplete.debugger':
+        return _IncompleteDebuggerModule()
+      if module == '0':
+        # `PYTHONBREAKPOINT=0` is a special value.
+        raise ValueError('Should not try to import module `0`')
+      return importlib_import_module(module, *args, **kwargs)
+
+    self._mock_import_module = self.enter_context(
+        mock.patch.object(importlib, 'import_module', my_import_module)
+    )
+
+  @parameterized.named_parameters(
+      ('no_variable', None),
+      ('empty_variable', ''),
+      ('explicit_pdb', 'pdb.set_trace'),
+      ('unimportable_module', 'unimportable.module.set_trace'),
+      ('opt_out', '0'),
+  )
+  def test_python_breakpoint_pdb(self, value):
+    with _pythonbreakpoint_variable(value):
+      self.assertIs(app._get_debugger_module_with_function('runcall'), pdb)
+      self.assertIs(app._get_debugger_module_with_function('post_mortem'), pdb)
+
+  def test_my_debugger(self):
+    with _pythonbreakpoint_variable('my.debugger.set_trace'):
+      debugger_with_runcall = app._get_debugger_module_with_function('runcall')
+      self.assertIsInstance(debugger_with_runcall, _MyDebuggerModule)
+      self.assertTrue(hasattr(debugger_with_runcall, 'runcall'))
+
+      debugger_with_post_mortem = app._get_debugger_module_with_function(
+          'post_mortem'
+      )
+      self.assertIsInstance(debugger_with_post_mortem, _MyDebuggerModule)
+      self.assertTrue(hasattr(debugger_with_post_mortem, 'post_mortem'))
+
+  def test_incomplete_debugger(self):
+    with _pythonbreakpoint_variable('incomplete.debugger.set_trace'):
+      debugger_with_runcall = app._get_debugger_module_with_function('runcall')
+      self.assertIs(debugger_with_runcall, pdb)
+      self.assertTrue(hasattr(debugger_with_runcall, 'runcall'))
+
+      debugger_with_post_mortem = app._get_debugger_module_with_function(
+          'post_mortem'
+      )
+      self.assertIsInstance(
+          debugger_with_post_mortem, _IncompleteDebuggerModule
+      )
+      self.assertTrue(hasattr(debugger_with_post_mortem, 'post_mortem'))
 
 
 class FunctionalTests(absltest.TestCase):
