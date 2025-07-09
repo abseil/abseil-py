@@ -55,7 +55,7 @@ flags.DEFINE_boolean(
 flags.DEFINE_boolean(
     'pdb_post_mortem',
     False,
-    'Set to true to handle uncaught exceptions with the post mortem debugger.'
+    'Set to true to handle uncaught exceptions with the post mortem debugger. '
     'PDB is used by default; $PYTHONBREAKPOINT '
     '(https://docs.python.org/3/using/cmdline.html#envvar-PYTHONBREAKPOINT) '
     'can be used to specify a custom one.',
