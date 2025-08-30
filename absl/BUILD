@@ -76,3 +76,5 @@ py_test(
         "//absl/testing:absltest",
     ],
 )
+
+exports_files(["logging"])
