@@ -1,0 +1,85 @@
+class NafourtyApp:
+    def __init__(self):
+        self.users = {}
+        self.data_plans = {
+            "daily": 500,
+            "weekly": 2000,
+            "monthly": 5000
+        }
+        self.airtime_rates = {
+            "MTN": 1.00,
+            "Airtel": 1.05,
+            "Glo": 1.10,
+            "9mobile": 1.15
+        }
+
+    def register_user(self, username, balance):
+        self.users[username] = {"balance": balance}
+
+    def purchase_data(self, username, plan):
+        if username in self.users:
+            user_balance = self.users[username]["balance"]
+            if user_balance >= self.data_plans[plan]:
+                self.users[username]["balance"] -= self.data_plans[plan]
+                print(f"Data purchased successfully. Remaining balance: {self.users[username]['balance']}")
+            else:
+                print("Insufficient balance.")
+        else:
+            print("User not found.")
+
+    def purchase_airtime(self, username, network, amount):
+        if username in self.users:
+            user_balance = self.users[username]["balance"]
+            airtime_cost = amount * self.airtime_rates[network]
+            if user_balance >= airtime_cost:
+                self.users[username]["balance"] -= airtime_cost
+                print(f"Airtime purchased successfully. Remaining balance: {self.users[username]['balance']}")
+            else:
+                print("Insufficient balance.")
+        else:
+            print("User not found.")
+
+    def fund_account(self, username, amount):
+        if username in self.users:
+            self.users[username]["balance"] += amount
+            print(f"Account funded successfully. New balance: {self.users[username]['balance']}")
+        else:
+            print("User not found.")
+
+app = NafourtyApp()
+
+while True:
+    print("1. Register User")
+    print("2. Purchase Data")
+    print("3. Purchase Airtime")
+    print("4. Fund Account")
+    choice = input("Enter your choice: ")
+
+    if choice == "1":
+        username = input("Enter username: ")
+        balance = float(input("Enter balance: "))
+        app.register_user(username, balance)
+    elif choice == "2":
+        username = input("Enter username: ")
+        print("Available data plans:")
+        print("1. Daily - 500")
+        print("2. Weekly - 2000")
+        print("3. Monthly - 5000")
+        plan_choice = input("Enter plan choice (daily/weekly/monthly): ")
+        app.purchase_data(username, plan_choice)
+    elif choice == "3":
+        username = input("Enter username: ")
+        print("Available networks:")
+        print("1. MTN")
+        print("2. Airtel")
+        print("3. Glo")
+        print("4. 9mobile")
+        network = input("Enter network: ")
+        amount = float(input("Enter airtime amount: "))
+        app.purchase_airtime(username, network, amount)
+    elif choice == "4":
+        username = input("Enter username: ")
+        amount = float(input("Enter amount to fund: "))
+        app.fund_account(username, amount)
+    else:
+        print("Invalid choice.")
