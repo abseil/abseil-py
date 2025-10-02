@@ -2385,8 +2385,12 @@ def _is_suspicious_attribute(
               not args.kwonlyargs)
   return False
 
+_TestCaseT = typing.TypeVar('_TestCaseT', bound=unittest.TestCase)
 
-def skipThisClass(reason: str) -> Callable[[_T], _T]:
+
+def skipThisClass(
+    reason: str,
+) -> Callable[[type[_TestCaseT]], type[_TestCaseT]]:
   """Skip tests in the decorated TestCase, but not any of its subclasses.
 
   This decorator indicates that this class should skip all its tests, but not
