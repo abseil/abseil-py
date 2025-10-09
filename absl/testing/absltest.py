@@ -223,7 +223,7 @@ flags.DEFINE_string('xml_output_file', '', 'File to store XML test results')
 
 
 # We might need to monkey-patch TestResult so that it stops considering an
-# unexpected pass as a as a "successful result".  For details, see
+# unexpected pass as a "successful result".  For details, see
 # http://bugs.python.org/issue20165
 def _monkey_patch_test_result_for_unexpected_passes() -> None:
   """Workaround for <http://bugs.python.org/issue20165>."""
