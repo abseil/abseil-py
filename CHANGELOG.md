@@ -12,6 +12,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## 2.3.2 (2025-10-31)
+
+## Unreleased
+
+### Added
+
+* (testing) Added a `@parameterized.named_product` which combines both
+  `named_parameters` and `product` together.
+
+### Changed
+
+### Fixed
+
 ## 2.3.1 (2025-07-03)
 
 ### Changed
