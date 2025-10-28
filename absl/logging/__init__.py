@@ -1189,7 +1189,7 @@ class ABSLLogger(logging.getLoggerClass()):
     self.log(logging.DEBUG, msg, *args, **kwargs)
 
   def log(self, level, msg, *args, **kwargs):
-    """Logs a message at a cetain level substituting in the supplied arguments.
+    """Logs a message at a certain level substituting in the supplied arguments.
 
     This method behaves differently in python and c++ modes.
 
