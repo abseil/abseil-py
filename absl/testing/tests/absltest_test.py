@@ -2677,9 +2677,13 @@ class SkipClassTest(absltest.TestCase):
   def test_incorrect_decorator_subclass(self):
     with self.assertRaises(TypeError):
 
+      # Disabling type checking because pytype correctly picks up that
+      # @absltest.skipThisClass is being used incorrectly.
+      # pytype: disable=wrong-arg-types
       @absltest.skipThisClass('reason')
       def test_method():  # pylint: disable=unused-variable
         pass
+      # pytype: enable=wrong-arg-types
 
   def test_correct_decorator_class(self):
 
