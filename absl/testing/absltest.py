@@ -2386,7 +2386,9 @@ def _is_suspicious_attribute(
   return False
 
 
-def skipThisClass(reason: str) -> Callable[[_T], _T]:
+def skipThisClass(
+    reason: str,
+) -> Callable[[Type[_T]], Type[_T]]:
   """Skip tests in the decorated TestCase, but not any of its subclasses.
 
   This decorator indicates that this class should skip all its tests, but not
