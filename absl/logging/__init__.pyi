@@ -67,7 +67,12 @@ def exception(msg: Any, *args: Any, **kwargs: Any) -> None:
   ...
 
 def log_every_n(
-    level: int, msg: Any, n: int, *args: Any, use_call_stack: bool = ...
+    level: int,
+    msg: Any,
+    n: int,
+    *args: Any,
+    use_call_stack: bool = ...,
+    **kwargs: Any,
 ) -> None:
   ...
 
@@ -76,16 +81,27 @@ def log_every_n_seconds(
     msg: Any,
     n_seconds: float,
     *args: Any,
-    use_call_stack: bool = ...
+    use_call_stack: bool = ...,
+    **kwargs: Any,
 ) -> None:
   ...
 
 def log_first_n(
-    level: int, msg: Any, n: int, *args: Any, use_call_stack: bool = ...
+    level: int,
+    msg: Any,
+    n: int,
+    *args: Any,
+    use_call_stack: bool = ...,
+    **kwargs: Any,
 ) -> None:
   ...
 
-def log_if(level: int, msg: Any, condition: Any, *args: Any) -> None:
+def log_if(level: int,
+  msg: Any,
+  condition: Any,
+  *args: Any,
+  **kwargs: Any,
+) -> None:
   ...
 
 def log(level: int, msg: Any, *args: Any, **kwargs: Any) -> None:

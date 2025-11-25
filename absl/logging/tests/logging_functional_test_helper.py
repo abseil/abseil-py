@@ -332,6 +332,27 @@ def _test_unicode():
   log('str % exception', 'exception: %s', Exception('Ch\u00e2tonnaye'))
 
 
+def _test_log_if_exc_info():
+  """Tests exc_info forwarding for log_first_n, log_every_n, etc."""
+  try:
+    raise OSError('Fake Error')
+  except OSError:
+    logging.log_first_n(
+        logging.ERROR, 'no exc_info log_first_n', 1, exc_info=False
+    )
+    logging.log_first_n(logging.ERROR, 'exc_info log_first_n', 1, exc_info=True)
+    logging.log_every_n(
+        logging.ERROR, 'no exc_info log_every_n', 1, exc_info=False
+    )
+    logging.log_every_n(logging.ERROR, 'exc_info log_every_n', 1, exc_info=True)
+    logging.log_every_n_seconds(
+        logging.ERROR, 'no exc_info log_every_n_seconds', 0, exc_info=False
+    )
+    logging.log_every_n_seconds(
+        logging.ERROR, 'exc_info log_every_n_seconds', 0, exc_info=True
+    )
+
+
 def main(argv):
   del argv  # Unused.
 

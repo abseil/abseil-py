@@ -152,6 +152,28 @@ E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] CRITICAL - A 
 """
 
 
+_LOG_IF_EXC_INFO_LOG_MESSAGE = """\
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] no exc_info log_first_n
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] exc_info log_first_n
+Traceback (most recent call last):
+  File "logging_functional_test_helper.py", line 456, in _test_log_if_exc_info
+    raise OSError('Fake Error')
+OSError: Fake Error
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] no exc_info log_every_n
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] exc_info log_every_n
+Traceback (most recent call last):
+  File "logging_functional_test_helper.py", line 456, in _test_log_if_exc_info
+    raise OSError('Fake Error')
+OSError: Fake Error
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] no exc_info log_every_n_seconds
+E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] exc_info log_every_n_seconds
+Traceback (most recent call last):
+  File "logging_functional_test_helper.py", line 456, in _test_log_if_exc_info
+    raise OSError('Fake Error')
+OSError: Fake Error
+"""
+
+
 _VERBOSITY_FLAG_TEST_PARAMETERS = (
     ('fatal', logging.FATAL),
     ('error', logging.ERROR),
@@ -748,6 +770,14 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] exception: Ch
         expected_logs,
         test_name='unicode',
         use_absl_log_file=True)
+
+  def test_log_if_exc_info(self):
+    self._exec_test(
+        _verify_ok,
+        [['stderr', None, _LOG_IF_EXC_INFO_LOG_MESSAGE]],
+        test_name='log_if_exc_info',
+        pass_logtostderr=True,
+    )
 
 
 if __name__ == '__main__':
