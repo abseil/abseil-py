@@ -222,38 +222,6 @@ flags.DEFINE_string(
 flags.DEFINE_string('xml_output_file', '', 'File to store XML test results')
 
 
-# We might need to monkey-patch TestResult so that it stops considering an
-# unexpected pass as a "successful result".  For details, see
-# http://bugs.python.org/issue20165
-def _monkey_patch_test_result_for_unexpected_passes() -> None:
-  """Workaround for <http://bugs.python.org/issue20165>."""
-
-  def wasSuccessful(self) -> bool:
-    """Tells whether or not this result was a success.
-
-    Any unexpected pass is to be counted as a non-success.
-
-    Args:
-      self: The TestResult instance.
-
-    Returns:
-      Whether or not this result was a success.
-    """
-    return (len(self.failures) == len(self.errors) ==
-            len(self.unexpectedSuccesses) == 0)
-
-  test_result = unittest.TestResult()
-  test_result.addUnexpectedSuccess(unittest.FunctionTestCase(lambda: None))
-  if test_result.wasSuccessful():  # The bug is present.
-    unittest.TestResult.wasSuccessful = wasSuccessful  # type: ignore[method-assign]
-    if test_result.wasSuccessful():  # Warn the user if our hot-fix failed.
-      sys.stderr.write('unittest.result.TestResult monkey patch to report'
-                       ' unexpected passes as failures did not work.\n')
-
-
-_monkey_patch_test_result_for_unexpected_passes()
-
-
 def _open(
     filepath: str, mode: str, _open_func: Callable[..., IO[AnyStr]] = open
 ) -> IO[AnyStr]:
