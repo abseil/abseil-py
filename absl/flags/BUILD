@@ -25,6 +25,7 @@ py_library(
 py_library(
     name = "argparse_flags",
     srcs = ["argparse_flags.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [":flags"],
 )
@@ -53,6 +54,7 @@ py_library(
 py_library(
     name = "_exceptions",
     srcs = ["_exceptions.py"],
+    strict_deps = False,
     deps = [
         ":_helpers",
     ],
@@ -89,6 +91,7 @@ py_library(
     srcs = [
         "_validators.py",
     ],
+    strict_deps = False,
     deps = [
         ":_exceptions",
         ":_flagvalues",
@@ -101,6 +104,7 @@ py_library(
     srcs = [
         "_validators_classes.py",
     ],
+    strict_deps = False,
     deps = [
         ":_exceptions",
     ],
@@ -259,6 +263,7 @@ py_library(
     name = "tests/module_bar",
     testonly = 1,
     srcs = ["tests/module_bar.py"],
+    strict_deps = False,
     deps = [
         ":_helpers",
         ":flags",
@@ -269,6 +274,7 @@ py_library(
     name = "tests/module_baz",
     testonly = 1,
     srcs = ["tests/module_baz.py"],
+    strict_deps = False,
     deps = [":flags"],
 )
 
@@ -276,6 +282,7 @@ py_library(
     name = "tests/module_foo",
     testonly = 1,
     srcs = ["tests/module_foo.py"],
+    strict_deps = False,
     deps = [
         ":_helpers",
         ":flags",
