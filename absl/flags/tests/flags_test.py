@@ -15,6 +15,7 @@
 
 import contextlib
 import enum
+import importlib
 import io
 import os
 import shutil
@@ -1008,15 +1009,6 @@ class FlagsUnitTest(absltest.TestCase):
     except flags.DuplicateFlagError:
       raise AssertionError('allow_override did not permit a flag duplication')
 
-    # Make sure that re-importing a module does not cause a DuplicateFlagError
-    # to be raised.
-    try:
-      sys.modules.pop('absl.flags.tests.module_baz')
-      import absl.flags.tests.module_baz  # pylint: disable=g-import-not-at-top
-      del absl
-    except flags.DuplicateFlagError:
-      raise AssertionError('Module reimport caused flag duplication error')
-
     # Make sure that when we override, the help string gets updated correctly
     flags.DEFINE_boolean(
         'dup3', 0, 'runhelp d31', short_name='u', allow_override=1)
@@ -1308,6 +1300,29 @@ class FlagsUnitTest(absltest.TestCase):
     (default: 'false')"""
 
     self.assertMultiLineEqual(expected_help, helpstr)
+
+  def test_module_redefinition(self):
+    # Make sure that reloading a module does not cause a DuplicateFlagError
+    # to be raised.
+    try:
+      from absl.flags.tests import module_baz
+
+      importlib.reload(module_baz)
+    except flags.DuplicateFlagError:
+      raise AssertionError('Module reload caused flag duplication error')
+
+    # Make sure that re-importing a module does not cause a DuplicateFlagError
+    # to be raised.
+    # NOTE: the following lines do not update the module id within flag_values.
+    # If we reverse the order of the two tests, the first one will succeed even
+    # if we're not detecting reloads.
+    try:
+      sys.modules.pop('absl.flags.tests.module_baz')
+      import absl.flags.tests.module_baz  # pylint: disable=g-import-not-at-top
+
+      del absl
+    except flags.DuplicateFlagError:
+      raise AssertionError('Module reimport caused flag duplication error')
 
   def test_string_flag_with_wrong_type(self):
     fv = flags.FlagValues()
