@@ -20,6 +20,7 @@ py_library(
 py_library(
     name = "command_name",
     srcs = ["command_name.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
 )
 
@@ -27,6 +28,7 @@ py_library(
     name = "tests/app_test_helper",
     testonly = 1,
     srcs = ["tests/app_test_helper.py"],
+    strict_deps = False,
     deps = [
         ":app",
         "//absl/flags",
