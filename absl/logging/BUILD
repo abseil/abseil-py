@@ -20,6 +20,7 @@ py_library(
 py_library(
     name = "converter",
     srcs = ["converter.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
 )
 

@@ -33,6 +33,7 @@ py_library(
     srcs = [
         "parameterized.py",
     ],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":absltest",
@@ -42,6 +43,7 @@ py_library(
 py_library(
     name = "xml_reporter",
     srcs = ["xml_reporter.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":_pretty_print_reporter",
@@ -52,6 +54,7 @@ py_library(
     name = "_bazelize_command",
     testonly = 1,
     srcs = ["_bazelize_command.py"],
+    strict_deps = False,
     visibility = ["//:__subpackages__"],
     deps = [
         "//absl/flags",
@@ -61,6 +64,7 @@ py_library(
 py_library(
     name = "_pretty_print_reporter",
     srcs = ["_pretty_print_reporter.py"],
+    strict_deps = False,
 )
 
 py_library(
