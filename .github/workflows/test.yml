@@ -25,6 +25,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Bazel
+        uses: bazelbuild/setup-bazelisk@v3
+        with:
+          bazelisk-version: 1.26.0
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         id: setup_python
