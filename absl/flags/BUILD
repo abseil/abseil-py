@@ -172,7 +172,7 @@ py_test(
 
 py_test(
     name = "tests/argparse_flags_test",
-    size = "small",
+    size = "medium",
     srcs = ["tests/argparse_flags_test.py"],
     data = [":tests/argparse_flags_test_helper"],
     deps = [

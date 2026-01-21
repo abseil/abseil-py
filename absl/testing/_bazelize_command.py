@@ -21,6 +21,9 @@ from absl import flags
 FLAGS = flags.FLAGS
 
 
+_EXECUTABLE_PATH_CACHE: dict[str, str] = {}
+
+
 def get_executable_path(py_binary_name):
   """Returns the executable path of a py_binary.
 
@@ -38,6 +41,8 @@ def get_executable_path(py_binary_name):
   Raises:
     RuntimeError: Raised when it cannot locate the executable path.
   """
+  if py_binary_name in _EXECUTABLE_PATH_CACHE:
+    return _EXECUTABLE_PATH_CACHE[py_binary_name]
 
   if os.name == 'nt':
     py_binary_name += '.exe'
@@ -50,6 +55,7 @@ def get_executable_path(py_binary_name):
         if len(tokens) != 2:
           continue
         if manifest_entry == tokens[0]:
+          _EXECUTABLE_PATH_CACHE[py_binary_name] = tokens[1]
           return tokens[1]
     raise RuntimeError(
         'Cannot locate executable path for {}, MANIFEST file: {}.'.format(

@@ -12,10 +12,17 @@ exit_code=0
 
 # Log the bazel version for easier debugging.
 bazel version
-bazel test --test_output=errors absl/... || exit_code=$?
+
+BAZEL_FLAGS="--test_output=errors --enable_runfiles"
+if [[ ! -z "${ABSL_EXPECTED_PYTHON_VERSION}" ]]; then
+  BAZEL_FLAGS="${BAZEL_FLAGS} --@rules_python//python/config_settings:python_version=${ABSL_EXPECTED_PYTHON_VERSION}"
+fi
+
+bazel test ${BAZEL_FLAGS} absl/... || exit_code=$?
 if [[ ! -z "${ABSL_EXPECTED_PYTHON_VERSION}" ]]; then
     bazel test \
-        --test_output=errors absl:tests/python_version_test \
+        ${BAZEL_FLAGS} \
+        absl:tests/python_version_test \
         --test_arg=--expected_version="${ABSL_EXPECTED_PYTHON_VERSION}" || exit_code=$?
 fi
 
