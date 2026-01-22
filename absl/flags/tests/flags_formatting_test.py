@@ -50,11 +50,11 @@ class FlagsUnitTest(absltest.TestCase):
 
     # Verify we still break
     wrapped = flags.text_wrap(text).split('\n')
-    self.assertEqual(4, len(wrapped))
+    self.assertLen(wrapped, 4)
     self.assertEqual(expect, wrapped)
 
     wrapped = flags.text_wrap(text, 80).split('\n')
-    self.assertEqual(1, len(wrapped))
+    self.assertLen(wrapped, 1)
     self.assertEqual([text], wrapped)
 
     # Normal case, breaking at word boundaries and rewriting new lines
@@ -179,7 +179,7 @@ class FlagsUnitTest(absltest.TestCase):
     doc = flags.doc_to_help(self.test_doc_to_help_flag_values.__doc__)
     # Test the general outline of the converted docs
     lines = doc.splitlines()
-    self.assertEqual(17, len(lines))
+    self.assertLen(lines, 17)
     empty_lines = [index for index in range(len(lines)) if not lines[index]]
     self.assertEqual([1, 3, 5, 8, 12, 15], empty_lines)
     # test that some starting prefix is kept

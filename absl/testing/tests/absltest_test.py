@@ -27,7 +27,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
-from typing import Any, ItemsView, Iterator, KeysView, Mapping, Optional, Type, ValuesView
+from typing import Any, ItemsView, Iterator, KeysView, Optional, ValuesView
 import unittest
 
 from absl.testing import _bazelize_command
@@ -1960,14 +1960,6 @@ class EqualityAssertionTest(absltest.TestCase):
     def __ne__(self, other):
       return self._value != other._value
 
-  class EqualityTestsWithCmp:
-
-    def __init__(self, value):
-      self._value = value
-
-    def __cmp__(self, other):
-      return cmp(self._value, other._value)
-
   class EqualityTestsWithLtEq:
 
     def __init__(self, value):
@@ -2042,7 +2034,7 @@ class EqualityAssertionTest(absltest.TestCase):
     different = self.EqualityTestsWithNe(1769)
     self._perform_apple_apple_orange_checks(same_a, same_b, different)
 
-  def test_comparison_with_cmp_or_lt_eq(self):
+  def test_comparison_with_lt_eq(self):
     same_a = self.EqualityTestsWithLtEq(42)
     same_b = self.EqualityTestsWithLtEq(42)
     different = self.EqualityTestsWithLtEq(1769)

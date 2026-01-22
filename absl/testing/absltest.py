@@ -1427,7 +1427,7 @@ class TestCase(unittest.TestCase):
           'The quick brown fox jumped over the lazy dog'.
       msg: Optional message to report on failure.
     """
-    if isinstance(strings, (bytes, unicode if str is bytes else str)):
+    if isinstance(strings, (bytes, str)):
       strings = (strings,)
 
     current_index = 0
@@ -2463,7 +2463,7 @@ class TestLoader(unittest.TestLoader):
       if _is_suspicious_attribute(testCaseClass, name):
         raise TypeError(TestLoader._ERROR_MSG % name)
     names = list(super().getTestCaseNames(testCaseClass))
-    if self._randomize_ordering_seed is not None:
+    if self._randomize_ordering_seed is not None and self._random is not None:
       logging.info(
           'Randomizing test order with seed: %d', self._randomize_ordering_seed)
       logging.info(
@@ -2486,9 +2486,10 @@ class TestLoader(unittest.TestLoader):
     input test case names, based on the shard index and total shard count.
 
     Args:
-      names: A sequence of test case names.
+      iterator: An iterator over the shards, where each iteration returns the
+        next shard index.
+      ordered_names: A sequence of test case names.
       shard_index: The index of the current shard.
-      total_shards: The total number of shards.
 
     Returns:
       A sequence of test case names for the current shard.

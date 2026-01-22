@@ -87,7 +87,6 @@ class CommandNameTest(absltest.TestCase):
     starting_name = _get_kernel_process_name()
     new_name = b'NameTest'
     mock_open = mock.mock_open()
-    mock_ctypes_cdll = mock.patch('ctypes.CDLL')
     with mock.patch.object(command_name, 'open', mock_open, create=True):
       with mock.patch('ctypes.CDLL') as mock_ctypes_cdll:
         mock_open.side_effect = IOError('mock open that raises.')
