@@ -18,6 +18,7 @@ aliases defined at the package level instead.
 """
 
 import copy
+from importlib import abc
 import logging
 import os
 import sys
@@ -35,6 +36,25 @@ _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
 _T = TypeVar('_T')
 _T_co = TypeVar('_T_co', covariant=True)  # pytype: disable=not-supported-yet
+
+
+class ReloadDetector(abc.MetaPathFinder):
+  """Helper class for detecting reloads."""
+
+  def __init__(self):
+    self.reloading_modules = set()
+
+  def find_spec(self, fullname, path, target=None):
+    if fullname in sys.modules:  # Indicates a reload.
+      self.reloading_modules.add(fullname)
+    return None
+
+
+reload_detector = ReloadDetector()
+
+# Register the hook by inserting it right before the last path finder.
+# This should play nicely with lazy imports.
+sys.meta_path.insert(-1, reload_detector)
 
 
 class FlagValues:
@@ -329,8 +349,10 @@ class FlagValues:
         # It must compare the flag with the one in _flags. This is because a
         # flag might be overridden only for its long name (or short name),
         # and only its short name (or long name) is considered registered.
-        if (flag.name == registered_flag.name and
-            flag.short_name == registered_flag.short_name):
+        if (
+            flag.name == registered_flag.name
+            and flag.short_name == registered_flag.short_name
+        ):
           return module
     return default
 
@@ -357,8 +379,10 @@ class FlagValues:
         # It must compare the flag with the one in _flags. This is because a
         # flag might be overridden only for its long name (or short name),
         # and only its short name (or long name) is considered registered.
-        if (flag.name == registered_flag.name and
-            flag.short_name == registered_flag.short_name):
+        if (
+            flag.name == registered_flag.name
+            and flag.short_name == registered_flag.short_name
+        ):
           return module_id
     return default
 
@@ -417,7 +441,8 @@ class FlagValues:
           self[flag_name] = flag
         except _exceptions.DuplicateFlagError:
           raise _exceptions.DuplicateFlagError.from_flag(
-              flag_name, self, other_flag_values=flag_values)
+              flag_name, self, other_flag_values=flag_values
+          )
 
   def remove_flag_values(
       self, flag_values: 'Union[FlagValues, Iterable[str]]'
@@ -437,7 +462,8 @@ class FlagValues:
     if not isinstance(flag, _flag.Flag):
       raise _exceptions.IllegalFlagValueError(
           f'Expect Flag instances, found type {type(flag)}. '
-          "Maybe you didn't mean to use FlagValue.__setitem__?")
+          "Maybe you didn't mean to use FlagValue.__setitem__?"
+      )
     if not isinstance(name, str):
       raise _exceptions.Error('Flag name must be a string')
     if not name:
@@ -447,11 +473,15 @@ class FlagValues:
     self._check_method_name_conflicts(name, flag)
     if name in fl and not flag.allow_override and not fl[name].allow_override:
       module, module_name = _helpers.get_calling_module_object_and_name()
-      if (self.find_module_defining_flag(name) == module_name and
-          id(module) != self.find_module_id_defining_flag(name)):
+      if self.find_module_defining_flag(name) == module_name and (
+          id(module) != self.find_module_id_defining_flag(name)
+          or module_name in reload_detector.reloading_modules
+      ):
         # If the flag has already been defined by a module with the same name,
         # but a different ID, we can stop here because it indicates that the
         # module is simply being imported a subsequent time.
+        # In case the module is being reloaded (using `importlib.reload`), it'll
+        # have the same ID, so we detect it using reload_detector.
         return
       raise _exceptions.DuplicateFlagError.from_flag(name, self)
     # If a new flag overrides an old one, we need to cleanup the old flag's
@@ -459,14 +489,20 @@ class FlagValues:
     flags_to_cleanup = set()
     short_name: Optional[str] = flag.short_name
     if short_name is not None:
-      if (short_name in fl and not flag.allow_override and
-          not fl[short_name].allow_override):
+      if (
+          short_name in fl
+          and not flag.allow_override
+          and not fl[short_name].allow_override
+      ):
         raise _exceptions.DuplicateFlagError.from_flag(short_name, self)
       if short_name in fl and fl[short_name] != flag:
         flags_to_cleanup.add(fl[short_name])
       fl[short_name] = flag
-    if (name not in fl  # new flag
-        or fl[name].using_default_value or not flag.using_default_value):
+    if (
+        name not in fl  # new flag
+        or fl[name].using_default_value
+        or not flag.using_default_value
+    ):
       if name in fl and fl[name] != flag:
         flags_to_cleanup.add(fl[name])
       fl[name] = flag
@@ -503,7 +539,8 @@ class FlagValues:
       return flag_entry.value
     else:
       raise _exceptions.UnparsedFlagAccessError(
-          'Trying to access flag --%s before flags were parsed.' % name)
+          'Trying to access flag --%s before flags were parsed.' % name
+      )
 
   def __setattr__(self, name: str, value: _T) -> _T:
     """Sets the 'value' attribute of the flag --name."""
@@ -570,7 +607,8 @@ class FlagValues:
     messages = []
     bad_flags: Set[str] = set()
     for validator in sorted(
-        validators, key=lambda validator: validator.insertion_index):
+        validators, key=lambda validator: validator.insertion_index
+    ):
       try:
         if isinstance(validator, _validators_classes.SingleFlagValidator):
           if validator.flag_name in bad_flags:
@@ -673,11 +711,13 @@ class FlagValues:
     """
     if isinstance(argv, (str, bytes)):
       raise TypeError(
-          'argv should be a tuple/list of strings, not bytes or string.')
+          'argv should be a tuple/list of strings, not bytes or string.'
+      )
     if not argv:
       raise ValueError(
           'argv cannot be an empty list, and must contain the program name as '
-          'the first element.')
+          'the first element.'
+      )
 
     # This pre parses the argv list for --flagfile=<> options.
     program_name = argv[0]
@@ -691,7 +731,8 @@ class FlagValues:
     for name, value in unknown_flags:
       suggestions = _helpers.get_flag_suggestions(name, list(self))
       raise _exceptions.UnrecognizedFlagError(
-          name, value, suggestions=suggestions)
+          name, value, suggestions=suggestions
+      )
 
     self.mark_as_parsed()
     self.validate_all_flags()
@@ -701,8 +742,10 @@ class FlagValues:
     raise TypeError("can't pickle FlagValues")
 
   def __copy__(self) -> Any:
-    raise TypeError('FlagValues does not support shallow copies. '
-                    'Use absl.testing.flagsaver or copy.deepcopy instead.')
+    raise TypeError(
+        'FlagValues does not support shallow copies. '
+        'Use absl.testing.flagsaver or copy.deepcopy instead.'
+    )
 
   def __deepcopy__(self, memo) -> Any:
     result = object.__new__(type(self))
@@ -1001,7 +1044,7 @@ class FlagValues:
     flaglist = [(flag.name, flag) for flag in flaglist]
     flaglist.sort()
     flagset = {}
-    for (name, flag) in flaglist:
+    for name, flag in flaglist:
       # It's possible this flag got deleted or overridden since being
       # registered in the per-module flaglist.  Check now against the
       # canonical source of current flag information, the _flags.
@@ -1023,15 +1066,18 @@ class FlagValues:
       if flag.help:
         flaghelp += flag.help
       flaghelp = _helpers.text_wrap(
-          flaghelp, indent=prefix + '  ', firstline_indent=prefix)
+          flaghelp, indent=prefix + '  ', firstline_indent=prefix
+      )
       if flag.default_as_str:
         flaghelp += '\n'
         flaghelp += _helpers.text_wrap(
-            '(default: %s)' % flag.default_as_str, indent=prefix + '  ')
+            '(default: %s)' % flag.default_as_str, indent=prefix + '  '
+        )
       if flag.parser.syntactic_help:
         flaghelp += '\n'
         flaghelp += _helpers.text_wrap(
-            '(%s)' % flag.parser.syntactic_help, indent=prefix + '  ')
+            '(%s)' % flag.parser.syntactic_help, indent=prefix + '  '
+        )
       output_lines.append(flaghelp)
 
   def get_flag_value(self, name: str, default: Any) -> Any:  # pylint: disable=invalid-name
@@ -1083,9 +1129,9 @@ class FlagValues:
       Error: Raised when illegal --flagfile is provided.
     """
     if flagfile_str.startswith('--flagfile='):
-      return os.path.expanduser((flagfile_str[(len('--flagfile=')):]).strip())
+      return os.path.expanduser((flagfile_str[(len('--flagfile=')) :]).strip())
     elif flagfile_str.startswith('-flagfile='):
-      return os.path.expanduser((flagfile_str[(len('-flagfile=')):]).strip())
+      return os.path.expanduser((flagfile_str[(len('-flagfile=')) :]).strip())
     else:
       raise _exceptions.Error('Hit illegal --flagfile type: %s' % flagfile_str)
 
@@ -1116,8 +1162,10 @@ class FlagValues:
     # We do a little safety check for reparsing a file we've already encountered
     # at a previous depth.
     if filename in parsed_file_stack:
-      sys.stderr.write('Warning: Hit circular flagfile dependency. Ignoring'
-                       ' flagfile: %s\n' % (filename,))
+      sys.stderr.write(
+          'Warning: Hit circular flagfile dependency. Ignoring flagfile: %s\n'
+          % (filename,)
+      )
       return []
     else:
       parsed_file_stack.append(filename)
@@ -1128,7 +1176,8 @@ class FlagValues:
       file_obj = open(filename)
     except OSError as e_msg:
       raise _exceptions.CantOpenFlagFileError(
-          'ERROR:: Unable to open flagfile: %s' % e_msg)
+          'ERROR:: Unable to open flagfile: %s' % e_msg
+      )
 
     with file_obj:
       line_list = file_obj.readlines()
@@ -1145,7 +1194,8 @@ class FlagValues:
       elif self._is_flag_file_directive(line):
         sub_filename = self._extract_filename(line)
         included_flags = self._get_flag_file_lines(
-            sub_filename, parsed_file_stack=parsed_file_stack)
+            sub_filename, parsed_file_stack=parsed_file_stack
+        )
         flag_line_list.extend(included_flags)
       else:
         # Any line that's not a comment or a nested flagfile should get
@@ -1208,7 +1258,8 @@ class FlagValues:
         if current_arg == '--flagfile' or current_arg == '-flagfile':
           if not rest_of_args:
             raise _exceptions.IllegalFlagValueError(
-                '--flagfile with no argument')
+                '--flagfile with no argument'
+            )
           flag_filename = os.path.expanduser(rest_of_args[0])
           rest_of_args = rest_of_args[1:]
         else:
@@ -1225,8 +1276,11 @@ class FlagValues:
           if not force_gnu and not self.__dict__['__use_gnu_getopt']:
             break
         else:
-          if ('=' not in current_arg and rest_of_args and
-              not rest_of_args[0].startswith('-')):
+          if (
+              '=' not in current_arg
+              and rest_of_args
+              and not rest_of_args[0].startswith('-')
+          ):
             # If this is an occurrence of a legitimate --x y, skip the value
             # so that it won't be mistaken for a standalone arg.
             fl = self._flags()
@@ -1295,8 +1349,10 @@ class FlagValues:
     doc.appendChild(all_flag)
 
     all_flag.appendChild(
-        _helpers.create_xml_dom_element(doc, 'program',
-                                        os.path.basename(sys.argv[0])))
+        _helpers.create_xml_dom_element(
+            doc, 'program', os.path.basename(sys.argv[0])
+        )
+    )
 
     usage_doc = sys.modules['__main__'].__doc__
     if not usage_doc:
@@ -1304,7 +1360,8 @@ class FlagValues:
     else:
       usage_doc = usage_doc.replace('%s', sys.argv[0])
     all_flag.appendChild(
-        _helpers.create_xml_dom_element(doc, 'usage', usage_doc))
+        _helpers.create_xml_dom_element(doc, 'usage', usage_doc)
+    )
 
     # Get list of key flags for the main module.
     key_flags = self.get_key_flags_for_module(sys.argv[0])
@@ -1318,13 +1375,14 @@ class FlagValues:
         is_key = flag in key_flags
         all_flag.appendChild(
             flag._create_xml_dom_element(  # pylint: disable=protected-access
-                doc,
-                module_name,
-                is_key=is_key))
+                doc, module_name, is_key=is_key
+            )
+        )
 
     outfile = outfile or sys.stdout
     outfile.write(
-        doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8'))
+        doc.toprettyxml(indent='  ', encoding='utf-8').decode('utf-8')
+    )
     outfile.flush()
 
   def _check_method_name_conflicts(self, name: str, flag: Flag):
@@ -1340,7 +1398,9 @@ class FlagValues:
             'allow_using_method_names and access the flag value with '
             "FLAGS['{name}'].value. FLAGS.{name} returns the method, "
             'not the flag value.'.format(
-                name=flag_name, class_name=type(self).__name__))
+                name=flag_name, class_name=type(self).__name__
+            )
+        )
 
 
 FLAGS = FlagValues()
@@ -1402,13 +1462,15 @@ class FlagHolder(Generic[_T_co]):
     raise TypeError(
         "unsupported operand type(s) for ==: '{0}' and '{1}' "
         "(did you mean to use '{0}.value' instead?)".format(
-            type(self).__name__, type(other).__name__))
+            type(self).__name__, type(other).__name__
+        )
+    )
 
   def __bool__(self):
     raise TypeError(
         "bool() not supported for instances of type '{0}' "
-        "(did you mean to use '{0}.value' instead?)".format(
-            type(self).__name__))
+        "(did you mean to use '{0}.value' instead?)".format(type(self).__name__)
+    )
 
   __nonzero__ = __bool__
 
@@ -1430,7 +1492,8 @@ class FlagHolder(Generic[_T_co]):
     val = getattr(self._flagvalues, self._name)
     if self._ensure_non_none_value and val is None:
       raise _exceptions.IllegalFlagValueError(
-          'Unexpected None value for flag %s' % self._name)
+          'Unexpected None value for flag %s' % self._name
+      )
     return val
 
   @property
@@ -1456,7 +1519,8 @@ def resolve_flag_ref(
     new_flag_values = flag_ref._flagvalues  # pylint: disable=protected-access
     if flag_values != FLAGS and flag_values != new_flag_values:
       raise ValueError(
-          'flag_values must not be customized when operating on a FlagHolder')
+          'flag_values must not be customized when operating on a FlagHolder'
+      )
     return flag_ref.name, new_flag_values
   return flag_ref, flag_values
 
@@ -1478,7 +1542,8 @@ def resolve_flag_refs(
       raise ValueError(
           'multiple FlagValues instances used in invocation. '
           'FlagHolders must be registered to the same FlagValues instance as '
-          'do flag names, if provided.')
+          'do flag names, if provided.'
+      )
     fv = newfv
     names.append(name)
   if fv is None:
