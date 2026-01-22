@@ -1,6 +1,6 @@
 module(name = "io_abseil_py")
 
-bazel_dep(name = "rules_cc", version = "0.1.2")
-bazel_dep(name = "rules_python", version = "1.5.1")
+bazel_dep(name = "rules_cc", version = "0.2.16")
+bazel_dep(name = "rules_python", version = "1.8.1")
 
 register_toolchains("@rules_python//python/runtime_env_toolchains:all")
