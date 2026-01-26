@@ -468,7 +468,6 @@ def DEFINE_boolean(  # pylint: disable=invalid-name
   ...
 
 
-# pytype: disable=bad-return-type
 def DEFINE_boolean(  # pylint: disable=invalid-name
     name,
     default,
@@ -503,7 +502,7 @@ def DEFINE_boolean(  # pylint: disable=invalid-name
   Returns:
     a handle to defined flag.
   """
-  return DEFINE_flag(
+  return DEFINE_flag(  # pytype: disable=bad-return-type
       _flag.BooleanFlag(name, default, help, **args),
       flag_values,
       module_name,
