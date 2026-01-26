@@ -14,27 +14,13 @@
 
 """Internal helper functions for Abseil Python flags library."""
 
-import os
 import re
-import struct
+import shutil
 import sys
 import textwrap
 import types
 from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Sequence, Set
 from xml.dom import minidom
-# pylint: disable=g-import-not-at-top
-fcntl: Optional[types.ModuleType]
-try:
-  import fcntl
-except ImportError:
-  fcntl = None
-termios: Optional[types.ModuleType]
-try:
-  # Importing termios will fail on non-unix platforms.
-  import termios
-except ImportError:
-  termios = None
-# pylint: enable=g-import-not-at-top
 
 
 _DEFAULT_HELP_WIDTH = 80  # Default width of help output.
@@ -110,8 +96,9 @@ def get_module_object_and_name(
   except KeyError:
     return None
   # Pick a more informative name for the main module.
-  return _ModuleObjectAndName(module,
-                              (sys.argv[0] if name == '__main__' else name))
+  return _ModuleObjectAndName(
+      module, sys.argv[0] if name == '__main__' else name
+  )
 
 
 def get_calling_module_object_and_name() -> _ModuleObjectAndName:
@@ -170,20 +157,8 @@ def create_xml_dom_element(
 
 def get_help_width() -> int:
   """Returns the integer width of help lines that is used in TextWrap."""
-  if not sys.stdout.isatty() or termios is None or fcntl is None:
-    return _DEFAULT_HELP_WIDTH
-  try:
-    data = fcntl.ioctl(sys.stdout, termios.TIOCGWINSZ, b'1234')
-    columns = struct.unpack('hh', data)[1]
-    # Emacs mode returns 0.
-    # Here we assume that any value below 40 is unreasonable.
-    if columns >= _MIN_HELP_WIDTH:
-      return columns
-    # Returning an int as default is fine, int(int) just return the int.
-    return int(os.getenv('COLUMNS', _DEFAULT_HELP_WIDTH))
-
-  except (TypeError, OSError, struct.error):
-    return _DEFAULT_HELP_WIDTH
+  size = shutil.get_terminal_size(fallback=(_DEFAULT_HELP_WIDTH, 1))
+  return size.columns
 
 
 def get_flag_suggestions(
@@ -257,14 +232,14 @@ def text_wrap(
   and expands tabs using 4 spaces.
 
   Args:
-    text: str, text to wrap.
-    length: int, maximum length of a line, includes indentation.
-        If this is None then use get_help_width()
-    indent: str, indent for all but first line.
-    firstline_indent: str, indent for first line; if None, fall back to indent.
+    text: Text to wrap.
+    length: Maximum length of a line, includes indentation. If this is `None`
+      then use `get_help_width()`.
+    indent: Indent for all but first line.
+    firstline_indent: Indent for first line. If `None`, fall back to `indent`.
 
   Returns:
-    str, the wrapped text.
+    The wrapped text.
 
   Raises:
     ValueError: Raised if indent or firstline_indent not shorter than length.

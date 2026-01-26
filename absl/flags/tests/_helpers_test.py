@@ -151,5 +151,61 @@ class GetCallingModuleTest(absltest.TestCase):
       sys.modules = orig_sys_modules
 
 
+class TextWrapTest(absltest.TestCase):
+
+  def test_basic_wrapping(self):
+    text = 'a ' * 8
+    wrapped = _helpers.text_wrap(text, length=10)
+    self.assertEqual('a a a a a\na a a', wrapped)
+
+  def test_simple_wrapping(self):
+    text = 'hello world hello world'
+    wrapped = _helpers.text_wrap(text, length=11)
+    self.assertEqual('hello world\nhello world', wrapped)
+
+  def test_indent(self):
+    text = 'hello world'
+    wrapped = _helpers.text_wrap(text, length=20, indent='  ')
+    self.assertEqual('  hello world', wrapped)
+
+  def test_different_firstline_indent(self):
+    text = 'hello world\nhello world'
+    wrapped = _helpers.text_wrap(
+        text, length=20, indent='  ', firstline_indent='>>'
+    )
+    self.assertEqual('>>hello world\n  hello world', wrapped)
+
+  def test_long_indent_error(self):
+    with self.assertRaises(ValueError):
+      _helpers.text_wrap('a', length=10, indent=' ' * 10)
+    with self.assertRaises(ValueError):
+      _helpers.text_wrap('a', length=10, firstline_indent=' ' * 10)
+
+  def test_tabs_expansion(self):
+    text = 'va\tlue'
+    wrapped = _helpers.text_wrap(text, length=20)
+    self.assertEqual('va  lue', wrapped)
+
+  def test_preserve_newlines(self):
+    text = 'line1\n\nline2'
+    wrapped = _helpers.text_wrap(text, length=20)
+    self.assertEqual('line1\n\nline2', wrapped)
+
+  def test_strip_whitespace_lines(self):
+    text = 'line1\n   \nline2'
+    wrapped = _helpers.text_wrap(text, length=20)
+    self.assertEqual('line1\n\nline2', wrapped)
+
+  def test_automatic_line_length(self):
+    text = 'a ' * 200
+    automatic_wrapped = _helpers.text_wrap(text)
+
+    width = _helpers.get_help_width()
+    self.assertGreater(width, 0)
+
+    explicit_wrapped = _helpers.text_wrap(text, length=width)
+    self.assertEqual(automatic_wrapped, explicit_wrapped)
+
+
 if __name__ == '__main__':
   absltest.main()
