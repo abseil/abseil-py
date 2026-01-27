@@ -20,7 +20,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import Any, Dict
+from typing import Any
 import unittest
 from xml.sax import saxutils
 from absl.testing import _pretty_print_reporter
@@ -525,7 +525,7 @@ class TextAndXMLTestRunner(unittest.TextTestRunner):
   _TEST_RESULT_CLASS = _TextAndXMLTestResult
 
   _xml_stream = None
-  _testsuites_properties: Dict[Any, Any] = {}
+  _testsuites_properties: dict[Any, Any] = {}
 
   def __init__(self, xml_stream=None, *args, **kwargs):
     """Initialize a TextAndXMLTestRunner.

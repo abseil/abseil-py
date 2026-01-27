@@ -17,9 +17,9 @@
 import os
 import sys
 import types
-from typing import Any, Dict, Optional
+from typing import Any
 
-faulthandler: Optional[types.ModuleType]
+faulthandler: types.ModuleType | None
 try:
   import faulthandler  # pylint: disable=g-import-not-at-top
 except ImportError:
@@ -133,7 +133,7 @@ def flags_parser(argv):
 _callback_results = []
 
 if __name__ == '__main__':
-  kwargs: Dict[str, Any] = {'main': main}
+  kwargs: dict[str, Any] = {'main': main}
   main_function_name = os.environ.get('APP_TEST_CUSTOM_MAIN_FUNC', None)
   if main_function_name:
     kwargs['main'] = globals()[main_function_name]

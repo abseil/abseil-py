@@ -19,11 +19,12 @@ aliases defined at the package level instead.
 """
 
 import collections
+from collections.abc import Iterable, Sequence
 import csv
 import enum
 import io
 import string
-from typing import Any, Dict, Generic, Iterable, List, Optional, Sequence, Type, TypeVar, Union
+from typing import Any, Generic, TypeVar
 from xml.dom import minidom
 
 from absl.flags import _helpers
@@ -36,7 +37,7 @@ _N = TypeVar('_N', int, float)
 class _ArgumentParserCache(type):
   """Metaclass used to cache and share argument parsers among flags."""
 
-  _instances: Dict[Any, Any] = {}
+  _instances: dict[Any, Any] = {}
 
   def __call__(cls, *args, **kwargs):
     """Returns an instance of the argument parser cls.
@@ -91,7 +92,7 @@ class ArgumentParser(Generic[_T], metaclass=_ArgumentParserCache):
 
   syntactic_help: str = ''
 
-  def parse(self, argument: str) -> Optional[_T]:
+  def parse(self, argument: str) -> _T | None:
     """Parses the string argument and returns the native value.
 
     By default it returns its argument unmodified.
@@ -117,7 +118,7 @@ class ArgumentParser(Generic[_T], metaclass=_ArgumentParserCache):
 
   def _custom_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     """Returns a list of minidom.Element to add additional flag information.
 
     Args:
@@ -141,15 +142,15 @@ class NumericParser(ArgumentParser[_N]):
   Parsed value may be bounded to a given upper and lower bound.
   """
 
-  lower_bound: Optional[_N]
-  upper_bound: Optional[_N]
+  lower_bound: _N | None
+  upper_bound: _N | None
 
   def is_outside_bounds(self, val: _N) -> bool:
     """Returns whether the value is outside the bounds or not."""
     return ((self.lower_bound is not None and val < self.lower_bound) or
             (self.upper_bound is not None and val > self.upper_bound))
 
-  def parse(self, argument: Union[str, _N]) -> _N:
+  def parse(self, argument: str | _N) -> _N:
     """See base class."""
     val = self.convert(argument)
     if self.is_outside_bounds(val):
@@ -158,7 +159,7 @@ class NumericParser(ArgumentParser[_N]):
 
   def _custom_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     elements = []
     if self.lower_bound is not None:
       elements.append(_helpers.create_xml_dom_element(
@@ -168,7 +169,7 @@ class NumericParser(ArgumentParser[_N]):
           doc, 'upper_bound', self.upper_bound))
     return elements
 
-  def convert(self, argument: Union[str, _N]) -> _N:
+  def convert(self, argument: str | _N) -> _N:
     """Returns the correct numeric value of argument.
 
     Subclass must implement this method, and raise TypeError if argument is not
@@ -195,8 +196,8 @@ class FloatParser(NumericParser[float]):
 
   def __init__(
       self,
-      lower_bound: Optional[float] = None,
-      upper_bound: Optional[float] = None,
+      lower_bound: float | None = None,
+      upper_bound: float | None = None,
   ) -> None:
     super().__init__()
     self.lower_bound = lower_bound
@@ -214,7 +215,7 @@ class FloatParser(NumericParser[float]):
       sh = '%s >= %s' % (self.number_name, lower_bound)
     self.syntactic_help = sh
 
-  def convert(self, argument: Union[int, float, str]) -> float:
+  def convert(self, argument: int | float | str) -> float:
     """Returns the float value of argument."""
     if (
         (isinstance(argument, int) and not isinstance(argument, bool))
@@ -242,7 +243,7 @@ class IntegerParser(NumericParser[int]):
   syntactic_help = ' '.join((number_article, number_name))
 
   def __init__(
-      self, lower_bound: Optional[int] = None, upper_bound: Optional[int] = None
+      self, lower_bound: int | None = None, upper_bound: int | None = None
   ) -> None:
     super().__init__()
     self.lower_bound = lower_bound
@@ -264,7 +265,7 @@ class IntegerParser(NumericParser[int]):
       sh = '%s >= %s' % (self.number_name, lower_bound)
     self.syntactic_help = sh
 
-  def convert(self, argument: Union[int, str]) -> int:
+  def convert(self, argument: int | str) -> int:
     """Returns the int value of argument."""
     if isinstance(argument, int) and not isinstance(argument, bool):
       return argument
@@ -288,7 +289,7 @@ class IntegerParser(NumericParser[int]):
 class BooleanParser(ArgumentParser[bool]):
   """Parser of boolean values."""
 
-  def parse(self, argument: Union[str, int]) -> bool:
+  def parse(self, argument: str | int) -> bool:
     """See base class."""
     if isinstance(argument, str):
       if argument.lower() in ('true', 't', '1'):
@@ -371,7 +372,7 @@ class EnumClassParser(ArgumentParser[_ET]):
   """Parser of an Enum class member."""
 
   def __init__(
-      self, enum_class: Type[_ET], case_sensitive: bool = True
+      self, enum_class: type[_ET], case_sensitive: bool = True
   ) -> None:
     """Initializes EnumParser.
 
@@ -414,7 +415,7 @@ class EnumClassParser(ArgumentParser[_ET]):
     """The accepted enum names, in lowercase if not case sensitive."""
     return self._member_names
 
-  def parse(self, argument: Union[_ET, str]) -> _ET:
+  def parse(self, argument: _ET | str) -> _ET:
     """Determines validity of argument and returns the correct element of enum.
 
     Args:
@@ -447,12 +448,12 @@ class EnumClassParser(ArgumentParser[_ET]):
     return 'enum class'
 
 
-class ListSerializer(Generic[_T], ArgumentSerializer[List[_T]]):
+class ListSerializer(Generic[_T], ArgumentSerializer[list[_T]]):
 
   def __init__(self, list_sep: str) -> None:
     self.list_sep = list_sep
 
-  def serialize(self, value: List[_T]) -> str:
+  def serialize(self, value: list[_T]) -> str:
     """See base class."""
     return self.list_sep.join([str(x) for x in value])
 
@@ -477,7 +478,7 @@ class EnumClassListSerializer(ListSerializer[_ET]):
     super().__init__(list_sep)
     self._element_serializer = EnumClassSerializer(**kwargs)
 
-  def serialize(self, value: Union[_ET, List[_ET]]) -> str:
+  def serialize(self, value: _ET | list[_ET]) -> str:
     """See base class."""
     if isinstance(value, list):
       return self.list_sep.join(
@@ -488,7 +489,7 @@ class EnumClassListSerializer(ListSerializer[_ET]):
 
 class CsvListSerializer(ListSerializer[str]):
 
-  def serialize(self, value: List[str]) -> str:
+  def serialize(self, value: list[str]) -> str:
     """Serializes a list as a CSV string or unicode."""
     output = io.StringIO()
     writer = csv.writer(output, delimiter=self.list_sep)
@@ -528,16 +529,14 @@ class BaseListParser(ArgumentParser):
   of the separator.
   """
 
-  def __init__(
-      self, token: Optional[str] = None, name: Optional[str] = None
-  ) -> None:
+  def __init__(self, token: str | None = None, name: str | None = None) -> None:
     assert name
     super().__init__()
     self._token = token
     self._name = name
     self.syntactic_help = 'a %s separated list' % self._name
 
-  def parse(self, argument: str) -> List[str]:
+  def parse(self, argument: str) -> list[str]:
     """See base class."""
     if isinstance(argument, list):
       return argument
@@ -557,7 +556,7 @@ class ListParser(BaseListParser):
   def __init__(self) -> None:
     super().__init__(',', 'comma')
 
-  def parse(self, argument: Union[str, List[str]]) -> List[str]:
+  def parse(self, argument: str | list[str]) -> list[str]:
     """Parses argument as comma-separated list of strings."""
     if isinstance(argument, list):
       return argument
@@ -577,7 +576,7 @@ class ListParser(BaseListParser):
 
   def _custom_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     elements = super()._custom_xml_dom_elements(doc)
     elements.append(_helpers.create_xml_dom_element(
         doc, 'list_separator', repr(',')))
@@ -599,7 +598,7 @@ class WhitespaceSeparatedListParser(BaseListParser):
     name = 'whitespace or comma' if self._comma_compat else 'whitespace'
     super().__init__(None, name)
 
-  def parse(self, argument: Union[str, List[str]]) -> List[str]:
+  def parse(self, argument: str | list[str]) -> list[str]:
     """Parses argument as whitespace-separated list of strings.
 
     It also parses argument as comma-separated list of strings if requested.
@@ -621,7 +620,7 @@ class WhitespaceSeparatedListParser(BaseListParser):
 
   def _custom_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     elements = super()._custom_xml_dom_elements(doc)
     separators = list(string.whitespace)
     if self._comma_compat:

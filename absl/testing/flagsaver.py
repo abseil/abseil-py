@@ -89,10 +89,10 @@ exception will be raised.  However if you *add* a flag after saving flag values,
 and then restore flag values, the added flag will be deleted with no errors.
 """
 
-import collections
+from collections.abc import Callable, Mapping, Sequence
 import functools
 import inspect
-from typing import Any, Callable, Dict, Mapping, Sequence, Tuple, Type, TypeVar, Union, overload
+from typing import Any, TypeVar, overload
 
 from absl import flags
 
@@ -110,7 +110,7 @@ def flagsaver(func: _CallableT) -> _CallableT:
 
 @overload
 def flagsaver(
-    *args: Tuple[flags.FlagHolder, Any], **kwargs: Any
+    *args: tuple[flags.FlagHolder, Any], **kwargs: Any
 ) -> '_FlagOverrider':
   ...
 
@@ -121,8 +121,10 @@ def flagsaver(*args, **kwargs):
 
 
 @overload
-def as_parsed(*args: Tuple[flags.FlagHolder, Union[str, Sequence[str]]],
-              **kwargs: Union[str, Sequence[str]]) -> '_ParsingFlagOverrider':
+def as_parsed(
+    *args: tuple[flags.FlagHolder, str | Sequence[str]],
+    **kwargs: str | Sequence[str],
+) -> '_ParsingFlagOverrider':
   ...
 
 
@@ -161,23 +163,24 @@ def as_parsed(*args, **kwargs):
 # pick the first match which could be incorrect.
 @overload
 def _construct_overrider(
-    flag_overrider_cls: Type['_ParsingFlagOverrider'],
-    *args: Tuple[flags.FlagHolder, Union[str, Sequence[str]]],
-    **kwargs: Union[str, Sequence[str]]) -> '_ParsingFlagOverrider':
+    flag_overrider_cls: type['_ParsingFlagOverrider'],
+    *args: tuple[flags.FlagHolder, str | Sequence[str]],
+    **kwargs: str | Sequence[str],
+) -> '_ParsingFlagOverrider':
   ...
 
 
 @overload
 def _construct_overrider(
-    flag_overrider_cls: Type['_FlagOverrider'], func: _CallableT
+    flag_overrider_cls: type['_FlagOverrider'], func: _CallableT
 ) -> _CallableT:
   ...
 
 
 @overload
 def _construct_overrider(
-    flag_overrider_cls: Type['_FlagOverrider'],
-    *args: Tuple[flags.FlagHolder, Any],
+    flag_overrider_cls: type['_FlagOverrider'],
+    *args: tuple[flags.FlagHolder, Any],
     **kwargs: Any,
 ) -> '_FlagOverrider':
   ...
@@ -225,7 +228,7 @@ def _construct_overrider(flag_overrider_cls, *args, **kwargs):
 
 def save_flag_values(
     flag_values: flags.FlagValues = FLAGS,
-) -> Dict[str, Dict[str, Any]]:
+) -> dict[str, dict[str, Any]]:
   """Returns copy of flag values as a dict.
 
   Args:
@@ -240,7 +243,7 @@ def save_flag_values(
 
 
 def restore_flag_values(
-    saved_flag_values: Mapping[str, Dict[str, Any]],
+    saved_flag_values: Mapping[str, dict[str, Any]],
     flag_values: flags.FlagValues = FLAGS,
 ) -> None:
   """Restores flag values based on the dictionary of flag values.
@@ -263,14 +266,20 @@ def restore_flag_values(
 
 
 @overload
-def _wrap(flag_overrider_cls: Type['_FlagOverrider'], func: _CallableT,
-          overrides: Mapping[str, Any]) -> _CallableT:
+def _wrap(
+    flag_overrider_cls: type['_FlagOverrider'],
+    func: _CallableT,
+    overrides: Mapping[str, Any],
+) -> _CallableT:
   ...
 
 
 @overload
-def _wrap(flag_overrider_cls: Type['_ParsingFlagOverrider'], func: _CallableT,
-          overrides: Mapping[str, Union[str, Sequence[str]]]) -> _CallableT:
+def _wrap(
+    flag_overrider_cls: type['_ParsingFlagOverrider'],
+    func: _CallableT,
+    overrides: Mapping[str, str | Sequence[str]],
+) -> _CallableT:
   ...
 
 
@@ -338,12 +347,13 @@ class _ParsingFlagOverrider(_FlagOverrider):
   This results in the flags having .present set properly.
   """
 
-  def __init__(self, **overrides: Union[str, Sequence[str]]):
+  def __init__(self, **overrides: str | Sequence[str]):
     for flag_name, new_value in overrides.items():
       if isinstance(new_value, str):
         continue
-      if (isinstance(new_value, collections.abc.Sequence) and
-          all(isinstance(single_value, str) for single_value in new_value)):
+      if isinstance(new_value, Sequence) and all(
+          isinstance(single_value, str) for single_value in new_value
+      ):
         continue
       raise TypeError(
           f'flagsaver.as_parsed() cannot parse {flag_name}. Expected a single '
@@ -375,7 +385,7 @@ class _ParsingFlagOverrider(_FlagOverrider):
       raise
 
 
-def _copy_flag_dict(flag: flags.Flag) -> Dict[str, Any]:
+def _copy_flag_dict(flag: flags.Flag) -> dict[str, Any]:
   """Returns a copy of the flag object's ``__dict__``.
 
   It's mostly a shallow copy of the ``__dict__``, except it also does a shallow

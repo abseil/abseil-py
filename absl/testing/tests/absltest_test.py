@@ -15,7 +15,7 @@
 """Tests for absltest."""
 
 import collections
-from collections.abc import Mapping
+from collections.abc import ItemsView, Iterator, KeysView, Mapping, ValuesView
 import contextlib
 import dataclasses
 import os
@@ -27,7 +27,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
-from typing import Any, ItemsView, Iterator, KeysView, Optional, ValuesView
+from typing import Any
 import unittest
 
 from absl.testing import _bazelize_command
@@ -2752,7 +2752,7 @@ class SkipClassTest(absltest.TestCase):
     @absltest.skipThisClass('reason')
     class Test(absltest.TestCase):
       foo: str
-      bar: Optional[str]
+      bar: str | None
 
       @classmethod
       def setUpClass(cls, foo, bar=None):

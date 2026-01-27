@@ -18,7 +18,6 @@ This module contains base classes and high-level functions for Abseil-style
 tests.
 """
 
-import collections
 from collections import abc
 import contextlib
 import dataclasses
@@ -26,7 +25,6 @@ import difflib
 import enum
 import errno
 import faulthandler
-import functools
 import getpass
 import inspect
 import io
@@ -45,7 +43,7 @@ import sys
 import tempfile
 import textwrap
 import typing
-from typing import Any, AnyStr, BinaryIO, Callable, ContextManager, IO, Iterator, List, Mapping, MutableMapping, MutableSequence, NoReturn, Optional, Sequence, TextIO, Tuple, Type, Union
+from typing import Any, AnyStr, BinaryIO, IO, NoReturn, TextIO
 import unittest
 from unittest import mock  # pylint: disable=unused-import Allow absltest.mock.
 import unittest.case
@@ -223,7 +221,7 @@ flags.DEFINE_string('xml_output_file', '', 'File to store XML test results')
 
 
 def _open(
-    filepath: str, mode: str, _open_func: Callable[..., IO[AnyStr]] = open
+    filepath: str, mode: str, _open_func: abc.Callable[..., IO[AnyStr]] = open
 ) -> IO[AnyStr]:
   """Opens a file.
 
@@ -270,8 +268,8 @@ class _TempDir:
 
   def create_file(
       self,
-      file_path: Optional[str] = None,
-      content: Optional[AnyStr] = None,
+      file_path: str | None = None,
+      content: AnyStr | None = None,
       mode: str = 'w',
       encoding: str = 'utf8',
       errors: str = 'strict',
@@ -302,7 +300,7 @@ class _TempDir:
                               errors)
     return tf
 
-  def mkdir(self, dir_path: Optional[str] = None) -> '_TempDir':
+  def mkdir(self, dir_path: str | None = None) -> '_TempDir':
     """Create a directory in the directory.
 
     Args:
@@ -340,12 +338,12 @@ class _TempFile:
   def _create(
       cls,
       base_path: str,
-      file_path: Optional[str],
-      content: Optional[AnyStr],
+      file_path: str | None,
+      content: AnyStr | None,
       mode: str,
       encoding: str,
       errors: str,
-  ) -> Tuple['_TempFile', str]:
+  ) -> tuple['_TempFile', str]:
     """Module-private: create a tempfile instance."""
     if file_path:
       cleanup_path = os.path.join(base_path, _get_first_part(file_path))
@@ -430,7 +428,7 @@ class _TempFile:
 
   def open_text(
       self, mode: str = 'rt', encoding: str = 'utf8', errors: str = 'strict'
-  ) -> ContextManager[TextIO]:
+  ) -> contextlib.AbstractContextManager[TextIO]:
     """Return a context manager for opening the file in text mode.
 
     Args:
@@ -453,7 +451,9 @@ class _TempFile:
     cm = self._open(mode, encoding, errors)
     return cm
 
-  def open_bytes(self, mode: str = 'rb') -> ContextManager[BinaryIO]:
+  def open_bytes(
+      self, mode: str = 'rb'
+  ) -> contextlib.AbstractContextManager[BinaryIO]:
     """Return a context manager for opening the file in binary mode.
 
     Args:
@@ -481,9 +481,9 @@ class _TempFile:
   def _open(
       self,
       mode: str,
-      encoding: Optional[str] = 'utf8',
-      errors: Optional[str] = 'strict',
-  ) -> Iterator[Any]:
+      encoding: str | None = 'utf8',
+      errors: str | None = 'strict',
+  ) -> abc.Iterator[Any]:
     with open(
         self.full_path, mode=mode, encoding=encoding, errors=errors
     ) as fp:
@@ -500,13 +500,13 @@ class _method:
   """
 
   _finstancemethod: Any
-  _fclassmethod: Optional[Any]
+  _fclassmethod: Any | None
 
-  def __init__(self, finstancemethod: Callable[..., Any]) -> None:
+  def __init__(self, finstancemethod: abc.Callable[..., Any]) -> None:
     self._finstancemethod = finstancemethod
     self._fclassmethod = None
 
-  def classmethod(self, fclassmethod: Callable[..., Any]) -> '_method':
+  def classmethod(self, fclassmethod: abc.Callable[..., Any]) -> '_method':
     if isinstance(fclassmethod, classmethod):
       self._fclassmethod = fclassmethod
     else:
@@ -521,8 +521,8 @@ class _method:
     )
 
   def __get__(
-      self, obj: Optional[Any], type_: Optional[Type[Any]]
-  ) -> Callable[..., Any]:
+      self, obj: Any | None, type_: type[Any] | None
+  ) -> abc.Callable[..., Any]:
     func = self._fclassmethod if obj is None else self._finstancemethod
     return func.__get__(obj, type_)  # type: ignore[attribute-error, union-attr]
 
@@ -549,7 +549,7 @@ class TestCase(unittest.TestCase):
   def __init__(self, *args, **kwargs) -> None:
     super().__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
-    self._outcome: Optional[Any] = getattr(self, '_outcome')
+    self._outcome: Any | None = getattr(self, '_outcome')
 
   def setUp(self):
     super().setUp()
@@ -574,8 +574,8 @@ class TestCase(unittest.TestCase):
 
   def create_tempdir(
       self,
-      name: Optional[str] = None,
-      cleanup: Optional[TempFileCleanup] = None,
+      name: str | None = None,
+      cleanup: TempFileCleanup | None = None,
   ) -> _TempDir:
     """Create a temporary directory specific to the test.
 
@@ -631,12 +631,12 @@ class TestCase(unittest.TestCase):
 
   def create_tempfile(
       self,
-      file_path: Optional[str] = None,
-      content: Optional[AnyStr] = None,
+      file_path: str | None = None,
+      content: AnyStr | None = None,
       mode: str = 'w',
       encoding: str = 'utf8',
       errors: str = 'strict',
-      cleanup: Optional[TempFileCleanup] = None,
+      cleanup: TempFileCleanup | None = None,
   ) -> _TempFile:
     """Create a temporary file specific to the test.
 
@@ -690,7 +690,7 @@ class TestCase(unittest.TestCase):
     return tf
 
   @_method
-  def enter_context(self, manager: ContextManager[_T]) -> _T:
+  def enter_context(self, manager: contextlib.AbstractContextManager[_T]) -> _T:
     """Returns the CM's value after registering it with the exit stack.
 
     Entering a context pushes it onto a stack of contexts. When `enter_context`
@@ -724,7 +724,9 @@ class TestCase(unittest.TestCase):
 
   @enter_context.classmethod
   @classmethod
-  def _enter_context_cls(cls, manager: ContextManager[_T]) -> _T:
+  def _enter_context_cls(
+      cls, manager: contextlib.AbstractContextManager[_T]
+  ) -> _T:
     if sys.version_info >= (3, 11):
       return cls.enterClassContext(manager)
 
@@ -743,14 +745,14 @@ class TestCase(unittest.TestCase):
     return os.path.join(self._get_tempdir_path_cls(), self._testMethodName)
 
   def _get_tempfile_cleanup(
-      self, override: Optional[TempFileCleanup]
+      self, override: TempFileCleanup | None
   ) -> TempFileCleanup:
     if override is not None:
       return override
     return self.tempfile_cleanup
 
   def _maybe_add_temp_path_cleanup(
-      self, path: str, cleanup: Optional[TempFileCleanup]
+      self, path: str, cleanup: TempFileCleanup | None
   ) -> None:
     cleanup = self._get_tempfile_cleanup(cleanup)
     if cleanup == TempFileCleanup.OFF:
@@ -764,7 +766,7 @@ class TestCase(unittest.TestCase):
 
   def _internal_add_cleanup_on_success(
       self,
-      function: Callable[..., Any],
+      function: abc.Callable[..., Any],
       *args: Any,
       **kwargs: Any,
   ) -> None:
@@ -1326,8 +1328,13 @@ class TestCase(unittest.TestCase):
 
   @typing.overload
   def assertRaisesWithPredicateMatch(
-      self, expected_exception, predicate, callable_obj: Callable[..., Any],
-      *args, **kwargs) -> None:
+      self,
+      expected_exception,
+      predicate,
+      callable_obj: abc.Callable[..., Any],
+      *args,
+      **kwargs,
+  ) -> None:
     # The purpose of this return statement is to work around
     # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
     return self._AssertRaisesContext(None, None, None)  # type: ignore[return-value]
@@ -1370,8 +1377,13 @@ class TestCase(unittest.TestCase):
 
   @typing.overload
   def assertRaisesWithLiteralMatch(
-      self, expected_exception, expected_exception_message,
-      callable_obj: Callable[..., Any], *args, **kwargs) -> None:
+      self,
+      expected_exception,
+      expected_exception_message,
+      callable_obj: abc.Callable[..., Any],
+      *args,
+      **kwargs,
+  ) -> None:
     # The purpose of this return statement is to work around
     # https://github.com/PyCQA/pylint/issues/5273; it is otherwise ignored.
     return self._AssertRaisesContext(None, None, None)  # type: ignore[return-value]
@@ -1623,7 +1635,10 @@ class TestCase(unittest.TestCase):
         CheckEqual(a, b)
 
   def assertDictContainsSubset(
-      self, subset: Mapping[Any, Any], dictionary: Mapping[Any, Any], msg=None
+      self,
+      subset: abc.Mapping[Any, Any],
+      dictionary: abc.Mapping[Any, Any],
+      msg=None,
   ):
     """Raises AssertionError if "dictionary" is not a superset of "subset".
 
@@ -1723,7 +1738,7 @@ class TestCase(unittest.TestCase):
       a,
       b,
       msg=None,
-      mapping_type=collections.abc.Mapping,
+      mapping_type=abc.Mapping,
       check_values_equality=lambda x, y: (x == y, None),
   ):
     """Raises AssertionError if a and b differ in keys or values.
@@ -1969,7 +1984,7 @@ class TestCase(unittest.TestCase):
 
   def _getAssertEqualityFunc(
       self, first: Any, second: Any
-  ) -> Callable[..., None]:
+  ) -> abc.Callable[..., None]:
     try:
       return super()._getAssertEqualityFunc(first, second)
     except AttributeError:
@@ -1988,8 +2003,8 @@ class TestCase(unittest.TestCase):
 
 
 def _sorted_list_difference(
-    expected: List[_T], actual: List[_T]
-) -> Tuple[List[_T], List[_T]]:
+    expected: list[_T], actual: list[_T]
+) -> tuple[list[_T], list[_T]]:
   """Finds elements in only one or the other of two, sorted input lists.
 
   Returns a two-element tuple of lists.  The first list contains those
@@ -2188,7 +2203,7 @@ def get_command_stderr(command, env=None, close_fds=True):
   return (result.returncode, result.stdout)
 
 
-def _quote_long_string(s: Union[str, bytes, bytearray]) -> str:
+def _quote_long_string(s: str | bytes | bytearray) -> str:
   """Quotes a potentially multi-line string to make the start and end obvious.
 
   Args:
@@ -2257,9 +2272,9 @@ def _register_sigterm_with_faulthandler() -> None:
 
 
 def _run_in_app(
-    function: Callable[..., None],
-    args: Sequence[str],
-    kwargs: Mapping[str, Any],
+    function: abc.Callable[..., None],
+    args: abc.Sequence[str],
+    kwargs: abc.Mapping[str, Any],
 ) -> None:
   """Executes a set of Python unit tests, ensuring app.run.
 
@@ -2341,7 +2356,7 @@ def _run_in_app(
 
 
 def _is_suspicious_attribute(
-    testCaseClass: Type[unittest.TestCase], name: str
+    testCaseClass: type[unittest.TestCase], name: str
 ) -> bool:
   """Returns True if an attribute is a method named like a test method."""
   if name.startswith('Test') and len(name) > 4 and name[4].isupper():
@@ -2356,7 +2371,7 @@ def _is_suspicious_attribute(
 
 def skipThisClass(
     reason: str,
-) -> Callable[[Type[_T]], Type[_T]]:
+) -> abc.Callable[[type[_T]], type[_T]]:
   """Skip tests in the decorated TestCase, but not any of its subclasses.
 
   This decorator indicates that this class should skip all its tests, but not
@@ -2474,10 +2489,10 @@ class TestLoader(unittest.TestLoader):
 
   def shardTestCaseNames(
       self,
-      iterator: Iterator[Any],
-      ordered_names: Sequence[str],
+      iterator: abc.Iterator[Any],
+      ordered_names: abc.Sequence[str],
       shard_index: int,
-  ) -> Sequence[str]:
+  ) -> abc.Sequence[str]:
     """Filters and returns test case names for a specific shard.
 
     This method is intended to be used in conjunction with test sharding
@@ -2505,7 +2520,7 @@ class TestLoader(unittest.TestLoader):
     return [x for x in ordered_names if x in filtered_names]
 
 
-def get_default_xml_output_filename() -> Optional[str]:
+def get_default_xml_output_filename() -> str | None:
   if os.environ.get('XML_OUTPUT_FILE'):
     return os.environ['XML_OUTPUT_FILE']
   elif os.environ.get('RUNNING_UNDER_TEST_DAEMON'):
@@ -2517,7 +2532,7 @@ def get_default_xml_output_filename() -> Optional[str]:
   return None
 
 
-def _setup_filtering(argv: MutableSequence[str]) -> bool:
+def _setup_filtering(argv: abc.MutableSequence[str]) -> bool:
   """Implements the bazel test filtering protocol.
 
   The following environment variable is used in this method:
@@ -2546,7 +2561,7 @@ def _setup_filtering(argv: MutableSequence[str]) -> bool:
   return True
 
 
-def _setup_test_runner_fail_fast(argv: MutableSequence[str]) -> None:
+def _setup_test_runner_fail_fast(argv: abc.MutableSequence[str]) -> None:
   """Implements the bazel test fail fast protocol.
 
   The following environment variable is used in this method:
@@ -2570,8 +2585,8 @@ def _setup_test_runner_fail_fast(argv: MutableSequence[str]) -> None:
 
 
 def _setup_sharding(
-    custom_loader: Optional[unittest.TestLoader] = None,
-) -> Tuple[unittest.TestLoader, Optional[int]]:
+    custom_loader: unittest.TestLoader | None = None,
+) -> tuple[unittest.TestLoader, int | None]:
   """Implements the bazel sharding protocol.
 
   The following environment variables are used in this method:
@@ -2644,11 +2659,11 @@ def _setup_sharding(
 
 
 def _run_and_get_tests_result(
-    argv: MutableSequence[str],
-    args: Sequence[Any],
-    kwargs: MutableMapping[str, Any],
-    xml_test_runner_class: Type[unittest.TextTestRunner],
-) -> Tuple[unittest.TestResult, bool]:
+    argv: abc.MutableSequence[str],
+    args: abc.Sequence[Any],
+    kwargs: abc.MutableMapping[str, Any],
+    xml_test_runner_class: type[unittest.TextTestRunner],
+) -> tuple[unittest.TestResult, bool]:
   """Same as run_tests, but it doesn't exit.
 
   Args:
@@ -2801,9 +2816,9 @@ def _run_and_get_tests_result(
 
 
 def run_tests(
-    argv: MutableSequence[str],
-    args: Sequence[Any],
-    kwargs: MutableMapping[str, Any],
+    argv: abc.MutableSequence[str],
+    args: abc.Sequence[Any],
+    kwargs: abc.MutableMapping[str, Any],
 ) -> None:
   """Executes a set of Python unit tests.
 

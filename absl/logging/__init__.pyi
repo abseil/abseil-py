@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections.abc import Callable
 import logging
-from typing import Any, Callable, Dict, IO, NoReturn, Optional, Tuple, TypeVar, Union
+from typing import Any, NoReturn, TypeVar
 
 from absl import flags
 
@@ -31,17 +32,17 @@ LOGTOSTDERR: flags.FlagHolder[bool]
 ALSOLOGTOSTDERR: flags.FlagHolder[bool]
 LOG_DIR: flags.FlagHolder[str]
 VERBOSITY: flags.FlagHolder[int]
-LOGGER_LEVELS: flags.FlagHolder[Dict[str, str]]
+LOGGER_LEVELS: flags.FlagHolder[dict[str, str]]
 STDERRTHRESHOLD: flags.FlagHolder[str]
 SHOWPREFIXFORINFO: flags.FlagHolder[bool]
 
 def get_verbosity() -> int:
   ...
 
-def set_verbosity(v: Union[int, str]) -> None:
+def set_verbosity(v: int | str) -> None:
   ...
 
-def set_stderrthreshold(s: Union[int, str]) -> None:
+def set_stderrthreshold(s: int | str) -> None:
   ...
 
 # TODO(b/277607978): Provide actual args+kwargs shadowing stdlib's logging functions.
@@ -134,11 +135,11 @@ def get_log_file_name(level: int = ...) -> str:
   ...
 
 def find_log_dir_and_names(
-    program_name: Optional[str] = ..., log_dir: Optional[str] = ...
-) -> Tuple[str, str, str]:
+    program_name: str | None = ..., log_dir: str | None = ...
+) -> tuple[str, str, str]:
   ...
 
-def find_log_dir(log_dir: Optional[str] = ...) -> str:
+def find_log_dir(log_dir: str | None = ...) -> str:
   ...
 
 def get_absl_log_prefix(record: logging.LogRecord) -> str:
@@ -155,18 +156,18 @@ class PythonHandler(logging.StreamHandler[_StreamT]):  # type: ignore[type-var]
 
   def __init__(
       self,
-      stream: Optional[_StreamT] = ...,
-      formatter: Optional[logging.Formatter] = ...,
+      stream: _StreamT | None = ...,
+      formatter: logging.Formatter | None = ...,
   ) -> None:
     ...
 
   def start_logging_to_file(
-      self, program_name: Optional[str] = ..., log_dir: Optional[str] = ...
+      self, program_name: str | None = ..., log_dir: str | None = ...
   ) -> None:
     ...
 
   def use_absl_log_file(
-      self, program_name: Optional[str] = ..., log_dir: Optional[str] = ...
+      self, program_name: str | None = ..., log_dir: str | None = ...
   ) -> None:
     ...
 
@@ -210,7 +211,7 @@ class ABSLHandler(logging.Handler):
     ...
 
   def use_absl_log_file(
-      self, program_name: Optional[str] = ..., log_dir: Optional[str] = ...
+      self, program_name: str | None = ..., log_dir: str | None = ...
   ) -> None:
     ...
 
@@ -226,7 +227,7 @@ class ABSLLogger(logging.Logger):
 
   def findCaller(
       self, stack_info: bool = ..., stacklevel: int = ...
-  ) -> Tuple[str, int, str, Optional[str]]:
+  ) -> tuple[str, int, str, str | None]:
     ...
 
   def critical(self, msg: Any, *args: Any, **kwargs: Any) -> None:
@@ -258,7 +259,7 @@ class ABSLLogger(logging.Logger):
 
   @classmethod
   def register_frame_to_skip(
-      cls, file_name: str, function_name: str, line_number: Optional[int] = ...
+      cls, file_name: str, function_name: str, line_number: int | None = ...
   ) -> None:
     ...
 

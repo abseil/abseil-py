@@ -14,7 +14,7 @@
 
 """Tests for absl.testing.parameterized."""
 
-from collections import abc
+from collections.abc import Iterable
 import os
 import sys
 import unittest
@@ -51,7 +51,7 @@ def dict_decorator(key, value):
 
   def decorator(test_method):
     # If decorating result of another dict_decorator
-    if isinstance(test_method, abc.Iterable):
+    if isinstance(test_method, Iterable):
       actual_tests = []
       for old_test in test_method.testcases:
         # each test is a ('test_suffix', dict) tuple

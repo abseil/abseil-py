@@ -1,11 +1,12 @@
-from typing import Any, Callable, Collection, Iterable, List, NoReturn, Optional, TypeVar, Union, overload
+from collections.abc import Callable
+from typing import Any, NoReturn, TypeVar, overload
 
 from absl.flags import _flag
 
 _MainArgs = TypeVar('_MainArgs')
 _Exc = TypeVar('_Exc', bound=Exception)
 
-class ExceptionHandler():
+class ExceptionHandler:
 
   def wants(self, exc: _Exc) -> bool:
     ...
@@ -13,7 +14,7 @@ class ExceptionHandler():
   def handle(self, exc: _Exc):
     ...
 
-EXCEPTION_HANDLERS: List[ExceptionHandler] = ...
+EXCEPTION_HANDLERS: list[ExceptionHandler] = ...
 
 class HelpFlag(_flag.BooleanFlag):
   def __init__(self):
@@ -34,23 +35,23 @@ def define_help_flags() -> None:
   ...
 
 @overload
-def usage(shorthelp: Union[bool, int] = ...,
-          writeto_stdout: Union[bool, int] = ...,
-          detailed_error: Optional[Any] = ...,
+def usage(shorthelp: bool | int = ...,
+          writeto_stdout: bool | int = ...,
+          detailed_error: Any | None = ...,
           exitcode: None = ...) -> None:
   ...
 
 @overload
-def usage(shorthelp: Union[bool, int],
-          writeto_stdout: Union[bool, int],
-          detailed_error: Optional[Any],
+def usage(shorthelp: bool | int,
+          writeto_stdout: bool | int,
+          detailed_error: Any | None,
           exitcode: int) -> NoReturn:
   ...
 
 @overload
-def usage(shorthelp: Union[bool, int] = ...,
-          writeto_stdout: Union[bool, int] = ...,
-          detailed_error: Optional[Any] = ...,
+def usage(shorthelp: bool | int = ...,
+          writeto_stdout: bool | int = ...,
+          detailed_error: Any | None = ...,
           *,
           exitcode: int) -> NoReturn:
   ...
@@ -64,7 +65,7 @@ class Error(Exception):
 class UsageError(Error):
   exitcode: int
 
-def parse_flags_with_usage(args: List[str]) -> List[str]:
+def parse_flags_with_usage(args: list[str]) -> list[str]:
   ...
 
 def call_after_init(callback: Callable[[], Any]) -> None:
@@ -73,16 +74,16 @@ def call_after_init(callback: Callable[[], Any]) -> None:
 # Without the flag_parser argument, `main` should require a List[str].
 @overload
 def run(
-    main: Callable[[List[str]], Any],
-    argv: Optional[List[str]] = ...,
+    main: Callable[[list[str]], Any],
+    argv: list[str] | None = ...,
 ) -> NoReturn:
   ...
 
 @overload
 def run(
     main: Callable[[_MainArgs], Any],
-    argv: Optional[List[str]] = ...,
+    argv: list[str] | None = ...,
     *,
-    flags_parser: Callable[[List[str]], _MainArgs],
+    flags_parser: Callable[[list[str]], _MainArgs],
 ) -> NoReturn:
   ...

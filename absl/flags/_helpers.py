@@ -14,12 +14,13 @@
 
 """Internal helper functions for Abseil Python flags library."""
 
+from collections.abc import Iterable, Sequence
 import re
 import shutil
 import sys
 import textwrap
 import types
-from typing import Any, Dict, Iterable, List, NamedTuple, Optional, Sequence, Set
+from typing import Any, NamedTuple
 from xml.dom import minidom
 
 
@@ -49,7 +50,7 @@ _ILLEGAL_XML_CHARS_REGEX = re.compile(
 # This is a set of module ids for the modules that disclaim key flags.
 # This module is explicitly added to this set so that we never consider it to
 # define key flag.
-disclaim_module_ids: Set[int] = {id(sys.modules[__name__])}
+disclaim_module_ids: set[int] = {id(sys.modules[__name__])}
 
 
 # Define special flags here so that help may be generated for them.
@@ -63,7 +64,7 @@ SPECIAL_FLAGS: Any = None
 # This points to the flags module, initialized in flags/__init__.py.
 # This should only be used in adopt_module_key_flags to take SPECIAL_FLAGS into
 # account.
-FLAGS_MODULE: Optional[types.ModuleType] = None
+FLAGS_MODULE: types.ModuleType | None = None
 
 
 class _ModuleObjectAndName(NamedTuple):
@@ -78,8 +79,8 @@ class _ModuleObjectAndName(NamedTuple):
 
 
 def get_module_object_and_name(
-    globals_dict: Dict[str, Any],
-) -> Optional[_ModuleObjectAndName]:
+    globals_dict: dict[str, Any],
+) -> _ModuleObjectAndName | None:
   """Returns the module that defines a global environment, and its name.
 
   Args:
@@ -163,7 +164,7 @@ def get_help_width() -> int:
 
 def get_flag_suggestions(
     attempt: str, longopt_list: Sequence[str]
-) -> List[str]:
+) -> list[str]:
   """Returns helpful similar matches for an invalid flag."""
   # Don't suggest on very short strings, or if no longopts are specified.
   if len(attempt) <= 2 or not longopt_list:
@@ -222,9 +223,9 @@ def _damerau_levenshtein(a, b):
 
 def text_wrap(
     text: str,
-    length: Optional[int] = None,
+    length: int | None = None,
     indent: str = '',
-    firstline_indent: Optional[str] = None,
+    firstline_indent: str | None = None,
 ) -> str:
   """Wraps a given text to a maximum line length and returns it.
 
@@ -283,7 +284,7 @@ def text_wrap(
 
 
 def flag_dict_to_args(
-    flag_map: Dict[str, Any], multi_flags: Optional[Set[str]] = None
+    flag_map: dict[str, Any], multi_flags: set[str] | None = None
 ) -> Iterable[str]:
   """Convert a dict of values into process call parameters.
 

@@ -17,12 +17,13 @@ Do NOT import this module directly. Import the flags package and use the
 aliases defined at the package level instead.
 """
 
+from collections.abc import Callable, Iterable, Iterator, Sequence
 import copy
 from importlib import abc
 import logging
 import os
 import sys
-from typing import Any, Callable, Dict, Generic, Iterable, Iterator, List, Optional, Sequence, Set, TextIO, Tuple, TypeVar, Union
+from typing import Any, Generic, TextIO, TypeVar
 from xml.dom import minidom
 
 from absl.flags import _exceptions
@@ -103,7 +104,7 @@ class FlagValues:
   # able to do so. The mixin methods, e.g. keys, values, are not uncommon flag
   # names. Those flag values would not be accessible via the FLAGS.xxx form.
 
-  __dict__: Dict[str, Any]
+  __dict__: dict[str, Any]
 
   def __init__(self):
     # Since everything in this class is so heavily overloaded, the only
@@ -166,10 +167,10 @@ class FlagValues:
   def is_gnu_getopt(self) -> bool:
     return self.__dict__['__use_gnu_getopt']
 
-  def _flags(self) -> Dict[str, Flag]:
+  def _flags(self) -> dict[str, Flag]:
     return self.__dict__['__flags']
 
-  def flags_by_module_dict(self) -> Dict[str, List[Flag]]:
+  def flags_by_module_dict(self) -> dict[str, list[Flag]]:
     """Returns the dictionary of module_name -> list of defined flags.
 
     Returns:
@@ -178,7 +179,7 @@ class FlagValues:
     """
     return self.__dict__['__flags_by_module']
 
-  def flags_by_module_id_dict(self) -> Dict[int, List[Flag]]:
+  def flags_by_module_id_dict(self) -> dict[int, list[Flag]]:
     """Returns the dictionary of module_id -> list of defined flags.
 
     Returns:
@@ -187,7 +188,7 @@ class FlagValues:
     """
     return self.__dict__['__flags_by_module_id']
 
-  def key_flags_by_module_dict(self) -> Dict[str, List[Flag]]:
+  def key_flags_by_module_dict(self) -> dict[str, list[Flag]]:
     """Returns the dictionary of module_name -> list of key flags.
 
     Returns:
@@ -281,7 +282,7 @@ class FlagValues:
       while flag_obj in flags_in_module:
         flags_in_module.remove(flag_obj)
 
-  def get_flags_for_module(self, module: Union[str, Any]) -> List[Flag]:
+  def get_flags_for_module(self, module: str | Any) -> list[Flag]:
     """Returns the list of flags defined by a module.
 
     Args:
@@ -299,7 +300,7 @@ class FlagValues:
 
     return list(self.flags_by_module_dict().get(module, []))
 
-  def get_key_flags_for_module(self, module: Union[str, Any]) -> List[Flag]:
+  def get_key_flags_for_module(self, module: str | Any) -> list[Flag]:
     """Returns the list of key flags for a module.
 
     Args:
@@ -328,8 +329,8 @@ class FlagValues:
 
   # TODO(yileiyang): Restrict default to Optional[str].
   def find_module_defining_flag(
-      self, flagname: str, default: Optional[_T] = None
-  ) -> Union[str, Optional[_T]]:
+      self, flagname: str, default: _T | None = None
+  ) -> str | _T | None:
     """Return the name of the module defining this flag, or default.
 
     Args:
@@ -358,8 +359,8 @@ class FlagValues:
 
   # TODO(yileiyang): Restrict default to Optional[str].
   def find_module_id_defining_flag(
-      self, flagname: str, default: Optional[_T] = None
-  ) -> Union[int, Optional[_T]]:
+      self, flagname: str, default: _T | None = None
+  ) -> int | _T | None:
     """Return the ID of the module defining this flag, or default.
 
     Args:
@@ -445,7 +446,7 @@ class FlagValues:
           )
 
   def remove_flag_values(
-      self, flag_values: 'Union[FlagValues, Iterable[str]]'
+      self, flag_values: 'FlagValues | Iterable[str]'
   ) -> None:
     """Remove flags that were previously appended from another FlagValues.
 
@@ -487,7 +488,7 @@ class FlagValues:
     # If a new flag overrides an old one, we need to cleanup the old flag's
     # modules if it's not registered.
     flags_to_cleanup = set()
-    short_name: Optional[str] = flag.short_name
+    short_name: str | None = flag.short_name
     if short_name is not None:
       if (
           short_name in fl
@@ -509,7 +510,7 @@ class FlagValues:
     for f in flags_to_cleanup:
       self._cleanup_unregistered_flag_from_module_dicts(f)
 
-  def __dir__(self) -> List[str]:
+  def __dir__(self) -> list[str]:
     """Returns list of names of all defined flags.
 
     Useful for TAB-completion in ipython.
@@ -605,7 +606,7 @@ class FlagValues:
           validator.
     """
     messages = []
-    bad_flags: Set[str] = set()
+    bad_flags: set[str] = set()
     for validator in sorted(
         validators, key=lambda validator: validator.insertion_index
     ):
@@ -691,7 +692,7 @@ class FlagValues:
 
   def __call__(
       self, argv: Sequence[str], known_only: bool = False
-  ) -> List[str]:
+  ) -> list[str]:
     """Parses flags from argv; stores parsed flags into this FlagValues object.
 
     All unparsed arguments are returned.
@@ -765,8 +766,8 @@ class FlagValues:
     self.__dict__['__is_retired_flag_func'] = is_retired_flag_func
 
   def _parse_args(
-      self, args: List[str], known_only: bool
-  ) -> Tuple[List[Tuple[str, Any]], List[str]]:
+      self, args: list[str], known_only: bool
+  ) -> tuple[list[tuple[str, Any]], list[str]]:
     """Helper function to do the main argument parsing.
 
     This function goes through args and does the bulk of the flag parsing.
@@ -787,8 +788,8 @@ class FlagValues:
        Error: Raised on any parsing error.
        ValueError: Raised on flag value parsing error.
     """
-    unparsed_names_and_args: List[Tuple[Optional[str], str]] = []
-    undefok: Set[str] = set()
+    unparsed_names_and_args: list[tuple[str | None, str]] = []
+    undefok: set[str] = set()
     retired_flag_func = self.__dict__['__is_retired_flag_func']
 
     flag_dict = self._flags()
@@ -929,7 +930,7 @@ class FlagValues:
     self.__dict__['__flags_parsed'] = False
     self.__dict__['__unparse_flags_called'] = True
 
-  def flag_values_dict(self) -> Dict[str, Any]:
+  def flag_values_dict(self) -> dict[str, Any]:
     """Returns a dictionary that maps flag names to flag values."""
     return {name: flag.value for name, flag in list(self._flags().items())}
 
@@ -960,7 +961,7 @@ class FlagValues:
         modules = [main_module] + modules
       return self._get_help_for_modules(modules, prefix, include_special_flags)
     else:
-      output_lines: List[str] = []
+      output_lines: list[str] = []
       # Just print one long list of flags.
       values = list(self._flags().values())
       if include_special_flags:
@@ -1026,7 +1027,7 @@ class FlagValues:
     Returns:
       str, describing the key flags of a module.
     """
-    helplist: List[str] = []
+    helplist: list[str] = []
     self._render_our_module_key_flags(module, helplist)
     return '\n'.join(helplist)
 
@@ -1208,7 +1209,7 @@ class FlagValues:
 
   def read_flags_from_files(
       self, argv: Sequence[str], force_gnu: bool = True
-  ) -> List[str]:
+  ) -> list[str]:
     """Processes command line args, but also allow args to be read from file.
 
     Args:
@@ -1331,7 +1332,7 @@ class FlagValues:
     with open(filename, 'a') as out_file:
       out_file.write(self.flags_into_string())
 
-  def write_help_in_xml_format(self, outfile: Optional[TextIO] = None) -> None:
+  def write_help_in_xml_format(self, outfile: TextIO | None = None) -> None:
     """Outputs flag documentation in XML format.
 
     NOTE: We use element names that are consistent with those used by
@@ -1512,8 +1513,8 @@ class FlagHolder(Generic[_T_co]):
 
 
 def resolve_flag_ref(
-    flag_ref: Union[str, FlagHolder], flag_values: FlagValues
-) -> Tuple[str, FlagValues]:
+    flag_ref: str | FlagHolder, flag_values: FlagValues
+) -> tuple[str, FlagValues]:
   """Helper to validate and resolve a flag reference argument."""
   if isinstance(flag_ref, FlagHolder):
     new_flag_values = flag_ref._flagvalues  # pylint: disable=protected-access
@@ -1526,8 +1527,8 @@ def resolve_flag_ref(
 
 
 def resolve_flag_refs(
-    flag_refs: Sequence[Union[str, FlagHolder]], flag_values: FlagValues
-) -> Tuple[List[str], FlagValues]:
+    flag_refs: Sequence[str | FlagHolder], flag_values: FlagValues
+) -> tuple[list[str], FlagValues]:
   """Helper to validate and resolve flag reference list arguments."""
   fv = None
   names = []

@@ -77,10 +77,10 @@ The differences in behavior are historical and unfortunate.
 """
 
 import collections
-from collections import abc
+from collections.abc import Mapping
 import getpass
-import io
 import inspect
+import io
 import itertools
 import logging
 import os
@@ -92,7 +92,6 @@ import threading
 import time
 import timeit
 import traceback
-import types
 import warnings
 
 from absl import flags
@@ -236,7 +235,7 @@ class _LoggerLevelsParser(flags.ArgumentParser):
   """Parser for --logger_levels flag."""
 
   def parse(self, value):
-    if isinstance(value, abc.Mapping):
+    if isinstance(value, Mapping):
       return value
 
     pairs = [pair.strip() for pair in value.split(',') if pair.strip()]

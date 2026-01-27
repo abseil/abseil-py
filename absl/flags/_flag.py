@@ -18,11 +18,11 @@ Do NOT import this module directly. Import the flags package and use the
 aliases defined at the package level instead.
 """
 
-from collections import abc
+from collections.abc import Iterable
 import copy
 import enum
 import functools
-from typing import Any, Dict, Generic, Iterable, List, Optional, Type, TypeVar, Union
+from typing import Any, Generic, TypeVar
 from xml.dom import minidom
 
 from absl.flags import _argument_parser
@@ -83,20 +83,20 @@ class Flag(Generic[_T]):
   """
 
   # NOTE: pytype doesn't find defaults without this.
-  default: Optional[_T]
-  default_as_str: Optional[str]
-  default_unparsed: Union[Optional[_T], str]
+  default: _T | None
+  default_as_str: str | None
+  default_unparsed: _T | None | str
 
   parser: _argument_parser.ArgumentParser[_T]
 
   def __init__(
       self,
       parser: _argument_parser.ArgumentParser[_T],
-      serializer: Optional[_argument_parser.ArgumentSerializer[_T]],
+      serializer: _argument_parser.ArgumentSerializer[_T] | None,
       name: str,
-      default: Union[Optional[_T], str],
-      help_string: Optional[str],
-      short_name: Optional[str] = None,
+      default: _T | None | str,
+      help_string: str | None,
+      short_name: str | None = None,
       boolean: bool = False,
       allow_override: bool = False,
       allow_override_cpp: bool = False,
@@ -122,8 +122,8 @@ class Flag(Generic[_T]):
     self.allow_using_method_names = allow_using_method_names
 
     self.using_default_value = True
-    self._value: Optional[_T] = None
-    self.validators: List[Any] = []
+    self._value: _T | None = None
+    self.validators: list[Any] = []
     if self.allow_hide_cpp and self.allow_override_cpp:
       raise _exceptions.Error(
           "Can't have both allow_hide_cpp (means use Python flag) and "
@@ -132,11 +132,11 @@ class Flag(Generic[_T]):
     self._set_default(default)
 
   @property
-  def value(self) -> Optional[_T]:
+  def value(self) -> _T | None:
     return self._value
 
   @value.setter
-  def value(self, value: Optional[_T]):
+  def value(self, value: _T | None):
     self._value = value
 
   def __hash__(self):
@@ -161,12 +161,12 @@ class Flag(Generic[_T]):
     raise TypeError('%s does not support shallow copies. '
                     'Use copy.deepcopy instead.' % type(self).__name__)
 
-  def __deepcopy__(self, memo: Dict[int, Any]) -> 'Flag[_T]':
+  def __deepcopy__(self, memo: dict[int, Any]) -> 'Flag[_T]':
     result = object.__new__(type(self))
     result.__dict__ = copy.deepcopy(self.__dict__, memo)
     return result
 
-  def _get_parsed_value_as_string(self, value: Optional[_T]) -> Optional[str]:
+  def _get_parsed_value_as_string(self, value: _T | None) -> str | None:
     """Returns parsed flag value as string."""
     if value is None:
       return None
@@ -179,7 +179,7 @@ class Flag(Generic[_T]):
         return repr('false')
     return repr(str(value))
 
-  def parse(self, argument: Union[str, _T]) -> None:
+  def parse(self, argument: str | _T) -> None:
     """Parses string and sets flag value.
 
     Args:
@@ -192,7 +192,7 @@ class Flag(Generic[_T]):
     self.value = self._parse(argument)
     self.present += 1
 
-  def _parse(self, argument: Union[str, _T]) -> Optional[_T]:
+  def _parse(self, argument: str | _T) -> _T | None:
     """Internal parse function.
 
     It returns the parsed value, and does not modify class states.
@@ -219,7 +219,7 @@ class Flag(Generic[_T]):
     """Serializes the flag."""
     return self._serialize(self.value)
 
-  def _serialize(self, value: Optional[_T]) -> str:
+  def _serialize(self, value: _T | None) -> str:
     """Internal serialize function."""
     if value is None:
       return ''
@@ -234,7 +234,7 @@ class Flag(Generic[_T]):
             'Serializer not present for flag %s' % self.name)
       return '--%s=%s' % (self.name, self.serializer.serialize(value))
 
-  def _set_default(self, value: Union[Optional[_T], str]) -> None:
+  def _set_default(self, value: _T | None | str) -> None:
     """Changes the default value (and current value too) for this Flag."""
     self.default_unparsed = value
     if value is None:
@@ -247,7 +247,7 @@ class Flag(Generic[_T]):
 
   # This is split out so that aliases can skip regular parsing of the default
   # value.
-  def _parse_from_default(self, value: Union[str, _T]) -> Optional[_T]:
+  def _parse_from_default(self, value: str | _T) -> _T | None:
     return self._parse(value)
 
   def flag_type(self) -> str:
@@ -313,13 +313,13 @@ class Flag(Generic[_T]):
       element.appendChild(e)
     return element
 
-  def _serialize_value_for_xml(self, value: Optional[_T]) -> Any:
+  def _serialize_value_for_xml(self, value: _T | None) -> Any:
     """Returns the serialized value, for use in an XML help text."""
     return value
 
   def _extra_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     """Returns extra info about this flag in XML.
 
     "Extra" means "not already included by _create_xml_dom_element above."
@@ -351,9 +351,9 @@ class BooleanFlag(Flag[bool]):
   def __init__(
       self,
       name: str,
-      default: Union[Optional[bool], str],
-      help: Optional[str],  # pylint: disable=redefined-builtin
-      short_name: Optional[str] = None,
+      default: bool | None | str,
+      help: str | None,  # pylint: disable=redefined-builtin
+      short_name: str | None = None,
       **args
   ) -> None:
     p = _argument_parser.BooleanParser()
@@ -368,10 +368,10 @@ class EnumFlag(Flag[str]):
   def __init__(
       self,
       name: str,
-      default: Optional[str],
-      help: Optional[str],  # pylint: disable=redefined-builtin
+      default: str | None,
+      help: str | None,  # pylint: disable=redefined-builtin
       enum_values: Iterable[str],
-      short_name: Optional[str] = None,
+      short_name: str | None = None,
       case_sensitive: bool = True,
       **args
   ):
@@ -384,7 +384,7 @@ class EnumFlag(Flag[str]):
 
   def _extra_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     elements = []
     for enum_value in self.parser.enum_values:
       elements.append(_helpers.create_xml_dom_element(
@@ -400,10 +400,10 @@ class EnumClassFlag(Flag[_ET]):
   def __init__(
       self,
       name: str,
-      default: Union[Optional[_ET], str],
-      help: Optional[str],  # pylint: disable=redefined-builtin
-      enum_class: Type[_ET],
-      short_name: Optional[str] = None,
+      default: _ET | None | str,
+      help: str | None,  # pylint: disable=redefined-builtin
+      enum_class: type[_ET],
+      short_name: str | None = None,
       case_sensitive: bool = False,
       **args
   ):
@@ -418,7 +418,7 @@ class EnumClassFlag(Flag[_ET]):
 
   def _extra_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     elements = []
     for enum_value in self.parser.enum_class.__members__.keys():
       elements.append(_helpers.create_xml_dom_element(
@@ -426,7 +426,7 @@ class EnumClassFlag(Flag[_ET]):
     return elements
 
 
-class MultiFlag(Generic[_T], Flag[List[_T]]):
+class MultiFlag(Generic[_T], Flag[list[_T]]):
   """A flag that can appear multiple time on the command-line.
 
   The value of such a flag is a list that contains the individual values
@@ -447,7 +447,7 @@ class MultiFlag(Generic[_T], Flag[List[_T]]):
     super().__init__(*args, **kwargs)
     self.help += ';\n    repeat this option to specify a list of values'
 
-  def parse(self, arguments: Union[str, _T, Iterable[_T]]):  # pylint: disable=arguments-renamed
+  def parse(self, arguments: str | _T | Iterable[_T]):  # pylint: disable=arguments-renamed
     """Parses one or more arguments with the installed parser.
 
     Args:
@@ -463,13 +463,13 @@ class MultiFlag(Generic[_T], Flag[List[_T]]):
       self.value = new_values
     self.present += len(new_values)
 
-  def _parse(self, arguments: Union[str, _T, Iterable[_T]]) -> List[_T]:  # pylint: disable=arguments-renamed
-    arguments_list: List[Union[str, _T]]
+  def _parse(self, arguments: str | _T | Iterable[_T]) -> list[_T]:  # pylint: disable=arguments-renamed
+    arguments_list: list[str | _T]
 
     if isinstance(arguments, str):
       arguments_list = [arguments]
 
-    elif isinstance(arguments, abc.Iterable):
+    elif isinstance(arguments, Iterable):
       arguments_list = list(arguments)
 
     else:
@@ -480,7 +480,7 @@ class MultiFlag(Generic[_T], Flag[List[_T]]):
 
     return [super(MultiFlag, self)._parse(item) for item in arguments_list]  # type: ignore
 
-  def _serialize(self, value: Optional[List[_T]]) -> str:
+  def _serialize(self, value: list[_T] | None) -> str:
     """See base class."""
     if not self.serializer:
       raise _exceptions.Error(
@@ -501,7 +501,7 @@ class MultiFlag(Generic[_T], Flag[List[_T]]):
 
   def _extra_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     elements = []
     if hasattr(self.parser, 'enum_values'):
       for enum_value in self.parser.enum_values:  # pytype: disable=attribute-error
@@ -523,9 +523,9 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
   def __init__(
       self,
       name: str,
-      default: Union[None, Iterable[_ET], _ET, Iterable[str], str],
+      default: None | Iterable[_ET] | _ET | Iterable[str] | str,
       help_string: str,
-      enum_class: Type[_ET],
+      enum_class: type[_ET],
       case_sensitive: bool = False,
       **args
   ):
@@ -546,7 +546,7 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
 
   def _extra_xml_dom_elements(
       self, doc: minidom.Document
-  ) -> List[minidom.Element]:
+  ) -> list[minidom.Element]:
     elements = []
     for enum_value in self.parser.enum_class.__members__.keys():  # pytype: disable=attribute-error
       elements.append(_helpers.create_xml_dom_element(

@@ -17,10 +17,11 @@ Do NOT import this module directly. Import the flags package and use the
 aliases defined at the package level instead.
 """
 
+from collections.abc import Iterable
 import enum
 import sys
 import types
-from typing import Any, Iterable, List, Literal, Optional, Type, TypeVar, Union, overload
+from typing import Any, Literal, TypeVar, overload
 
 from absl.flags import _argument_parser
 from absl.flags import _exceptions
@@ -60,10 +61,10 @@ def DEFINE(  # pylint: disable=invalid-name
     parser: _argument_parser.ArgumentParser[_T],
     name: str,
     default: Any,
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = ...,
-    module_name: Optional[str] = ...,
+    serializer: _argument_parser.ArgumentSerializer[_T] | None = ...,
+    module_name: str | None = ...,
     required: Literal[True] = ...,
     **args: Any
 ) -> _flagvalues.FlagHolder[_T]:
@@ -74,14 +75,14 @@ def DEFINE(  # pylint: disable=invalid-name
 def DEFINE(  # pylint: disable=invalid-name
     parser: _argument_parser.ArgumentParser[_T],
     name: str,
-    default: Optional[Any],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    default: Any | None,
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    serializer: Optional[_argument_parser.ArgumentSerializer[_T]] = ...,
-    module_name: Optional[str] = ...,
+    serializer: _argument_parser.ArgumentSerializer[_T] | None = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[_T]]:
+) -> _flagvalues.FlagHolder[_T | None]:
   ...
 
 
@@ -132,7 +133,7 @@ def DEFINE(  # pylint: disable=invalid-name
 def DEFINE_flag(  # pylint: disable=invalid-name
     flag: _flag.Flag[_T],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: Literal[True] = ...,
 ) -> _flagvalues.FlagHolder[_T]:
   ...
@@ -142,9 +143,9 @@ def DEFINE_flag(  # pylint: disable=invalid-name
 def DEFINE_flag(  # pylint: disable=invalid-name
     flag: _flag.Flag[_T],
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
-) -> _flagvalues.FlagHolder[Optional[_T]]:
+) -> _flagvalues.FlagHolder[_T | None]:
   ...
 
 
@@ -238,9 +239,9 @@ def override_value(flag_holder: _flagvalues.FlagHolder[_T], value: _T) -> None:
 
 
 def _internal_declare_key_flags(
-    flag_names: List[str],
+    flag_names: list[str],
     flag_values: _flagvalues.FlagValues = _flagvalues.FLAGS,
-    key_flag_values: Optional[_flagvalues.FlagValues] = None,
+    key_flag_values: _flagvalues.FlagValues | None = None,
 ) -> None:
   """Declares a flag as key for the calling module.
 
@@ -270,7 +271,7 @@ def _internal_declare_key_flags(
 
 
 def declare_key_flag(
-    flag_name: Union[str, _flagvalues.FlagHolder],
+    flag_name: str | _flagvalues.FlagHolder,
     flag_values: _flagvalues.FlagValues = _flagvalues.FLAGS,
 ) -> None:
   """Declares one flag as key to the current module.
@@ -371,8 +372,8 @@ def disclaim_key_flags() -> None:
 @overload
 def DEFINE_string(  # pylint: disable=invalid-name
     name: str,
-    default: Optional[str],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    default: str | None,
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
@@ -385,11 +386,11 @@ def DEFINE_string(  # pylint: disable=invalid-name
 def DEFINE_string(  # pylint: disable=invalid-name
     name: str,
     default: None,
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[str]]:
+) -> _flagvalues.FlagHolder[str | None]:
   ...
 
 
@@ -397,7 +398,7 @@ def DEFINE_string(  # pylint: disable=invalid-name
 def DEFINE_string(  # pylint: disable=invalid-name
     name: str,
     default: str,
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
@@ -431,10 +432,10 @@ def DEFINE_string(  # pylint: disable=invalid-name
 @overload
 def DEFINE_boolean(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, str, bool, int],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    default: None | str | bool | int,
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     *,
     required: Literal[True],
     **args: Any
@@ -446,22 +447,22 @@ def DEFINE_boolean(  # pylint: disable=invalid-name
 def DEFINE_boolean(  # pylint: disable=invalid-name
     name: str,
     default: None,
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[bool]]:
+) -> _flagvalues.FlagHolder[bool | None]:
   ...
 
 
 @overload
 def DEFINE_boolean(  # pylint: disable=invalid-name
     name: str,
-    default: Union[str, bool, int],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    default: str | bool | int,
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
 ) -> _flagvalues.FlagHolder[bool]:
@@ -513,10 +514,10 @@ def DEFINE_boolean(  # pylint: disable=invalid-name
 @overload
 def DEFINE_float(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, float, str],
-    help: Optional[str],  # pylint: disable=redefined-builtin
-    lower_bound: Optional[float] = ...,
-    upper_bound: Optional[float] = ...,
+    default: None | float | str,
+    help: str | None,  # pylint: disable=redefined-builtin
+    lower_bound: float | None = ...,
+    upper_bound: float | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
@@ -529,23 +530,23 @@ def DEFINE_float(  # pylint: disable=invalid-name
 def DEFINE_float(  # pylint: disable=invalid-name
     name: str,
     default: None,
-    help: Optional[str],  # pylint: disable=redefined-builtin
-    lower_bound: Optional[float] = ...,
-    upper_bound: Optional[float] = ...,
+    help: str | None,  # pylint: disable=redefined-builtin
+    lower_bound: float | None = ...,
+    upper_bound: float | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[float]]:
+) -> _flagvalues.FlagHolder[float | None]:
   ...
 
 
 @overload
 def DEFINE_float(  # pylint: disable=invalid-name
     name: str,
-    default: Union[float, str],
-    help: Optional[str],  # pylint: disable=redefined-builtin
-    lower_bound: Optional[float] = ...,
-    upper_bound: Optional[float] = ...,
+    default: float | str,
+    help: str | None,  # pylint: disable=redefined-builtin
+    lower_bound: float | None = ...,
+    upper_bound: float | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
@@ -602,10 +603,10 @@ def DEFINE_float(  # pylint: disable=invalid-name
 @overload
 def DEFINE_integer(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, int, str],
-    help: Optional[str],  # pylint: disable=redefined-builtin
-    lower_bound: Optional[int] = ...,
-    upper_bound: Optional[int] = ...,
+    default: None | int | str,
+    help: str | None,  # pylint: disable=redefined-builtin
+    lower_bound: int | None = ...,
+    upper_bound: int | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
@@ -618,23 +619,23 @@ def DEFINE_integer(  # pylint: disable=invalid-name
 def DEFINE_integer(  # pylint: disable=invalid-name
     name: str,
     default: None,
-    help: Optional[str],  # pylint: disable=redefined-builtin
-    lower_bound: Optional[int] = ...,
-    upper_bound: Optional[int] = ...,
+    help: str | None,  # pylint: disable=redefined-builtin
+    lower_bound: int | None = ...,
+    upper_bound: int | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[int]]:
+) -> _flagvalues.FlagHolder[int | None]:
   ...
 
 
 @overload
 def DEFINE_integer(  # pylint: disable=invalid-name
     name: str,
-    default: Union[int, str],
-    help: Optional[str],  # pylint: disable=redefined-builtin
-    lower_bound: Optional[int] = ...,
-    upper_bound: Optional[int] = ...,
+    default: int | str,
+    help: str | None,  # pylint: disable=redefined-builtin
+    lower_bound: int | None = ...,
+    upper_bound: int | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
@@ -691,11 +692,11 @@ def DEFINE_integer(  # pylint: disable=invalid-name
 @overload
 def DEFINE_enum(  # pylint: disable=invalid-name
     name: str,
-    default: Optional[str],
+    default: str | None,
     enum_values: Iterable[str],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     *,
     required: Literal[True],
     **args: Any
@@ -708,12 +709,12 @@ def DEFINE_enum(  # pylint: disable=invalid-name
     name: str,
     default: None,
     enum_values: Iterable[str],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[str]]:
+) -> _flagvalues.FlagHolder[str | None]:
   ...
 
 
@@ -722,9 +723,9 @@ def DEFINE_enum(  # pylint: disable=invalid-name
     name: str,
     default: str,
     enum_values: Iterable[str],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
 ) -> _flagvalues.FlagHolder[str]:
@@ -775,11 +776,11 @@ def DEFINE_enum(  # pylint: disable=invalid-name
 @overload
 def DEFINE_enum_class(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, _ET, str],
-    enum_class: Type[_ET],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    default: None | _ET | str,
+    enum_class: type[_ET],
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     case_sensitive: bool = ...,
     *,
     required: Literal[True],
@@ -792,25 +793,25 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name
 def DEFINE_enum_class(  # pylint: disable=invalid-name
     name: str,
     default: None,
-    enum_class: Type[_ET],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    enum_class: type[_ET],
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     case_sensitive: bool = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[_ET]]:
+) -> _flagvalues.FlagHolder[_ET | None]:
   ...
 
 
 @overload
 def DEFINE_enum_class(  # pylint: disable=invalid-name
     name: str,
-    default: Union[_ET, str],
-    enum_class: Type[_ET],
-    help: Optional[str],  # pylint: disable=redefined-builtin
+    default: _ET | str,
+    enum_class: type[_ET],
+    help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     case_sensitive: bool = ...,
     required: bool = ...,
     **args: Any
@@ -864,13 +865,13 @@ def DEFINE_enum_class(  # pylint: disable=invalid-name
 @overload
 def DEFINE_list(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, Iterable[str], str],
+    default: None | Iterable[str] | str,
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[str]]:
+) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
 
@@ -882,19 +883,19 @@ def DEFINE_list(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[List[str]]]:
+) -> _flagvalues.FlagHolder[list[str] | None]:
   ...
 
 
 @overload
 def DEFINE_list(  # pylint: disable=invalid-name
     name: str,
-    default: Union[Iterable[str], str],
+    default: Iterable[str] | str,
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[str]]:
+) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
 
@@ -941,14 +942,14 @@ def DEFINE_list(  # pylint: disable=invalid-name
 @overload
 def DEFINE_spaceseplist(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, Iterable[str], str],
+    default: None | Iterable[str] | str,
     help: str,  # pylint: disable=redefined-builtin
     comma_compat: bool = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[str]]:
+) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
 
@@ -961,20 +962,20 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[List[str]]]:
+) -> _flagvalues.FlagHolder[list[str] | None]:
   ...
 
 
 @overload
 def DEFINE_spaceseplist(  # pylint: disable=invalid-name
     name: str,
-    default: Union[Iterable[str], str],
+    default: Iterable[str] | str,
     help: str,  # pylint: disable=redefined-builtin
     comma_compat: bool = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[str]]:
+) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
 
@@ -1031,11 +1032,11 @@ def DEFINE_multi(  # pylint: disable=invalid-name
     default: Iterable[_T],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[_T]]:
+) -> _flagvalues.FlagHolder[list[_T]]:
   ...
 
 
@@ -1044,14 +1045,14 @@ def DEFINE_multi(  # pylint: disable=invalid-name
     parser: _argument_parser.ArgumentParser[_T],
     serializer: _argument_parser.ArgumentSerializer[_T],
     name: str,
-    default: Union[None, _T],
+    default: None | _T,
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[_T]]:
+) -> _flagvalues.FlagHolder[list[_T]]:
   ...
 
 
@@ -1063,10 +1064,10 @@ def DEFINE_multi(  # pylint: disable=invalid-name
     default: None,
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[List[_T]]]:
+) -> _flagvalues.FlagHolder[list[_T] | None]:
   ...
 
 
@@ -1078,10 +1079,10 @@ def DEFINE_multi(  # pylint: disable=invalid-name
     default: Iterable[_T],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[_T]]:
+) -> _flagvalues.FlagHolder[list[_T]]:
   ...
 
 
@@ -1093,10 +1094,10 @@ def DEFINE_multi(  # pylint: disable=invalid-name
     default: _T,
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[_T]]:
+) -> _flagvalues.FlagHolder[list[_T]]:
   ...
 
 
@@ -1153,13 +1154,13 @@ def DEFINE_multi(  # pylint: disable=invalid-name
 @overload
 def DEFINE_multi_string(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, Iterable[str], str],
+    default: None | Iterable[str] | str,
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[str]]:
+) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
 
@@ -1171,19 +1172,19 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[List[str]]]:
+) -> _flagvalues.FlagHolder[list[str] | None]:
   ...
 
 
 @overload
 def DEFINE_multi_string(  # pylint: disable=invalid-name
     name: str,
-    default: Union[Iterable[str], str],
+    default: Iterable[str] | str,
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[str]]:
+) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
 
@@ -1235,15 +1236,15 @@ def DEFINE_multi_string(  # pylint: disable=invalid-name
 @overload
 def DEFINE_multi_integer(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, Iterable[int], int, str],
+    default: None | Iterable[int] | int | str,
     help: str,  # pylint: disable=redefined-builtin
-    lower_bound: Optional[int] = ...,
-    upper_bound: Optional[int] = ...,
+    lower_bound: int | None = ...,
+    upper_bound: int | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[int]]:
+) -> _flagvalues.FlagHolder[list[int]]:
   ...
 
 
@@ -1252,26 +1253,26 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name
     name: str,
     default: None,
     help: str,  # pylint: disable=redefined-builtin
-    lower_bound: Optional[int] = ...,
-    upper_bound: Optional[int] = ...,
+    lower_bound: int | None = ...,
+    upper_bound: int | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[List[int]]]:
+) -> _flagvalues.FlagHolder[list[int] | None]:
   ...
 
 
 @overload
 def DEFINE_multi_integer(  # pylint: disable=invalid-name
     name: str,
-    default: Union[Iterable[int], int, str],
+    default: Iterable[int] | int | str,
     help: str,  # pylint: disable=redefined-builtin
-    lower_bound: Optional[int] = ...,
-    upper_bound: Optional[int] = ...,
+    lower_bound: int | None = ...,
+    upper_bound: int | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[int]]:
+) -> _flagvalues.FlagHolder[list[int]]:
   ...
 
 
@@ -1326,15 +1327,15 @@ def DEFINE_multi_integer(  # pylint: disable=invalid-name
 @overload
 def DEFINE_multi_float(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, Iterable[float], float, str],
+    default: None | Iterable[float] | float | str,
     help: str,  # pylint: disable=redefined-builtin
-    lower_bound: Optional[float] = ...,
-    upper_bound: Optional[float] = ...,
+    lower_bound: float | None = ...,
+    upper_bound: float | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[float]]:
+) -> _flagvalues.FlagHolder[list[float]]:
   ...
 
 
@@ -1343,26 +1344,26 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name
     name: str,
     default: None,
     help: str,  # pylint: disable=redefined-builtin
-    lower_bound: Optional[float] = ...,
-    upper_bound: Optional[float] = ...,
+    lower_bound: float | None = ...,
+    upper_bound: float | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[List[float]]]:
+) -> _flagvalues.FlagHolder[list[float] | None]:
   ...
 
 
 @overload
 def DEFINE_multi_float(  # pylint: disable=invalid-name
     name: str,
-    default: Union[Iterable[float], float, str],
+    default: Iterable[float] | float | str,
     help: str,  # pylint: disable=redefined-builtin
-    lower_bound: Optional[float] = ...,
-    upper_bound: Optional[float] = ...,
+    lower_bound: float | None = ...,
+    upper_bound: float | None = ...,
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[float]]:
+) -> _flagvalues.FlagHolder[list[float]]:
   ...
 
 
@@ -1417,14 +1418,14 @@ def DEFINE_multi_float(  # pylint: disable=invalid-name
 @overload
 def DEFINE_multi_enum(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, Iterable[str], str],
+    default: None | Iterable[str] | str,
     enum_values: Iterable[str],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[str]]:
+) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
 
@@ -1437,20 +1438,20 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[List[str]]]:
+) -> _flagvalues.FlagHolder[list[str] | None]:
   ...
 
 
 @overload
 def DEFINE_multi_enum(  # pylint: disable=invalid-name
     name: str,
-    default: Union[Iterable[str], str],
+    default: Iterable[str] | str,
     enum_values: Iterable[str],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[str]]:
+) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
 
@@ -1511,29 +1512,29 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     # FlagHolder[List[Union[_ET, enum.Enum]]] when an iterable of concrete enum
     # subclasses are used.
     default: Iterable[_ET],
-    enum_class: Type[_ET],
+    enum_class: type[_ET],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[_ET]]:
+) -> _flagvalues.FlagHolder[list[_ET]]:
   ...
 
 
 @overload
 def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     name: str,
-    default: Union[None, _ET, Iterable[str], str],
-    enum_class: Type[_ET],
+    default: None | _ET | Iterable[str] | str,
+    enum_class: type[_ET],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     *,
     required: Literal[True],
     **args: Any
-) -> _flagvalues.FlagHolder[List[_ET]]:
+) -> _flagvalues.FlagHolder[list[_ET]]:
   ...
 
 
@@ -1541,13 +1542,13 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
 def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     name: str,
     default: None,
-    enum_class: Type[_ET],
+    enum_class: type[_ET],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[Optional[List[_ET]]]:
+) -> _flagvalues.FlagHolder[list[_ET] | None]:
   ...
 
 
@@ -1559,27 +1560,27 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     # FlagHolder[List[Union[_ET, enum.Enum]]] when an iterable of concrete enum
     # subclasses are used.
     default: Iterable[_ET],
-    enum_class: Type[_ET],
+    enum_class: type[_ET],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[_ET]]:
+) -> _flagvalues.FlagHolder[list[_ET]]:
   ...
 
 
 @overload
 def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     name: str,
-    default: Union[_ET, Iterable[str], str],
-    enum_class: Type[_ET],
+    default: _ET | Iterable[str] | str,
+    enum_class: type[_ET],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
-    module_name: Optional[str] = ...,
+    module_name: str | None = ...,
     required: bool = ...,
     **args: Any
-) -> _flagvalues.FlagHolder[List[_ET]]:
+) -> _flagvalues.FlagHolder[list[_ET]]:
   ...
 
 
@@ -1643,7 +1644,7 @@ def DEFINE_alias(  # pylint: disable=invalid-name
     name: str,
     original_name: str,
     flag_values: _flagvalues.FlagValues = _flagvalues.FLAGS,
-    module_name: Optional[str] = None,
+    module_name: str | None = None,
 ) -> _flagvalues.FlagHolder[Any]:
   """Defines an alias flag for an existing one.
 
