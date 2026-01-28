@@ -12,6 +12,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## 2.4.0 (2026-01-28)
+
+### Added
+
+*  Added support for Python 3.14.
+*  Allow `$PYTHONBREAKPOINT` to affect `runcall` and `post_mortem` debugging.
+*  (logging) Propagate `**kwargs` in conditional/rate-limited logging functions.
+
+### Changed
+
+*  Dropped support for Python 3.8 and 3.9.
+*  (flags) Change internals of `absl.flags.get_help_width()` implementation.
+*  (cleanup) Modernize Bazel setup with `MODULE.bazel`.
+*  (cleanup) Modernize type annotations using Python 3.10+ features.
+
+### Fixed
+
+*  (flags) Fix duplicate flag definition when reloading a module.
+*  (typechecking) Correct type signature of `absltest.skipThisClass`.
+
 ## 2.3.1 (2025-07-03)
 
 ### Changed
