@@ -229,6 +229,24 @@ class ParameterizedTestsTest(absltest.TestCase):
     def test_without_parameters(self):
       pass
 
+  class NamedProductTests(parameterized.TestCase):
+    """Used by test_named_product_creates_expected_tests."""
+
+    @parameterized.named_product(
+        [
+            dict(testcase_name='a_1', x=[1, 2], y=[3, 4]),
+            dict(testcase_name='a_2', x=[5, 6], y=[7, 8]),
+        ],
+        [
+            dict(testcase_name='b_1', z=['foo', 'bar'], w=['baz', 'qux']),
+            dict(
+                testcase_name='b_2', z=['quux', 'quuz'], w=['corge', 'grault']
+            ),
+        ],
+    )
+    def test_named_product(self, x, y, z, w):
+      pass
+
   class ChainedTests(parameterized.TestCase):
 
     @dict_decorator('cone', 'waffle')
@@ -824,6 +842,102 @@ class ParameterizedTestsTest(absltest.TestCase):
         )
         def test_something(self, unused_obj):
           pass
+
+  def test_named_product_empty_fails(self):
+    with self.assertRaises(ValueError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_product()
+        def test_something(self):
+          pass
+
+  def test_named_product_one_argument_fails(self):
+    with self.assertRaises(ValueError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_product(
+            [
+                {'testcase_name': 'foo', 'x': 1, 'y': 2},
+                {'testcase_name': 'bar', 'x': 3, 'y': 4},
+            ],
+        )
+        def test_something(self, x, y):
+          pass
+
+  def test_named_product_duplicate_keys_fails(self):
+    with self.assertRaises(ValueError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_product(
+            [
+                {'testcase_name': 'foo', 'x': 1, 'y': 2},
+                {'testcase_name': 'bar', 'x': 3, 'y': 4},
+            ],
+            [
+                {'testcase_name': 'baz', 'x': 5, 'z': 7},
+                {'testcase_name': 'qux', 'x': 6, 'z': 8},
+            ],
+        )
+        def test_something(self, x, y, z):
+          pass
+
+  def test_named_product_no_testcase_name_fails(self):
+    with self.assertRaises(ValueError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_product(
+            [
+                {'x': 1, 'y': 2},
+                {'testcase_name': 'bar', 'x': 3, 'y': 4},
+            ],
+            [
+                {'testcase_name': 'baz', 'x': 5, 'z': 7},
+                {'testcase_name': 'qux', 'z': 8},
+            ],
+        )
+        def test_something(self, x, y, z):
+          pass
+
+  def test_named_product_no_testcase_name_in_second_argument_fails(self):
+    with self.assertRaises(ValueError):
+
+      class _(parameterized.TestCase):
+
+        @parameterized.named_product(
+            [
+                {'testcase_name': 'foo', 'x': 1, 'y': 2},
+                {'testcase_name': 'bar', 'x': 3, 'y': 4},
+            ],
+            [
+                {'x': 5, 'z': 7},
+                {'testcase_name': 'qux', 'z': 8},
+            ],
+        )
+        def test_something(self, x, y, z):
+          pass
+
+  def test_named_product_creates_expected_tests(self):
+    ts = unittest.defaultTestLoader.loadTestsFromTestCase(
+        self.NamedProductTests
+    )
+    test = next(t for t in ts)
+    self.assertContainsSubset(
+        [
+            'test_named_product_a_1_b_1',
+            'test_named_product_a_1_b_2',
+            'test_named_product_a_2_b_1',
+            'test_named_product_a_2_b_2',
+        ],
+        dir(test),
+    )
+    res = unittest.TestResult()
+    ts.run(res)
+    self.assertEqual(4, res.testsRun)
+    self.assertTrue(res.wasSuccessful())
 
   def test_parameterized_test_iter_has_testcases_property(self):
     @parameterized.parameters(1, 2, 3, 4, 5, 6)

@@ -191,6 +191,50 @@ This results in 4 test cases being created - for each of the two sets of test
 data (supplied as kwarg dicts) and for each of the two data types (supplied as
 a named parameter). Multiple keyword argument dicts may be supplied if required.
 
+
+Named Parameterized Test Cases of a Cartesian Product
+======================================================
+
+Both named_parameters and product have useful features as described above.
+However, when using both, it can be difficult to ensure that generated test
+cases retain useful names.
+
+Here, we combine both approaches to create parameterized tests with both
+generated permutations and human-readable names.
+
+Example:
+
+    @parameterized.named_product(
+        [
+          dict(
+              testcase_name='five_mod_three_is_2',
+              num=5,
+              modulo=3,
+              expected=2,
+          ),
+          dict(
+              testcase_name='seven_mod_four_is_3',
+              num=7,
+              modulo=4,
+              expected=3,
+          ),
+        ],
+        [
+            dict(testcase_name='int', dtype=int),
+            dict(testcase_name='float', dtype=float),
+        ]
+    )
+    def testModuloResult(self, num, modulo, expected, dtype):
+      self.assertEqual(expected, dtype(num) % modulo)
+
+  This would generate the test cases:
+
+    testModuloResult_five_mod_three_is_2_int
+    testModuloResult_five_mod_three_is_2_float
+    testModuloResult_seven_mod_four_is_3_int
+    testModuloResult_seven_mod_four_is_3_float
+
+
 Async Support
 =============
 
@@ -483,6 +527,81 @@ def named_parameters(*testcases):
   Returns:
      A test generator to be handled by TestGeneratorMetaclass.
   """
+  return _parameter_decorator(_NAMED, testcases)
+
+
+def named_product(*kwargs_seqs):
+  """Decorates a test method to run it over the cartesian product of parameters.
+
+  See the module docstring for a usage example. The test will be run for every
+  possible combination of the parameters.
+
+  For example,
+
+  ```python
+  named_product(
+      [
+          dict(testcase_name="foo", x=1, y=2),
+          dict(testcase_name="bar", x=3, y=4),
+      ],
+      [
+          dict(testcase_name="baz", z=5),
+          dict(testcase_name="qux", z=6),
+      ],
+  )
+  ```
+
+  is equivalent to:
+
+  ```python
+  named_parameters(
+      [
+          dict(testcase_name="foo_baz", x=1, y=2, z=5),
+          dict(testcase_name="foo_qux", x=1, y=2, z=6),
+          dict(testcase_name="bar_baz", x=3, y=4, z=5),
+          dict(testcase_name="bar_qux", x=3, y=4, z=6),
+      ],
+  )
+  ```
+
+  Args:
+    *kwargs_seqs: Each positional parameter is a sequence of keyword arg dicts;
+      every test case generated will include exactly one kwargs dict from each
+      positional parameter; these will then be merged to form an overall list of
+      arguments for the test case.
+
+  Returns:
+    A test generator to be handled by TestGeneratorMetaclass.
+  """
+  if len(kwargs_seqs) <= 1:
+    raise ValueError('Need at least 2 arguments for cross product.')
+  if not all(kwargs_seq for kwargs_seq in kwargs_seqs):
+    raise ValueError('All arguments for cross product must be non-empty.')
+  # Ensure all kwargs_seq have a `testcase_name` key.
+  for kwargs_seq in kwargs_seqs:
+    for kwargs in kwargs_seq:
+      if _NAMED_DICT_KEY not in kwargs:
+        raise ValueError(
+            'All arguments for cross product must have a `testcase_name` key.'
+        )
+
+  def _cross_join():
+    """Yields a single kwargs dict for each dimension of the cross join."""
+    for kwargs_seq in itertools.product(*kwargs_seqs):
+      joined_kwargs = {}
+      for v in kwargs_seq:
+        duplicate_keys = joined_kwargs.keys() & v.keys() - {_NAMED_DICT_KEY}
+        if duplicate_keys:
+          raise ValueError(
+              f'Duplicate keys in {v[_NAMED_DICT_KEY]}: {duplicate_keys}'
+          )
+        joined_kwargs.update(v)
+      joined_kwargs[_NAMED_DICT_KEY] = '_'.join(
+          kwargs[_NAMED_DICT_KEY] for kwargs in kwargs_seq
+      )
+      yield joined_kwargs
+
+  testcases = tuple(_cross_join())
   return _parameter_decorator(_NAMED, testcases)
 
 
