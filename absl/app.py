@@ -160,7 +160,7 @@ class HelpFlag(flags.BooleanFlag):
       # Advertise --helpfull on stdout, since usage() was on stdout.
       print()
       print('Try --helpfull to get a list of all flags.')
-      sys.exit(1)
+      sys.exit(0)
 
 
 class HelpshortFlag(HelpFlag):
@@ -178,7 +178,7 @@ class HelpfullFlag(flags.BooleanFlag):
   def parse(self, arg):
     if self._parse(arg):
       usage(writeto_stdout=True)
-      sys.exit(1)
+      sys.exit(0)
 
 
 class HelpXMLFlag(flags.BooleanFlag):
@@ -195,7 +195,7 @@ class HelpXMLFlag(flags.BooleanFlag):
   def parse(self, arg):
     if self._parse(arg):
       flags.FLAGS.write_help_in_xml_format(sys.stdout)
-      sys.exit(1)
+      sys.exit(0)
 
 
 def parse_flags_with_usage(args):
