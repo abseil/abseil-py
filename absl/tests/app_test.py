@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for app.py."""
+"""Tests for app.py.
+
+Note: This docstring itself is used in some of the tests below.
+"""
 
 import contextlib
 import copy
@@ -57,51 +60,43 @@ class UnitTests(absltest.TestCase):
       app.install_exception_handler(1)
 
   def test_usage(self):
-    with mock.patch.object(
-        sys, 'stderr', new=io.StringIO()) as mock_stderr:
+    with mock.patch.object(sys, 'stderr', new=io.StringIO()) as mock_stderr:
       app.usage()
     self.assertIn(__doc__, mock_stderr.getvalue())
     # Assert that flags are written to stderr.
     self.assertIn('\n  --[no]helpfull:', mock_stderr.getvalue())
 
   def test_usage_shorthelp(self):
-    with mock.patch.object(
-        sys, 'stderr', new=io.StringIO()) as mock_stderr:
+    with mock.patch.object(sys, 'stderr', new=io.StringIO()) as mock_stderr:
       app.usage(shorthelp=True)
     # Assert that flags are NOT written to stderr.
     self.assertNotIn('  --', mock_stderr.getvalue())
 
   def test_usage_writeto_stderr(self):
-    with mock.patch.object(
-        sys, 'stdout', new=io.StringIO()) as mock_stdout:
+    with mock.patch.object(sys, 'stdout', new=io.StringIO()) as mock_stdout:
       app.usage(writeto_stdout=True)
     self.assertIn(__doc__, mock_stdout.getvalue())
 
   def test_usage_detailed_error(self):
-    with mock.patch.object(
-        sys, 'stderr', new=io.StringIO()) as mock_stderr:
+    with mock.patch.object(sys, 'stderr', new=io.StringIO()) as mock_stderr:
       app.usage(detailed_error='BAZBAZ')
     self.assertIn('BAZBAZ', mock_stderr.getvalue())
 
   def test_usage_exitcode(self):
     with mock.patch.object(sys, 'stderr', new=sys.stderr):
-      try:
+      with self.assertRaises(SystemExit) as context:
         app.usage(exitcode=2)
-        self.fail('app.usage(exitcode=1) should raise SystemExit')
-      except SystemExit as e:
-        self.assertEqual(2, e.code)
+      self.assertEqual(2, context.exception.code)
 
   def test_usage_expands_docstring(self):
     with patch_main_module_docstring('Name: %s, %%s'):
-      with mock.patch.object(
-          sys, 'stderr', new=io.StringIO()) as mock_stderr:
+      with mock.patch.object(sys, 'stderr', new=io.StringIO()) as mock_stderr:
         app.usage()
     self.assertIn(f'Name: {sys.argv[0]}, %s', mock_stderr.getvalue())
 
   def test_usage_does_not_expand_bad_docstring(self):
     with patch_main_module_docstring('Name: %s, %%s, %@'):
-      with mock.patch.object(
-          sys, 'stderr', new=io.StringIO()) as mock_stderr:
+      with mock.patch.object(sys, 'stderr', new=io.StringIO()) as mock_stderr:
         app.usage()
     self.assertIn('Name: %s, %%s, %@', mock_stderr.getvalue())
 
@@ -112,7 +107,8 @@ class UnitTests(absltest.TestCase):
       app._register_and_parse_flags_with_usage.done = False
       with self.assertRaises(SystemExit):
         app._register_and_parse_flags_with_usage(
-            argv=['./program', '--only_check_args'])
+            argv=['./program', '--only_check_args']
+        )
     finally:
       app._register_and_parse_flags_with_usage.done = done
 
@@ -209,10 +205,15 @@ class FunctionalTests(absltest.TestCase):
 
   helper_type = 'pure_python'
 
-  def run_helper(self, expect_success,
-                 expected_stdout_substring=None, expected_stderr_substring=None,
-                 arguments=(),
-                 env_overrides=None):
+  def run_helper(
+      self,
+      *,
+      expect_success,
+      expected_stdout_substring=None,
+      expected_stderr_substring=None,
+      arguments=(),
+      env_overrides=None,
+  ):
     env = os.environ.copy()
     env['APP_TEST_HELPER_TYPE'] = self.helper_type
     env['PYTHONIOENCODING'] = 'utf8'
@@ -256,23 +257,26 @@ class FunctionalTests(absltest.TestCase):
 
   def test_help(self):
     _, _, stderr = self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--help'],
-        expected_stdout_substring=app_test_helper.__doc__)
+        expected_stdout_substring=app_test_helper.__doc__,
+    )
     self.assertNotIn('--', stderr)
 
   def test_helpfull_basic(self):
     self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--helpfull'],
         # --logtostderr is from absl.logging module.
-        expected_stdout_substring='--[no]logtostderr')
+        expected_stdout_substring='--[no]logtostderr',
+    )
 
   def test_helpfull_unicode_flag_help(self):
     _, stdout, _ = self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--helpfull'],
-        expected_stdout_substring='str_flag_with_unicode_args')
+        expected_stdout_substring='str_flag_with_unicode_args',
+    )
 
     self.assertIn('smile:\U0001F604', stdout)
 
@@ -280,25 +284,36 @@ class FunctionalTests(absltest.TestCase):
 
   def test_helpshort(self):
     _, _, stderr = self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--helpshort'],
-        expected_stdout_substring=app_test_helper.__doc__)
+        expected_stdout_substring=app_test_helper.__doc__,
+    )
     self.assertNotIn('--', stderr)
+
+  def test_helpxml(self):
+    _, stdout, _ = self.run_helper(
+        expect_success=False,
+        arguments=['--helpxml'],
+        expected_stdout_substring=f'<usage>{app_test_helper.__doc__}</usage>',
+    )
+    self.assertIn('<AllFlags>', stdout)
 
   def test_custom_main(self):
     self.run_helper(
-        True,
+        expect_success=True,
         env_overrides={'APP_TEST_CUSTOM_MAIN_FUNC': 'custom_main'},
-        expected_stdout_substring='Function called: custom_main.')
+        expected_stdout_substring='Function called: custom_main.',
+    )
 
   def test_custom_argv(self):
     self.run_helper(
-        True,
+        expect_success=True,
         expected_stdout_substring='argv: ./program pos_arg1',
         env_overrides={
             'APP_TEST_CUSTOM_ARGV': './program --noraise_exception pos_arg1',
             'APP_TEST_PRINT_ARGV': '1',
-        })
+        },
+    )
 
   def test_gwq_status_file_on_exception(self):
     if self.helper_type == 'pure_python':
@@ -307,67 +322,77 @@ class FunctionalTests(absltest.TestCase):
 
     tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--raise_exception'],
-        env_overrides={'GOOGLE_STATUS_DIR': tmpdir})
+        env_overrides={'GOOGLE_STATUS_DIR': tmpdir},
+    )
     with open(os.path.join(tmpdir, 'STATUS')) as status_file:
       self.assertIn('MyException:', status_file.read())
 
   def test_faulthandler_dumps_stack_on_sigsegv(self):
     return_code, _, _ = self.run_helper(
-        False,
+        expect_success=False,
         expected_stderr_substring='app_test_helper.py", line',
-        arguments=['--faulthandler_sigsegv'])
+        arguments=['--faulthandler_sigsegv'],
+    )
     # sigsegv returns 3 on Windows, and -11 on LINUX/macOS.
     expected_return_code = 3 if os.name == 'nt' else -11
     self.assertEqual(expected_return_code, return_code)
 
   def test_top_level_exception(self):
     self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--raise_exception'],
-        expected_stderr_substring='MyException')
+        expected_stderr_substring='MyException',
+    )
 
   def test_only_check_args(self):
     self.run_helper(
-        True,
-        arguments=['--only_check_args', '--raise_exception'])
+        expect_success=True,
+        arguments=['--only_check_args', '--raise_exception'],
+    )
 
   def test_only_check_args_failure(self):
     self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--only_check_args', '--banana'],
-        expected_stderr_substring='FATAL Flags parsing error')
+        expected_stderr_substring='FATAL Flags parsing error',
+    )
 
   def test_usage_error(self):
     exitcode, _, _ = self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--raise_usage_error'],
-        expected_stderr_substring=app_test_helper.__doc__)
+        expected_stderr_substring=app_test_helper.__doc__,
+    )
     self.assertEqual(1, exitcode)
 
   def test_usage_error_exitcode(self):
     exitcode, _, _ = self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--raise_usage_error', '--usage_error_exitcode=88'],
-        expected_stderr_substring=app_test_helper.__doc__)
+        expected_stderr_substring=app_test_helper.__doc__,
+    )
     self.assertEqual(88, exitcode)
 
   def test_exception_handler(self):
     exception_handler_messages = (
-        'MyExceptionHandler: first\nMyExceptionHandler: second\n')
+        'MyExceptionHandler: first\nMyExceptionHandler: second\n'
+    )
     self.run_helper(
-        False,
+        expect_success=False,
         arguments=['--raise_exception'],
-        expected_stdout_substring=exception_handler_messages)
+        expected_stdout_substring=exception_handler_messages,
+    )
 
   def test_exception_handler_not_called(self):
-    _, _, stdout = self.run_helper(True)
+    _, _, stdout = self.run_helper(expect_success=True)
     self.assertNotIn('MyExceptionHandler', stdout)
 
   def test_print_init_callbacks(self):
     _, stdout, _ = self.run_helper(
-        expect_success=True, arguments=['--print_init_callbacks'])
+        expect_success=True, arguments=['--print_init_callbacks']
+    )
     self.assertIn('before app.run', stdout)
     self.assertIn('during real_main', stdout)
 
@@ -385,14 +410,17 @@ class FlagValuesExternalizationTest(absltest.TestCase):
 
   @flagsaver.flagsaver
   def test_nohelp_doesnt_show_help(self):
-    with self.assertRaisesWithPredicateMatch(SystemExit,
-                                             lambda e: e.code == 1):
+    with self.assertRaisesWithPredicateMatch(SystemExit, lambda e: e.code == 1):
       app.run(
           len,
           argv=[
-              './program', '--nohelp', '--helpshort=false', '--helpfull=0',
-              '--helpxml=f'
-          ])
+              './program',
+              '--nohelp',
+              '--helpshort=false',
+              '--helpfull=0',
+              '--helpxml=f',
+          ],
+      )
 
   @flagsaver.flagsaver
   def test_serialize_roundtrip(self):
@@ -400,19 +428,26 @@ class FlagValuesExternalizationTest(absltest.TestCase):
     # flags will go through the round trip process.
     flags.DEFINE_string('testflag', 'testval', 'help', flag_values=FLAGS)
 
-    flags.DEFINE_multi_enum('test_multi_enum_flag',
-                            ['x', 'y'], ['x', 'y', 'z'],
-                            'Multi enum help.',
-                            flag_values=FLAGS)
+    flags.DEFINE_multi_enum(
+        'test_multi_enum_flag',
+        ['x', 'y'],
+        ['x', 'y', 'z'],
+        'Multi enum help.',
+        flag_values=FLAGS,
+    )
 
     class Fruit(enum.Enum):
       APPLE = 1
       ORANGE = 2
       TOMATO = 3
-    flags.DEFINE_multi_enum_class('test_multi_enum_class_flag',
-                                  ['APPLE', 'TOMATO'], Fruit,
-                                  'Fruit help.',
-                                  flag_values=FLAGS)
+
+    flags.DEFINE_multi_enum_class(
+        'test_multi_enum_class_flag',
+        ['APPLE', 'TOMATO'],
+        Fruit,
+        'Fruit help.',
+        flag_values=FLAGS,
+    )
 
     new_flag_values = flags.FlagValues()
     new_flag_values.append_flag_values(FLAGS)
@@ -423,16 +458,22 @@ class FlagValuesExternalizationTest(absltest.TestCase):
     argv = ['binary_name'] + FLAGS.flags_into_string().splitlines()
 
     self.assertNotEqual(new_flag_values['testflag'], FLAGS.testflag)
-    self.assertNotEqual(new_flag_values['test_multi_enum_flag'],
-                        FLAGS.test_multi_enum_flag)
-    self.assertNotEqual(new_flag_values['test_multi_enum_class_flag'],
-                        FLAGS.test_multi_enum_class_flag)
+    self.assertNotEqual(
+        new_flag_values['test_multi_enum_flag'], FLAGS.test_multi_enum_flag
+    )
+    self.assertNotEqual(
+        new_flag_values['test_multi_enum_class_flag'],
+        FLAGS.test_multi_enum_class_flag,
+    )
     new_flag_values(argv)
     self.assertEqual(new_flag_values.testflag, FLAGS.testflag)
-    self.assertEqual(new_flag_values.test_multi_enum_flag,
-                     FLAGS.test_multi_enum_flag)
-    self.assertEqual(new_flag_values.test_multi_enum_class_flag,
-                     FLAGS.test_multi_enum_class_flag)
+    self.assertEqual(
+        new_flag_values.test_multi_enum_flag, FLAGS.test_multi_enum_flag
+    )
+    self.assertEqual(
+        new_flag_values.test_multi_enum_class_flag,
+        FLAGS.test_multi_enum_class_flag,
+    )
     del FLAGS.testflag
     del FLAGS.test_multi_enum_flag
     del FLAGS.test_multi_enum_class_flag
