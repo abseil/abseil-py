@@ -277,6 +277,7 @@ def _register_and_parse_flags_with_usage(
 
   # Exit when told so.
   if FLAGS.only_check_args:
+    FLAGS._force_discover_all_flags()
     sys.exit(0)
   # Immediately after flags are parsed, bump verbosity to INFO if the flag has
   # not been set.
