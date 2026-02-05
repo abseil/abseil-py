@@ -955,15 +955,16 @@ class FlagsUnitTest(absltest.TestCase):
     # Duplicate short flag detection
     with self.assertRaisesRegex(
         flags.DuplicateFlagError,
-        r"The flag 'z' is defined twice\. .*First from.*, Second from"):
+        r"The flag 'z' is defined twice\. .*First from.*, second from",
+    ):
       flags.DEFINE_boolean('zoom1', 0, 'runhelp z1', short_name='z')
       flags.DEFINE_boolean('zoom2', 0, 'runhelp z2', short_name='z')
-      raise AssertionError('duplicate short flag detection failed')
 
     # Duplicate mixed flag detection
     with self.assertRaisesRegex(
         flags.DuplicateFlagError,
-        r"The flag 's' is defined twice\. .*First from.*, Second from"):
+        r"The flag 's' is defined twice\. .*First from.*, second from",
+    ):
       flags.DEFINE_boolean('short1', 0, 'runhelp s1', short_name='s')
       flags.DEFINE_boolean('s', 0, 'runhelp s2')
 
