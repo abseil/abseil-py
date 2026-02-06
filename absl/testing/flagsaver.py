@@ -297,6 +297,16 @@ def _wrap(flag_overrider_cls, func, overrides):
     A wrapped version of func.
   """
 
+  if inspect.iscoroutinefunction(func):
+
+    @functools.wraps(func)
+    async def _flagsaver_async_wrapper(*args, **kwargs):
+      """Wrapper function that saves and restores flags."""
+      with flag_overrider_cls(**overrides):
+        return await func(*args, **kwargs)
+
+    return _flagsaver_async_wrapper
+
   @functools.wraps(func)
   def _flagsaver_wrapper(*args, **kwargs):
     """Wrapper function that saves and restores flags."""

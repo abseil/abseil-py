@@ -13,6 +13,7 @@
 # limitations under the License.
 """Tests for flagsaver."""
 
+import unittest
 from absl import flags
 from absl.testing import absltest
 from absl.testing import flagsaver
@@ -28,19 +29,25 @@ flags.DEFINE_string('flagsaver_test_validated_flag1', None, 'flag to test with')
 flags.DEFINE_string('flagsaver_test_validated_flag2', None, 'flag to test with')
 
 INT_FLAG = flags.DEFINE_integer(
-    'flagsaver_test_int_flag', default=1, help='help')
+    'flagsaver_test_int_flag', default=1, help='help'
+)
 STR_FLAG = flags.DEFINE_string(
-    'flagsaver_test_str_flag', default='str default', help='help')
+    'flagsaver_test_str_flag', default='str default', help='help'
+)
 
-MULTI_INT_FLAG = flags.DEFINE_multi_integer('flagsaver_test_multi_int_flag',
-                                            None, 'flag to test with')
+MULTI_INT_FLAG = flags.DEFINE_multi_integer(
+    'flagsaver_test_multi_int_flag', None, 'flag to test with'
+)
 
 
 @flags.multi_flags_validator(
-    ('flagsaver_test_validated_flag1', 'flagsaver_test_validated_flag2'))
+    ('flagsaver_test_validated_flag1', 'flagsaver_test_validated_flag2')
+)
 def validate_test_flags(flag_dict):
-  return (flag_dict['flagsaver_test_validated_flag1'] ==
-          flag_dict['flagsaver_test_validated_flag2'])
+  return (
+      flag_dict['flagsaver_test_validated_flag1']
+      == flag_dict['flagsaver_test_validated_flag2']
+  )
 
 
 FLAGS = flags.FLAGS
@@ -438,8 +445,9 @@ class AsParsedTest(absltest.TestCase):
     self.assertTrue(FLAGS[INT_FLAG.name].using_default_value)
     self.assertTrue(FLAGS[STR_FLAG.name].using_default_value)
 
-    with flagsaver.as_parsed((INT_FLAG, '123'),
-                             flagsaver_test_str_flag='new value'):
+    with flagsaver.as_parsed(
+        (INT_FLAG, '123'), flagsaver_test_str_flag='new value'
+    ):
       self.assertTrue(INT_FLAG.present)
       self.assertTrue(STR_FLAG.present)
       self.assertFalse(FLAGS[INT_FLAG.name].using_default_value)
@@ -488,7 +496,8 @@ class AsParsedTest(absltest.TestCase):
         TypeError,
         r'flagsaver\.as_parsed\(\) cannot parse flagsaver_test_int_flag\. '
         r'Expected a single string or sequence of strings but .*int.* was '
-        r'provided\.'):
+        r'provided\.',
+    ):
       manager = flagsaver.as_parsed(flagsaver_test_int_flag=123)  # pytype: disable=wrong-arg-types
       del manager
 
@@ -620,6 +629,29 @@ class BadUsageTest(parameterized.TestCase):
         # We don't expect to get here. A type error should happen when
         # attempting to enter the context manager.
         pass
+
+
+class AsyncTest(absltest.TestCase, unittest.IsolatedAsyncioTestCase):
+
+  @flagsaver.flagsaver(flagsaver_test_flag0='new value')
+  async def test_flagsaver_async(self):
+    self.assertEqual('new value', FLAGS.flagsaver_test_flag0)
+
+  @flagsaver.as_parsed(flagsaver_test_flag0='new value')
+  async def test_as_parsed_async(self):
+    self.assertEqual('new value', FLAGS.flagsaver_test_flag0)
+
+  async def test_inner_async_function(self):
+    @flagsaver.flagsaver(flagsaver_test_flag0='inner')
+    async def inner():
+      return FLAGS.flagsaver_test_flag0
+
+    self.assertEqual('inner', await inner())
+
+  @unittest.expectedFailure
+  @flagsaver.flagsaver(flagsaver_test_flag0='new value')
+  async def test_expected_failure(self):
+    self.assertEqual('wrong value', FLAGS.flagsaver_test_flag0)
 
 
 if __name__ == '__main__':
