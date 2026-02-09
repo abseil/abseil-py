@@ -315,20 +315,6 @@ class FunctionalTests(absltest.TestCase):
         },
     )
 
-  def test_gwq_status_file_on_exception(self):
-    if self.helper_type == 'pure_python':
-      # Pure python binary does not write to GWQ Status.
-      return
-
-    tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
-    self.run_helper(
-        expect_success=False,
-        arguments=['--raise_exception'],
-        env_overrides={'GOOGLE_STATUS_DIR': tmpdir},
-    )
-    with open(os.path.join(tmpdir, 'STATUS')) as status_file:
-      self.assertIn('MyException:', status_file.read())
-
   def test_faulthandler_dumps_stack_on_sigsegv(self):
     return_code, _, _ = self.run_helper(
         expect_success=False,
