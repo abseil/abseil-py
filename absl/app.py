@@ -33,6 +33,7 @@ import pdb
 import sys
 import textwrap
 import traceback
+from typing import NoReturn
 
 from absl import command_name
 from absl import flags
@@ -75,6 +76,11 @@ flags.DEFINE_boolean('use_cprofile_for_profiling', True,
 flags.DEFINE_boolean('only_check_args', False,
                      'Set to true to validate args and exit.',
                      allow_hide_cpp=True)
+
+
+def _exit_before_main(status_code) -> None:
+  """Abstraction of exiting before main() to enable overrides."""
+  sys.exit(status_code)
 
 
 def _get_debugger_module_with_function(function_name):
@@ -160,7 +166,7 @@ class HelpFlag(flags.BooleanFlag):
       # Advertise --helpfull on stdout, since usage() was on stdout.
       print()
       print('Try --helpfull to get a list of all flags.')
-      sys.exit(1)
+      _exit_before_main(1)
 
 
 class HelpshortFlag(HelpFlag):
@@ -178,7 +184,7 @@ class HelpfullFlag(flags.BooleanFlag):
   def parse(self, arg):
     if self._parse(arg):
       usage(writeto_stdout=True)
-      sys.exit(1)
+      _exit_before_main(1)
 
 
 class HelpXMLFlag(flags.BooleanFlag):
@@ -195,7 +201,7 @@ class HelpXMLFlag(flags.BooleanFlag):
   def parse(self, arg):
     if self._parse(arg):
       flags.FLAGS.write_help_in_xml_format(sys.stdout)
-      sys.exit(1)
+      _exit_before_main(1)
 
 
 def parse_flags_with_usage(args):
@@ -220,7 +226,7 @@ def parse_flags_with_usage(args):
       final_message = 'FATAL Flags parsing error: %s\n' % message
     sys.stderr.write(final_message)
     sys.stderr.write('Pass --helpshort or --helpfull to see help on flags.\n')
-    sys.exit(1)
+    _exit_before_main(1)
 
 
 _define_help_flags_called = False
@@ -277,7 +283,7 @@ def _register_and_parse_flags_with_usage(
 
   # Exit when told so.
   if FLAGS.only_check_args:
-    sys.exit(0)
+    _exit_before_main(0)
   # Immediately after flags are parsed, bump verbosity to INFO if the flag has
   # not been set.
   if FLAGS['verbosity'].using_default_value:
