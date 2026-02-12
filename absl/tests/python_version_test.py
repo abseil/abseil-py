@@ -31,7 +31,8 @@ class PythonVersionTest(absltest.TestCase):
     version = _EXPECTED_VERSION.value
     if not version:
       self.skipTest(
-          'Skipping version test since --expected_version is not specified')
+          'Skipping version test since --expected_version is not specified'
+      )
     num_parts = len(version.split('.'))
     self.assertEqual('.'.join(map(str, sys.version_info[:num_parts])), version)
 

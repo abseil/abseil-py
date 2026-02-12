@@ -32,14 +32,17 @@ FLAGS = flags.FLAGS
 flags.DEFINE_boolean('faulthandler_sigsegv', False, 'raise SIGSEGV')
 flags.DEFINE_boolean('raise_exception', False, 'Raise MyException from main.')
 flags.DEFINE_boolean(
-    'raise_usage_error', False, 'Raise app.UsageError from main.')
+    'raise_usage_error', False, 'Raise app.UsageError from main.'
+)
 flags.DEFINE_integer(
-    'usage_error_exitcode', None, 'The exitcode if app.UsageError if raised.')
+    'usage_error_exitcode', None, 'The exitcode if app.UsageError if raised.'
+)
 flags.DEFINE_string(
     'str_flag_with_unicode_args', 'thumb:\U0001F44D', 'smile:\U0001F604'
 )
-flags.DEFINE_boolean('print_init_callbacks', False,
-                     'print init callbacks and exit')
+flags.DEFINE_boolean(
+    'print_init_callbacks', False, 'print init callbacks and exit'
+)
 
 
 class MyException(Exception):
@@ -119,7 +122,8 @@ def flags_parser_main(argv):
   if argv is not flags_parser_argv_sentinel:
     sys.exit(
         'FAILED: main function should be called with the return value of '
-        'flags_parser, but found: {}'.format(argv))
+        'flags_parser, but found: {}'.format(argv)
+    )
 
 
 def flags_parser(argv):

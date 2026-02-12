@@ -29,9 +29,11 @@ flags.DEFINE_string('absl_echo', None, 'The echo message from absl.flags.')
 def parse_flags_simple(argv):
   """Simple example for absl.flags + argparse."""
   parser = argparse_flags.ArgumentParser(
-      description='A simple example of argparse_flags.')
+      description='A simple example of argparse_flags.'
+  )
   parser.add_argument(
-      '--argparse_echo', help='The echo message from argparse_flags')
+      '--argparse_echo', help='The echo message from argparse_flags'
+  )
   return parser.parse_args(argv[1:])
 
 
@@ -53,21 +55,22 @@ def shuffle(args):
 def parse_flags_subcommands(argv):
   """Subcommands example for absl.flags + argparse."""
   parser = argparse_flags.ArgumentParser(
-      description='A subcommands example of argparse_flags.')
-  parser.add_argument('--argparse_echo',
-                      help='The echo message from argparse_flags')
+      description='A subcommands example of argparse_flags.'
+  )
+  parser.add_argument(
+      '--argparse_echo', help='The echo message from argparse_flags'
+  )
 
   subparsers = parser.add_subparsers(help='The command to execute.')
 
-  roll_dice_parser = subparsers.add_parser(
-      'roll_dice', help='Roll a dice.')
+  roll_dice_parser = subparsers.add_parser('roll_dice', help='Roll a dice.')
   roll_dice_parser.add_argument('--num_faces', type=int, default=6)
   roll_dice_parser.set_defaults(command=roll_dice)
 
-  shuffle_parser = subparsers.add_parser(
-      'shuffle', help='Shuffle inputs.')
+  shuffle_parser = subparsers.add_parser('shuffle', help='Shuffle inputs.')
   shuffle_parser.add_argument(
-      'inputs', metavar='I', nargs='+', help='Inputs to shuffle.')
+      'inputs', metavar='I', nargs='+', help='Inputs to shuffle.'
+  )
   shuffle_parser.set_defaults(command=shuffle)
 
   return parser.parse_args(argv[1:])
@@ -81,5 +84,7 @@ def main_subcommands(args):
 if __name__ == '__main__':
   main_func_name = os.environ['MAIN_FUNC']
   flags_parser_func_name = os.environ['FLAGS_PARSER_FUNC']
-  app.run(main=globals()[main_func_name],
-          flags_parser=globals()[flags_parser_func_name])
+  app.run(
+      main=globals()[main_func_name],
+      flags_parser=globals()[flags_parser_func_name],
+  )

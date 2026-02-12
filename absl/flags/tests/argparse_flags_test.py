@@ -35,25 +35,43 @@ class ArgparseFlagsTest(parameterized.TestCase):
     super().setUp()
     self._absl_flags = flags.FlagValues()
     flags.DEFINE_bool(
-        'absl_bool', None, 'help for --absl_bool.',
-        short_name='b', flag_values=self._absl_flags)
+        'absl_bool',
+        None,
+        'help for --absl_bool.',
+        short_name='b',
+        flag_values=self._absl_flags,
+    )
     # Add a boolean flag that starts with "no", to verify it can correctly
     # handle the "no" prefixes in boolean flags.
     flags.DEFINE_bool(
-        'notice', None, 'help for --notice.',
-        flag_values=self._absl_flags)
+        'notice', None, 'help for --notice.', flag_values=self._absl_flags
+    )
     flags.DEFINE_string(
-        'absl_string', 'default', 'help for --absl_string=%.',
-        short_name='s', flag_values=self._absl_flags)
+        'absl_string',
+        'default',
+        'help for --absl_string=%.',
+        short_name='s',
+        flag_values=self._absl_flags,
+    )
     flags.DEFINE_integer(
-        'absl_integer', 1, 'help for --absl_integer.',
-        flag_values=self._absl_flags)
+        'absl_integer',
+        1,
+        'help for --absl_integer.',
+        flag_values=self._absl_flags,
+    )
     flags.DEFINE_float(
-        'absl_float', 1, 'help for --absl_integer.',
-        flag_values=self._absl_flags)
+        'absl_float',
+        1,
+        'help for --absl_integer.',
+        flag_values=self._absl_flags,
+    )
     flags.DEFINE_enum(
-        'absl_enum', 'apple', ['apple', 'orange'], 'help for --absl_enum.',
-        flag_values=self._absl_flags)
+        'absl_enum',
+        'apple',
+        ['apple', 'orange'],
+        'help for --absl_enum.',
+        flag_values=self._absl_flags,
+    )
 
   def test_dash_as_prefix_char_only(self):
     with self.assertRaises(ValueError):
@@ -65,15 +83,15 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_parse_absl_flags(self):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     self.assertFalse(self._absl_flags.is_parsed())
     self.assertTrue(self._absl_flags['absl_string'].using_default_value)
     self.assertTrue(self._absl_flags['absl_integer'].using_default_value)
     self.assertTrue(self._absl_flags['absl_float'].using_default_value)
     self.assertTrue(self._absl_flags['absl_enum'].using_default_value)
 
-    parser.parse_args(
-        ['--absl_string=new_string', '--absl_integer', '2'])
+    parser.parse_args(['--absl_string=new_string', '--absl_integer', '2'])
     self.assertEqual(self._absl_flags.absl_string, 'new_string')
     self.assertEqual(self._absl_flags.absl_integer, 2)
     self.assertTrue(self._absl_flags.is_parsed())
@@ -95,7 +113,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
   )
   def test_parse_boolean_flags(self, args, expected):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     self.assertIsNone(self._absl_flags['absl_bool'].value)
     self.assertIsNone(self._absl_flags['b'].value)
     if isinstance(expected, bool):
@@ -112,14 +131,16 @@ class ArgparseFlagsTest(parameterized.TestCase):
   )
   def test_parse_boolean_existing_no_prefix(self, args, expected):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     self.assertIsNone(self._absl_flags['notice'].value)
     parser.parse_args(args)
     self.assertEqual(expected, self._absl_flags.notice)
 
   def test_unrecognized_flag(self):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     with self.assertRaises(SystemExit):
       parser.parse_args(['--unknown_flag=what'])
 
@@ -130,7 +151,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
       return value > 0
 
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     with self.assertRaises(SystemExit):
       parser.parse_args(['--absl_integer', '-2'])
 
@@ -144,7 +166,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
   )
   def test_dashes(self, argument, expected):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     if isinstance(expected, str):
       parser.parse_args([argument])
       self.assertEqual(self._absl_flags.absl_string, expected)
@@ -154,20 +177,32 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_absl_flags_not_added_to_namespace(self):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     args = parser.parse_args(['--absl_string=new_string'])
     self.assertIsNone(getattr(args, 'absl_string', None))
 
   def test_mixed_flags_and_positional(self):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     parser.add_argument('--header', help='Header message to print.')
-    parser.add_argument('integers', metavar='N', type=int, nargs='+',
-                        help='an integer for the accumulator')
+    parser.add_argument(
+        'integers',
+        metavar='N',
+        type=int,
+        nargs='+',
+        help='an integer for the accumulator',
+    )
 
-    args = parser.parse_args(
-        ['--absl_string=new_string', '--header=HEADER', '--absl_integer',
-         '2', '3', '4'])
+    args = parser.parse_args([
+        '--absl_string=new_string',
+        '--header=HEADER',
+        '--absl_integer',
+        '2',
+        '3',
+        '4',
+    ])
     self.assertEqual(self._absl_flags.absl_string, 'new_string')
     self.assertEqual(self._absl_flags.absl_integer, 2)
     self.assertEqual(args.header, 'HEADER')
@@ -175,7 +210,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_subparsers(self):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     parser.add_argument('--header', help='Header message to print.')
     subparsers = parser.add_subparsers(help='The command to execute.')
 
@@ -192,8 +228,12 @@ class ArgparseFlagsTest(parameterized.TestCase):
     sub_parser.set_defaults(command=sub_command_func)
 
     args = parser.parse_args([
-        '--header=HEADER', '--absl_string=new_value', 'sub_cmd',
-        '--absl_integer=2', '--sub_flag=new_sub_flag_value'])
+        '--header=HEADER',
+        '--absl_string=new_value',
+        'sub_cmd',
+        '--absl_integer=2',
+        '--sub_flag=new_sub_flag_value',
+    ])
 
     self.assertEqual(args.header, 'HEADER')
     self.assertEqual(self._absl_flags.absl_string, 'new_value')
@@ -203,7 +243,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_subparsers_no_inherit_in_subparser(self):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     subparsers = parser.add_subparsers(help='The command to execute.')
 
     # NOTE: The sub parsers don't work well with typing hence `type: ignore`.
@@ -221,7 +262,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_help_main_module_flags(self):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     help_message = parser.format_help()
 
     # Only the short name is shown in the usage string.
@@ -237,10 +279,15 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_help_non_main_module_flags(self):
     flags.DEFINE_string(
-        'non_main_module_flag', 'default', 'help',
-        module_name='other.module', flag_values=self._absl_flags)
+        'non_main_module_flag',
+        'default',
+        'help',
+        module_name='other.module',
+        flag_values=self._absl_flags,
+    )
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     help_message = parser.format_help()
 
     # Non main module key flags are not printed in the help message.
@@ -248,11 +295,16 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_help_non_main_module_key_flags(self):
     flags.DEFINE_string(
-        'non_main_module_flag', 'default', 'help',
-        module_name='other.module', flag_values=self._absl_flags)
+        'non_main_module_flag',
+        'default',
+        'help',
+        module_name='other.module',
+        flag_values=self._absl_flags,
+    )
     flags.declare_key_flag('non_main_module_flag', flag_values=self._absl_flags)
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     help_message = parser.format_help()
 
     # Main module key fags are printed in the help message, even if the flag
@@ -267,7 +319,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
   )
   def test_help_flags(self, args):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     with self.assertRaises(SystemExit):
       parser.parse_args(args)
 
@@ -279,7 +332,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
   )
   def test_no_help_flags(self, args):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags, add_help=False)
+        inherited_absl_flags=self._absl_flags, add_help=False
+    )
     with mock.patch.object(parser, 'print_help') as print_help_mock:
       with self.assertRaises(SystemExit):
         parser.parse_args(args)
@@ -287,12 +341,18 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_helpfull_message(self):
     flags.DEFINE_string(
-        'non_main_module_flag', 'default', 'help',
-        module_name='other.module', flag_values=self._absl_flags)
+        'non_main_module_flag',
+        'default',
+        'help',
+        module_name='other.module',
+        flag_values=self._absl_flags,
+    )
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
-    with self.assertRaises(SystemExit),\
-        mock.patch.object(sys, 'stdout', new=io.StringIO()) as mock_stdout:
+        inherited_absl_flags=self._absl_flags
+    )
+    with self.assertRaises(SystemExit), mock.patch.object(
+        sys, 'stdout', new=io.StringIO()
+    ) as mock_stdout:
       parser.parse_args(['--helpfull'])
     stdout_message = mock_stdout.getvalue()
     logging.info('captured stdout message:\n%s', stdout_message)
@@ -306,32 +366,43 @@ class ArgparseFlagsTest(parameterized.TestCase):
     self.assertIn('--undefok', stdout_message)
 
   @parameterized.named_parameters(
-      ('at_end',
-       ('1', '--absl_string=value_from_cmd', '--flagfile='),
-       'value_from_file'),
-      ('at_beginning',
-       ('--flagfile=', '1', '--absl_string=value_from_cmd'),
-       'value_from_cmd'),
+      (
+          'at_end',
+          ('1', '--absl_string=value_from_cmd', '--flagfile='),
+          'value_from_file',
+      ),
+      (
+          'at_beginning',
+          ('--flagfile=', '1', '--absl_string=value_from_cmd'),
+          'value_from_cmd',
+      ),
   )
   def test_flagfile(self, cmd_args, expected_absl_string_value):
     # Set gnu_getopt to False, to verify it's ignored by argparse_flags.
     self._absl_flags.set_gnu_getopt(False)
 
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     parser.add_argument('--header', help='Header message to print.')
-    parser.add_argument('integers', metavar='N', type=int, nargs='+',
-                        help='an integer for the accumulator')
+    parser.add_argument(
+        'integers',
+        metavar='N',
+        type=int,
+        nargs='+',
+        help='an integer for the accumulator',
+    )
     flagfile = tempfile.NamedTemporaryFile(
-        dir=absltest.TEST_TMPDIR.value, delete=False)
+        dir=absltest.TEST_TMPDIR.value, delete=False
+    )
     self.addCleanup(os.unlink, flagfile.name)
     with flagfile:
-      flagfile.write(b'''
+      flagfile.write(b"""
 # The flag file.
 --absl_string=value_from_file
 --absl_integer=1
 --header=header_from_file
-''')
+""")
 
     expand_flagfile = lambda x: x + flagfile.name if x == '--flagfile=' else x
     cmd_args = [expand_flagfile(x) for x in cmd_args]
@@ -360,8 +431,12 @@ class ArgparseFlagsTest(parameterized.TestCase):
       ('value', 'name', ['--name=value'], []),
       ('boolean_positive', 'bool', ['--bool'], []),
       ('boolean_negative', 'bool', ['--nobool'], []),
-      ('left_over', 'strip', ['--first', '--strip', '--last'],
-       ['--first', '--last']),
+      (
+          'left_over',
+          'strip',
+          ['--first', '--strip', '--last'],
+          ['--first', '--last'],
+      ),
   )
   def test_strip_undefok_args(self, undefok, args, expected_args):
     actual_args = argparse_flags._strip_undefok_args(undefok, args)
@@ -377,7 +452,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
   )
   def test_undefok_flag_correct_use(self, cmd_args):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     args = parser.parse_args(cmd_args)  # Make sure it doesn't raise.
     # Make sure `undefok` is not exposed in namespace.
     sentinel = object()
@@ -385,9 +461,9 @@ class ArgparseFlagsTest(parameterized.TestCase):
 
   def test_undefok_flag_existing(self):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
-    parser.parse_args(
-        ['--absl_string=new_value', '--undefok=absl_string'])
+        inherited_absl_flags=self._absl_flags
+    )
+    parser.parse_args(['--absl_string=new_value', '--undefok=absl_string'])
     self.assertEqual('new_value', self._absl_flags.absl_string)
 
   @parameterized.named_parameters(
@@ -396,16 +472,19 @@ class ArgparseFlagsTest(parameterized.TestCase):
   )
   def test_undefok_flag_incorrect_use(self, cmd_args):
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags)
+        inherited_absl_flags=self._absl_flags
+    )
     with self.assertRaises(SystemExit):
       parser.parse_args(cmd_args)
 
   def test_argument_default(self):
     # Regression test for https://github.com/abseil/abseil-py/issues/171.
     parser = argparse_flags.ArgumentParser(
-        inherited_absl_flags=self._absl_flags, argument_default=23)
+        inherited_absl_flags=self._absl_flags, argument_default=23
+    )
     parser.add_argument(
-        '--magic_number', type=int, help='The magic number to use.')
+        '--magic_number', type=int, help='The magic number to use.'
+    )
     args = parser.parse_args([])
     self.assertEqual(args.magic_number, 23)
 
@@ -428,38 +507,62 @@ class ArgparseFlagsTest(parameterized.TestCase):
 class ArgparseWithAppRunTest(parameterized.TestCase):
 
   @parameterized.named_parameters(
-      ('simple',
-       'main_simple', 'parse_flags_simple',
-       ['--argparse_echo=I am argparse.', '--absl_echo=I am absl.'],
-       ['I am argparse.', 'I am absl.']),
-      ('subcommand_roll_dice',
-       'main_subcommands', 'parse_flags_subcommands',
-       ['--argparse_echo=I am argparse.', '--absl_echo=I am absl.',
-        'roll_dice', '--num_faces=12'],
-       ['I am argparse.', 'I am absl.', 'Rolled a dice: ']),
-      ('subcommand_shuffle',
-       'main_subcommands', 'parse_flags_subcommands',
-       ['--argparse_echo=I am argparse.', '--absl_echo=I am absl.',
-        'shuffle', 'a', 'b', 'c'],
-       ['I am argparse.', 'I am absl.', 'Shuffled: ']),
+      (
+          'simple',
+          'main_simple',
+          'parse_flags_simple',
+          ['--argparse_echo=I am argparse.', '--absl_echo=I am absl.'],
+          ['I am argparse.', 'I am absl.'],
+      ),
+      (
+          'subcommand_roll_dice',
+          'main_subcommands',
+          'parse_flags_subcommands',
+          [
+              '--argparse_echo=I am argparse.',
+              '--absl_echo=I am absl.',
+              'roll_dice',
+              '--num_faces=12',
+          ],
+          ['I am argparse.', 'I am absl.', 'Rolled a dice: '],
+      ),
+      (
+          'subcommand_shuffle',
+          'main_subcommands',
+          'parse_flags_subcommands',
+          [
+              '--argparse_echo=I am argparse.',
+              '--absl_echo=I am absl.',
+              'shuffle',
+              'a',
+              'b',
+              'c',
+          ],
+          ['I am argparse.', 'I am absl.', 'Shuffled: '],
+      ),
   )
   def test_argparse_with_app_run(
-      self, main_func_name, flags_parser_func_name, args, output_strings):
+      self, main_func_name, flags_parser_func_name, args, output_strings
+  ):
     env = os.environ.copy()
     env['MAIN_FUNC'] = main_func_name
     env['FLAGS_PARSER_FUNC'] = flags_parser_func_name
     helper = _bazelize_command.get_executable_path(
-        'absl/flags/tests/argparse_flags_test_helper')
+        'absl/flags/tests/argparse_flags_test_helper'
+    )
     try:
       stdout = subprocess.check_output([helper] + args, env=env, text=True)
     except subprocess.CalledProcessError as e:
-      error_info = ('ERROR: argparse_helper failed\n'
-                    'Command: {}\n'
-                    'Exit code: {}\n'
-                    '----- output -----\n{}'
-                    '------------------')
-      error_info = error_info.format(e.cmd, e.returncode,
-                                     e.output + '\n' if e.output else '<empty>')
+      error_info = (
+          'ERROR: argparse_helper failed\n'
+          'Command: {}\n'
+          'Exit code: {}\n'
+          '----- output -----\n{}'
+          '------------------'
+      )
+      error_info = error_info.format(
+          e.cmd, e.returncode, e.output + '\n' if e.output else '<empty>'
+      )
       print(error_info, file=sys.stderr)
       raise
 

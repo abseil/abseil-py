@@ -37,7 +37,8 @@ class FlagSuggestionTest(absltest.TestCase):
         'ftree-bit-ccp',
         'ftree-builtin-call-dce',
         'ftree-ccp',
-        'ftree-ch']
+        'ftree-ch',
+    ]
 
   def test_damerau_levenshtein_id(self):
     self.assertEqual(0, _helpers._damerau_levenshtein('asdf', 'asdf'))
@@ -54,8 +55,9 @@ class FlagSuggestionTest(absltest.TestCase):
     self.assertEqual(1, _helpers._damerau_levenshtein('kitten', 'ktiten'))
 
   def test_mispelled_suggestions(self):
-    suggestions = _helpers.get_flag_suggestions('fstack_protector_all',
-                                                self.longopts)
+    suggestions = _helpers.get_flag_suggestions(
+        'fstack_protector_all', self.longopts
+    )
     self.assertEqual(['fstack-protector-all'], suggestions)
 
   def test_ambiguous_prefix_suggestion(self):
@@ -84,18 +86,22 @@ class GetCallingModuleTest(absltest.TestCase):
 
   def test_get_calling_module(self):
     self.assertEqual(_helpers.get_calling_module(), sys.argv[0])
-    self.assertEqual(module_foo.get_module_name(),
-                     'absl.flags.tests.module_foo')
-    self.assertEqual(module_bar.get_module_name(),
-                     'absl.flags.tests.module_bar')
+    self.assertEqual(
+        module_foo.get_module_name(), 'absl.flags.tests.module_foo'
+    )
+    self.assertEqual(
+        module_bar.get_module_name(), 'absl.flags.tests.module_bar'
+    )
 
     # We execute the following exec statements for their side-effect
     # (i.e., not raising an error).  They emphasize the case that not
     # all code resides in one of the imported modules: Python is a
     # really dynamic language, where we can dynamically construct some
     # code and execute it.
-    code = ('from absl.flags import _helpers\n'
-            'module_name = _helpers.get_calling_module()')
+    code = (
+        'from absl.flags import _helpers\n'
+        'module_name = _helpers.get_calling_module()'
+    )
     exec(code)  # pylint: disable=exec-used
 
     # Next two exec statements executes code with a global environment
@@ -117,13 +123,11 @@ class GetCallingModuleTest(absltest.TestCase):
     # module, second time by executing it from module_bar.
     global_dict = {}
     exec(code, global_dict)  # pylint: disable=exec-used
-    self.assertEqual(global_dict['module_name'],
-                     sys.argv[0])
+    self.assertEqual(global_dict['module_name'], sys.argv[0])
 
     global_dict = {}
     module_bar.execute_code(code, global_dict)
-    self.assertEqual(global_dict['module_name'],
-                     'absl.flags.tests.module_bar')
+    self.assertEqual(global_dict['module_name'], 'absl.flags.tests.module_bar')
 
   def test_get_calling_module_with_iteritems_error(self):
     # This test checks that get_calling_module is using
@@ -145,8 +149,9 @@ class GetCallingModuleTest(absltest.TestCase):
     try:
       # _get_calling_module should still work as expected:
       self.assertEqual(_helpers.get_calling_module(), sys.argv[0])
-      self.assertEqual(module_foo.get_module_name(),
-                       'absl.flags.tests.module_foo')
+      self.assertEqual(
+          module_foo.get_module_name(), 'absl.flags.tests.module_foo'
+      )
     finally:
       sys.modules = orig_sys_modules
 

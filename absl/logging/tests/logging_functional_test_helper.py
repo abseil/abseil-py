@@ -57,15 +57,17 @@ def _test_do_logging():
   logging.log(0, 'This line is log level 0')
   logging.info('Interesting Stuff\0')
   logging.info('Interesting Stuff with Arguments: %d', 42)
-  logging.info('%(a)s Stuff with %(b)s',
-               {'a': 'Interesting', 'b': 'Dictionary'})
+  logging.info(
+      '%(a)s Stuff with %(b)s', {'a': 'Interesting', 'b': 'Dictionary'}
+  )
 
   with mock.patch.object(timeit, 'default_timer') as mock_timer:
     mock_timer.return_value = 0
     while timeit.default_timer() < 9:
-      logging.log_every_n_seconds(logging.INFO, 'This should appear 5 times.',
-                                  2)
-      mock_timer.return_value = mock_timer() + .2
+      logging.log_every_n_seconds(
+          logging.INFO, 'This should appear 5 times.', 2
+      )
+      mock_timer.return_value = mock_timer() + 0.2
 
   for i in range(1, 5):
     logging.log_first_n(logging.INFO, 'Info first %d of %d', 2, i, 2)
@@ -244,9 +246,9 @@ def _test_register_frame_to_skip():
   logging.get_absl_logger().register_frame_to_skip(__file__, '_getline')
   line3 = _getline()
   # Both should be line number of the _getline_inner() call.
-  assert (line1 == line2), (line1, line2)
+  assert line1 == line2, (line1, line2)
   # line3 should be a line number in this function.
-  assert (line2 != line3), (line2, line3)
+  assert line2 != line3, (line2, line3)
 
 
 def _test_flush():
@@ -264,8 +266,9 @@ def _test_stderrthreshold():
   def log_things():
     logging.debug('FLAGS.stderrthreshold=%s, debug log', FLAGS.stderrthreshold)
     logging.info('FLAGS.stderrthreshold=%s, info log', FLAGS.stderrthreshold)
-    logging.warning('FLAGS.stderrthreshold=%s, warning log',
-                    FLAGS.stderrthreshold)
+    logging.warning(
+        'FLAGS.stderrthreshold=%s, warning log', FLAGS.stderrthreshold
+    )
     logging.error('FLAGS.stderrthreshold=%s, error log', FLAGS.stderrthreshold)
 
   FLAGS.stderrthreshold = 'debug'
@@ -309,8 +312,9 @@ def _test_unicode():
 
   def log(name, msg, *args):
     """Logs the message, and ensures the same name is not logged again."""
-    assert name not in test_names, ('test_unicode expects unique names to work,'
-                                    ' found existing name {}').format(name)
+    assert name not in test_names, (
+        'test_unicode expects unique names to work, found existing name {}'
+    ).format(name)
     test_names.append(name)
 
     # Add line separators so that tests can verify the output for each log

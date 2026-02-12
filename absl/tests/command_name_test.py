@@ -51,8 +51,9 @@ def _is_prctl_syscall_available():
   return True
 
 
-@unittest.skipIf(not _get_kernel_process_name(),
-                 '_get_kernel_process_name() fails.')
+@unittest.skipIf(
+    not _get_kernel_process_name(), '_get_kernel_process_name() fails.'
+)
 class CommandNameTest(absltest.TestCase):
 
   def assertProcessNameSimilarTo(self, new_name):
@@ -65,15 +66,19 @@ class CommandNameTest(absltest.TestCase):
         msg=f'set {new_name!r} vs found {actual_name!r}',
     )
 
-  @unittest.skipIf(not os.access('/proc/self/comm', os.W_OK),
-                   '/proc/self/comm is not writeable.')
+  @unittest.skipIf(
+      not os.access('/proc/self/comm', os.W_OK),
+      '/proc/self/comm is not writeable.',
+  )
   def test_set_kernel_process_name(self):
     new_name = 'ProcessNam0123456789abcdefghijklmnöp'
     command_name.set_kernel_process_name(new_name)
     self.assertProcessNameSimilarTo(new_name)
 
-  @unittest.skipIf(not _is_prctl_syscall_available(),
-                   'prctl() system call missing from libc.so.6.')
+  @unittest.skipIf(
+      not _is_prctl_syscall_available(),
+      'prctl() system call missing from libc.so.6.',
+  )
   def test_set_kernel_process_name_no_proc_file(self):
     new_name = b'NoProcFile0123456789abcdefghijklmnop'
     mock_open = mock.mock_open()

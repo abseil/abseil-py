@@ -124,11 +124,13 @@ class TestCaseTest(BaseTestCase):
     self.run_helper(
         1,
         [],
-        {'TEST_RANDOM_SEED': None,
-         'TEST_SRCDIR': None,
-         'TEST_TMPDIR': None,
+        {
+            'TEST_RANDOM_SEED': None,
+            'TEST_SRCDIR': None,
+            'TEST_TMPDIR': None,
         },
-        expect_success=True)
+        expect_success=True,
+    )
 
   def test_flags_env_var_no_flags(self):
     tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
@@ -136,13 +138,15 @@ class TestCaseTest(BaseTestCase):
     self.run_helper(
         2,
         [],
-        {'TEST_RANDOM_SEED': '321',
-         'TEST_SRCDIR': srcdir,
-         'TEST_TMPDIR': tmpdir,
-         'ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR': srcdir,
-         'ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR': tmpdir,
+        {
+            'TEST_RANDOM_SEED': '321',
+            'TEST_SRCDIR': srcdir,
+            'TEST_TMPDIR': tmpdir,
+            'ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR': srcdir,
+            'ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR': tmpdir,
         },
-        expect_success=True)
+        expect_success=True,
+    )
 
   def test_flags_no_env_var_flags(self):
     tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
@@ -193,27 +197,35 @@ class TestCaseTest(BaseTestCase):
     self.run_helper(
         6,
         [],
-        {'XML_OUTPUT_FILE': xml_output_file_env,
-         'RUNNING_UNDER_TEST_DAEMON': '1',
-         'TEST_XMLOUTPUTDIR': random_dir,
-         'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': xml_output_file_env,
+        {
+            'XML_OUTPUT_FILE': xml_output_file_env,
+            'RUNNING_UNDER_TEST_DAEMON': '1',
+            'TEST_XMLOUTPUTDIR': random_dir,
+            'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': (
+                xml_output_file_env
+            ),
         },
-        expect_success=True)
+        expect_success=True,
+    )
 
   def test_xml_output_file_from_daemon(self):
-    tmpdir = os.path.join(tempfile.mkdtemp(
-        dir=absltest.TEST_TMPDIR.value), 'sub_dir')
+    tmpdir = os.path.join(
+        tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value), 'sub_dir'
+    )
     random_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
         6,
         ['--test_tmpdir', tmpdir],
-        {'XML_OUTPUT_FILE': None,
-         'RUNNING_UNDER_TEST_DAEMON': '1',
-         'TEST_XMLOUTPUTDIR': random_dir,
-         'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': os.path.join(
-             os.path.dirname(tmpdir), 'test_detail.xml'),
+        {
+            'XML_OUTPUT_FILE': None,
+            'RUNNING_UNDER_TEST_DAEMON': '1',
+            'TEST_XMLOUTPUTDIR': random_dir,
+            'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': os.path.join(
+                os.path.dirname(tmpdir), 'test_detail.xml'
+            ),
         },
-        expect_success=True)
+        expect_success=True,
+    )
 
   def test_xml_output_file_from_test_xmloutputdir_env(self):
     xml_output_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
@@ -221,27 +233,33 @@ class TestCaseTest(BaseTestCase):
     self.run_helper(
         6,
         [],
-        {'XML_OUTPUT_FILE': None,
-         'RUNNING_UNDER_TEST_DAEMON': None,
-         'TEST_XMLOUTPUTDIR': xml_output_dir,
-         'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': os.path.join(
-             xml_output_dir, expected_xml_file),
+        {
+            'XML_OUTPUT_FILE': None,
+            'RUNNING_UNDER_TEST_DAEMON': None,
+            'TEST_XMLOUTPUTDIR': xml_output_dir,
+            'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': os.path.join(
+                xml_output_dir, expected_xml_file
+            ),
         },
-        expect_success=True)
+        expect_success=True,
+    )
 
   def test_xml_output_file_from_flag(self):
     random_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     flag_file = os.path.join(
-        tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value), 'output.xml')
+        tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value), 'output.xml'
+    )
     self.run_helper(
         6,
         ['--xml_output_file', flag_file],
-        {'XML_OUTPUT_FILE': os.path.join(random_dir, 'output.xml'),
-         'RUNNING_UNDER_TEST_DAEMON': '1',
-         'TEST_XMLOUTPUTDIR': random_dir,
-         'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': flag_file,
+        {
+            'XML_OUTPUT_FILE': os.path.join(random_dir, 'output.xml'),
+            'RUNNING_UNDER_TEST_DAEMON': '1',
+            'TEST_XMLOUTPUTDIR': random_dir,
+            'ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE': flag_file,
         },
-        expect_success=True)
+        expect_success=True,
+    )
 
   def test_app_run(self):
     stdout, _, _ = self.run_helper(
@@ -291,12 +309,21 @@ class TestCaseTest(BaseTestCase):
 
     a = [0, 'a', []]
     b = []
-    self.assertRaises(absltest.TestCase.failureException,
-                      self.assertListEqual, a, b)
-    self.assertRaises(absltest.TestCase.failureException,
-                      self.assertListEqual, tuple(a), tuple(b))
-    self.assertRaises(absltest.TestCase.failureException,
-                      self.assertSequenceEqual, a, tuple(b))
+    self.assertRaises(
+        absltest.TestCase.failureException, self.assertListEqual, a, b
+    )
+    self.assertRaises(
+        absltest.TestCase.failureException,
+        self.assertListEqual,
+        tuple(a),
+        tuple(b),
+    )
+    self.assertRaises(
+        absltest.TestCase.failureException,
+        self.assertSequenceEqual,
+        a,
+        tuple(b),
+    )
 
     b.extend(a)
     self.assertListEqual(a, b)
@@ -463,16 +490,18 @@ class TestCaseTest(BaseTestCase):
       # that is consistent with dict equality.
       assert_dict_equal({1: 1.0, 2: 2}, {1: 1, 2: 3})
     except AssertionError as e:
-      self.assertMultiLineEqual('{1: 1.0, 2: 2} != {1: 1, 2: 3}\n'
-                                'repr() of differing entries:\n2: 2 != 3\n',
-                                str(e))
+      self.assertMultiLineEqual(
+          '{1: 1.0, 2: 2} != {1: 1, 2: 3}\n'
+          'repr() of differing entries:\n2: 2 != 3\n',
+          str(e),
+      )
 
     try:
       assert_dict_equal({}, {'x': 1})
     except AssertionError as e:
-      self.assertMultiLineEqual("{} != {'x': 1}\n"
-                                "Unexpected, but present entries:\n'x': 1\n",
-                                str(e))
+      self.assertMultiLineEqual(
+          "{} != {'x': 1}\nUnexpected, but present entries:\n'x': 1\n", str(e)
+      )
     else:
       self.fail('Expecting AssertionError')
 
@@ -528,17 +557,23 @@ Missing entries:
       # Do as best we can not to be misleading when objects have the same repr
       # but aren't equal.
       err_str = str(e)
-      self.assertStartsWith(err_str,
-                            "{'a': A, b: B, c: C} != {'a': A, d: D, e: E}\n")
+      self.assertStartsWith(
+          err_str, "{'a': A, b: B, c: C} != {'a': A, d: D, e: E}\n"
+      )
       self.assertRegex(
-          err_str, r'(?ms).*^Unexpected, but present entries:\s+'
-          r'^(d: D$\s+^e: E|e: E$\s+^d: D)$')
+          err_str,
+          r'(?ms).*^Unexpected, but present entries:\s+'
+          r'^(d: D$\s+^e: E|e: E$\s+^d: D)$',
+      )
       self.assertRegex(
-          err_str, r'(?ms).*^repr\(\) of differing entries:\s+'
-          r'^.a.: A != A$', err_str)
+          err_str,
+          r'(?ms).*^repr\(\) of differing entries:\s+' r'^.a.: A != A$',
+          err_str,
+      )
       self.assertRegex(
-          err_str, r'(?ms).*^Missing entries:\s+'
-          r'^(b: B$\s+^c: C|c: C$\s+^b: B)$')
+          err_str,
+          r'(?ms).*^Missing entries:\s+' r'^(b: B$\s+^c: C|c: C$\s+^b: B)$',
+      )
     else:
       self.fail('Expecting AssertionError')
 
@@ -546,7 +581,7 @@ Missing entries:
     class RaisesOnRepr:
 
       def __repr__(self):
-        return 1/0  # Intentionally broken __repr__ implementation.
+        return 1 / 0  # Intentionally broken __repr__ implementation.
 
     try:
       assert_dict_equal(
@@ -558,8 +593,11 @@ Missing entries:
       # Depending on the testing environment, the object may get a __main__
       # prefix or a absltest_test prefix, so strip that for comparison.
       error_msg = re.sub(
-          r'( at 0x[^>]+)|__main__\.|absltest_test\.', '', str(e))
-      self.assertRegex(error_msg, """(?m)\
+          r'( at 0x[^>]+)|__main__\.|absltest_test\.', '', str(e)
+      )
+      self.assertRegex(
+          error_msg,
+          """(?m)\
 {<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>} != \
 {<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>}
 Unexpected, but present entries:
@@ -567,7 +605,8 @@ Unexpected, but present entries:
 
 Missing entries:
 <.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>
-""")
+""",
+      )
 
     # Confirm that safe_repr, not repr, is being used.
     class RaisesOnLt:
@@ -805,8 +844,9 @@ specify delta or places not both
     self.assertContainsSubset([], {'a': 1})
 
     self.assertRaises(AssertionError, self.assertContainsSubset, ('d',), actual)
-    self.assertRaises(AssertionError, self.assertContainsSubset, ['d'],
-                      set(actual))
+    self.assertRaises(
+        AssertionError, self.assertContainsSubset, ['d'], set(actual)
+    )
     self.assertRaises(AssertionError, self.assertContainsSubset, {'a': 1}, [])
 
     with self.assertRaisesRegex(AssertionError, 'Missing elements'):
@@ -814,7 +854,8 @@ specify delta or places not both
 
     with self.assertRaisesRegex(
         AssertionError,
-        re.compile('Missing elements .* Custom message', re.DOTALL)):
+        re.compile('Missing elements .* Custom message', re.DOTALL),
+    ):
       self.assertContainsSubset({1, 2}, {1}, 'Custom message')
 
   def test_assert_no_common_elements(self):
@@ -825,7 +866,8 @@ specify delta or places not both
 
     with self.assertRaisesRegex(
         AssertionError,
-        re.compile('Common elements .* Custom message', re.DOTALL)):
+        re.compile('Common elements .* Custom message', re.DOTALL),
+    ):
       self.assertNoCommonElements({1, 2}, {1}, 'Custom message')
 
     with self.assertRaises(AssertionError):
@@ -845,10 +887,10 @@ specify delta or places not both
     self.assertAlmostEqual(3.14, 3, delta=0.2)
     self.assertAlmostEqual(2.81, 3.14, delta=1)
     self.assertAlmostEqual(-1, 1, delta=3)
-    self.assertRaises(AssertionError, self.assertAlmostEqual,
-                      3.14, 2.81, delta=0.1)
-    self.assertRaises(AssertionError, self.assertAlmostEqual,
-                      1, 2, delta=0.5)
+    self.assertRaises(
+        AssertionError, self.assertAlmostEqual, 3.14, 2.81, delta=0.1
+    )
+    self.assertRaises(AssertionError, self.assertAlmostEqual, 1, 2, delta=0.5)
     self.assertNotAlmostEqual(3.14, 2.81, delta=0.1)
 
   def test_assert_starts_with(self):
@@ -856,9 +898,9 @@ specify delta or places not both
     self.assertStartsWith('foobar', 'foobar')
     msg = 'This is a useful message'
     whole_msg = "'foobar' does not start with 'bar' : This is a useful message"
-    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
-                                      self.assertStartsWith,
-                                      'foobar', 'bar', msg)
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, whole_msg, self.assertStartsWith, 'foobar', 'bar', msg
+    )
     self.assertRaises(AssertionError, self.assertStartsWith, 'foobar', 'blah')
 
   def test_assert_not_starts_with(self):
@@ -866,20 +908,26 @@ specify delta or places not both
     self.assertNotStartsWith('foobar', 'blah')
     msg = 'This is a useful message'
     whole_msg = "'foobar' does start with 'foo' : This is a useful message"
-    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
-                                      self.assertNotStartsWith,
-                                      'foobar', 'foo', msg)
-    self.assertRaises(AssertionError, self.assertNotStartsWith, 'foobar',
-                      'foobar')
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        whole_msg,
+        self.assertNotStartsWith,
+        'foobar',
+        'foo',
+        msg,
+    )
+    self.assertRaises(
+        AssertionError, self.assertNotStartsWith, 'foobar', 'foobar'
+    )
 
   def test_assert_ends_with(self):
     self.assertEndsWith('foobar', 'bar')
     self.assertEndsWith('foobar', 'foobar')
     msg = 'This is a useful message'
     whole_msg = "'foobar' does not end with 'foo' : This is a useful message"
-    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
-                                      self.assertEndsWith,
-                                      'foobar', 'foo', msg)
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, whole_msg, self.assertEndsWith, 'foobar', 'foo', msg
+    )
     self.assertRaises(AssertionError, self.assertEndsWith, 'foobar', 'blah')
 
   def test_assert_not_ends_with(self):
@@ -887,11 +935,12 @@ specify delta or places not both
     self.assertNotEndsWith('foobar', 'blah')
     msg = 'This is a useful message'
     whole_msg = "'foobar' does end with 'bar' : This is a useful message"
-    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
-                                      self.assertNotEndsWith,
-                                      'foobar', 'bar', msg)
-    self.assertRaises(AssertionError, self.assertNotEndsWith, 'foobar',
-                      'foobar')
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, whole_msg, self.assertNotEndsWith, 'foobar', 'bar', msg
+    )
+    self.assertRaises(
+        AssertionError, self.assertNotEndsWith, 'foobar', 'foobar'
+    )
 
   def test_assert_regex_backports(self):
     self.assertRegex('regex', 'regex')
@@ -915,8 +964,9 @@ specify delta or places not both
       self.assertRegexMatch('str', regexes=[])
 
   def test_assert_regex_match_bad_arguments(self):
-    with self.assertRaisesRegex(AssertionError,
-                                'regexes is string or bytes;.*'):
+    with self.assertRaisesRegex(
+        AssertionError, 'regexes is string or bytes;.*'
+    ):
       self.assertRegexMatch('1.*2', '1 2')
 
   def test_assert_regex_match_unicode_vs_bytes(self):
@@ -939,11 +989,11 @@ specify delta or places not both
     self.assertCommandFails(
         ['cat', os.path.join(tmpdir, 'file.txt')],
         ['No such file or directory'],
-        env=_env_for_command_tests())
+        env=_env_for_command_tests(),
+    )
 
   def test_assert_command_fails_with_list_of_string(self):
-    self.assertCommandFails(
-        ['false'], [''], env=_env_for_command_tests())
+    self.assertCommandFails(['false'], [''], env=_env_for_command_tests())
 
   def test_assert_command_fails_with_list_of_unicode_string(self):
     self.assertCommandFails(['false'], [''], env=_env_for_command_tests())
@@ -956,8 +1006,11 @@ specify delta or places not both
 
   def test_assert_command_fails_with_message(self):
     msg = 'This is a useful message'
-    expected_re = re.compile('The following command succeeded while expected to'
-                             ' fail:.* This is a useful message', re.DOTALL)
+    expected_re = re.compile(
+        'The following command succeeded while expected to'
+        ' fail:.* This is a useful message',
+        re.DOTALL,
+    )
 
     with self.assertRaisesRegex(AssertionError, expected_re):
       self.assertCommandFails(
@@ -971,7 +1024,8 @@ specify delta or places not both
     with self.assertRaisesRegex(AssertionError, expected_re):
       self.assertCommandSucceeds(
           ['cat', os.path.join(tmpdir, 'file.txt')],
-          env=_env_for_command_tests())
+          env=_env_for_command_tests(),
+      )
 
   def test_assert_command_succeeds_with_matching_unicode_regexes(self):
     self.assertCommandSucceeds(
@@ -980,22 +1034,25 @@ specify delta or places not both
 
   def test_assert_command_succeeds_with_matching_bytes_regexes(self):
     self.assertCommandSucceeds(
-        ['echo', 'SUCCESS'], regexes=[b'SUCCESS'],
-        env=_env_for_command_tests())
+        ['echo', 'SUCCESS'], regexes=[b'SUCCESS'], env=_env_for_command_tests()
+    )
 
   def test_assert_command_succeeds_with_non_matching_regexes(self):
-    expected_re = re.compile('Running command.* This is a useful message',
-                             re.DOTALL)
+    expected_re = re.compile(
+        'Running command.* This is a useful message', re.DOTALL
+    )
     msg = 'This is a useful message'
 
     with self.assertRaisesRegex(AssertionError, expected_re):
       self.assertCommandSucceeds(
-          ['echo', 'FAIL'], regexes=['SUCCESS'], msg=msg,
-          env=_env_for_command_tests())
+          ['echo', 'FAIL'],
+          regexes=['SUCCESS'],
+          msg=msg,
+          env=_env_for_command_tests(),
+      )
 
   def test_assert_command_succeeds_with_list_of_string(self):
-    self.assertCommandSucceeds(
-        ['true'], env=_env_for_command_tests())
+    self.assertCommandSucceeds(['true'], env=_env_for_command_tests())
 
   def test_assert_command_succeeds_with_list_of_unicode_string(self):
     self.assertCommandSucceeds(['true'], env=_env_for_command_tests())
@@ -1109,10 +1166,13 @@ test case
 ?                                                       +++++++++++++++++++++
 +     own implementation that does not subclass from TestCase, of course.
 """
-    self.assertRaisesWithLiteralMatch(AssertionError, sample_text_error,
-                                      self.assertMultiLineEqual,
-                                      sample_text,
-                                      revised_sample_text)
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        sample_text_error,
+        self.assertMultiLineEqual,
+        sample_text,
+        revised_sample_text,
+    )
 
     self.assertRaises(AssertionError, self.assertMultiLineEqual, (1, 2), 'str')
     self.assertRaises(AssertionError, self.assertMultiLineEqual, 'str', (1, 2))
@@ -1120,72 +1180,50 @@ test case
   def test_assert_multi_line_equal_adds_newlines_if_needed(self):
     self.assertRaisesWithLiteralMatch(
         AssertionError,
-        '\n'
-        '  line1\n'
-        '- line2\n'
-        '?     ^\n'
-        '+ line3\n'
-        '?     ^\n',
+        '\n  line1\n- line2\n?     ^\n+ line3\n?     ^\n',
         self.assertMultiLineEqual,
-        'line1\n'
-        'line2',
-        'line1\n'
-        'line3')
+        'line1\nline2',
+        'line1\nline3',
+    )
 
   def test_assert_multi_line_equal_shows_missing_newlines(self):
     self.assertRaisesWithLiteralMatch(
         AssertionError,
-        '\n'
-        '  line1\n'
-        '- line2\n'
-        '?      -\n'
-        '+ line2\n',
+        '\n  line1\n- line2\n?      -\n+ line2\n',
         self.assertMultiLineEqual,
-        'line1\n'
-        'line2\n',
-        'line1\n'
-        'line2')
+        'line1\nline2\n',
+        'line1\nline2',
+    )
 
   def test_assert_multi_line_equal_shows_extra_newlines(self):
     self.assertRaisesWithLiteralMatch(
         AssertionError,
-        '\n'
-        '  line1\n'
-        '- line2\n'
-        '+ line2\n'
-        '?      +\n',
+        '\n  line1\n- line2\n+ line2\n?      +\n',
         self.assertMultiLineEqual,
-        'line1\n'
-        'line2',
-        'line1\n'
-        'line2\n')
+        'line1\nline2',
+        'line1\nline2\n',
+    )
 
   def test_assert_multi_line_equal_line_limit_limits(self):
     self.assertRaisesWithLiteralMatch(
         AssertionError,
-        '\n'
-        '  line1\n'
-        '(... and 4 more delta lines omitted for brevity.)\n',
+        '\n  line1\n(... and 4 more delta lines omitted for brevity.)\n',
         self.assertMultiLineEqual,
-        'line1\n'
-        'line2\n',
-        'line1\n'
-        'line3\n',
-        line_limit=1)
+        'line1\nline2\n',
+        'line1\nline3\n',
+        line_limit=1,
+    )
 
   def test_assert_multi_line_equal_line_limit_limits_with_message(self):
     self.assertRaisesWithLiteralMatch(
         AssertionError,
-        'Prefix:\n'
-        '  line1\n'
-        '(... and 4 more delta lines omitted for brevity.)\n',
+        'Prefix:\n  line1\n(... and 4 more delta lines omitted for brevity.)\n',
         self.assertMultiLineEqual,
-        'line1\n'
-        'line2\n',
-        'line1\n'
-        'line3\n',
+        'line1\nline2\n',
+        'line1\nline3\n',
         'Prefix',
-        line_limit=1)
+        line_limit=1,
+    )
 
   def test_assert_is_none(self):
     self.assertIsNone(None)
@@ -1210,9 +1248,9 @@ test case
 
   def test_assert_raises_with_predicate_match_no_raise(self):
     with self.assertRaisesRegex(AssertionError, '^Exception not raised$'):
-      self.assertRaisesWithPredicateMatch(Exception,
-                                          lambda e: True,
-                                          lambda: 1)  # don't raise
+      self.assertRaisesWithPredicateMatch(
+          Exception, lambda e: True, lambda: 1
+      )  # don't raise
 
     with self.assertRaisesRegex(AssertionError, '^Exception not raised$'):
       with self.assertRaisesWithPredicateMatch(Exception, lambda e: True):
@@ -1223,9 +1261,9 @@ test case
       raise ValueError
 
     with self.assertRaises(ValueError):
-      self.assertRaisesWithPredicateMatch(IOError,
-                                          lambda e: True,
-                                          _raise_value_error)
+      self.assertRaisesWithPredicateMatch(
+          IOError, lambda e: True, _raise_value_error
+      )
 
     with self.assertRaises(ValueError):
       with self.assertRaisesWithPredicateMatch(IOError, lambda e: True):
@@ -1234,10 +1272,11 @@ test case
   def test_assert_raises_with_predicate_match_predicate_fails(self):
     def _raise_value_error():
       raise ValueError
+
     with self.assertRaisesRegex(AssertionError, ' does not match predicate '):
-      self.assertRaisesWithPredicateMatch(ValueError,
-                                          lambda e: False,
-                                          _raise_value_error)
+      self.assertRaisesWithPredicateMatch(
+          ValueError, lambda e: False, _raise_value_error
+      )
 
     with self.assertRaisesRegex(AssertionError, ' does not match predicate '):
       with self.assertRaisesWithPredicateMatch(ValueError, lambda e: False):
@@ -1247,9 +1286,9 @@ test case
     def _raise_value_error():
       raise ValueError
 
-    self.assertRaisesWithPredicateMatch(ValueError,
-                                        lambda e: True,
-                                        _raise_value_error)
+    self.assertRaisesWithPredicateMatch(
+        ValueError, lambda e: True, _raise_value_error
+    )
 
     with self.assertRaisesWithPredicateMatch(ValueError, lambda e: True):
       raise ValueError
@@ -1267,6 +1306,7 @@ test case
 
   def test_assert_raises_with_literal_match_exception_captured(self):
     message = 'some value error'
+
     def _raise_value_error():
       raise ValueError(message)
 
@@ -1280,35 +1320,47 @@ test case
   def test_assert_contains_in_order(self):
     # Valids
     self.assertContainsInOrder(
-        ['fox', 'dog'], 'The quick brown fox jumped over the lazy dog.')
+        ['fox', 'dog'], 'The quick brown fox jumped over the lazy dog.'
+    )
     self.assertContainsInOrder(
-        ['quick', 'fox', 'dog'],
-        'The quick brown fox jumped over the lazy dog.')
+        ['quick', 'fox', 'dog'], 'The quick brown fox jumped over the lazy dog.'
+    )
     self.assertContainsInOrder(
-        ['The', 'fox', 'dog.'], 'The quick brown fox jumped over the lazy dog.')
+        ['The', 'fox', 'dog.'], 'The quick brown fox jumped over the lazy dog.'
+    )
     self.assertContainsInOrder(
-        ['fox'], 'The quick brown fox jumped over the lazy dog.')
+        ['fox'], 'The quick brown fox jumped over the lazy dog.'
+    )
     self.assertContainsInOrder(
-        'fox', 'The quick brown fox jumped over the lazy dog.')
+        'fox', 'The quick brown fox jumped over the lazy dog.'
+    )
+    self.assertContainsInOrder(['fox', 'dog'], 'fox dog fox')
     self.assertContainsInOrder(
-        ['fox', 'dog'], 'fox dog fox')
-    self.assertContainsInOrder(
-        [], 'The quick brown fox jumped over the lazy dog.')
-    self.assertContainsInOrder(
-        [], '')
+        [], 'The quick brown fox jumped over the lazy dog.'
+    )
+    self.assertContainsInOrder([], '')
 
     # Invalids
     msg = 'This is a useful message'
-    whole_msg = ("Did not find 'fox' after 'dog' in 'The quick brown fox"
-                 " jumped over the lazy dog' : This is a useful message")
+    whole_msg = (
+        "Did not find 'fox' after 'dog' in 'The quick brown fox"
+        " jumped over the lazy dog' : This is a useful message"
+    )
     self.assertRaisesWithLiteralMatch(
-        AssertionError, whole_msg, self.assertContainsInOrder,
-        ['dog', 'fox'], 'The quick brown fox jumped over the lazy dog', msg=msg)
+        AssertionError,
+        whole_msg,
+        self.assertContainsInOrder,
+        ['dog', 'fox'],
+        'The quick brown fox jumped over the lazy dog',
+        msg=msg,
+    )
     self.assertRaises(
-        AssertionError, self.assertContainsInOrder,
-        ['The', 'dog', 'fox'], 'The quick brown fox jumped over the lazy dog')
-    self.assertRaises(
-        AssertionError, self.assertContainsInOrder, ['dog'], '')
+        AssertionError,
+        self.assertContainsInOrder,
+        ['The', 'dog', 'fox'],
+        'The quick brown fox jumped over the lazy dog',
+    )
+    self.assertRaises(AssertionError, self.assertContainsInOrder, ['dog'], '')
 
   def test_assert_contains_subsequence_for_numbers(self):
     self.assertContainsSubsequence([1, 2, 3], [1])
@@ -1318,17 +1370,23 @@ test case
     with self.assertRaises(AssertionError):
       self.assertContainsSubsequence([1, 2, 3], [4])
     msg = 'This is a useful message'
-    whole_msg = ('[3, 1] not a subsequence of [1, 2, 3]. '
-                 'First non-matching element: 1 : This is a useful message')
-    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
-                                      self.assertContainsSubsequence,
-                                      [1, 2, 3], [3, 1], msg=msg)
+    whole_msg = (
+        '[3, 1] not a subsequence of [1, 2, 3]. '
+        'First non-matching element: 1 : This is a useful message'
+    )
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        whole_msg,
+        self.assertContainsSubsequence,
+        [1, 2, 3],
+        [3, 1],
+        msg=msg,
+    )
 
   def test_assert_contains_subsequence_for_strings(self):
     self.assertContainsSubsequence(['foo', 'bar', 'blorp'], ['foo', 'blorp'])
     with self.assertRaises(AssertionError):
-      self.assertContainsSubsequence(
-          ['foo', 'bar', 'blorp'], ['blorp', 'foo'])
+      self.assertContainsSubsequence(['foo', 'bar', 'blorp'], ['blorp', 'foo'])
 
   def test_assert_contains_subsequence_with_empty_subsequence(self):
     self.assertContainsSubsequence([1, 2, 3], [])
@@ -1349,18 +1407,25 @@ test case
     with self.assertRaises(AssertionError):
       self.assertContainsExactSubsequence([1, 2, 3], [4])
     msg = 'This is a useful message'
-    whole_msg = ('[1, 2, 4] not an exact subsequence of [1, 2, 3, 4]. '
-                 'Longest matching prefix: [1, 2] : This is a useful message')
-    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
-                                      self.assertContainsExactSubsequence,
-                                      [1, 2, 3, 4], [1, 2, 4], msg=msg)
+    whole_msg = (
+        '[1, 2, 4] not an exact subsequence of [1, 2, 3, 4]. '
+        'Longest matching prefix: [1, 2] : This is a useful message'
+    )
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        whole_msg,
+        self.assertContainsExactSubsequence,
+        [1, 2, 3, 4],
+        [1, 2, 4],
+        msg=msg,
+    )
 
   def test_assert_contains_exact_subsequence_for_strings(self):
-    self.assertContainsExactSubsequence(
-        ['foo', 'bar', 'blorp'], ['foo', 'bar'])
+    self.assertContainsExactSubsequence(['foo', 'bar', 'blorp'], ['foo', 'bar'])
     with self.assertRaises(AssertionError):
       self.assertContainsExactSubsequence(
-          ['foo', 'bar', 'blorp'], ['blorp', 'foo'])
+          ['foo', 'bar', 'blorp'], ['blorp', 'foo']
+      )
 
   def test_assert_contains_exact_subsequence_with_empty_subsequence(self):
     self.assertContainsExactSubsequence([1, 2, 3], [])
@@ -1433,24 +1498,22 @@ test case
 
     class B(A):
       """Like A, but not hashable."""
+
       __hash__ = None
 
     self.assertTotallyOrdered(
         [A(1, 'a')],
         [A(2, 'b')],  # 2 is after 1.
-        [
-            A(3, 'c'),
-            B(3, 'd'),
-            B(3, 'e')  # The second argument is irrelevant.
-        ],
-        [A(4, 'z')])
+        [A(3, 'c'), B(3, 'd'), B(3, 'e')],  # The second argument is irrelevant.
+        [A(4, 'z')],
+    )
 
     # Invalid.
     msg = 'This is a useful message'
     whole_msg = '2 not less than 1 : This is a useful message'
-    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
-                                      self.assertTotallyOrdered, [2], [1],
-                                      msg=msg)
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, whole_msg, self.assertTotallyOrdered, [2], [1], msg=msg
+    )
     self.assertRaises(AssertionError, self.assertTotallyOrdered, [2], [1])
     self.assertRaises(AssertionError, self.assertTotallyOrdered, [2], [1], [3])
     self.assertRaises(AssertionError, self.assertTotallyOrdered, [1, 2])
@@ -1488,36 +1551,62 @@ test case
     self.assertUrlEqual('#fragment', '#fragment')
     self.assertUrlEqual('http://a/?q=1', 'http://a/?q=1')
     self.assertUrlEqual('http://a/?q=1&v=5', 'http://a/?v=5&q=1')
-    self.assertUrlEqual('/logs?v=1&a=2&t=labels&f=path%3A%22foo%22',
-                        '/logs?a=2&f=path%3A%22foo%22&v=1&t=labels')
+    self.assertUrlEqual(
+        '/logs?v=1&a=2&t=labels&f=path%3A%22foo%22',
+        '/logs?a=2&f=path%3A%22foo%22&v=1&t=labels',
+    )
     self.assertUrlEqual('http://a/path;p1', 'http://a/path;p1')
     self.assertUrlEqual('http://a/path;p2;p3;p1', 'http://a/path;p1;p2;p3')
-    self.assertUrlEqual('sip:alice@atlanta.com;maddr=239.255.255.1;ttl=15',
-                        'sip:alice@atlanta.com;ttl=15;maddr=239.255.255.1')
+    self.assertUrlEqual(
+        'sip:alice@atlanta.com;maddr=239.255.255.1;ttl=15',
+        'sip:alice@atlanta.com;ttl=15;maddr=239.255.255.1',
+    )
     self.assertUrlEqual('http://nyan/cat?p=1&b=', 'http://nyan/cat?b=&p=1')
 
   def test_assert_url_equal_different(self):
     msg = 'This is a useful message'
     whole_msg = 'This is a useful message:\n- a\n+ b\n'
-    self.assertRaisesWithLiteralMatch(AssertionError, whole_msg,
-                                      self.assertUrlEqual,
-                                      'http://a', 'http://b', msg=msg)
-    self.assertRaises(AssertionError, self.assertUrlEqual,
-                      'http://a/x', 'http://a:8080/x')
-    self.assertRaises(AssertionError, self.assertUrlEqual,
-                      'http://a/x', 'http://a/y')
-    self.assertRaises(AssertionError, self.assertUrlEqual,
-                      'http://a/?q=2', 'http://a/?q=1')
-    self.assertRaises(AssertionError, self.assertUrlEqual,
-                      'http://a/?q=1&v=5', 'http://a/?v=2&q=1')
-    self.assertRaises(AssertionError, self.assertUrlEqual,
-                      'http://a', 'sip://b')
-    self.assertRaises(AssertionError, self.assertUrlEqual,
-                      'http://a#g', 'sip://a#f')
-    self.assertRaises(AssertionError, self.assertUrlEqual,
-                      'http://a/path;p1;p3;p1', 'http://a/path;p1;p2;p3')
-    self.assertRaises(AssertionError, self.assertUrlEqual,
-                      'http://nyan/cat?p=1&b=', 'http://nyan/cat?p=1')
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        whole_msg,
+        self.assertUrlEqual,
+        'http://a',
+        'http://b',
+        msg=msg,
+    )
+    self.assertRaises(
+        AssertionError, self.assertUrlEqual, 'http://a/x', 'http://a:8080/x'
+    )
+    self.assertRaises(
+        AssertionError, self.assertUrlEqual, 'http://a/x', 'http://a/y'
+    )
+    self.assertRaises(
+        AssertionError, self.assertUrlEqual, 'http://a/?q=2', 'http://a/?q=1'
+    )
+    self.assertRaises(
+        AssertionError,
+        self.assertUrlEqual,
+        'http://a/?q=1&v=5',
+        'http://a/?v=2&q=1',
+    )
+    self.assertRaises(
+        AssertionError, self.assertUrlEqual, 'http://a', 'sip://b'
+    )
+    self.assertRaises(
+        AssertionError, self.assertUrlEqual, 'http://a#g', 'sip://a#f'
+    )
+    self.assertRaises(
+        AssertionError,
+        self.assertUrlEqual,
+        'http://a/path;p1;p3;p1',
+        'http://a/path;p1;p2;p3',
+    )
+    self.assertRaises(
+        AssertionError,
+        self.assertUrlEqual,
+        'http://nyan/cat?p=1&b=',
+        'http://nyan/cat?p=1',
+    )
 
   def test_same_structure_same(self):
     self.assertSameStructure(0, 0)
@@ -1534,48 +1623,62 @@ test case
     self.assertSameStructure(['a'], ('a',))
     self.assertSameStructure({}, {})
     self.assertSameStructure({'one': 1}, {'one': 1})
-    self.assertSameStructure(collections.defaultdict(None, {'one': 1}),
-                             {'one': 1})
-    self.assertSameStructure(collections.OrderedDict({'one': 1}),
-                             collections.defaultdict(None, {'one': 1}))
+    self.assertSameStructure(
+        collections.defaultdict(None, {'one': 1}), {'one': 1}
+    )
+    self.assertSameStructure(
+        collections.OrderedDict({'one': 1}),
+        collections.defaultdict(None, {'one': 1}),
+    )
 
   def test_same_structure_different(self):
     # Different type
     with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'int'> but b is a <(type|class) 'str'>"):
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'str'>",
+    ):
       self.assertSameStructure(0, 'hello')
     with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'int'> but b is a <(type|class) 'list'>"):
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'list'>",
+    ):
       self.assertSameStructure(0, [])
     with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'int'> but b is a <(type|class) 'float'>"):
+        r"a is a <(type|class) 'int'> but b is a <(type|class) 'float'>",
+    ):
       self.assertSameStructure(2, 2.0)
 
     with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'list'> but b is a <(type|class) 'dict'>"):
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'dict'>",
+    ):
       self.assertSameStructure([], {})
 
     with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'list'> but b is a <(type|class) 'set'>"):
+        r"a is a <(type|class) 'list'> but b is a <(type|class) 'set'>",
+    ):
       self.assertSameStructure([], set())
 
     with self.assertRaisesRegex(
         AssertionError,
-        r"a is a <(type|class) 'dict'> but b is a <(type|class) 'set'>"):
+        r"a is a <(type|class) 'dict'> but b is a <(type|class) 'set'>",
+    ):
       self.assertSameStructure({}, set())
 
     # Different scalar values
     self.assertRaisesWithLiteralMatch(
-        AssertionError, 'a is 0 but b is 1',
-        self.assertSameStructure, 0, 1)
+        AssertionError, 'a is 0 but b is 1', self.assertSameStructure, 0, 1
+    )
     self.assertRaisesWithLiteralMatch(
-        AssertionError, "a is 'hello' but b is 'goodbye' : This was expected",
-        self.assertSameStructure, 'hello', 'goodbye', msg='This was expected')
+        AssertionError,
+        "a is 'hello' but b is 'goodbye' : This was expected",
+        self.assertSameStructure,
+        'hello',
+        'goodbye',
+        msg='This was expected',
+    )
 
     # Different sets
     self.assertRaisesWithLiteralMatch(
@@ -1599,70 +1702,118 @@ test case
 
     # Different lists
     self.assertRaisesWithLiteralMatch(
-        AssertionError, "a has [2] with value 'z' but b does not",
-        self.assertSameStructure, ['x', 'y', 'z'], ['x', 'y'])
+        AssertionError,
+        "a has [2] with value 'z' but b does not",
+        self.assertSameStructure,
+        ['x', 'y', 'z'],
+        ['x', 'y'],
+    )
     self.assertRaisesWithLiteralMatch(
-        AssertionError, "a lacks [2] but b has it with value 'z'",
-        self.assertSameStructure, ['x', 'y'], ['x', 'y', 'z'])
+        AssertionError,
+        "a lacks [2] but b has it with value 'z'",
+        self.assertSameStructure,
+        ['x', 'y'],
+        ['x', 'y', 'z'],
+    )
     self.assertRaisesWithLiteralMatch(
-        AssertionError, "a[2] is 'z' but b[2] is 'Z'",
-        self.assertSameStructure, ['x', 'y', 'z'], ['x', 'y', 'Z'])
+        AssertionError,
+        "a[2] is 'z' but b[2] is 'Z'",
+        self.assertSameStructure,
+        ['x', 'y', 'z'],
+        ['x', 'y', 'Z'],
+    )
 
     # Different dicts
     self.assertRaisesWithLiteralMatch(
-        AssertionError, "a has ['two'] with value 2 but it's missing in b",
-        self.assertSameStructure, {'one': 1, 'two': 2}, {'one': 1})
+        AssertionError,
+        "a has ['two'] with value 2 but it's missing in b",
+        self.assertSameStructure,
+        {'one': 1, 'two': 2},
+        {'one': 1},
+    )
     self.assertRaisesWithLiteralMatch(
-        AssertionError, "a lacks ['two'] but b has it with value 2",
-        self.assertSameStructure, {'one': 1}, {'one': 1, 'two': 2})
+        AssertionError,
+        "a lacks ['two'] but b has it with value 2",
+        self.assertSameStructure,
+        {'one': 1},
+        {'one': 1, 'two': 2},
+    )
     self.assertRaisesWithLiteralMatch(
-        AssertionError, "a['two'] is 2 but b['two'] is 3",
-        self.assertSameStructure, {'one': 1, 'two': 2}, {'one': 1, 'two': 3})
+        AssertionError,
+        "a['two'] is 2 but b['two'] is 3",
+        self.assertSameStructure,
+        {'one': 1, 'two': 2},
+        {'one': 1, 'two': 3},
+    )
 
     # String and byte types should not be considered equivalent to other
     # sequences
     self.assertRaisesRegex(
         AssertionError,
         r"a is a <(type|class) 'list'> but b is a <(type|class) 'str'>",
-        self.assertSameStructure, [], '')
+        self.assertSameStructure,
+        [],
+        '',
+    )
     self.assertRaisesRegex(
         AssertionError,
         r"a is a <(type|class) 'str'> but b is a <(type|class) 'tuple'>",
-        self.assertSameStructure, '', ())
+        self.assertSameStructure,
+        '',
+        (),
+    )
     self.assertRaisesRegex(
         AssertionError,
         r"a is a <(type|class) 'list'> but b is a <(type|class) 'str'>",
-        self.assertSameStructure, ['a', 'b', 'c'], 'abc')
+        self.assertSameStructure,
+        ['a', 'b', 'c'],
+        'abc',
+    )
     self.assertRaisesRegex(
         AssertionError,
         r"a is a <(type|class) 'str'> but b is a <(type|class) 'tuple'>",
-        self.assertSameStructure, 'abc', ('a', 'b', 'c'))
+        self.assertSameStructure,
+        'abc',
+        ('a', 'b', 'c'),
+    )
 
     # Deep key generation
     self.assertRaisesWithLiteralMatch(
         AssertionError,
         "a[0][0]['x']['y']['z'][0] is 1 but b[0][0]['x']['y']['z'][0] is 2",
         self.assertSameStructure,
-        [[{'x': {'y': {'z': [1]}}}]], [[{'x': {'y': {'z': [2]}}}]])
+        [[{'x': {'y': {'z': [1]}}}]],
+        [[{'x': {'y': {'z': [2]}}}]],
+    )
 
     # Multiple problems
     self.assertRaisesWithLiteralMatch(
         AssertionError,
         'a[0] is 1 but b[0] is 3; a[1] is 2 but b[1] is 4',
-        self.assertSameStructure, [1, 2], [3, 4])
+        self.assertSameStructure,
+        [1, 2],
+        [3, 4],
+    )
     with self.assertRaisesRegex(
         AssertionError,
-        re.compile(r"^a\[0] is 'a' but b\[0] is 'A'; .*"
-                   r"a\[18] is 's' but b\[18] is 'S'; \.\.\.$")):
+        re.compile(
+            r"^a\[0] is 'a' but b\[0] is 'A'; .*"
+            r"a\[18] is 's' but b\[18] is 'S'; \.\.\.$"
+        ),
+    ):
       self.assertSameStructure(
-          list(string.ascii_lowercase), list(string.ascii_uppercase))
+          list(string.ascii_lowercase), list(string.ascii_uppercase)
+      )
 
     # Verify same behavior with self.maxDiff = None
     self.maxDiff = None
     self.assertRaisesWithLiteralMatch(
         AssertionError,
         'a[0] is 1 but b[0] is 3; a[1] is 2 but b[1] is 4',
-        self.assertSameStructure, [1, 2], [3, 4])
+        self.assertSameStructure,
+        [1, 2],
+        [3, 4],
+    )
 
   def test_same_structure_mapping_unchanged(self):
     default_a = collections.defaultdict(lambda: 'BAD MODIFICATION', {})
@@ -1670,7 +1821,10 @@ test case
     self.assertRaisesWithLiteralMatch(
         AssertionError,
         r"a lacks ['one'] but b has it with value 'z'",
-        self.assertSameStructure, default_a, dict_b)
+        self.assertSameStructure,
+        default_a,
+        dict_b,
+    )
     self.assertEmpty(default_a)
 
     dict_a = {'one': 'z'}
@@ -1678,12 +1832,16 @@ test case
     self.assertRaisesWithLiteralMatch(
         AssertionError,
         r"a has ['one'] with value 'z' but it's missing in b",
-        self.assertSameStructure, dict_a, default_b)
+        self.assertSameStructure,
+        dict_a,
+        default_b,
+    )
     self.assertEmpty(default_b)
 
   def test_same_structure_uses_type_equality_func_for_leaves(self):
 
     class CustomLeaf:
+
       def __init__(self, n):
         self.n = n
 
@@ -1693,13 +1851,16 @@ test case
     def assert_custom_leaf_equal(a, b, msg):
       del msg
       assert a.n % 5 == b.n % 5
+
     self.addTypeEqualityFunc(CustomLeaf, assert_custom_leaf_equal)
 
     self.assertSameStructure(CustomLeaf(4), CustomLeaf(9))
     self.assertRaisesWithLiteralMatch(
         AssertionError,
         r'a is CustomLeaf(4) but b is CustomLeaf(8)',
-        self.assertSameStructure, CustomLeaf(4), CustomLeaf(8),
+        self.assertSameStructure,
+        CustomLeaf(4),
+        CustomLeaf(8),
     )
 
   def test_assert_json_equal_same(self):
@@ -1710,10 +1871,14 @@ test case
     self.assertJsonEqual('false', 'false')
     self.assertJsonEqual('34', '34')
     self.assertJsonEqual('[1, 2, 3]', '[1,2,3]', msg='please PASS')
-    self.assertJsonEqual('{"sequence": [1, 2, 3], "float": 23.42}',
-                         '{"float": 23.42, "sequence": [1,2,3]}')
-    self.assertJsonEqual('{"nest": {"spam": "eggs"}, "float": 23.42}',
-                         '{"float": 23.42, "nest": {"spam":"eggs"}}')
+    self.assertJsonEqual(
+        '{"sequence": [1, 2, 3], "float": 23.42}',
+        '{"float": 23.42, "sequence": [1,2,3]}',
+    )
+    self.assertJsonEqual(
+        '{"nest": {"spam": "eggs"}, "float": 23.42}',
+        '{"float": 23.42, "nest": {"spam":"eggs"}}',
+    )
 
   def test_assert_json_equal_different(self):
     with self.assertRaises(AssertionError):
@@ -1729,11 +1894,15 @@ test case
     with self.assertRaises(AssertionError):
       self.assertJsonEqual('[1, 0, 3]', '[1,2,3]')
     with self.assertRaises(AssertionError):
-      self.assertJsonEqual('{"sequence": [1, 2, 3], "float": 23.42}',
-                           '{"float": 23.42, "sequence": [1,0,3]}')
+      self.assertJsonEqual(
+          '{"sequence": [1, 2, 3], "float": 23.42}',
+          '{"float": 23.42, "sequence": [1,0,3]}',
+      )
     with self.assertRaises(AssertionError):
-      self.assertJsonEqual('{"nest": {"spam": "eggs"}, "float": 23.42}',
-                           '{"float": 23.42, "nest": {"Spam":"beans"}}')
+      self.assertJsonEqual(
+          '{"nest": {"spam": "eggs"}, "float": 23.42}',
+          '{"float": 23.42, "nest": {"Spam":"beans"}}',
+      )
 
   def test_assert_json_equal_bad_json(self):
     with self.assertRaises(ValueError) as error_context:
@@ -1838,18 +2007,16 @@ class GetCommandStderrTestCase(absltest.TestCase):
 
   def test_return_status(self):
     tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
-    returncode = (
-        absltest.get_command_stderr(
-            ['cat', os.path.join(tmpdir, 'file.txt')],
-            env=_env_for_command_tests())[0])
+    returncode = absltest.get_command_stderr(
+        ['cat', os.path.join(tmpdir, 'file.txt')], env=_env_for_command_tests()
+    )[0]
     self.assertEqual(1, returncode)
 
   def test_stderr(self):
     tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
-    stderr = (
-        absltest.get_command_stderr(
-            ['cat', os.path.join(tmpdir, 'file.txt')],
-            env=_env_for_command_tests())[1])
+    stderr = absltest.get_command_stderr(
+        ['cat', os.path.join(tmpdir, 'file.txt')], env=_env_for_command_tests()
+    )[1]
     stderr = stderr.decode('utf-8')
     self.assertRegex(stderr, 'No such file or directory')
 
@@ -2055,8 +2222,10 @@ class AssertSequenceStartsWithTest(parameterized.TestCase):
 
   def test_raise_if_empty_prefix_with_non_empty_whole(self):
     with self.assertRaisesRegex(
-        AssertionError, 'Prefix length is 0 but whole length is %d: %s' % (len(
-            self.a), r"\[5, 'foo', \{'c': 'd'\}, None\]")):
+        AssertionError,
+        'Prefix length is 0 but whole length is %d: %s'
+        % (len(self.a), r"\[5, 'foo', \{'c': 'd'\}, None\]"),
+    ):
       self.assertSequenceStartsWith([], self.a)
 
   def test_single_element_prefix(self):
@@ -2075,14 +2244,18 @@ class AssertSequenceStartsWithTest(parameterized.TestCase):
     self.assertSequenceStartsWith(5, self.a)
 
   def test_whole_not_asequence(self):
-    msg = (r'For whole: len\(5\) is not supported, it appears to be type: '
-           '<(type|class) \'int\'>')
+    msg = (
+        r'For whole: len\(5\) is not supported, it appears to be type: '
+        "<(type|class) 'int'>"
+    )
     with self.assertRaisesRegex(AssertionError, msg):
       self.assertSequenceStartsWith(self.a, 5)
 
   def test_raise_if_sequence_does_not_start_with_prefix(self):
-    msg = (r"prefix: \['foo', \{'c': 'd'\}\] not found at start of whole: "
-           r"\[5, 'foo', \{'c': 'd'\}, None\].")
+    msg = (
+        r"prefix: \['foo', \{'c': 'd'\}\] not found at start of whole: "
+        r"\[5, 'foo', \{'c': 'd'\}, None\]."
+    )
     with self.assertRaisesRegex(AssertionError, msg):
       self.assertSequenceStartsWith(['foo', {'c': 'd'}], self.a)
 
@@ -2254,7 +2427,8 @@ class TestAssertLen(absltest.TestCase):
   def test_user_message_added_to_default(self):
     msg = 'This is a useful message'
     whole_msg = (
-        r'\[1\] has length of 1, expected 100. : This is a useful message')
+        r'\[1\] has length of 1, expected 100. : This is a useful message'
+    )
     with self.assertRaisesRegex(AssertionError, whole_msg):
       self.assertLen([1], 100, msg)
 
@@ -2310,6 +2484,7 @@ class TestLoaderTest(absltest.TestCase):
 
     def TestSuspiciousMethod(self):
       pass
+
   # pylint: enable=invalid-name
 
   def setUp(self):
@@ -2450,7 +2625,8 @@ class GetCommandStringTest(parameterized.TestCase):
       ('command arg-0', 'command arg-0', 'command arg-0'),
   )
   def test_get_command_string(
-      self, command, expected_non_windows, expected_windows):
+      self, command, expected_non_windows, expected_windows
+  ):
     expected = expected_windows if os.name == 'nt' else expected_non_windows
     self.assertEqual(expected, absltest.get_command_string(command))
 
@@ -2481,16 +2657,18 @@ class TempFileTest(BaseTestCase):
     env = {
         'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP': cleanup,
         'TEST_TMPDIR': tmpdir.full_path,
-        }
+    }
     stdout, stderr, _ = self.run_helper(
         0, ['TempFileHelperTest'], env, expect_success=False
     )
-    output = ('\n=== Helper output ===\n'
-              '----- stdout -----\n{}\n'
-              '----- end stdout -----\n'
-              '----- stderr -----\n{}\n'
-              '----- end stderr -----\n'
-              '===== end helper output =====').format(stdout, stderr)
+    output = (
+        '\n=== Helper output ===\n'
+        '----- stdout -----\n{}\n'
+        '----- end stdout -----\n'
+        '----- stderr -----\n{}\n'
+        '----- end stderr -----\n'
+        '===== end helper output ====='
+    ).format(stdout, stderr)
     self.assertIn('test_failure', stderr, output)
 
     # Adjust paths to match on Windows
@@ -2664,6 +2842,7 @@ class SkipClassTest(absltest.TestCase):
       @absltest.skipThisClass
       class Test(absltest.TestCase):  # pylint: disable=unused-variable
         pass
+
       # pytype: enable=wrong-arg-types
 
   def test_incorrect_decorator_subclass(self):
@@ -2675,6 +2854,7 @@ class SkipClassTest(absltest.TestCase):
       @absltest.skipThisClass('reason')
       def test_method():  # pylint: disable=unused-variable
         pass
+
       # pytype: enable=wrong-arg-types
 
   def test_correct_decorator_class(self):

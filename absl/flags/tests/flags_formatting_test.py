@@ -59,21 +59,23 @@ class FlagsUnitTest(absltest.TestCase):
 
     # Normal case, breaking at word boundaries and rewriting new lines
     input_value = 'a b c d e f g h'
-    expect = {1: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
-              2: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
-              3: ['a b', 'c d', 'e f', 'g h'],
-              4: ['a b', 'c d', 'e f', 'g h'],
-              5: ['a b c', 'd e f', 'g h'],
-              6: ['a b c', 'd e f', 'g h'],
-              7: ['a b c d', 'e f g h'],
-              8: ['a b c d', 'e f g h'],
-              9: ['a b c d e', 'f g h'],
-              10: ['a b c d e', 'f g h'],
-              11: ['a b c d e f', 'g h'],
-              12: ['a b c d e f', 'g h'],
-              13: ['a b c d e f g', 'h'],
-              14: ['a b c d e f g', 'h'],
-              15: ['a b c d e f g h']}
+    expect = {
+        1: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
+        2: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
+        3: ['a b', 'c d', 'e f', 'g h'],
+        4: ['a b', 'c d', 'e f', 'g h'],
+        5: ['a b c', 'd e f', 'g h'],
+        6: ['a b c', 'd e f', 'g h'],
+        7: ['a b c d', 'e f g h'],
+        8: ['a b c d', 'e f g h'],
+        9: ['a b c d e', 'f g h'],
+        10: ['a b c d e', 'f g h'],
+        11: ['a b c d e f', 'g h'],
+        12: ['a b c d e f', 'g h'],
+        13: ['a b c d e f g', 'h'],
+        14: ['a b c d e f g', 'h'],
+        15: ['a b c d e f g h'],
+    }
     for width, exp in expect.items():
       self.assertEqual(exp, flags.text_wrap(input_value, width).split('\n'))
 
@@ -99,34 +101,25 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual('a\n b\n c', flags.text_wrap('a\nb\nc', 80, ' ', ''))
 
     # tabs
-    self.assertEqual('a\n b   c',
-                     flags.text_wrap('a\nb\tc', 80, ' ', ''))
-    self.assertEqual('a\n bb  c',
-                     flags.text_wrap('a\nbb\tc', 80, ' ', ''))
-    self.assertEqual('a\n bbb c',
-                     flags.text_wrap('a\nbbb\tc', 80, ' ', ''))
-    self.assertEqual('a\n bbbb    c',
-                     flags.text_wrap('a\nbbbb\tc', 80, ' ', ''))
-    self.assertEqual('a\n b\n c\n d',
-                     flags.text_wrap('a\nb\tc\td', 3, ' ', ''))
-    self.assertEqual('a\n b\n c\n d',
-                     flags.text_wrap('a\nb\tc\td', 4, ' ', ''))
-    self.assertEqual('a\n b\n c\n d',
-                     flags.text_wrap('a\nb\tc\td', 5, ' ', ''))
-    self.assertEqual('a\n b   c\n d',
-                     flags.text_wrap('a\nb\tc\td', 6, ' ', ''))
-    self.assertEqual('a\n b   c\n d',
-                     flags.text_wrap('a\nb\tc\td', 7, ' ', ''))
-    self.assertEqual('a\n b   c\n d',
-                     flags.text_wrap('a\nb\tc\td', 8, ' ', ''))
-    self.assertEqual('a\n b   c\n d',
-                     flags.text_wrap('a\nb\tc\td', 9, ' ', ''))
-    self.assertEqual('a\n b   c   d',
-                     flags.text_wrap('a\nb\tc\td', 10, ' ', ''))
+    self.assertEqual('a\n b   c', flags.text_wrap('a\nb\tc', 80, ' ', ''))
+    self.assertEqual('a\n bb  c', flags.text_wrap('a\nbb\tc', 80, ' ', ''))
+    self.assertEqual('a\n bbb c', flags.text_wrap('a\nbbb\tc', 80, ' ', ''))
+    self.assertEqual(
+        'a\n bbbb    c', flags.text_wrap('a\nbbbb\tc', 80, ' ', '')
+    )
+    self.assertEqual('a\n b\n c\n d', flags.text_wrap('a\nb\tc\td', 3, ' ', ''))
+    self.assertEqual('a\n b\n c\n d', flags.text_wrap('a\nb\tc\td', 4, ' ', ''))
+    self.assertEqual('a\n b\n c\n d', flags.text_wrap('a\nb\tc\td', 5, ' ', ''))
+    self.assertEqual('a\n b   c\n d', flags.text_wrap('a\nb\tc\td', 6, ' ', ''))
+    self.assertEqual('a\n b   c\n d', flags.text_wrap('a\nb\tc\td', 7, ' ', ''))
+    self.assertEqual('a\n b   c\n d', flags.text_wrap('a\nb\tc\td', 8, ' ', ''))
+    self.assertEqual('a\n b   c\n d', flags.text_wrap('a\nb\tc\td', 9, ' ', ''))
+    self.assertEqual(
+        'a\n b   c   d', flags.text_wrap('a\nb\tc\td', 10, ' ', '')
+    )
 
     # multiple tabs
-    self.assertEqual('a       c',
-                     flags.text_wrap('a\t\tc', 80, ' ', ''))
+    self.assertEqual('a       c', flags.text_wrap('a\t\tc', 80, ' ', ''))
 
     _helpers._DEFAULT_HELP_WIDTH = default_help_width  # restore
 
@@ -142,8 +135,9 @@ class FlagsUnitTest(absltest.TestCase):
     # Different first line, one line empty - erm double new line.
     self.assertEqual('a b c\n\nd', flags.doc_to_help('a\n  b\n  c\n\n  d'))
     self.assertEqual('a b\n      c d', flags.doc_to_help('a\n  b\n  \tc\n  d'))
-    self.assertEqual('a b\n      c\n      d',
-                     flags.doc_to_help('a\n  b\n  \tc\n  \td'))
+    self.assertEqual(
+        'a b\n      c\n      d', flags.doc_to_help('a\n  b\n  \tc\n  \td')
+    )
 
   def test_doc_to_help_flag_values(self):
     # !!!!!!!!!!!!!!!!!!!!
@@ -183,30 +177,44 @@ class FlagsUnitTest(absltest.TestCase):
     empty_lines = [index for index in range(len(lines)) if not lines[index]]
     self.assertEqual([1, 3, 5, 8, 12, 15], empty_lines)
     # test that some starting prefix is kept
-    flags_lines = [index for index in range(len(lines))
-                   if lines[index].startswith('     FLAGS')]
+    flags_lines = [
+        index
+        for index in range(len(lines))
+        if lines[index].startswith('     FLAGS')
+    ]
     self.assertEqual([7, 10, 11], flags_lines)
     # but other, especially common space has been removed
-    space_lines = [index for index in range(len(lines))
-                   if lines[index] and lines[index][0].isspace()]
+    space_lines = [
+        index
+        for index in range(len(lines))
+        if lines[index] and lines[index][0].isspace()
+    ]
     self.assertEqual([7, 10, 11, 14], space_lines)
     # No right space was kept
-    rspace_lines = [index for index in range(len(lines))
-                    if lines[index] != lines[index].rstrip()]
+    rspace_lines = [
+        index
+        for index in range(len(lines))
+        if lines[index] != lines[index].rstrip()
+    ]
     self.assertEqual([], rspace_lines)
     # test double spaces are kept
     self.assertEqual(True, lines[2].endswith('application:  flags.FLAGS'))
 
   def test_text_wrap_raises_on_excessive_indent(self):
     """Ensure an indent longer than line length raises."""
-    self.assertRaises(ValueError,
-                      flags.text_wrap, 'dummy', length=10, indent=' ' * 10)
+    self.assertRaises(
+        ValueError, flags.text_wrap, 'dummy', length=10, indent=' ' * 10
+    )
 
   def test_text_wrap_raises_on_excessive_first_line(self):
     """Ensure a first line indent longer than line length raises."""
     self.assertRaises(
         ValueError,
-        flags.text_wrap, 'dummy', length=80, firstline_indent=' ' * 80)
+        flags.text_wrap,
+        'dummy',
+        length=80,
+        firstline_indent=' ' * 80,
+    )
 
 
 if __name__ == '__main__':

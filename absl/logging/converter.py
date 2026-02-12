@@ -62,25 +62,31 @@ ABSL_WARN = -1  # Deprecated name.
 ABSL_INFO = 0
 ABSL_DEBUG = 1
 
-ABSL_LEVELS = {ABSL_FATAL: 'FATAL',
-               ABSL_ERROR: 'ERROR',
-               ABSL_WARNING: 'WARNING',
-               ABSL_INFO: 'INFO',
-               ABSL_DEBUG: 'DEBUG'}
+ABSL_LEVELS = {
+    ABSL_FATAL: 'FATAL',
+    ABSL_ERROR: 'ERROR',
+    ABSL_WARNING: 'WARNING',
+    ABSL_INFO: 'INFO',
+    ABSL_DEBUG: 'DEBUG',
+}
 
 # Inverts the ABSL_LEVELS dictionary
-ABSL_NAMES = {'FATAL': ABSL_FATAL,
-              'ERROR': ABSL_ERROR,
-              'WARNING': ABSL_WARNING,
-              'WARN': ABSL_WARNING,  # Deprecated name.
-              'INFO': ABSL_INFO,
-              'DEBUG': ABSL_DEBUG}
+ABSL_NAMES = {
+    'FATAL': ABSL_FATAL,
+    'ERROR': ABSL_ERROR,
+    'WARNING': ABSL_WARNING,
+    'WARN': ABSL_WARNING,  # Deprecated name.
+    'INFO': ABSL_INFO,
+    'DEBUG': ABSL_DEBUG,
+}
 
-ABSL_TO_STANDARD = {ABSL_FATAL: STANDARD_CRITICAL,
-                    ABSL_ERROR: STANDARD_ERROR,
-                    ABSL_WARNING: STANDARD_WARNING,
-                    ABSL_INFO: STANDARD_INFO,
-                    ABSL_DEBUG: STANDARD_DEBUG}
+ABSL_TO_STANDARD = {
+    ABSL_FATAL: STANDARD_CRITICAL,
+    ABSL_ERROR: STANDARD_ERROR,
+    ABSL_WARNING: STANDARD_WARNING,
+    ABSL_INFO: STANDARD_INFO,
+    ABSL_DEBUG: STANDARD_DEBUG,
+}
 
 # Inverts the ABSL_TO_STANDARD
 STANDARD_TO_ABSL = {v: k for (k, v) in ABSL_TO_STANDARD.items()}
@@ -160,7 +166,7 @@ def string_to_standard(level):
 
   Args:
     level: str, case-insensitive ``'debug'``, ``'info'``, ``'warning'``,
-        ``'error'``, ``'fatal'``.
+      ``'error'``, ``'fatal'``.
 
   Returns:
     The corresponding integer level for use in standard logging.

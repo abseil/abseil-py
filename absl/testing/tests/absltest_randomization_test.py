@@ -53,8 +53,9 @@ class TestOrderRandomizationTest(parameterized.TestCase):
     if extra_env is not None:
       env.update(extra_env)
 
-    command = (
-        [_bazelize_command.get_executable_path(self._test_name)] + extra_argv)
+    command = [
+        _bazelize_command.get_executable_path(self._test_name)
+    ] + extra_argv
     proc = subprocess.Popen(
         args=command,
         env=env,
@@ -85,7 +86,8 @@ class TestOrderRandomizationTest(parameterized.TestCase):
           'env': {
               'TEST_RANDOMIZE_ORDERING_SEED': 'random',
           },
-      },)
+      },
+  )
   def test_simple_randomization(self, argv, env):
     output, tests, exit_code = self._run_test(argv, env)
     self.assertEqual(0, exit_code, msg='command output: ' + output)
@@ -102,15 +104,11 @@ class TestOrderRandomizationTest(parameterized.TestCase):
       },
       {
           'argv': [],
-          'env': {
-              'TEST_RANDOMIZE_ORDERING_SEED': '1'
-          },
+          'env': {'TEST_RANDOMIZE_ORDERING_SEED': '1'},
       },
       {
           'argv': [],
-          'env': {
-              'LATE_SET_TEST_RANDOMIZE_ORDERING_SEED': '1'
-          },
+          'env': {'LATE_SET_TEST_RANDOMIZE_ORDERING_SEED': '1'},
       },
   )
   def test_fixed_seed(self, argv, env):
@@ -129,16 +127,13 @@ class TestOrderRandomizationTest(parameterized.TestCase):
   @parameterized.parameters(
       {
           'argv': ['--test_randomize_ordering_seed=0'],
-          'env': {
-              'TEST_RANDOMIZE_ORDERING_SEED': 'random'
-          },
+          'env': {'TEST_RANDOMIZE_ORDERING_SEED': 'random'},
       },
       {
           'argv': [],
-          'env': {
-              'TEST_RANDOMIZE_ORDERING_SEED': '0'
-          },
-      },)
+          'env': {'TEST_RANDOMIZE_ORDERING_SEED': '0'},
+      },
+  )
   def test_disabling_randomization(self, argv, env):
     output, tests, exit_code = self._run_test(argv, env)
     self.assertEqual(0, exit_code, msg='command output: ' + output)

@@ -25,5 +25,6 @@ class SampleTest(absltest.TestCase):
         self.assertEqual(i, i)
         print('msg_for_test')
 
+
 if __name__ == '__main__':
   absltest.main()

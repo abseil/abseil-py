@@ -41,10 +41,13 @@ from absl.flags import _flagvalues
 from absl.flags import _validators_classes
 
 
-def register_validator(flag_name,
-                       checker,
-                       message='Flag validation failed',
-                       flag_values=_flagvalues.FLAGS):
+def register_validator(
+    flag_name,
+    checker,
+    message='Flag validation failed',
+    flag_values=_flagvalues.FLAGS,
+):
+  # fmt: off
   """Adds a constraint, which will be enforced during program execution.
 
   The constraint is validated when flags are initially parsed, and after each
@@ -52,7 +55,7 @@ def register_validator(flag_name,
 
   Args:
     flag_name: str | FlagHolder, name or holder of the flag to be checked.
-        Positional-only parameter.
+      Positional-only parameter.
     checker: callable, a function to validate the flag.
 
         * input - A single positional argument: The value of the corresponding
@@ -63,10 +66,10 @@ def register_validator(flag_name,
           ``raise flags.ValidationError(desired_error_message)``.
 
     message: str, error text to be shown to the user if checker returns False.
-        If checker raises flags.ValidationError, message from the raised
-        error will be shown.
+      If checker raises flags.ValidationError, message from the raised error
+      will be shown.
     flag_values: flags.FlagValues, optional FlagValues instance to validate
-        against.
+      against.
 
   Raises:
     AttributeError: Raised when flag_name is not registered as a valid flag
@@ -74,13 +77,15 @@ def register_validator(flag_name,
     ValueError: Raised when flag_values is non-default and does not match the
         FlagValues of the provided FlagHolder instance.
   """
+  # fmt: on
   flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
   v = _validators_classes.SingleFlagValidator(flag_name, checker, message)
   _add_validator(flag_values, v)
 
 
-def validator(flag_name, message='Flag validation failed',
-              flag_values=_flagvalues.FLAGS):
+def validator(
+    flag_name, message='Flag validation failed', flag_values=_flagvalues.FLAGS
+):
   """A function decorator for defining a flag validator.
 
   Registers the decorated function as a validator for flag_name, e.g.::
@@ -93,12 +98,13 @@ def validator(flag_name, message='Flag validation failed',
 
   Args:
     flag_name: str | FlagHolder, name or holder of the flag to be checked.
-        Positional-only parameter.
+      Positional-only parameter.
     message: str, error text to be shown to the user if checker returns False.
-        If checker raises flags.ValidationError, message from the raised
-        error will be shown.
+      If checker raises flags.ValidationError, message from the raised error
+      will be shown.
     flag_values: flags.FlagValues, optional FlagValues instance to validate
-        against.
+      against.
+
   Returns:
     A function decorator that registers its function argument as a validator.
   Raises:
@@ -107,17 +113,21 @@ def validator(flag_name, message='Flag validation failed',
   """
 
   def decorate(function):
-    register_validator(flag_name, function,
-                       message=message,
-                       flag_values=flag_values)
+    register_validator(
+        flag_name, function, message=message, flag_values=flag_values
+    )
     return function
+
   return decorate
 
 
-def register_multi_flags_validator(flag_names,
-                                   multi_flags_checker,
-                                   message='Flags validation failed',
-                                   flag_values=_flagvalues.FLAGS):
+def register_multi_flags_validator(
+    flag_names,
+    multi_flags_checker,
+    message='Flags validation failed',
+    flag_values=_flagvalues.FLAGS,
+):
+  # fmt: off
   """Adds a constraint to multiple flags.
 
   The constraint is validated when flags are initially parsed, and after each
@@ -125,7 +135,7 @@ def register_multi_flags_validator(flag_names,
 
   Args:
     flag_names: [str | FlagHolder], a list of the flag names or holders to be
-        checked. Positional-only parameter.
+      checked. Positional-only parameter.
     multi_flags_checker: callable, a function to validate the flag.
 
         * input - dict, with keys() being flag_names, and value for each key
@@ -135,10 +145,10 @@ def register_multi_flags_validator(flag_names,
             raise flags.ValidationError.
 
     message: str, error text to be shown to the user if checker returns False.
-        If checker raises flags.ValidationError, message from the raised
-        error will be shown.
+      If checker raises flags.ValidationError, message from the raised error
+      will be shown.
     flag_values: flags.FlagValues, optional FlagValues instance to validate
-        against.
+      against.
 
   Raises:
     AttributeError: Raised when a flag is not registered as a valid flag name.
@@ -147,16 +157,19 @@ def register_multi_flags_validator(flag_names,
         or when str-type flag_names entries are present and the `flag_values`
         argument does not match that of provided FlagHolder(s).
   """
+  # fmt: on
   flag_names, flag_values = _flagvalues.resolve_flag_refs(
-      flag_names, flag_values)
+      flag_names, flag_values
+  )
   v = _validators_classes.MultiFlagsValidator(
-      flag_names, multi_flags_checker, message)
+      flag_names, multi_flags_checker, message
+  )
   _add_validator(flag_values, v)
 
 
-def multi_flags_validator(flag_names,
-                          message='Flag validation failed',
-                          flag_values=_flagvalues.FLAGS):
+def multi_flags_validator(
+    flag_names, message='Flag validation failed', flag_values=_flagvalues.FLAGS
+):
   """A function decorator for defining a multi-flag validator.
 
   Registers the decorated function as a validator for flag_names, e.g.::
@@ -170,12 +183,12 @@ def multi_flags_validator(flag_names,
 
   Args:
     flag_names: [str | FlagHolder], a list of the flag names or holders to be
-        checked. Positional-only parameter.
+      checked. Positional-only parameter.
     message: str, error text to be shown to the user if checker returns False.
-        If checker raises flags.ValidationError, message from the raised
-        error will be shown.
+      If checker raises flags.ValidationError, message from the raised error
+      will be shown.
     flag_values: flags.FlagValues, optional FlagValues instance to validate
-        against.
+      against.
 
   Returns:
     A function decorator that registers its function argument as a validator.
@@ -185,10 +198,9 @@ def multi_flags_validator(flag_names,
   """
 
   def decorate(function):
-    register_multi_flags_validator(flag_names,
-                                   function,
-                                   message=message,
-                                   flag_values=flag_values)
+    register_multi_flags_validator(
+        flag_names, function, message=message, flag_values=flag_values
+    )
     return function
 
   return decorate
@@ -209,10 +221,11 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
         app.run()
 
   Args:
-    flag_name: str | FlagHolder, name or holder of the flag.
-        Positional-only parameter.
+    flag_name: str | FlagHolder, name or holder of the flag. Positional-only
+      parameter.
     flag_values: flags.FlagValues, optional :class:`~absl.flags.FlagValues`
-        instance where the flag is defined.
+      instance where the flag is defined.
+
   Raises:
     AttributeError: Raised when flag_name is not registered as a valid flag
         name.
@@ -225,7 +238,8 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
         'Flag --%s has a non-None default value; therefore, '
         'mark_flag_as_required will pass even if flag is not specified in the '
         'command line!' % flag_name,
-        stacklevel=2)
+        stacklevel=2,
+    )
   register_validator(
       flag_name,
       lambda value: value is not None,
@@ -247,7 +261,8 @@ def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
   Args:
     flag_names: Sequence[str | FlagHolder], names or holders of the flags.
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
-        are defined.
+      are defined.
+
   Raises:
     AttributeError: If any of flag name has not already been defined as a flag.
   """
@@ -255,8 +270,9 @@ def mark_flags_as_required(flag_names, flag_values=_flagvalues.FLAGS):
     mark_flag_as_required(flag_name, flag_values)
 
 
-def mark_flags_as_mutual_exclusive(flag_names, required=False,
-                                   flag_values=_flagvalues.FLAGS):
+def mark_flags_as_mutual_exclusive(
+    flag_names, required=False, flag_values=_flagvalues.FLAGS
+):
   """Ensures that only one flag among flag_names is not None.
 
   Important note: This validator checks if flag values are ``None``, and it does
@@ -266,13 +282,13 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
   includes multi flags with a default value of ``[]`` instead of None.
 
   Args:
-    flag_names: [str | FlagHolder], names or holders of flags.
-        Positional-only parameter.
+    flag_names: [str | FlagHolder], names or holders of flags. Positional-only
+      parameter.
     required: bool. If true, exactly one of the flags must have a value other
-        than None. Otherwise, at most one of the flags can have a value other
-        than None, and it is valid for all of the flags to be None.
+      than None. Otherwise, at most one of the flags can have a value other than
+      None, and it is valid for all of the flags to be None.
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
-        are defined.
+      are defined.
 
   Raises:
     ValueError: Raised when multiple FlagValues are used in the same
@@ -281,14 +297,16 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
         argument does not match that of provided FlagHolder(s).
   """
   flag_names, flag_values = _flagvalues.resolve_flag_refs(
-      flag_names, flag_values)
+      flag_names, flag_values
+  )
   for flag_name in flag_names:
     if flag_values[flag_name].default is not None:
       warnings.warn(
           'Flag --{} has a non-None default value. That does not make sense '
           'with mark_flags_as_mutual_exclusive, which checks whether the '
           'listed flags have a value other than None.'.format(flag_name),
-          stacklevel=2)
+          stacklevel=2,
+      )
 
   def validate_mutual_exclusion(flags_dict):
     flag_count = sum(1 for val in flags_dict.values() if val is not None)
@@ -296,23 +314,27 @@ def mark_flags_as_mutual_exclusive(flag_names, required=False,
       return True
     raise _exceptions.ValidationError(
         '{} one of ({}) must have a value other than None.'.format(
-            'Exactly' if required else 'At most', ', '.join(flag_names)))
+            'Exactly' if required else 'At most', ', '.join(flag_names)
+        )
+    )
 
   register_multi_flags_validator(
-      flag_names, validate_mutual_exclusion, flag_values=flag_values)
+      flag_names, validate_mutual_exclusion, flag_values=flag_values
+  )
 
 
-def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
-                                        flag_values=_flagvalues.FLAGS):
+def mark_bool_flags_as_mutual_exclusive(
+    flag_names, required=False, flag_values=_flagvalues.FLAGS
+):
   """Ensures that only one flag among flag_names is True.
 
   Args:
-    flag_names: [str | FlagHolder], names or holders of flags.
-        Positional-only parameter.
+    flag_names: [str | FlagHolder], names or holders of flags. Positional-only
+      parameter.
     required: bool. If true, exactly one flag must be True. Otherwise, at most
-        one flag can be True, and it is valid for all flags to be False.
+      one flag can be True, and it is valid for all flags to be False.
     flag_values: flags.FlagValues, optional FlagValues instance where the flags
-        are defined.
+      are defined.
 
   Raises:
     ValueError: Raised when multiple FlagValues are used in the same
@@ -321,12 +343,14 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
         argument does not match that of provided FlagHolder(s).
   """
   flag_names, flag_values = _flagvalues.resolve_flag_refs(
-      flag_names, flag_values)
+      flag_names, flag_values
+  )
   for flag_name in flag_names:
     if not flag_values[flag_name].boolean:
       raise _exceptions.ValidationError(
           'Flag --{} is not Boolean, which is required for flags used in '
-          'mark_bool_flags_as_mutual_exclusive.'.format(flag_name))
+          'mark_bool_flags_as_mutual_exclusive.'.format(flag_name)
+      )
 
   def validate_boolean_mutual_exclusion(flags_dict):
     flag_count = sum(bool(val) for val in flags_dict.values())
@@ -334,10 +358,13 @@ def mark_bool_flags_as_mutual_exclusive(flag_names, required=False,
       return True
     raise _exceptions.ValidationError(
         '{} one of ({}) must be True.'.format(
-            'Exactly' if required else 'At most', ', '.join(flag_names)))
+            'Exactly' if required else 'At most', ', '.join(flag_names)
+        )
+    )
 
   register_multi_flags_validator(
-      flag_names, validate_boolean_mutual_exclusion, flag_values=flag_values)
+      flag_names, validate_boolean_mutual_exclusion, flag_values=flag_values
+  )
 
 
 def _add_validator(fv, validator_instance):
@@ -346,6 +373,7 @@ def _add_validator(fv, validator_instance):
   Args:
     fv: flags.FlagValues, the FlagValues instance to add the validator.
     validator_instance: validators.Validator, the validator to add.
+
   Raises:
     KeyError: Raised when validators work with a non-existing flag.
   """

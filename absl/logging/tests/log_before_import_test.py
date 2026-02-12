@@ -89,11 +89,13 @@ class LoggingInitWarningTest(absltest.TestCase):
 
     traceback_re = re.compile(
         r'\nTraceback \(most recent call last\):.*?Error: Exception reason.',
-        re.MULTILINE | re.DOTALL)
+        re.MULTILINE | re.DOTALL,
+    )
     if not traceback_re.search(captured_stderr):
       self.fail(
           'Cannot find traceback message from logging.exception '
-          'in stderr:\n{}'.format(captured_stderr))
+          'in stderr:\n{}'.format(captured_stderr)
+      )
     # Remove the traceback so the rest of the stderr is deterministic.
     captured_stderr = traceback_re.sub('', captured_stderr)
     captured_stderr_lines = captured_stderr.splitlines()
@@ -118,8 +120,9 @@ class LoggingInitWarningTest(absltest.TestCase):
     with mock.patch('sys.stderr', new=fake_stderr_type()) as mock_stderr:
       self.assertMultiLineEqual('', mock_stderr.getvalue())
       logging.warning('Hello. hello. hello. Is there anybody out there?')
-      self.assertNotIn('Logging before flag parsing goes to stderr',
-                       mock_stderr.getvalue())
+      self.assertNotIn(
+          'Logging before flag parsing goes to stderr', mock_stderr.getvalue()
+      )
     logging.info('A major purpose of this executable is merely not to crash.')
 
 

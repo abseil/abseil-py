@@ -55,9 +55,17 @@ class FlagDictToArgsTest(absltest.TestCase):
         'loadthatstuff': [42, 'hello', 'goodbye'],
     }
     self.assertSameElements(
-        ('--week-end', '--noestudia', '--notrabaja', '--party',
-         '--monday=party', '--score=42', '--loadthatstuff=42,hello,goodbye'),
-        flags.flag_dict_to_args(arg_dict))
+        (
+            '--week-end',
+            '--noestudia',
+            '--notrabaja',
+            '--party',
+            '--monday=party',
+            '--score=42',
+            '--loadthatstuff=42,hello,goodbye',
+        ),
+        flags.flag_dict_to_args(arg_dict),
+    )
 
   def test_flatten_google_flag_map_with_multi_flag(self):
     arg_dict = {
@@ -65,9 +73,13 @@ class FlagDictToArgsTest(absltest.TestCase):
         'some_multi_string': ['value3', 'value4'],
     }
     self.assertSameElements(
-        ('--some_list=value1,value2', '--some_multi_string=value3',
-         '--some_multi_string=value4'),
-        flags.flag_dict_to_args(arg_dict, multi_flags={'some_multi_string'}))
+        (
+            '--some_list=value1,value2',
+            '--some_multi_string=value3',
+            '--some_multi_string=value4',
+        ),
+        flags.flag_dict_to_args(arg_dict, multi_flags={'some_multi_string'}),
+    )
 
 
 class Fruit(enum.Enum):
@@ -289,7 +301,8 @@ class FlagsUnitTest(absltest.TestCase):
     number_test_framework_flags = len(FLAGS)
     repeat_help = 'how many times to repeat (0-5)'
     flags.DEFINE_integer(
-        'repeat', 4, repeat_help, lower_bound=0, short_name='r')
+        'repeat', 4, repeat_help, lower_bound=0, short_name='r'
+    )
     flags.DEFINE_string('name', 'Bob', 'namehelp')
     flags.DEFINE_boolean('debug', 0, 'debughelp')
     flags.DEFINE_boolean('q', 1, 'quiet mode')
@@ -300,7 +313,7 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_integer('decimal', '666', 'using decimals')
     flags.DEFINE_integer('hexadecimal', '0x666', 'using hexadecimals')
     flags.DEFINE_integer('x', 3, 'how eXtreme to be')
-    flags.DEFINE_integer('l', 0x7fffffff00000000, 'how long to be')
+    flags.DEFINE_integer('l', 0x7FFFFFFF00000000, 'how long to be')
     flags.DEFINE_list('args', 'v=1,"vmodule=a=0,b=2"', 'a list of arguments')
     flags.DEFINE_list('letters', 'a,b,c', 'a list of letters')
     flags.DEFINE_list(
@@ -308,32 +321,38 @@ class FlagsUnitTest(absltest.TestCase):
         ['a', 'b', 'c'],
         'with default being a list of strings',
     )
-    flags.DEFINE_enum('kwery', None, ['who', 'what', 'Why', 'where', 'when'],
-                      '?')
     flags.DEFINE_enum(
-        'sense', None, ['Case', 'case', 'CASE'], '?', case_sensitive=True)
+        'kwery', None, ['who', 'what', 'Why', 'where', 'when'], '?'
+    )
+    flags.DEFINE_enum(
+        'sense', None, ['Case', 'case', 'CASE'], '?', case_sensitive=True
+    )
     flags.DEFINE_enum(
         'cases',
-        None, ['UPPER', 'lower', 'Initial', 'Ot_HeR'],
+        None,
+        ['UPPER', 'lower', 'Initial', 'Ot_HeR'],
         '?',
-        case_sensitive=False)
+        case_sensitive=False,
+    )
     flags.DEFINE_enum(
         'funny',
-        None, ['Joke', 'ha', 'ha', 'ha', 'ha'],
+        None,
+        ['Joke', 'ha', 'ha', 'ha', 'ha'],
         '?',
-        case_sensitive=True)
+        case_sensitive=True,
+    )
     flags.DEFINE_enum(
-        'blah',
-        None, ['bla', 'Blah', 'BLAH', 'blah'],
-        '?',
-        case_sensitive=False)
+        'blah', None, ['bla', 'Blah', 'BLAH', 'blah'], '?', case_sensitive=False
+    )
     flags.DEFINE_string(
-        'only_once', None, 'test only sets this once', allow_overwrite=False)
+        'only_once', None, 'test only sets this once', allow_overwrite=False
+    )
     flags.DEFINE_string(
         'universe',
         None,
         'test tries to set this three times',
-        allow_overwrite=False)
+        allow_overwrite=False,
+    )
 
     # Specify number of flags defined above.  The short_name defined
     # for 'repeat' counts as an extra flag.
@@ -348,7 +367,7 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(FLAGS.decimal, 666)
     self.assertEqual(FLAGS.hexadecimal, 0x666)
     self.assertEqual(FLAGS.x, 3)
-    self.assertEqual(FLAGS.l, 0x7fffffff00000000)
+    self.assertEqual(FLAGS.l, 0x7FFFFFFF00000000)
     self.assertEqual(FLAGS.args, ['v=1', 'vmodule=a=0,b=2'])
     self.assertEqual(FLAGS.letters, ['a', 'b', 'c'])
     self.assertEqual(FLAGS.list_default_list, ['a', 'b', 'c'])
@@ -366,7 +385,7 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertEqual(flag_values['q'], 1)
     self.assertEqual(flag_values['quack'], 0)
     self.assertEqual(flag_values['x'], 3)
-    self.assertEqual(flag_values['l'], 0x7fffffff00000000)
+    self.assertEqual(flag_values['l'], 0x7FFFFFFF00000000)
     self.assertEqual(flag_values['args'], ['v=1', 'vmodule=a=0,b=2'])
     self.assertEqual(flag_values['letters'], ['a', 'b', 'c'])
     self.assertEqual(flag_values['list_default_list'], ['a', 'b', 'c'])
@@ -437,8 +456,9 @@ class FlagsUnitTest(absltest.TestCase):
 
     # try deleting a flag
     del FLAGS.r
-    self.assertLen(FLAGS,
-                   number_defined_flags - 1 + number_test_framework_flags)
+    self.assertLen(
+        FLAGS, number_defined_flags - 1 + number_test_framework_flags
+    )
     self.assertNotIn('r', FLAGS)
 
     # .. command line with extra stuff
@@ -631,13 +651,17 @@ class FlagsUnitTest(absltest.TestCase):
         'testspace_or_comma_list',
         '',
         'tests space list parsing with comma compatibility',
-        comma_compat=True)
+        comma_compat=True,
+    )
 
-    for name, sep in (('testcomma_list', ','), ('testspace_list',
-                                                ' '), ('testspace_list', '\n'),
-                      ('testspace_or_comma_list',
-                       ' '), ('testspace_or_comma_list',
-                              '\n'), ('testspace_or_comma_list', ',')):
+    for name, sep in (
+        ('testcomma_list', ','),
+        ('testspace_list', ' '),
+        ('testspace_list', '\n'),
+        ('testspace_or_comma_list', ' '),
+        ('testspace_or_comma_list', '\n'),
+        ('testspace_or_comma_list', ','),
+    ):
       for lst in lists:
         argv = ('./program', '--%s=%s' % (name, sep.join(lst)))
         argv = FLAGS(argv)
@@ -646,9 +670,11 @@ class FlagsUnitTest(absltest.TestCase):
     # Test help text
     flags_help = str(FLAGS)
     self.assertNotEqual(
-        flags_help.find('repeat'), -1, 'cannot find flag in help')
+        flags_help.find('repeat'), -1, 'cannot find flag in help'
+    )
     self.assertNotEqual(
-        flags_help.find(repeat_help), -1, 'cannot find help string in help')
+        flags_help.find(repeat_help), -1, 'cannot find help string in help'
+    )
 
     # Test flag specified twice
     argv = ('./program', '--repeat=4', '--repeat=2', '--debug', '--nodebug')
@@ -661,7 +687,8 @@ class FlagsUnitTest(absltest.TestCase):
         's_str',
         'sing1',
         'string option that can occur multiple times',
-        short_name='s')
+        short_name='s',
+    )
     self.assertEqual(FLAGS.get_flag_value('s_str', None), ['sing1'])
 
     # Test MultiFlag with list of default values
@@ -670,7 +697,8 @@ class FlagsUnitTest(absltest.TestCase):
         'm_str',
         multi_string_defs,
         'string option that can occur multiple times',
-        short_name='m')
+        short_name='m',
+    )
     self.assertEqual(FLAGS.get_flag_value('m_str', None), multi_string_defs)
 
     # Test flag specified multiple times with a MultiFlag
@@ -686,12 +714,18 @@ class FlagsUnitTest(absltest.TestCase):
 
     # A flag with allow_overwrite set to False should complain when it is
     # specified more than once
-    argv = ('./program', '--universe=ptolemaic', '--universe=copernicean',
-            '--universe=euclidean')
+    argv = (
+        './program',
+        '--universe=ptolemaic',
+        '--universe=copernicean',
+        '--universe=euclidean',
+    )
     self.assertRaisesWithLiteralMatch(
         flags.IllegalFlagValueError,
-        'flag --universe=copernicean: already defined as ptolemaic', FLAGS,
-        argv)
+        'flag --universe=copernicean: already defined as ptolemaic',
+        FLAGS,
+        argv,
+    )
 
     # A flag value error shouldn't modify the value:
     flags.DEFINE_integer('smol', 1, 'smol flag', upper_bound=5)
@@ -724,8 +758,12 @@ class FlagsUnitTest(absltest.TestCase):
     old_testspace_list = FLAGS.testspace_list
     old_testspace_or_comma_list = FLAGS.testspace_or_comma_list
 
-    argv = ('./program', FLAGS['test0'].serialize(), FLAGS['test1'].serialize(),
-            FLAGS['s_str'].serialize())
+    argv = (
+        './program',
+        FLAGS['test0'].serialize(),
+        FLAGS['test1'].serialize(),
+        FLAGS['s_str'].serialize(),
+    )
 
     argv = FLAGS(argv)
     self.assertEqual(FLAGS['test0'].serialize(), '--notest0')
@@ -740,9 +778,12 @@ class FlagsUnitTest(absltest.TestCase):
     FLAGS.testcomma_list = list(testcomma_list1)
     FLAGS.testspace_list = list(testspace_list1)
     FLAGS.testspace_or_comma_list = list(testspace_or_comma_list1)
-    argv = ('./program', FLAGS['testcomma_list'].serialize(),
-            FLAGS['testspace_list'].serialize(),
-            FLAGS['testspace_or_comma_list'].serialize())
+    argv = (
+        './program',
+        FLAGS['testcomma_list'].serialize(),
+        FLAGS['testspace_list'].serialize(),
+        FLAGS['testspace_or_comma_list'].serialize(),
+    )
     argv = FLAGS(argv)
     self.assertEqual(FLAGS.testcomma_list, testcomma_list1)
     self.assertEqual(FLAGS.testspace_list, testspace_list1)
@@ -754,16 +795,20 @@ class FlagsUnitTest(absltest.TestCase):
     FLAGS.testcomma_list = list(testcomma_list1)
     FLAGS.testspace_list = list(testspace_list1)
     FLAGS.testspace_or_comma_list = list(testspace_or_comma_list1)
-    argv = ('./program', FLAGS['testcomma_list'].serialize(),
-            FLAGS['testspace_list'].serialize(),
-            FLAGS['testspace_or_comma_list'].serialize())
+    argv = (
+        './program',
+        FLAGS['testcomma_list'].serialize(),
+        FLAGS['testspace_list'].serialize(),
+        FLAGS['testspace_or_comma_list'].serialize(),
+    )
     argv = FLAGS(argv)
     self.assertEqual(FLAGS.testcomma_list, testcomma_list1)
     self.assertEqual(FLAGS.testspace_list, testspace_list1)
     # We don't expect idempotency when commas are placed in an item value and
     # comma_compat is enabled.
-    self.assertEqual(FLAGS.testspace_or_comma_list,
-                     ['aa', 'bb', 'some', 'commas', 'cc'])
+    self.assertEqual(
+        FLAGS.testspace_or_comma_list, ['aa', 'bb', 'some', 'commas', 'cc']
+    )
 
     FLAGS.testcomma_list = old_testcomma_list
     FLAGS.testspace_list = old_testspace_list
@@ -976,21 +1021,25 @@ class FlagsUnitTest(absltest.TestCase):
         flagnames[0],
         False,
         'Flag about to be repeated.',
-        flag_values=original_flags)
+        flag_values=original_flags,
+    )
     duplicate_flags = module_foo.duplicate_flags(flagnames)
-    with self.assertRaisesRegex(flags.DuplicateFlagError,
-                                'flags_test.*module_foo'):
+    with self.assertRaisesRegex(
+        flags.DuplicateFlagError, 'flags_test.*module_foo'
+    ):
       original_flags.append_flag_values(duplicate_flags)
 
     # Make sure allow_override works
     try:
       flags.DEFINE_boolean(
-          'dup1', 0, 'runhelp d11', short_name='u', allow_override=0)
+          'dup1', 0, 'runhelp d11', short_name='u', allow_override=0
+      )
       flag = FLAGS._flags()['dup1']
       self.assertEqual(flag.default, 0)
 
       flags.DEFINE_boolean(
-          'dup1', 1, 'runhelp d12', short_name='u', allow_override=1)
+          'dup1', 1, 'runhelp d12', short_name='u', allow_override=1
+      )
       flag = FLAGS._flags()['dup1']
       self.assertEqual(flag.default, 1)
     except flags.DuplicateFlagError:
@@ -999,12 +1048,14 @@ class FlagsUnitTest(absltest.TestCase):
     # Make sure allow_override works
     try:
       flags.DEFINE_boolean(
-          'dup2', 0, 'runhelp d21', short_name='u', allow_override=1)
+          'dup2', 0, 'runhelp d21', short_name='u', allow_override=1
+      )
       flag = FLAGS._flags()['dup2']
       self.assertEqual(flag.default, 0)
 
       flags.DEFINE_boolean(
-          'dup2', 1, 'runhelp d22', short_name='u', allow_override=0)
+          'dup2', 1, 'runhelp d22', short_name='u', allow_override=0
+      )
       flag = FLAGS._flags()['dup2']
       self.assertEqual(flag.default, 1)
     except flags.DuplicateFlagError:
@@ -1012,9 +1063,11 @@ class FlagsUnitTest(absltest.TestCase):
 
     # Make sure that when we override, the help string gets updated correctly
     flags.DEFINE_boolean(
-        'dup3', 0, 'runhelp d31', short_name='u', allow_override=1)
+        'dup3', 0, 'runhelp d31', short_name='u', allow_override=1
+    )
     flags.DEFINE_boolean(
-        'dup3', 1, 'runhelp d32', short_name='u', allow_override=1)
+        'dup3', 1, 'runhelp d32', short_name='u', allow_override=1
+    )
     self.assertEqual(str(FLAGS).find('runhelp d31'), -1)
     self.assertNotEqual(str(FLAGS).find('runhelp d32'), -1)
 
@@ -1039,7 +1092,8 @@ class FlagsUnitTest(absltest.TestCase):
     new_flags = flags.FlagValues()
     flags.DEFINE_boolean('new3', 0, 'runhelp n3', flag_values=new_flags)
     flags.DEFINE_boolean(
-        'new4', 0, 'runhelp n4', flag_values=new_flags, short_name='n4')
+        'new4', 0, 'runhelp n4', flag_values=new_flags, short_name='n4'
+    )
     self.assertEqual(len(new_flags._flags()), 3)
     old_len = len(FLAGS._flags())
     FLAGS.append_flag_values(new_flags)
@@ -1118,8 +1172,13 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertSameElements(FLAGS['letters'].default, FLAGS.alias_letters)
 
     # Original flags set on command line
-    argv = ('./program', '--name=Martin', '--debug=True', '--decimal=777',
-            '--letters=x,y,z')
+    argv = (
+        './program',
+        '--name=Martin',
+        '--debug=True',
+        '--decimal=777',
+        '--letters=x,y,z',
+    )
     FLAGS(argv)
     self.assertEqual('Martin', FLAGS.name)
     self.assertEqual('Martin', FLAGS.alias_name)
@@ -1131,8 +1190,13 @@ class FlagsUnitTest(absltest.TestCase):
     self.assertSameElements(['x', 'y', 'z'], FLAGS.alias_letters)
 
     # Alias flags set on command line
-    argv = ('./program', '--alias_name=Auston', '--alias_debug=False',
-            '--alias_decimal=888', '--alias_letters=l,m,n')
+    argv = (
+        './program',
+        '--alias_name=Auston',
+        '--alias_debug=False',
+        '--alias_decimal=888',
+        '--alias_letters=l,m,n',
+    )
     FLAGS(argv)
     self.assertEqual('Auston', FLAGS.name)
     self.assertEqual('Auston', FLAGS.alias_name)
@@ -1146,35 +1210,41 @@ class FlagsUnitTest(absltest.TestCase):
     # Make sure importing a module does not change flag value parsed
     # from commandline.
     flags.DEFINE_integer(
-        'dup5', 1, 'runhelp d51', short_name='u5', allow_override=0)
+        'dup5', 1, 'runhelp d51', short_name='u5', allow_override=0
+    )
     self.assertEqual(FLAGS.dup5, 1)
     self.assertEqual(FLAGS.dup5, 1)
     argv = ('./program', '--dup5=3')
     FLAGS(argv)
     self.assertEqual(FLAGS.dup5, 3)
     flags.DEFINE_integer(
-        'dup5', 2, 'runhelp d52', short_name='u5', allow_override=1)
+        'dup5', 2, 'runhelp d52', short_name='u5', allow_override=1
+    )
     self.assertEqual(FLAGS.dup5, 3)
 
     # Make sure importing a module does not change user defined flag value.
     flags.DEFINE_integer(
-        'dup6', 1, 'runhelp d61', short_name='u6', allow_override=0)
+        'dup6', 1, 'runhelp d61', short_name='u6', allow_override=0
+    )
     self.assertEqual(FLAGS.dup6, 1)
     FLAGS.dup6 = 3
     self.assertEqual(FLAGS.dup6, 3)
     flags.DEFINE_integer(
-        'dup6', 2, 'runhelp d62', short_name='u6', allow_override=1)
+        'dup6', 2, 'runhelp d62', short_name='u6', allow_override=1
+    )
     self.assertEqual(FLAGS.dup6, 3)
 
     # Make sure importing a module does not change user defined flag value
     # even if it is the 'default' value.
     flags.DEFINE_integer(
-        'dup7', 1, 'runhelp d71', short_name='u7', allow_override=0)
+        'dup7', 1, 'runhelp d71', short_name='u7', allow_override=0
+    )
     self.assertEqual(FLAGS.dup7, 1)
     FLAGS.dup7 = 1
     self.assertEqual(FLAGS.dup7, 1)
     flags.DEFINE_integer(
-        'dup7', 2, 'runhelp d72', short_name='u7', allow_override=1)
+        'dup7', 2, 'runhelp d72', short_name='u7', allow_override=1
+    )
     self.assertEqual(FLAGS.dup7, 1)
 
     # Test module_help().
@@ -1420,7 +1490,8 @@ class FlagsUnitTest(absltest.TestCase):
         default=None,
         help='help',
         required=True,
-        flag_values=fv)
+        flag_values=fv,
+    )
     # Since the flag is required, the FlagHolder should ensure value returned
     # is not None.
     self.assertTrue(fl._ensure_non_none_value)
@@ -1429,11 +1500,8 @@ class FlagsUnitTest(absltest.TestCase):
     fv = flags.FlagValues()
     with self.assertRaises(ValueError):
       flags.DEFINE_integer(
-          name='int_flag',
-          default=3,
-          help='help',
-          required=True,
-          flag_values=fv)
+          name='int_flag', default=3, help='help', required=True, flag_values=fv
+      )
 
 
 class MultiNumericalFlagsTest(absltest.TestCase):
@@ -1447,7 +1515,8 @@ class MultiNumericalFlagsTest(absltest.TestCase):
         int_defaults,
         'integer option that can occur multiple times',
         short_name='mi',
-        flag_values=fv)
+        flag_values=fv,
+    )
     self.assertListEqual(fv['m_int'].default, int_defaults)
     argv = ('./program', '--m_int=-99', '--mi=101')
     fv(argv)
@@ -1459,23 +1528,28 @@ class MultiNumericalFlagsTest(absltest.TestCase):
         float_defaults,
         'float option that can occur multiple times',
         short_name='mf',
-        flag_values=fv)
-    for (expected, actual) in zip(float_defaults,
-                                  fv.get_flag_value('m_float', None)):
+        flag_values=fv,
+    )
+    for expected, actual in zip(
+        float_defaults, fv.get_flag_value('m_float', None)
+    ):
       self.assertAlmostEqual(expected, actual)
     argv = ('./program', '--m_float=-17', '--mf=2.78e9')
     fv(argv)
     expected_floats = [-17.0, 2.78e9]
-    for (expected, actual) in zip(expected_floats,
-                                  fv.get_flag_value('m_float', None)):
+    for expected, actual in zip(
+        expected_floats, fv.get_flag_value('m_float', None)
+    ):
       self.assertAlmostEqual(expected, actual)
 
   def test_multi_numerical_with_tuples(self):
     """Verify multi_int/float accept tuples as default values."""
     flags.DEFINE_multi_integer(
-        'm_int_tuple', (77, 88),
+        'm_int_tuple',
+        (77, 88),
         'integer option that can occur multiple times',
-        short_name='mi_tuple')
+        short_name='mi_tuple',
+    )
     self.assertListEqual(FLAGS.get_flag_value('m_int_tuple', None), [77, 88])
 
     dict_with_float_keys = {2.2: 'hello', 3: 'happy'}
@@ -1484,21 +1558,25 @@ class MultiNumericalFlagsTest(absltest.TestCase):
         'm_float_tuple',
         float_defaults,
         'float option that can occur multiple times',
-        short_name='mf_tuple')
-    for (expected, actual) in zip(float_defaults,
-                                  FLAGS.get_flag_value('m_float_tuple', None)):
+        short_name='mf_tuple',
+    )
+    for expected, actual in zip(
+        float_defaults, FLAGS.get_flag_value('m_float_tuple', None)
+    ):
       self.assertAlmostEqual(expected, actual)
 
   def test_single_value_default(self):
     """Test multi_int and multi_float flags with a single default value."""
     int_default = 77
-    flags.DEFINE_multi_integer('m_int1', int_default,
-                               'integer option that can occur multiple times')
+    flags.DEFINE_multi_integer(
+        'm_int1', int_default, 'integer option that can occur multiple times'
+    )
     self.assertListEqual(FLAGS.get_flag_value('m_int1', None), [int_default])
 
     float_default = 2.2
-    flags.DEFINE_multi_float('m_float1', float_default,
-                             'float option that can occur multiple times')
+    flags.DEFINE_multi_float(
+        'm_float1', float_default, 'float option that can occur multiple times'
+    )
     actual = FLAGS.get_flag_value('m_float1', None)
     self.assertEqual(1, len(actual))
     self.assertAlmostEqual(actual[0], float_default)
@@ -1510,12 +1588,22 @@ class MultiNumericalFlagsTest(absltest.TestCase):
     self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r"flag --m_int2=abc: invalid literal for int\(\) with base 10: 'abc'",
-        flags.DEFINE_multi_integer, 'm_int2', ['abc'], 'desc')
+        flags.DEFINE_multi_integer,
+        'm_int2',
+        ['abc'],
+        'desc',
+    )
 
     self.assertRaisesRegex(
-        flags.IllegalFlagValueError, r'flag --m_float2=abc: '
+        flags.IllegalFlagValueError,
+        r'flag --m_float2=abc: '
         r'(invalid literal for float\(\)|could not convert string to float): '
-        r"'?abc'?", flags.DEFINE_multi_float, 'm_float2', ['abc'], 'desc')
+        r"'?abc'?",
+        flags.DEFINE_multi_float,
+        'm_float2',
+        ['abc'],
+        'desc',
+    )
 
     # Test non-parseable command line values.
     fv = flags.FlagValues()
@@ -1523,23 +1611,31 @@ class MultiNumericalFlagsTest(absltest.TestCase):
         'm_int2',
         '77',
         'integer option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     argv = ('./program', '--m_int2=def')
     self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r"flag --m_int2=def: invalid literal for int\(\) with base 10: 'def'",
-        fv, argv)
+        fv,
+        argv,
+    )
 
     flags.DEFINE_multi_float(
         'm_float2',
         2.2,
         'float option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     argv = ('./program', '--m_float2=def')
     self.assertRaisesRegex(
-        flags.IllegalFlagValueError, r'flag --m_float2=def: '
+        flags.IllegalFlagValueError,
+        r'flag --m_float2=def: '
         r'(invalid literal for float\(\)|could not convert string to float): '
-        r"'?def'?", fv, argv)
+        r"'?def'?",
+        fv,
+        argv,
+    )
 
 
 class MultiEnumFlagsTest(absltest.TestCase):
@@ -1551,10 +1647,12 @@ class MultiEnumFlagsTest(absltest.TestCase):
     enum_defaults = ['FOO', 'BAZ']
     flags.DEFINE_multi_enum(
         'm_enum',
-        enum_defaults, ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
+        enum_defaults,
+        ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
         'Enum option that can occur multiple times',
         short_name='me',
-        flag_values=fv)
+        flag_values=fv,
+    )
     self.assertListEqual(fv['m_enum'].default, enum_defaults)
     argv = ('./program', '--m_enum=WHOOSH', '--me=FOO')
     fv(argv)
@@ -1566,13 +1664,16 @@ class MultiEnumFlagsTest(absltest.TestCase):
 
     flags.DEFINE_multi_enum(
         'm_enum',
-        None, ['FOO', 'BAR'],
+        None,
+        ['FOO', 'BAR'],
         'Enum option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     self.assertRegex(
         fv['m_enum'].help,
         r'<FOO\|BAR>: Enum option that can occur multiple times;\s+'
-        'repeat this option to specify a list of values')
+        'repeat this option to specify a list of values',
+    )
 
   def test_single_value_default(self):
     """Test multi_enum flags with a single default value."""
@@ -1580,9 +1681,11 @@ class MultiEnumFlagsTest(absltest.TestCase):
     enum_default = 'FOO'
     flags.DEFINE_multi_enum(
         'm_enum1',
-        enum_default, ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
+        enum_default,
+        ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
         'enum option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     self.assertListEqual(fv['m_enum1'].default, [enum_default])
 
   def test_case_sensitivity(self):
@@ -1590,27 +1693,35 @@ class MultiEnumFlagsTest(absltest.TestCase):
     fv = flags.FlagValues()
     # Test case insensitive enum.
     flags.DEFINE_multi_enum(
-        'm_enum2', ['whoosh'], ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
+        'm_enum2',
+        ['whoosh'],
+        ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
         'Enum option that can occur multiple times',
         short_name='me2',
         case_sensitive=False,
-        flag_values=fv)
+        flag_values=fv,
+    )
     argv = ('./program', '--m_enum2=bar', '--me2=fOo')
     fv(argv)
     self.assertListEqual(fv.get_flag_value('m_enum2', None), ['BAR', 'FOO'])
 
     # Test case sensitive enum.
     flags.DEFINE_multi_enum(
-        'm_enum3', ['BAR'], ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
+        'm_enum3',
+        ['BAR'],
+        ['FOO', 'BAR', 'BAZ', 'WHOOSH'],
         'Enum option that can occur multiple times',
         short_name='me3',
         case_sensitive=True,
-        flag_values=fv)
+        flag_values=fv,
+    )
     argv = ('./program', '--m_enum3=bar', '--me3=fOo')
     self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_enum3=invalid: value should be one of <FOO|BAR|BAZ|WHOOSH>',
-        fv, argv)
+        fv,
+        argv,
+    )
 
   def test_bad_multi_enum_flags(self):
     """Test multi_enum with invalid values."""
@@ -1619,23 +1730,37 @@ class MultiEnumFlagsTest(absltest.TestCase):
     self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_enum=INVALID: value should be one of <FOO|BAR|BAZ>',
-        flags.DEFINE_multi_enum, 'm_enum', ['INVALID'], ['FOO', 'BAR', 'BAZ'],
-        'desc')
+        flags.DEFINE_multi_enum,
+        'm_enum',
+        ['INVALID'],
+        ['FOO', 'BAR', 'BAZ'],
+        'desc',
+    )
 
     self.assertRaisesRegex(
         flags.IllegalFlagValueError,
         r'flag --m_enum=1234: value should be one of <FOO|BAR|BAZ>',
-        flags.DEFINE_multi_enum, 'm_enum2', [1234], ['FOO', 'BAR', 'BAZ'],
-        'desc')
+        flags.DEFINE_multi_enum,
+        'm_enum2',
+        [1234],
+        ['FOO', 'BAR', 'BAZ'],
+        'desc',
+    )
 
     # Test command-line values that are not in the permitted list of enums.
-    flags.DEFINE_multi_enum('m_enum4', 'FOO', ['FOO', 'BAR', 'BAZ'],
-                            'enum option that can occur multiple times')
+    flags.DEFINE_multi_enum(
+        'm_enum4',
+        'FOO',
+        ['FOO', 'BAR', 'BAZ'],
+        'enum option that can occur multiple times',
+    )
     argv = ('./program', '--m_enum4=INVALID')
     self.assertRaisesRegex(
         flags.IllegalFlagValueError,
-        r'flag --m_enum4=invalid: value should be one of <FOO|BAR|BAZ>', FLAGS,
-        argv)
+        r'flag --m_enum4=invalid: value should be one of <FOO|BAR|BAZ>',
+        FLAGS,
+        argv,
+    )
 
 
 class MultiEnumClassFlagsTest(absltest.TestCase):
@@ -1648,7 +1773,8 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
         Fruit,
         'Enum option that can occur multiple times',
         flag_values=fv,
-        short_name='me')
+        short_name='me',
+    )
     self.assertEqual(fv['fruit'].short_name, 'me')
 
   def test_define_results_in_registered_flag_with_none(self):
@@ -1659,7 +1785,8 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
         enum_defaults,
         Fruit,
         'Enum option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     fv.mark_as_parsed()
 
     self.assertIsNone(fv.fruit)
@@ -1672,12 +1799,14 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
         enum_defaults,
         Fruit,
         'Enum option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
 
     self.assertRegex(
         fv['fruit'].help,
         r'<apple\|orange>: Enum option that can occur multiple times;\s+'
-        'repeat this option to specify a list of values')
+        'repeat this option to specify a list of values',
+    )
 
   def test_define_results_in_registered_flag_with_string(self):
     fv = flags.FlagValues()
@@ -1687,7 +1816,8 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
         enum_defaults,
         Fruit,
         'Enum option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     fv.mark_as_parsed()
 
     self.assertListEqual(fv.fruit, [Fruit.APPLE])
@@ -1700,7 +1830,8 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
         enum_defaults,
         Fruit,
         'Enum option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     fv.mark_as_parsed()
 
     self.assertListEqual(fv.fruit, [Fruit.APPLE])
@@ -1714,11 +1845,13 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
         CaseSensitiveFruit,
         'Enum option that can occur multiple times',
         flag_values=fv,
-        case_sensitive=True)
+        case_sensitive=True,
+    )
     fv.mark_as_parsed()
 
-    self.assertListEqual(fv.fruit,
-                         [CaseSensitiveFruit.apple, CaseSensitiveFruit.APPLE])
+    self.assertListEqual(
+        fv.fruit, [CaseSensitiveFruit.apple, CaseSensitiveFruit.APPLE]
+    )
 
   def test_define_results_in_registered_flag_with_enum_list(self):
     fv = flags.FlagValues()
@@ -1728,7 +1861,8 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
         enum_defaults,
         Fruit,
         'Enum option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     fv.mark_as_parsed()
 
     self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.ORANGE])
@@ -1741,7 +1875,8 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
         enum_defaults,
         Fruit,
         'Enum option that can occur multiple times',
-        flag_values=fv)
+        flag_values=fv,
+    )
     argv = ('./program', '--fruit=Apple', '--fruit=orange')
     fv(argv)
     self.assertListEqual(fv.fruit, [Fruit.APPLE, Fruit.ORANGE])
@@ -1749,18 +1884,21 @@ class MultiEnumClassFlagsTest(absltest.TestCase):
   def test_bad_multi_enum_class_flags_from_definition(self):
     with self.assertRaisesRegex(
         flags.IllegalFlagValueError,
-        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>'):
+        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>',
+    ):
       flags.DEFINE_multi_enum_class('fruit', ['INVALID'], Fruit, 'desc')
 
   def test_bad_multi_enum_class_flags_from_commandline(self):
     fv = flags.FlagValues()
     enum_defaults = [Fruit.APPLE]
     flags.DEFINE_multi_enum_class(
-        'fruit', enum_defaults, Fruit, 'desc', flag_values=fv)
+        'fruit', enum_defaults, Fruit, 'desc', flag_values=fv
+    )
     argv = ('./program', '--fruit=INVALID')
     with self.assertRaisesRegex(
         flags.IllegalFlagValueError,
-        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>'):
+        'flag --fruit=INVALID: value should be one of <apple|orange|APPLE>',
+    ):
       fv(argv)
 
 
@@ -1773,7 +1911,8 @@ class UnicodeFlagsTest(absltest.TestCase):
         'unicode_str',
         b'\xC3\x80\xC3\xBD'.decode('utf-8'),
         b'help:\xC3\xAA'.decode('utf-8'),
-        flag_values=fv)
+        flag_values=fv,
+    )
     argv = ('./program',)
     fv(argv)  # should not raise any exceptions
 
@@ -1786,7 +1925,8 @@ class UnicodeFlagsTest(absltest.TestCase):
         'unicode_list',
         ['abc', b'\xC3\x80'.decode('utf-8'), b'\xC3\xBD'.decode('utf-8')],
         b'help:\xC3\xAB'.decode('utf-8'),
-        flag_values=fv)
+        flag_values=fv,
+    )
     argv = ('./program',)
     fv(argv)  # should not raise any exceptions
 
@@ -1799,16 +1939,20 @@ class UnicodeFlagsTest(absltest.TestCase):
         'unicode1',
         b'\xC3\x80\xC3\xBD'.decode('utf-8'),
         b'help:\xC3\xAC'.decode('utf-8'),
-        flag_values=fv)
+        flag_values=fv,
+    )
     flags.DEFINE_list(
         'unicode2',
         ['abc', b'\xC3\x80'.decode('utf-8'), b'\xC3\xBD'.decode('utf-8')],
         b'help:\xC3\xAD'.decode('utf-8'),
-        flag_values=fv)
+        flag_values=fv,
+    )
     flags.DEFINE_list(
-        'non_unicode', ['abc', 'def', 'ghi'],
+        'non_unicode',
+        ['abc', 'def', 'ghi'],
         b'help:\xC3\xAD'.decode('utf-8'),
-        flag_values=fv)
+        flag_values=fv,
+    )
 
     outfile = io.StringIO()
     fv.write_help_in_xml_format(outfile)
@@ -1820,19 +1964,24 @@ class UnicodeFlagsTest(absltest.TestCase):
         b'    <meaning>help:\xc3\xac</meaning>\n'
         b'    <default>\xc3\x80\xc3\xbd</default>\n'
         b'    <current>\xc3\x80\xc3\xbd</current>'.decode('utf-8'),
-        actual_output)
+        actual_output,
+    )
     self.assertIn(
         b'<name>unicode2</name>\n'
         b'    <meaning>help:\xc3\xad</meaning>\n'
         b'    <default>abc,\xc3\x80,\xc3\xbd</default>\n'
         b"    <current>['abc', '\xc3\x80', '\xc3\xbd']"
-        b'</current>'.decode('utf-8'), actual_output)
+        b'</current>'.decode('utf-8'),
+        actual_output,
+    )
     self.assertIn(
         b'<name>non_unicode</name>\n'
         b'    <meaning>help:\xc3\xad</meaning>\n'
         b'    <default>abc,def,ghi</default>\n'
         b"    <current>['abc', 'def', 'ghi']"
-        b'</current>'.decode('utf-8'), actual_output)
+        b'</current>'.decode('utf-8'),
+        actual_output,
+    )
 
 
 class LoadFromFlagFileTest(absltest.TestCase):
@@ -1844,25 +1993,30 @@ class LoadFromFlagFileTest(absltest.TestCase):
         'unittest_message1',
         'Foo!',
         'You Add Here.',
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_string(
         'unittest_message2',
         'Bar!',
         'Hello, Sailor!',
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_boolean(
         'unittest_boolflag',
         0,
         'Some Boolean thing',
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_integer(
         'unittest_number',
         12345,
         'Some integer',
         lower_bound=0,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_list(
-        'UnitTestList', '1,2,3', 'Some list', flag_values=self.flag_values)
+        'UnitTestList', '1,2,3', 'Some list', flag_values=self.flag_values
+    )
     self.tmp_path = None
     self.flag_values.mark_as_parsed()
 
@@ -1923,7 +2077,8 @@ class LoadFromFlagFileTest(absltest.TestCase):
 
   def _read_flags_from_files(self, argv, force_gnu):
     return argv[:1] + self.flag_values.read_flags_from_files(
-        argv[1:], force_gnu=force_gnu)
+        argv[1:], force_gnu=force_gnu
+    )
 
   #### Flagfile Unit Tests ####
   def test_method_flagfiles_1(self):
@@ -1932,8 +2087,9 @@ class LoadFromFlagFileTest(absltest.TestCase):
     fake_argv = fake_cmd_line.split(' ')
     self.flag_values(fake_argv)
     self.assertEqual(self.flag_values.unittest_boolflag, 1)
-    self.assertListEqual(fake_argv,
-                         self._read_flags_from_files(fake_argv, False))
+    self.assertListEqual(
+        fake_argv, self._read_flags_from_files(fake_argv, False)
+    )
 
   def test_method_flagfiles_2(self):
     """Tests parsing one file + arguments off simulated argv."""
@@ -1946,8 +2102,11 @@ class LoadFromFlagFileTest(absltest.TestCase):
     # Flags from the file will appear in the order order they are specified
     # in the file, in the same position as the flagfile argument.
     expected_results = [
-        'fooScript', '--q', '--unittest_message1=tempFile1!',
-        '--unittest_number=54321', '--nounittest_boolflag'
+        'fooScript',
+        '--q',
+        '--unittest_message1=tempFile1!',
+        '--unittest_number=54321',
+        '--nounittest_boolflag',
     ]
     test_results = self._read_flags_from_files(fake_argv, False)
     self.assertListEqual(expected_results, test_results)
@@ -1958,14 +2117,19 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Tests parsing nested files + arguments of simulated argv."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --unittest_number=77 --flagfile=%s' %
-                     tmp_files[1])
+    fake_cmd_line = (
+        'fooScript --unittest_number=77 --flagfile=%s' % tmp_files[1]
+    )
     fake_argv = fake_cmd_line.split(' ')
 
     expected_results = [
-        'fooScript', '--unittest_number=77', '--unittest_message1=tempFile1!',
-        '--unittest_number=54321', '--nounittest_boolflag',
-        '--unittest_message2=setFromTempFile2', '--unittest_number=6789a'
+        'fooScript',
+        '--unittest_number=77',
+        '--unittest_message1=tempFile1!',
+        '--unittest_number=54321',
+        '--nounittest_boolflag',
+        '--unittest_message2=setFromTempFile2',
+        '--unittest_number=6789a',
     ]
     test_results = self._read_flags_from_files(fake_argv, False)
     self.assertListEqual(expected_results, test_results)
@@ -1980,15 +2144,20 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --unittest_number 77 --flagfile=%s' %
-                     tmp_files[1])
+    fake_cmd_line = (
+        'fooScript --unittest_number 77 --flagfile=%s' % tmp_files[1]
+    )
     fake_argv = fake_cmd_line.split(' ')
 
     expected_results = [
-        'fooScript', '--unittest_number', '77',
-        '--unittest_message1=tempFile1!', '--unittest_number=54321',
-        '--nounittest_boolflag', '--unittest_message2=setFromTempFile2',
-        '--unittest_number=6789a'
+        'fooScript',
+        '--unittest_number',
+        '77',
+        '--unittest_message1=tempFile1!',
+        '--unittest_number=54321',
+        '--nounittest_boolflag',
+        '--unittest_message2=setFromTempFile2',
+        '--unittest_number=6789a',
     ]
     test_results = self._read_flags_from_files(fake_argv, False)
     self.assertListEqual(expected_results, test_results)
@@ -2001,13 +2170,16 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --unittest_boolflag 77 --flagfile=%s' %
-                     tmp_files[1])
+    fake_cmd_line = (
+        'fooScript --unittest_boolflag 77 --flagfile=%s' % tmp_files[1]
+    )
     fake_argv = fake_cmd_line.split(' ')
 
     expected_results = [
-        'fooScript', '--unittest_boolflag', '77',
-        '--flagfile=%s' % tmp_files[1]
+        'fooScript',
+        '--unittest_boolflag',
+        '77',
+        '--flagfile=%s' % tmp_files[1],
     ]
     with _use_gnu_getopt(self.flag_values, False):
       test_results = self._read_flags_from_files(fake_argv, False)
@@ -2020,12 +2192,15 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --flagfile=%s --nounittest_boolflag' %
-                     tmp_files[2])
+    fake_cmd_line = (
+        'fooScript --flagfile=%s --nounittest_boolflag' % tmp_files[2]
+    )
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
-        'fooScript', '--unittest_message1=setFromTempFile3',
-        '--unittest_boolflag', '--nounittest_boolflag'
+        'fooScript',
+        '--unittest_message1=setFromTempFile3',
+        '--unittest_boolflag',
+        '--nounittest_boolflag',
     ]
 
     test_results = self._read_flags_from_files(fake_argv, False)
@@ -2038,8 +2213,10 @@ class LoadFromFlagFileTest(absltest.TestCase):
     fake_cmd_line = 'fooScript --some_flag -- --flagfile=%s' % tmp_files[0]
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
-        'fooScript', '--some_flag', '--',
-        '--flagfile=%s' % tmp_files[0]
+        'fooScript',
+        '--some_flag',
+        '--',
+        '--flagfile=%s' % tmp_files[0],
     ]
 
     test_results = self._read_flags_from_files(fake_argv, False)
@@ -2049,12 +2226,15 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Test that --flagfile parsing stops at non-options (non-GNU behavior)."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%s' %
-                     tmp_files[0])
+    fake_cmd_line = (
+        'fooScript --some_flag some_arg --flagfile=%s' % tmp_files[0]
+    )
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
-        'fooScript', '--some_flag', 'some_arg',
-        '--flagfile=%s' % tmp_files[0]
+        'fooScript',
+        '--some_flag',
+        'some_arg',
+        '--flagfile=%s' % tmp_files[0],
     ]
 
     with _use_gnu_getopt(self.flag_values, False):
@@ -2066,13 +2246,17 @@ class LoadFromFlagFileTest(absltest.TestCase):
     self.flag_values.set_gnu_getopt()
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%s' %
-                     tmp_files[0])
+    fake_cmd_line = (
+        'fooScript --some_flag some_arg --flagfile=%s' % tmp_files[0]
+    )
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
-        'fooScript', '--some_flag', 'some_arg',
-        '--unittest_message1=tempFile1!', '--unittest_number=54321',
-        '--nounittest_boolflag'
+        'fooScript',
+        '--some_flag',
+        'some_arg',
+        '--unittest_message1=tempFile1!',
+        '--unittest_number=54321',
+        '--nounittest_boolflag',
     ]
 
     test_results = self._read_flags_from_files(fake_argv, False)
@@ -2082,13 +2266,17 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Test that --flagfile parsing respects force_gnu=True."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%s' %
-                     tmp_files[0])
+    fake_cmd_line = (
+        'fooScript --some_flag some_arg --flagfile=%s' % tmp_files[0]
+    )
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
-        'fooScript', '--some_flag', 'some_arg',
-        '--unittest_message1=tempFile1!', '--unittest_number=54321',
-        '--nounittest_boolflag'
+        'fooScript',
+        '--some_flag',
+        'some_arg',
+        '--unittest_message1=tempFile1!',
+        '--unittest_number=54321',
+        '--nounittest_boolflag',
     ]
 
     test_results = self._read_flags_from_files(fake_argv, True)
@@ -2098,15 +2286,21 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Tests that parsing repeated non-circular flagfiles works."""
     tmp_files = self._setup_test_files()
     # specify our temp files on the fake cmd line
-    fake_cmd_line = ('fooScript --flagfile=%s --flagfile=%s' %
-                     (tmp_files[1], tmp_files[0]))
+    fake_cmd_line = 'fooScript --flagfile=%s --flagfile=%s' % (
+        tmp_files[1],
+        tmp_files[0],
+    )
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
-        'fooScript', '--unittest_message1=tempFile1!',
-        '--unittest_number=54321', '--nounittest_boolflag',
-        '--unittest_message2=setFromTempFile2', '--unittest_number=6789a',
-        '--unittest_message1=tempFile1!', '--unittest_number=54321',
-        '--nounittest_boolflag'
+        'fooScript',
+        '--unittest_message1=tempFile1!',
+        '--unittest_number=54321',
+        '--nounittest_boolflag',
+        '--unittest_message2=setFromTempFile2',
+        '--unittest_number=6789a',
+        '--unittest_message1=tempFile1!',
+        '--unittest_number=54321',
+        '--nounittest_boolflag',
     ]
 
     test_results = self._read_flags_from_files(fake_argv, False)
@@ -2114,26 +2308,37 @@ class LoadFromFlagFileTest(absltest.TestCase):
 
   @unittest.skipIf(
       os.name == 'nt',
-      'There is no good way to create an unreadable file on Windows.')
+      'There is no good way to create an unreadable file on Windows.',
+  )
   def test_method_flagfiles_no_permissions(self):
     """Test that --flagfile raises except on file that is unreadable."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%s' %
-                     tmp_files[3])
+    fake_cmd_line = (
+        'fooScript --some_flag some_arg --flagfile=%s' % tmp_files[3]
+    )
     fake_argv = fake_cmd_line.split(' ')
-    self.assertRaises(flags.CantOpenFlagFileError, self._read_flags_from_files,
-                      fake_argv, True)
+    self.assertRaises(
+        flags.CantOpenFlagFileError,
+        self._read_flags_from_files,
+        fake_argv,
+        True,
+    )
 
   def test_method_flagfiles_not_found(self):
     """Test that --flagfile raises except on file that does not exist."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = ('fooScript --some_flag some_arg --flagfile=%sNOTEXIST' %
-                     tmp_files[3])
+    fake_cmd_line = (
+        'fooScript --some_flag some_arg --flagfile=%sNOTEXIST' % tmp_files[3]
+    )
     fake_argv = fake_cmd_line.split(' ')
-    self.assertRaises(flags.CantOpenFlagFileError, self._read_flags_from_files,
-                      fake_argv, True)
+    self.assertRaises(
+        flags.CantOpenFlagFileError,
+        self._read_flags_from_files,
+        fake_argv,
+        True,
+    )
 
   def test_flagfiles_user_path_expansion(self):
     """Test that user directory referenced paths are correctly expanded.
@@ -2148,11 +2353,13 @@ class LoadFromFlagFileTest(absltest.TestCase):
     expected_results = os.path.expanduser('~/foo.file')
 
     test_results = self.flag_values._extract_filename(
-        fake_flagfile_item_style_1)
+        fake_flagfile_item_style_1
+    )
     self.assertEqual(expected_results, test_results)
 
     test_results = self.flag_values._extract_filename(
-        fake_flagfile_item_style_2)
+        fake_flagfile_item_style_2
+    )
     self.assertEqual(expected_results, test_results)
 
   def test_no_touchy_non_flags(self):
@@ -2161,8 +2368,12 @@ class LoadFromFlagFileTest(absltest.TestCase):
     The arguments are not supposed to be flags
     """
     fake_argv = [
-        'fooScript', '--unittest_boolflag', 'command', '--command_arg1',
-        '--UnitTestBoom', '--UnitTestB'
+        'fooScript',
+        '--unittest_boolflag',
+        'command',
+        '--command_arg1',
+        '--UnitTestBoom',
+        '--UnitTestB',
     ]
     with _use_gnu_getopt(self.flag_values, False):
       argv = self.flag_values(fake_argv)
@@ -2172,7 +2383,10 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Test that flags given after arguments are parsed if using gnu_getopt."""
     self.flag_values.set_gnu_getopt()
     fake_argv = [
-        'fooScript', '--unittest_boolflag', 'command', '--unittest_number=54321'
+        'fooScript',
+        '--unittest_boolflag',
+        'command',
+        '--unittest_number=54321',
     ]
     argv = self.flag_values(fake_argv)
     self.assertListEqual(argv, ['fooScript', 'command'])
@@ -2183,8 +2397,9 @@ class LoadFromFlagFileTest(absltest.TestCase):
     # and that the value is changed when one is given as an option.
     self.flag_values.set_default('unittest_message1', 'New value')
     self.assertEqual(self.flag_values.unittest_message1, 'New value')
-    self.assertEqual(self.flag_values['unittest_message1'].default_as_str,
-                     "'New value'")
+    self.assertEqual(
+        self.flag_values['unittest_message1'].default_as_str, "'New value'"
+    )
     self.flag_values(['dummyscript', '--unittest_message1=Newer value'])
     self.assertEqual(self.flag_values.unittest_message1, 'Newer value')
 
@@ -2214,8 +2429,9 @@ class LoadFromFlagFileTest(absltest.TestCase):
     # Test that setting the default to false works correctly.
     self.flag_values.set_default('unittest_boolflag', False)
     self.assertEqual(self.flag_values.unittest_boolflag, False)
-    self.assertEqual(self.flag_values['unittest_boolflag'].default_as_str,
-                     "'false'")
+    self.assertEqual(
+        self.flag_values['unittest_boolflag'].default_as_str, "'false'"
+    )
     self.flag_values(['dummyscript', '--unittest_boolflag=true'])
     self.assertEqual(self.flag_values.unittest_boolflag, True)
 
@@ -2241,9 +2457,11 @@ class FlagsParsingTest(absltest.TestCase):
 
   def test_two_dash_arg_first(self):
     flags.DEFINE_string(
-        'twodash_name', 'Bob', 'namehelp', flag_values=self.flag_values)
+        'twodash_name', 'Bob', 'namehelp', flag_values=self.flag_values
+    )
     flags.DEFINE_string(
-        'twodash_blame', 'Rob', 'blamehelp', flag_values=self.flag_values)
+        'twodash_blame', 'Rob', 'blamehelp', flag_values=self.flag_values
+    )
     argv = ('./program', '--', '--twodash_name=Harry')
     argv = self.flag_values(argv)
     self.assertEqual('Bob', self.flag_values.twodash_name)
@@ -2251,11 +2469,17 @@ class FlagsParsingTest(absltest.TestCase):
 
   def test_two_dash_arg_middle(self):
     flags.DEFINE_string(
-        'twodash2_name', 'Bob', 'namehelp', flag_values=self.flag_values)
+        'twodash2_name', 'Bob', 'namehelp', flag_values=self.flag_values
+    )
     flags.DEFINE_string(
-        'twodash2_blame', 'Rob', 'blamehelp', flag_values=self.flag_values)
-    argv = ('./program', '--twodash2_blame=Larry', '--',
-            '--twodash2_name=Harry')
+        'twodash2_blame', 'Rob', 'blamehelp', flag_values=self.flag_values
+    )
+    argv = (
+        './program',
+        '--twodash2_blame=Larry',
+        '--',
+        '--twodash2_name=Harry',
+    )
     argv = self.flag_values(argv)
     self.assertEqual('Bob', self.flag_values.twodash2_name)
     self.assertEqual('Larry', self.flag_values.twodash2_blame)
@@ -2263,9 +2487,11 @@ class FlagsParsingTest(absltest.TestCase):
 
   def test_one_dash_arg_first(self):
     flags.DEFINE_string(
-        'onedash_name', 'Bob', 'namehelp', flag_values=self.flag_values)
+        'onedash_name', 'Bob', 'namehelp', flag_values=self.flag_values
+    )
     flags.DEFINE_string(
-        'onedash_blame', 'Rob', 'blamehelp', flag_values=self.flag_values)
+        'onedash_blame', 'Rob', 'blamehelp', flag_values=self.flag_values
+    )
     argv = ('./program', '-', '--onedash_name=Harry')
     with _use_gnu_getopt(self.flag_values, False):
       argv = self.flag_values(argv)
@@ -2279,7 +2505,8 @@ class FlagsParsingTest(absltest.TestCase):
         default=None,
         help='help',
         required=True,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     argv = ('./program',)
     with _use_gnu_getopt(self.flag_values, False):
       with self.assertRaises(flags.IllegalFlagValueError):
@@ -2292,7 +2519,8 @@ class FlagsParsingTest(absltest.TestCase):
         help='help',
         required=True,
         lower_bound=4,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     argv = ('./program', '--int_flag=2')
     with _use_gnu_getopt(self.flag_values, False):
       with self.assertRaises(flags.IllegalFlagValueError):
@@ -2328,16 +2556,26 @@ class FlagsParsingTest(absltest.TestCase):
       self.assertEqual(e.flagvalue, '--nosuchflagwithparam=foo')
 
     # Allow unknown flag --nosuchflag if specified with undefok
-    argv = ('./program', '--nosuchflag', '--name=Bob', '--undefok=nosuchflag',
-            'extra')
+    argv = (
+        './program',
+        '--nosuchflag',
+        '--name=Bob',
+        '--undefok=nosuchflag',
+        'extra',
+    )
     argv = self.flag_values(argv)
     self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
 
     # Allow unknown flag --noboolflag if undefok=boolflag is specified
-    argv = ('./program', '--noboolflag', '--name=Bob', '--undefok=boolflag',
-            'extra')
+    argv = (
+        './program',
+        '--noboolflag',
+        '--name=Bob',
+        '--undefok=boolflag',
+        'extra',
+    )
     argv = self.flag_values(argv)
     self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
@@ -2345,16 +2583,26 @@ class FlagsParsingTest(absltest.TestCase):
 
     # But not if the flagname is misspelled:
     try:
-      argv = ('./program', '--nosuchflag', '--name=Bob', '--undefok=nosuchfla',
-              'extra')
+      argv = (
+          './program',
+          '--nosuchflag',
+          '--name=Bob',
+          '--undefok=nosuchfla',
+          'extra',
+      )
       self.flag_values(argv)
       raise AssertionError('Unknown flag exception not raised')
     except flags.UnrecognizedFlagError as e:
       self.assertEqual(e.flagname, 'nosuchflag')
 
     try:
-      argv = ('./program', '--nosuchflag', '--name=Bob',
-              '--undefok=nosuchflagg', 'extra')
+      argv = (
+          './program',
+          '--nosuchflag',
+          '--name=Bob',
+          '--undefok=nosuchflagg',
+          'extra',
+      )
       self.flag_values(argv)
       raise AssertionError('Unknown flag exception not raised')
     except flags.UnrecognizedFlagError as e:
@@ -2369,16 +2617,28 @@ class FlagsParsingTest(absltest.TestCase):
 
     # Allow unknown flag --nosuchflagwithparam=foo if specified
     # with undefok
-    argv = ('./program', '--nosuchflagwithparam=foo', '--name=Bob',
-            '--undefok=nosuchflagwithparam', 'extra')
+    argv = (
+        './program',
+        '--nosuchflagwithparam=foo',
+        '--name=Bob',
+        '--undefok=nosuchflagwithparam',
+        'extra',
+    )
     argv = self.flag_values(argv)
     self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
 
     # Even if undefok specifies multiple flags
-    argv = ('./program', '--nosuchflag', '-w', '--nosuchflagwithparam=foo',
-            '--name=Bob', '--undefok=nosuchflag,w,nosuchflagwithparam', 'extra')
+    argv = (
+        './program',
+        '--nosuchflag',
+        '-w',
+        '--nosuchflagwithparam=foo',
+        '--name=Bob',
+        '--undefok=nosuchflag,w,nosuchflagwithparam',
+        'extra',
+    )
     argv = self.flag_values(argv)
     self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
@@ -2386,8 +2646,13 @@ class FlagsParsingTest(absltest.TestCase):
 
     # However, not if undefok doesn't specify the flag
     try:
-      argv = ('./program', '--nosuchflag', '--name=Bob',
-              '--undefok=another_such', 'extra')
+      argv = (
+          './program',
+          '--nosuchflag',
+          '--name=Bob',
+          '--undefok=another_such',
+          'extra',
+      )
       self.flag_values(argv)
       raise AssertionError('Unknown flag exception not raised')
     except flags.UnrecognizedFlagError as e:
@@ -2405,9 +2670,16 @@ class FlagsParsingTest(absltest.TestCase):
       pass
 
     # Test --undefok <list>
-    argv = ('./program', '--nosuchflag', '-w', '--nosuchflagwithparam=foo',
-            '--name=Bob', '--undefok', 'nosuchflag,w,nosuchflagwithparam',
-            'extra')
+    argv = (
+        './program',
+        '--nosuchflag',
+        '-w',
+        '--nosuchflagwithparam=foo',
+        '--name=Bob',
+        '--undefok',
+        'nosuchflag,w,nosuchflagwithparam',
+        'extra',
+    )
     argv = self.flag_values(argv)
     self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
@@ -2466,7 +2738,8 @@ class NonGlobalFlagsTest(absltest.TestCase):
     # 1. Declare and delete a flag with no short name.
     flag_values = flags.FlagValues()
     flags.DEFINE_string(
-        'delattr_foo', default_value, 'A simple flag.', flag_values=flag_values)
+        'delattr_foo', default_value, 'A simple flag.', flag_values=flag_values
+    )
 
     flag_values.mark_as_parsed()
     self.assertEqual(flag_values.delattr_foo, default_value)
@@ -2479,7 +2752,8 @@ class NonGlobalFlagsTest(absltest.TestCase):
     # If the previous del FLAGS.delattr_foo did not work properly, the
     # next definition will trigger a redefinition error.
     flags.DEFINE_integer(
-        'delattr_foo', 3, 'A simple flag.', flag_values=flag_values)
+        'delattr_foo', 3, 'A simple flag.', flag_values=flag_values
+    )
     del flag_values.delattr_foo
 
     self.assertFalse('delattr_foo' in flag_values)
@@ -2490,7 +2764,8 @@ class NonGlobalFlagsTest(absltest.TestCase):
         default_value,
         'flag with short name',
         short_name='x5',
-        flag_values=flag_values)
+        flag_values=flag_values,
+    )
     flag_obj = flag_values['delattr_bar']
     self.assertTrue(flag_values._flag_is_registered(flag_obj))
     del flag_values.x5
@@ -2504,7 +2779,8 @@ class NonGlobalFlagsTest(absltest.TestCase):
         default_value,
         'flag with short name',
         short_name='x5',
-        flag_values=flag_values)
+        flag_values=flag_values,
+    )
     flag_obj = flag_values['delattr_bar']
     self.assertTrue(flag_values._flag_is_registered(flag_obj))
     del flag_values.delattr_bar
@@ -2531,11 +2807,13 @@ class NonGlobalFlagsTest(absltest.TestCase):
     # Success case: newline in argument is quoted.
     self.assertEqual(_check_parsing('"foo","bar\nbar"'), ['foo', 'bar\nbar'])
     # Failure case: newline in argument is unquoted.
-    self.assertRaises(flags.IllegalFlagValueError, _check_parsing,
-                      '"foo",bar\nbar')
+    self.assertRaises(
+        flags.IllegalFlagValueError, _check_parsing, '"foo",bar\nbar'
+    )
     # Failure case: unmatched ".
-    self.assertRaises(flags.IllegalFlagValueError, _check_parsing,
-                      '"foo,barbar')
+    self.assertRaises(
+        flags.IllegalFlagValueError, _check_parsing, '"foo,barbar'
+    )
 
   def test_flag_definition_via_setitem(self):
     with self.assertRaises(flags.IllegalFlagValueError):
@@ -2551,7 +2829,8 @@ class SetDefaultTest(absltest.TestCase):
 
   def test_success(self):
     int_holder = flags.DEFINE_integer(
-        'an_int', 1, 'an int', flag_values=self.flag_values)
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
 
     flags.set_default(int_holder, 2)
     self.flag_values.mark_as_parsed()
@@ -2560,7 +2839,8 @@ class SetDefaultTest(absltest.TestCase):
 
   def test_update_after_parse(self):
     int_holder = flags.DEFINE_integer(
-        'an_int', 1, 'an int', flag_values=self.flag_values)
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
 
     self.flag_values.mark_as_parsed()
     flags.set_default(int_holder, 2)
@@ -2569,7 +2849,8 @@ class SetDefaultTest(absltest.TestCase):
 
   def test_overridden_by_explicit_assignment(self):
     int_holder = flags.DEFINE_integer(
-        'an_int', 1, 'an int', flag_values=self.flag_values)
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
 
     self.flag_values.mark_as_parsed()
     self.flag_values.an_int = 3
@@ -2579,7 +2860,8 @@ class SetDefaultTest(absltest.TestCase):
 
   def test_restores_back_to_none(self):
     int_holder = flags.DEFINE_integer(
-        'an_int', None, 'an int', flag_values=self.flag_values)
+        'an_int', None, 'an int', flag_values=self.flag_values
+    )
 
     self.flag_values.mark_as_parsed()
     flags.set_default(int_holder, 3)
@@ -2589,7 +2871,8 @@ class SetDefaultTest(absltest.TestCase):
 
   def test_failure_on_invalid_type(self):
     int_holder = flags.DEFINE_integer(
-        'an_int', 1, 'an int', flag_values=self.flag_values)
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
 
     self.flag_values.mark_as_parsed()
 
@@ -2598,7 +2881,8 @@ class SetDefaultTest(absltest.TestCase):
 
   def test_failure_on_type_protected_none_default(self):
     int_holder = flags.DEFINE_integer(
-        'an_int', 1, 'an int', flag_values=self.flag_values)
+        'an_int', 1, 'an int', flag_values=self.flag_values
+    )
 
     self.flag_values.mark_as_parsed()
 
@@ -2763,13 +3047,17 @@ class KeyFlagsTest(absltest.TestCase):
     # Before starting any testing, make sure no flags are already
     # defined for module_foo and module_bar.
     self.assertListEqual(
-        self._get_names_of_key_flags(module_foo, flag_values), [])
+        self._get_names_of_key_flags(module_foo, flag_values), []
+    )
     self.assertListEqual(
-        self._get_names_of_key_flags(module_bar, flag_values), [])
+        self._get_names_of_key_flags(module_bar, flag_values), []
+    )
     self.assertListEqual(
-        self._get_names_of_defined_flags(module_foo, flag_values), [])
+        self._get_names_of_defined_flags(module_foo, flag_values), []
+    )
     self.assertListEqual(
-        self._get_names_of_defined_flags(module_bar, flag_values), [])
+        self._get_names_of_defined_flags(module_bar, flag_values), []
+    )
 
     # Defines a few flags in module_foo and module_bar.
     module_foo.define_flags(flag_values=flag_values)
@@ -2780,11 +3068,13 @@ class KeyFlagsTest(absltest.TestCase):
       for module in [module_foo, module_bar]:
         self._assert_lists_have_same_elements(
             flag_values.get_flags_for_module(module),
-            flag_values.get_key_flags_for_module(module))
+            flag_values.get_key_flags_for_module(module),
+        )
         # Also check that each module defined the expected flags.
         self._assert_lists_have_same_elements(
             self._get_names_of_defined_flags(module, flag_values),
-            module.names_of_defined_flags())
+            module.names_of_defined_flags(),
+        )
 
       # Part 2. Check that flags.declare_key_flag works fine.
       # Declare that some flags from module_bar are key for
@@ -2794,12 +3084,14 @@ class KeyFlagsTest(absltest.TestCase):
       # Check that module_foo has the expected list of defined flags.
       self._assert_lists_have_same_elements(
           self._get_names_of_defined_flags(module_foo, flag_values),
-          module_foo.names_of_defined_flags())
+          module_foo.names_of_defined_flags(),
+      )
 
       # Check that module_foo has the expected list of key flags.
       self._assert_lists_have_same_elements(
           self._get_names_of_key_flags(module_foo, flag_values),
-          module_foo.names_of_declared_key_flags())
+          module_foo.names_of_declared_key_flags(),
+      )
 
       # Part 3. Check that flags.adopt_module_key_flags works fine.
       # Trigger a call to flags.adopt_module_key_flags(module_bar)
@@ -2810,8 +3102,9 @@ class KeyFlagsTest(absltest.TestCase):
       # Check that module_foo has the expected list of key flags.
       self._assert_lists_have_same_elements(
           self._get_names_of_key_flags(module_foo, flag_values),
-          module_foo.names_of_declared_key_flags() +
-          module_foo.names_of_declared_extra_key_flags())
+          module_foo.names_of_declared_key_flags()
+          + module_foo.names_of_declared_extra_key_flags(),
+      )
     finally:
       module_foo.remove_flags(flag_values=flag_values)
 
@@ -2838,10 +3131,12 @@ class KeyFlagsTest(absltest.TestCase):
     # module, and that module_bar defined the expected flags.
     self._assert_lists_have_same_elements(
         fv.get_flags_for_module(module_bar),
-        fv.get_key_flags_for_module(module_bar))
+        fv.get_key_flags_for_module(module_bar),
+    )
     self._assert_lists_have_same_elements(
         self._get_names_of_defined_flags(module_bar, fv),
-        module_bar.names_of_defined_flags())
+        module_bar.names_of_defined_flags(),
+    )
 
     # Pick two flags from module_bar, declare them as key for the
     # current (i.e., main) module (via flags.declare_key_flag), and
@@ -2855,61 +3150,72 @@ class KeyFlagsTest(absltest.TestCase):
 
     flags.declare_key_flag(flag_name_0, flag_values=fv)
     self._assert_lists_have_same_elements(
-        self._get_names_of_key_flags(main_module, fv), [flag_name_0])
+        self._get_names_of_key_flags(main_module, fv), [flag_name_0]
+    )
 
     flags.declare_key_flag(flag_name_2, flag_values=fv)
     self._assert_lists_have_same_elements(
         self._get_names_of_key_flags(main_module, fv),
-        [flag_name_0, flag_name_2])
+        [flag_name_0, flag_name_2],
+    )
 
     # Try with a special (not user-defined) flag too:
     flags.declare_key_flag('undefok', flag_values=fv)
     self._assert_lists_have_same_elements(
         self._get_names_of_key_flags(main_module, fv),
-        [flag_name_0, flag_name_2, 'undefok'])
+        [flag_name_0, flag_name_2, 'undefok'],
+    )
 
     flags.adopt_module_key_flags(module_bar, fv)
     self._assert_lists_have_same_elements(
         self._get_names_of_key_flags(main_module, fv),
-        names_of_flags_defined_by_bar + ['undefok'])
+        names_of_flags_defined_by_bar + ['undefok'],
+    )
 
     # Adopt key flags from the flags module itself.
     flags.adopt_module_key_flags(flags, flag_values=fv)
     self._assert_lists_have_same_elements(
         self._get_names_of_key_flags(main_module, fv),
-        names_of_flags_defined_by_bar + ['flagfile', 'undefok'])
+        names_of_flags_defined_by_bar + ['flagfile', 'undefok'],
+    )
 
   def test_key_flags_with_flagholders(self):
     main_module = sys.argv[0]
 
     self.assertListEqual(
-        self._get_names_of_key_flags(main_module, self.flag_values), [])
+        self._get_names_of_key_flags(main_module, self.flag_values), []
+    )
     self.assertListEqual(
-        self._get_names_of_defined_flags(main_module, self.flag_values), [])
+        self._get_names_of_defined_flags(main_module, self.flag_values), []
+    )
 
     int_holder = flags.DEFINE_integer(
         'main_module_int_fg',
         1,
         'Integer flag in the main module.',
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
 
     flags.declare_key_flag(int_holder, self.flag_values)
 
     self.assertCountEqual(
         self.flag_values.get_flags_for_module(main_module),
-        self.flag_values.get_key_flags_for_module(main_module))
+        self.flag_values.get_key_flags_for_module(main_module),
+    )
 
     bool_holder = flags.DEFINE_boolean(
         'main_module_bool_fg',
         False,
         'Boolean flag in the main module.',
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
 
     flags.declare_key_flag(bool_holder)  # omitted flag_values
 
     self.assertCountEqual(
         self.flag_values.get_flags_for_module(main_module),
-        self.flag_values.get_key_flags_for_module(main_module))
+        self.flag_values.get_key_flags_for_module(main_module),
+    )
 
     self.assertLen(self.flag_values.get_flags_for_module(main_module), 2)
 
@@ -2920,8 +3226,9 @@ class KeyFlagsTest(absltest.TestCase):
     # Safety check that the main module does not declare any flags
     # at the beginning of this test.
     expected_help = ''
-    self.assertMultiLineEqual(expected_help,
-                              self.flag_values.main_module_help())
+    self.assertMultiLineEqual(
+        expected_help, self.flag_values.main_module_help()
+    )
 
     # Define one flag in this main module and some flags in modules
     # a and b.  Also declare one flag from module a and one flag
@@ -2930,50 +3237,62 @@ class KeyFlagsTest(absltest.TestCase):
         'main_module_int_fg',
         1,
         'Integer flag in the main module.',
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
 
     try:
       main_module_int_fg_help = (
           '  --main_module_int_fg: Integer flag in the main module.\n'
           "    (default: '1')\n"
-          '    (an integer)')
+          '    (an integer)'
+      )
 
       expected_help += '\n%s:\n%s' % (sys.argv[0], main_module_int_fg_help)
-      self.assertMultiLineEqual(expected_help,
-                                self.flag_values.main_module_help())
+      self.assertMultiLineEqual(
+          expected_help, self.flag_values.main_module_help()
+      )
 
       # The following call should be a no-op: any flag declared by a
       # module is automatically key for that module.
       flags.declare_key_flag('main_module_int_fg', flag_values=self.flag_values)
-      self.assertMultiLineEqual(expected_help,
-                                self.flag_values.main_module_help())
+      self.assertMultiLineEqual(
+          expected_help, self.flag_values.main_module_help()
+      )
 
       # The definition of a few flags in an imported module should not
       # change the main module help.
       module_foo.define_flags(flag_values=self.flag_values)
-      self.assertMultiLineEqual(expected_help,
-                                self.flag_values.main_module_help())
+      self.assertMultiLineEqual(
+          expected_help, self.flag_values.main_module_help()
+      )
 
       flags.declare_key_flag('tmod_foo_bool', flag_values=self.flag_values)
       tmod_foo_bool_help = (
           '  --[no]tmod_foo_bool: Boolean flag from module foo.\n'
-          "    (default: 'true')")
+          "    (default: 'true')"
+      )
       expected_help += '\n' + tmod_foo_bool_help
-      self.assertMultiLineEqual(expected_help,
-                                self.flag_values.main_module_help())
+      self.assertMultiLineEqual(
+          expected_help, self.flag_values.main_module_help()
+      )
 
       flags.declare_key_flag('tmod_bar_z', flag_values=self.flag_values)
       tmod_bar_z_help = (
           '  --[no]tmod_bar_z: Another boolean flag from module bar.\n'
-          "    (default: 'false')")
+          "    (default: 'false')"
+      )
       # Unfortunately, there is some flag sorting inside
       # main_module_help, so we can't keep incrementally extending
       # the expected_help string ...
-      expected_help = ('\n%s:\n%s\n%s\n%s' %
-                       (sys.argv[0], main_module_int_fg_help, tmod_bar_z_help,
-                        tmod_foo_bool_help))
-      self.assertMultiLineEqual(self.flag_values.main_module_help(),
-                                expected_help)
+      expected_help = '\n%s:\n%s\n%s\n%s' % (
+          sys.argv[0],
+          main_module_int_fg_help,
+          tmod_bar_z_help,
+          tmod_foo_bool_help,
+      )
+      self.assertMultiLineEqual(
+          self.flag_values.main_module_help(), expected_help
+      )
 
     finally:
       # At the end, delete all the flag information we created.
@@ -3003,16 +3322,20 @@ class FindModuleTest(absltest.TestCase):
   def test_find_module_defining_flag(self):
     self.assertEqual(
         'default',
-        FLAGS.find_module_defining_flag('__NON_EXISTENT_FLAG__', 'default'))
-    self.assertEqual(module_baz.__name__,
-                     FLAGS.find_module_defining_flag('tmod_baz_x'))
+        FLAGS.find_module_defining_flag('__NON_EXISTENT_FLAG__', 'default'),
+    )
+    self.assertEqual(
+        module_baz.__name__, FLAGS.find_module_defining_flag('tmod_baz_x')
+    )
 
   def test_find_module_id_defining_flag(self):
     self.assertEqual(
         'default',
-        FLAGS.find_module_id_defining_flag('__NON_EXISTENT_FLAG__', 'default'))
+        FLAGS.find_module_id_defining_flag('__NON_EXISTENT_FLAG__', 'default'),
+    )
     self.assertEqual(
-        id(module_baz), FLAGS.find_module_id_defining_flag('tmod_baz_x'))
+        id(module_baz), FLAGS.find_module_id_defining_flag('tmod_baz_x')
+    )
 
   def test_find_module_defining_flag_passing_module_name(self):
     my_flags = flags.FlagValues()
@@ -3022,9 +3345,11 @@ class FindModuleTest(absltest.TestCase):
         True,
         'Flag with a different module name.',
         flag_values=my_flags,
-        module_name=module_name)
-    self.assertEqual(module_name,
-                     my_flags.find_module_defining_flag('flag_name'))
+        module_name=module_name,
+    )
+    self.assertEqual(
+        module_name, my_flags.find_module_defining_flag('flag_name')
+    )
 
   def test_find_module_id_defining_flag_passing_module_name(self):
     my_flags = flags.FlagValues()
@@ -3034,9 +3359,11 @@ class FindModuleTest(absltest.TestCase):
         True,
         'Flag with a different module name.',
         flag_values=my_flags,
-        module_name=module_name)
+        module_name=module_name,
+    )
     self.assertEqual(
-        id(sys), my_flags.find_module_id_defining_flag('flag_name'))
+        id(sys), my_flags.find_module_id_defining_flag('flag_name')
+    )
 
 
 class FlagsErrorMessagesTest(absltest.TestCase):
@@ -3052,59 +3379,68 @@ class FlagsErrorMessagesTest(absltest.TestCase):
         4,
         'non-negative flag',
         lower_bound=1,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_integer(
         'non_negative',
         4,
         'positive flag',
         lower_bound=0,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_integer(
         'negative',
         -4,
         'negative flag',
         upper_bound=-1,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_integer(
         'non_positive',
         -4,
         'non-positive flag',
         upper_bound=0,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_integer(
         'greater',
         19,
         'greater-than flag',
         lower_bound=4,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_integer(
         'smaller',
         -19,
         'smaller-than flag',
         upper_bound=4,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_integer(
         'usual',
         4,
         'usual flag',
         lower_bound=0,
         upper_bound=10000,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_integer(
         'another_usual',
         0,
         'usual flag',
         lower_bound=-1,
         upper_bound=1,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
 
     self._check_error_message('positive', -4, 'a positive integer')
     self._check_error_message('non_negative', -4, 'a non-negative integer')
     self._check_error_message('negative', 0, 'a negative integer')
     self._check_error_message('non_positive', 4, 'a non-positive integer')
     self._check_error_message('usual', -4, 'an integer in the range [0, 10000]')
-    self._check_error_message('another_usual', 4,
-                              'an integer in the range [-1, 1]')
+    self._check_error_message(
+        'another_usual', 4, 'an integer in the range [-1, 1]'
+    )
     self._check_error_message('greater', -5, 'integer >= 4')
     self._check_error_message('smaller', 5, 'integer <= 4')
 
@@ -3114,74 +3450,84 @@ class FlagsErrorMessagesTest(absltest.TestCase):
         4,
         'non-negative flag',
         lower_bound=1,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_float(
         'non_negative',
         4,
         'positive flag',
         lower_bound=0,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_float(
         'negative',
         -4,
         'negative flag',
         upper_bound=-1,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_float(
         'non_positive',
         -4,
         'non-positive flag',
         upper_bound=0,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_float(
         'greater',
         19,
         'greater-than flag',
         lower_bound=4,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_float(
         'smaller',
         -19,
         'smaller-than flag',
         upper_bound=4,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_float(
         'usual',
         4,
         'usual flag',
         lower_bound=0,
         upper_bound=10000,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
     flags.DEFINE_float(
         'another_usual',
         0,
         'usual flag',
         lower_bound=-1,
         upper_bound=1,
-        flag_values=self.flag_values)
+        flag_values=self.flag_values,
+    )
 
     self._check_error_message('positive', 0.5, 'number >= 1')
     self._check_error_message('non_negative', -4.0, 'a non-negative number')
     self._check_error_message('negative', 0.5, 'number <= -1')
     self._check_error_message('non_positive', 4.0, 'a non-positive number')
     self._check_error_message('usual', -4.0, 'a number in the range [0, 10000]')
-    self._check_error_message('another_usual', 4.0,
-                              'a number in the range [-1, 1]')
+    self._check_error_message(
+        'another_usual', 4.0, 'a number in the range [-1, 1]'
+    )
     self._check_error_message('smaller', 5.0, 'number <= 4')
 
-  def _check_error_message(self, flag_name, flag_value,
-                           expected_message_suffix):
+  def _check_error_message(
+      self, flag_name, flag_value, expected_message_suffix
+  ):
     """Set a flag to a given value and make sure we get expected message."""
 
     try:
       self.flag_values.__setattr__(flag_name, flag_value)
       raise AssertionError('Bounds exception not raised!')
     except flags.IllegalFlagValueError as e:
-      expected = ('flag --%(name)s=%(value)s: %(value)s is not %(suffix)s' % {
+      expected = 'flag --%(name)s=%(value)s: %(value)s is not %(suffix)s' % {
           'name': flag_name,
           'value': flag_value,
-          'suffix': expected_message_suffix
-      })
+          'suffix': expected_message_suffix,
+      }
       self.assertEqual(str(e), expected)
 
 

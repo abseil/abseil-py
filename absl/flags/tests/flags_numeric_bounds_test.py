@@ -28,21 +28,31 @@ class NumericFlagBoundsTest(absltest.TestCase):
 
   def test_no_validator_if_no_bounds(self):
     """Validator is not registered if lower and upper bound are None."""
-    with mock.patch.object(_validators, 'register_validator'
-                          ) as register_validator:
-      flags.DEFINE_integer('positive_flag', None, 'positive int',
-                           lower_bound=0, flag_values=self.flag_values)
+    with mock.patch.object(
+        _validators, 'register_validator'
+    ) as register_validator:
+      flags.DEFINE_integer(
+          'positive_flag',
+          None,
+          'positive int',
+          lower_bound=0,
+          flag_values=self.flag_values,
+      )
       register_validator.assert_called_once_with(
-          'positive_flag', mock.ANY, flag_values=self.flag_values)
-    with mock.patch.object(_validators, 'register_validator'
-                          ) as register_validator:
-      flags.DEFINE_integer('int_flag', None, 'just int',
-                           flag_values=self.flag_values)
+          'positive_flag', mock.ANY, flag_values=self.flag_values
+      )
+    with mock.patch.object(
+        _validators, 'register_validator'
+    ) as register_validator:
+      flags.DEFINE_integer(
+          'int_flag', None, 'just int', flag_values=self.flag_values
+      )
       register_validator.assert_not_called()
 
   def test_success(self):
-    flags.DEFINE_integer('int_flag', 5, 'Just integer',
-                         flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'int_flag', 5, 'Just integer', flag_values=self.flag_values
+    )
     argv = ('./program', '--int_flag=13')
     self.flag_values(argv)
     self.assertEqual(13, self.flag_values.int_flag)
@@ -50,25 +60,40 @@ class NumericFlagBoundsTest(absltest.TestCase):
     self.assertEqual(25, self.flag_values.int_flag)
 
   def test_success_if_none(self):
-    flags.DEFINE_integer('int_flag', None, '',
-                         lower_bound=0, upper_bound=5,
-                         flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'int_flag',
+        None,
+        '',
+        lower_bound=0,
+        upper_bound=5,
+        flag_values=self.flag_values,
+    )
     argv = ('./program',)
     self.flag_values(argv)
     self.assertIsNone(self.flag_values.int_flag)
 
   def test_success_if_exactly_equals(self):
-    flags.DEFINE_float('float_flag', None, '',
-                       lower_bound=1, upper_bound=1,
-                       flag_values=self.flag_values)
+    flags.DEFINE_float(
+        'float_flag',
+        None,
+        '',
+        lower_bound=1,
+        upper_bound=1,
+        flag_values=self.flag_values,
+    )
     argv = ('./program', '--float_flag=1')
     self.flag_values(argv)
     self.assertEqual(1, self.flag_values.float_flag)
 
   def test_exception_if_smaller(self):
-    flags.DEFINE_integer('int_flag', None, '',
-                         lower_bound=0, upper_bound=5,
-                         flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'int_flag',
+        None,
+        '',
+        lower_bound=0,
+        upper_bound=5,
+        flag_values=self.flag_values,
+    )
     argv = ('./program', '--int_flag=-1')
     try:
       self.flag_values(argv)
@@ -83,8 +108,9 @@ class SettingFlagAfterStartTest(absltest.TestCase):
     self.flag_values = flags.FlagValues()
 
   def test_success(self):
-    flags.DEFINE_integer('int_flag', None, 'Just integer',
-                         flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'int_flag', None, 'Just integer', flag_values=self.flag_values
+    )
     argv = ('./program', '--int_flag=13')
     self.flag_values(argv)
     self.assertEqual(13, self.flag_values.int_flag)
@@ -92,8 +118,13 @@ class SettingFlagAfterStartTest(absltest.TestCase):
     self.assertEqual(25, self.flag_values.int_flag)
 
   def test_exception_if_setting_integer_flag_outside_bounds(self):
-    flags.DEFINE_integer('int_flag', None, 'Just integer', lower_bound=0,
-                         flag_values=self.flag_values)
+    flags.DEFINE_integer(
+        'int_flag',
+        None,
+        'Just integer',
+        lower_bound=0,
+        flag_values=self.flag_values,
+    )
     argv = ('./program', '--int_flag=13')
     self.flag_values(argv)
     self.assertEqual(13, self.flag_values.int_flag)

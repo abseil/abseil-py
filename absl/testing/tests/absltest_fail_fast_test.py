@@ -43,11 +43,12 @@ class TestFailFastTest(parameterized.TestCase):
     Args:
       fail_fast: string, the fail fast value.
       use_app_run: bool, whether the test helper should call
-          `absltest.main(argv=)` inside `app.run`.
+        `absltest.main(argv=)` inside `app.run`.
 
     Returns:
       (stdout, exit_code) tuple of (string, int).
     """
+
     env = absltest_env.inherited_env()
     if fail_fast is not None:
       env['TESTBRIDGE_TEST_RUNNER_FAIL_FAST'] = fail_fast

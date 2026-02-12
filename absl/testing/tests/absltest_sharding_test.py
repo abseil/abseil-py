@@ -69,7 +69,7 @@ class TestShardingTest(parameterized.TestCase):
       env.update(additional_env)
     env.update({
         'TEST_TOTAL_SHARDS': str(total_shards),
-        'TEST_SHARD_INDEX': str(shard_index)
+        'TEST_SHARD_INDEX': str(shard_index),
     })
     if shard_file:
       self._shard_file = shard_file
@@ -108,37 +108,49 @@ class TestShardingTest(parameterized.TestCase):
     exit_code_by_shard = []  # A list of ints
 
     for i in range(total_shards):
-      (out, exit_code) = self._run_sharded(total_shards, i)
+      out, exit_code = self._run_sharded(total_shards, i)
       method_list = [x for x in out.split('\n') if x.startswith('class')]
       outerr_by_shard.append(method_list)
       combined_outerr.extend(method_list)
       exit_code_by_shard.append(exit_code)
 
-    self.assertLen([x for x in exit_code_by_shard if x != 0], 1,
-                   'Expected exactly one failure')
+    self.assertLen(
+        [x for x in exit_code_by_shard if x != 0],
+        1,
+        'Expected exactly one failure',
+    )
 
     # Test completeness and partition properties.
-    self.assertLen(combined_outerr, NUM_TEST_METHODS,
-                   'Partition requirement not met')
-    self.assertLen(set(combined_outerr), NUM_TEST_METHODS,
-                   'Completeness requirement not met')
+    self.assertLen(
+        combined_outerr, NUM_TEST_METHODS, 'Partition requirement not met'
+    )
+    self.assertLen(
+        set(combined_outerr),
+        NUM_TEST_METHODS,
+        'Completeness requirement not met',
+    )
 
     # Test balance:
     for i in range(len(outerr_by_shard)):
-      self.assertGreaterEqual(len(outerr_by_shard[i]),
-                              (NUM_TEST_METHODS / total_shards) - 1,
-                              'Shard %d of %d out of balance' %
-                              (i, len(outerr_by_shard)))
+      self.assertGreaterEqual(
+          len(outerr_by_shard[i]),
+          (NUM_TEST_METHODS / total_shards) - 1,
+          'Shard %d of %d out of balance' % (i, len(outerr_by_shard)),
+      )
 
   def test_shard_file(self):
-    self._run_sharded(3, 1, os.path.join(
-        absltest.TEST_TMPDIR.value, 'shard_file'))
+    self._run_sharded(
+        3, 1, os.path.join(absltest.TEST_TMPDIR.value, 'shard_file')
+    )
 
   def test_zero_shards(self):
     out, exit_code = self._run_sharded(0, 0)
     self.assertEqual(1, exit_code)
-    self.assertGreaterEqual(out.find('Bad sharding values. index=0, total=0'),
-                            0, 'Bad output: %s' % (out))
+    self.assertGreaterEqual(
+        out.find('Bad sharding values. index=0, total=0'),
+        0,
+        'Bad output: %s' % (out),
+    )
 
   def test_with_four_shards(self):
     self._assert_sharding_correctness(4)
@@ -161,7 +173,8 @@ class TestShardingTest(parameterized.TestCase):
     tests_seen = []
     for seed in ('7', '17'):
       out, exit_code = self._run_sharded(
-          2, 0, additional_env={'TEST_RANDOMIZE_ORDERING_SEED': seed})
+          2, 0, additional_env={'TEST_RANDOMIZE_ORDERING_SEED': seed}
+      )
       self.assertEqual(0, exit_code)
       tests_seen.append([x for x in out.splitlines() if x.startswith('class')])
     first_tests, second_tests = tests_seen  # pylint: disable=unbalanced-tuple-unpacking

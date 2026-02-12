@@ -28,24 +28,32 @@ def define_flags(flag_values=FLAGS):
   """Defines some flags.
 
   Args:
-    flag_values: The FlagValues object we want to register the flags
-      with.
+    flag_values: The FlagValues object we want to register the flags with.
   """
+
   # The 'tmod_bar_' prefix (short for 'test_module_bar') ensures there
   # is no name clash with the existing flags.
-  flags.DEFINE_boolean('tmod_bar_x', True, 'Boolean flag.',
-                       flag_values=flag_values)
-  flags.DEFINE_string('tmod_bar_y', 'default', 'String flag.',
-                      flag_values=flag_values)
-  flags.DEFINE_boolean('tmod_bar_z', False,
-                       'Another boolean flag from module bar.',
-                       flag_values=flag_values)
-  flags.DEFINE_integer('tmod_bar_t', 4, 'Sample int flag.',
-                       flag_values=flag_values)
-  flags.DEFINE_integer('tmod_bar_u', 5, 'Sample int flag.',
-                       flag_values=flag_values)
-  flags.DEFINE_integer('tmod_bar_v', 6, 'Sample int flag.',
-                       flag_values=flag_values)
+  flags.DEFINE_boolean(
+      'tmod_bar_x', True, 'Boolean flag.', flag_values=flag_values
+  )
+  flags.DEFINE_string(
+      'tmod_bar_y', 'default', 'String flag.', flag_values=flag_values
+  )
+  flags.DEFINE_boolean(
+      'tmod_bar_z',
+      False,
+      'Another boolean flag from module bar.',
+      flag_values=flag_values,
+  )
+  flags.DEFINE_integer(
+      'tmod_bar_t', 4, 'Sample int flag.', flag_values=flag_values
+  )
+  flags.DEFINE_integer(
+      'tmod_bar_u', 5, 'Sample int flag.', flag_values=flag_values
+  )
+  flags.DEFINE_integer(
+      'tmod_bar_v', 6, 'Sample int flag.', flag_values=flag_values
+  )
 
 
 def remove_one_flag(flag_name, flag_values=FLAGS):
@@ -68,12 +76,14 @@ def remove_one_flag(flag_name, flag_values=FLAGS):
 
 def names_of_defined_flags():
   """Returns: List of names of the flags declared in this module."""
-  return ['tmod_bar_x',
-          'tmod_bar_y',
-          'tmod_bar_z',
-          'tmod_bar_t',
-          'tmod_bar_u',
-          'tmod_bar_v']
+  return [
+      'tmod_bar_x',
+      'tmod_bar_y',
+      'tmod_bar_z',
+      'tmod_bar_t',
+      'tmod_bar_u',
+      'tmod_bar_v',
+  ]
 
 
 def remove_flags(flag_values=FLAGS):
@@ -104,8 +114,8 @@ def execute_code(code, global_dict):
 
   Args:
     code: A string, the code to be executed.
-    global_dict: A dictionary, the global environment that code should
-      be executed in.
+    global_dict: A dictionary, the global environment that code should be
+      executed in.
   """
   # Indeed, using exec generates a lint warning.  But some user code
   # actually uses exec, and we have to test for it ...

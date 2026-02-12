@@ -74,6 +74,7 @@ class _ModuleObjectAndName(NamedTuple):
   - module: object, module object.
   - module_name: str, module name.
   """
+
   module: types.ModuleType
   module_name: str
 
@@ -137,13 +138,14 @@ def create_xml_dom_element(
   Args:
     doc: minidom.Document, the DOM document it should create nodes from.
     name: str, the tag of XML element.
-    value: object, whose string representation will be used
-        as the value of the XML element. Illegal or highly discouraged xml 1.0
-        characters are stripped.
+    value: object, whose string representation will be used as the value of the
+      XML element. Illegal or highly discouraged xml 1.0 characters are
+      stripped.
 
   Returns:
     An instance of minidom.Element.
   """
+
   s = str(value)
   if isinstance(value, bool):
     # Display boolean values as the C++ flag library does: no caps.
@@ -174,8 +176,10 @@ def get_flag_suggestions(
 
   # Find close approximations in flag prefixes.
   # This also handles the case where the flag is spelled right but ambiguous.
-  distances = [(_damerau_levenshtein(attempt, option[0:len(attempt)]), option)
-               for option in option_names]
+  distances = [
+      (_damerau_levenshtein(attempt, option[0 : len(attempt)]), option)
+      for option in option_names
+  ]
   # t[0] is distance, and sorting by t[1] allows us to have stable output.
   distances.sort()
 
@@ -209,7 +213,8 @@ def _damerau_levenshtein(a, b):
       d = min(
           distance(x[1:], y) + 1,  # correct an insertion error
           distance(x, y[1:]) + 1,  # correct a deletion error
-          distance(x[1:], y[1:]) + (x[0] != y[0]))  # correct a wrong character
+          distance(x[1:], y[1:]) + (x[0] != y[0]),
+      )  # correct a wrong character
       if len(x) >= 2 and len(y) >= 2 and x[0] == y[1] and x[1] == y[0]:
         # Correct a transposition.
         t = distance(x[2:], y[2:]) + 1
@@ -218,6 +223,7 @@ def _damerau_levenshtein(a, b):
 
     memo[x, y] = d
     return d
+
   return distance(a, b)
 
 
@@ -264,9 +270,11 @@ def text_wrap(
   # Create one wrapper for the first paragraph and one for subsequent
   # paragraphs that does not have the initial wrapping.
   wrapper = textwrap.TextWrapper(
-      width=length, initial_indent=firstline_indent, subsequent_indent=indent)
+      width=length, initial_indent=firstline_indent, subsequent_indent=indent
+  )
   subsequent_wrapper = textwrap.TextWrapper(
-      width=length, initial_indent=indent, subsequent_indent=indent)
+      width=length, initial_indent=indent, subsequent_indent=indent
+  )
 
   # textwrap does not have any special treatment for newlines. From the docs:
   # "...newlines may appear in the middle of a line and cause strange output.
@@ -286,6 +294,7 @@ def text_wrap(
 def flag_dict_to_args(
     flag_map: dict[str, Any], multi_flags: set[str] | None = None
 ) -> Iterable[str]:
+  # fmt: off
   """Convert a dict of values into process call parameters.
 
   This method is used to convert a dictionary into a sequence of parameters
@@ -307,10 +316,12 @@ def flag_dict_to_args(
         * Everything else is converted to string an passed as such.
 
     multi_flags: set, names (strings) of flags that should be treated as
-        multi-flags.
+      multi-flags.
+
   Yields:
     sequence of string suitable for a subprocess execution.
   """
+  # fmt: on
   for key, value in flag_map.items():
     if value is None:
       yield '--%s' % key

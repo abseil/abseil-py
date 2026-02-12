@@ -119,9 +119,11 @@ AssertionError: {}
 
 UNEXPECTED_SUCCESS_MESSAGE = '\n'.join([
     '',
-    (r'  <error message="" type=""><!\[CDATA\[Test case '
-     r'__main__.MockTest.unexpectedly_passing_test should have failed, '
-     r'but passed.\]\]></error>'),
+    (
+        r'  <error message="" type=""><!\[CDATA\[Test case '
+        r'__main__.MockTest.unexpectedly_passing_test should have failed, '
+        r'but passed.\]\]></error>'
+    ),
 ])
 
 UNICODE_ERROR_MESSAGE = UNICODE_MESSAGE % ('error', 'error')
@@ -138,8 +140,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
   def _make_result(self, times):
     timer = mock.Mock()
     timer.side_effect = times
-    return xml_reporter._TextAndXMLTestResult(self.xml_stream, self.stream,
-                                              'foo', 0, timer)
+    return xml_reporter._TextAndXMLTestResult(
+        self.xml_stream, self.stream, 'foo', 0, timer
+    )
 
   def _assert_match(self, regex, output, flags=0):
     fail_msg = f'Expected regex:\n{regex}\nTo match:\n{output}'
@@ -203,10 +206,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': ''
+        'message': '',
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def test_with_passing_subtest(self):
@@ -240,10 +244,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': ''
+        'message': '',
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def test_with_passing_subtest_with_dots_in_parameter_name(self):
@@ -272,21 +277,18 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     expected_testcase_re = TESTCASE_STRING % {
         'run_time': run_time,
         'start_time': start_time_str,
-        'test_name':
-            r'passing_test&#x20;\[msg\]&#x20;\(case=&apos;a.b.c&apos;\)',
-        'classname':
-            '__main__.MockTest',
-        'status':
-            'run',
-        'result':
-            'completed',
-        'attributes':
-            '',
-        'message':
-            ''
+        'test_name': (
+            r'passing_test&#x20;\[msg\]&#x20;\(case=&apos;a.b.c&apos;\)'
+        ),
+        'classname': '__main__.MockTest',
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': '',
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def get_sample_error(self):
@@ -355,10 +357,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': FAILURE_MESSAGE
+        'message': FAILURE_MESSAGE,
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def test_with_failing_subtest(self):
@@ -392,10 +395,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': FAILURE_MESSAGE
+        'message': FAILURE_MESSAGE,
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def test_with_error_test(self):
@@ -432,7 +436,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': ERROR_MESSAGE
+        'message': ERROR_MESSAGE,
     }
     (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
     self._assert_match(expected_testcase_re, testcase)
@@ -468,10 +472,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': ERROR_MESSAGE
+        'message': ERROR_MESSAGE,
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def test_with_fail_and_error_test(self):
@@ -512,7 +517,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'result': 'completed',
         'attributes': '',
         # Messages from failure and error should be concatenated in order.
-        'message': FAILURE_MESSAGE + ERROR_MESSAGE
+        'message': FAILURE_MESSAGE + ERROR_MESSAGE,
     }
     (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
     self._assert_match(expected_testcase_re, testcase)
@@ -554,7 +559,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'result': 'completed',
         'attributes': '',
         # Messages from error and failure should be concatenated in order.
-        'message': ERROR_MESSAGE + FAILURE_MESSAGE
+        'message': ERROR_MESSAGE + FAILURE_MESSAGE,
     }
     (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
     self._assert_match(expected_testcase_re, testcase)
@@ -577,14 +582,18 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
-    expected_re = OUTPUT_STRING % {
-        'suite_name': 'MockTest',
-        'tests': 1,
-        'failures': 0,
-        'errors': 1,
-        'run_time': run_time,
-        'start_time': start_time_str,
-    } + '\n'
+    expected_re = (
+        OUTPUT_STRING
+        % {
+            'suite_name': 'MockTest',
+            'tests': 1,
+            'failures': 0,
+            'errors': 1,
+            'run_time': run_time,
+            'start_time': start_time_str,
+        }
+        + '\n'
+    )
     expected_testcase_re = TESTCASE_STRING % {
         'run_time': run_time,
         'start_time': start_time_str,
@@ -593,7 +602,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': NEWLINE_ERROR_MESSAGE
+        'message': NEWLINE_ERROR_MESSAGE,
     }
     (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
     self._assert_match(expected_testcase_re, testcase)
@@ -632,7 +641,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': UNICODE_ERROR_MESSAGE
+        'message': UNICODE_ERROR_MESSAGE,
     }
     (testcase,) = self._assert_match(expected_re, xml, re.DOTALL)
     self._assert_match(expected_testcase_re, testcase)
@@ -689,10 +698,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': ''
+        'message': '',
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase, re.DOTALL)
 
   def test_with_unexpected_success_error_test(self):
@@ -726,10 +736,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': UNEXPECTED_SUCCESS_MESSAGE
+        'message': UNEXPECTED_SUCCESS_MESSAGE,
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def test_with_skipped_test(self):
@@ -762,10 +773,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'classname': '__main__.MockTest',
         'status': 'notrun',
         'result': 'suppressed',
-        'message': ''
+        'message': '',
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def test_two_tests_with_time(self):
@@ -774,8 +786,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     start_time2 = 400
     end_time2 = 700
     name = '__main__.MockTest.'
-    result = self._make_result((start_time1, start_time1, end_time1,
-                                start_time2, end_time2, end_time2))
+    result = self._make_result(
+        (start_time1, start_time1, end_time1, start_time2, end_time2, end_time2)
+    )
 
     test = MockTest(f'{name}one_test')
     result.startTestRun()
@@ -810,7 +823,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'classname': '__main__.MockTest',
         'status': 'run',
         'result': 'completed',
-        'message': ''
+        'message': '',
     }
     expected_testcase2_re = TESTCASE_STRING % {
         'run_time': end_time2 - start_time2,
@@ -819,11 +832,12 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'classname': '__main__.MockTest',
         'status': 'run',
         'result': 'completed',
-        'message': ''
+        'message': '',
     }
 
-    (testcases,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                      re.DOTALL)
+    (testcases,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     [testcase1, testcase2] = testcases.split('\n  </testcase>\n')
     # Sorting by test name flips the order of the two tests.
     self._assert_match(expected_testcase2_re, testcase1)
@@ -860,10 +874,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': ''
+        'message': '',
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def test_unnamed_parameterized_testcase(self):
@@ -894,7 +909,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     start_time_str = re.escape(self._iso_timestamp(start_time))
     run_time = end_time - start_time
     classname = xml_reporter._escape_xml_attr(
-        unittest.util.strclass(test.__class__))
+        unittest.util.strclass(test.__class__)
+    )
     expected_re = OUTPUT_STRING % {
         'suite_name': 'ParameterizedTest',
         'tests': 1,
@@ -911,10 +927,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': ''
+        'message': '',
     }
-    (testcase,) = self._assert_match(expected_re, self.xml_stream.getvalue(),
-                                     re.DOTALL)
+    (testcase,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
     self._assert_match(expected_testcase_re, testcase)
 
   def teststop_test_without_pending_test(self):
@@ -927,8 +944,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     # Just verify that this doesn't crash
 
   def test_text_and_xmltest_runner(self):
-    runner = xml_reporter.TextAndXMLTestRunner(self.xml_stream, self.stream,
-                                               'foo', 1)
+    runner = xml_reporter.TextAndXMLTestRunner(
+        self.xml_stream, self.stream, 'foo', 1
+    )
     result1 = runner._makeResult()
     result2 = xml_reporter._TextAndXMLTestResult(None, None, None, 0, None)
     self.assertIs(type(result1), type(result2))
@@ -938,9 +956,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     saved_time = time.time
     try:
       time.time = lambda: -1
-      reporter = xml_reporter._TextAndXMLTestResult(self.xml_stream,
-                                                    self.stream,
-                                                    'foo', 0)
+      reporter = xml_reporter._TextAndXMLTestResult(
+          self.xml_stream, self.stream, 'foo', 0
+      )
       test = MockTest('bar')
       reporter.startTest(test)
       self.assertNotEqual(reporter.start_time, -1)
@@ -949,8 +967,10 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
   def test_concurrent_add_and_delete_pending_test_case_result(self):
     """Make sure adding/deleting pending test case results are thread safe."""
-    result = xml_reporter._TextAndXMLTestResult(None, self.stream, None, 0,
-                                                None)
+    result = xml_reporter._TextAndXMLTestResult(
+        None, self.stream, None, 0, None
+    )
+
     def add_and_delete_pending_test_case_result(test_name):
       test = MockTest(test_name)
       result.addSuccess(test)
@@ -967,8 +987,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     num_error_tests = 20
     total_num_tests = num_passing_tests + num_failing_tests + num_error_tests
 
-    times = [0] + [i for i in range(2 * total_num_tests)
-                  ] + [2 * total_num_tests - 1]
+    times = (
+        [0]
+        + [i for i in range(2 * total_num_tests)]
+        + [2 * total_num_tests - 1]
+    )
     result = self._make_result(times)
     threads = []
     names = []
@@ -982,22 +1005,31 @@ class TextAndXMLTestResultTest(absltest.TestCase):
       # running them. So all ids will be unique.
       # We must do the same here: create test instance beforehand.
       test = MockTest(test_name)
-      threads.append(threading.Thread(
-          target=self._simulate_passing_test, args=(test, result)))
+      threads.append(
+          threading.Thread(
+              target=self._simulate_passing_test, args=(test, result)
+          )
+      )
     for i in range(num_failing_tests):
       name = 'failing_concurrent_test_%s' % i
       names.append(name)
       test_name = '__main__.MockTest.%s' % name
       test = MockTest(test_name)
-      threads.append(threading.Thread(
-          target=self._simulate_failing_test, args=(test, result)))
+      threads.append(
+          threading.Thread(
+              target=self._simulate_failing_test, args=(test, result)
+          )
+      )
     for i in range(num_error_tests):
       name = 'error_concurrent_test_%s' % i
       names.append(name)
       test_name = '__main__.MockTest.%s' % name
       test = MockTest(test_name)
-      threads.append(threading.Thread(
-          target=self._simulate_error_test, args=(test, result)))
+      threads.append(
+          threading.Thread(
+              target=self._simulate_error_test, args=(test, result)
+          )
+      )
     for t in threads:
       t.start()
     for t in threads:
@@ -1009,9 +1041,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     for tn in names:
       if tn not in self.xml_stream.getvalue():
         tests_not_in_xml.append(tn)
-    msg = ('Expected xml_stream to contain all test %s results, but %s tests '
-           'are missing. List of missing tests: %s' % (
-               total_num_tests, len(tests_not_in_xml), tests_not_in_xml))
+    msg = (
+        'Expected xml_stream to contain all test %s results, but %s tests '
+        'are missing. List of missing tests: %s'
+        % (total_num_tests, len(tests_not_in_xml), tests_not_in_xml)
+    )
     self.assertEqual([], tests_not_in_xml, msg)
 
   def test_add_failure_during_stop_test(self):
@@ -1026,7 +1060,8 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     with mock.patch.object(
         unittest.TextTestResult,
         'stopTest',
-        side_effect=lambda t: result.addFailure(t, self.get_sample_failure())):
+        side_effect=lambda t: result.addFailure(t, self.get_sample_failure()),
+    ):
       # Run stopTest in a separate thread since we are looking to verify that
       # it does not deadlock, and would otherwise prevent the test from
       # completing.
@@ -1035,15 +1070,19 @@ class TextAndXMLTestResultTest(absltest.TestCase):
       stop_test_thread.start()
 
     stop_test_thread.join(10.0)
-    self.assertFalse(stop_test_thread.is_alive(),
-                     'result.stopTest(test) call failed to complete')
+    self.assertFalse(
+        stop_test_thread.is_alive(),
+        'result.stopTest(test) call failed to complete',
+    )
 
 
 class XMLTest(absltest.TestCase):
 
   def test_escape_xml(self):
-    self.assertEqual(xml_reporter._escape_xml_attr('"Hi" <\'>\t\r\n'),
-                     '&quot;Hi&quot;&#x20;&lt;&apos;&gt;&#x9;&#xD;&#xA;')
+    self.assertEqual(
+        xml_reporter._escape_xml_attr('"Hi" <\'>\t\r\n'),
+        '&quot;Hi&quot;&#x20;&lt;&apos;&gt;&#x9;&#xD;&#xA;',
+    )
 
 
 class XmlReporterFixtureTest(absltest.TestCase):
@@ -1100,26 +1139,31 @@ class XmlReporterFixtureTest(absltest.TestCase):
     self.assertEqual(int(xml.attrib['failures']), num_failures)
     self.assertLen(xml, len(suites))
     actual_suites = sorted(
-        xml.findall('testsuite'), key=lambda x: x.attrib['name'])
+        xml.findall('testsuite'), key=lambda x: x.attrib['name']
+    )
     suites = sorted(suites, key=lambda x: x['name'])
     for actual_suite, expected_suite in zip(actual_suites, suites):
       self.assertEqual(actual_suite.attrib['name'], expected_suite['name'])
       self.assertLen(actual_suite, len(expected_suite['cases']))
-      actual_cases = sorted(actual_suite.findall('testcase'),
-                            key=lambda x: x.attrib['name'])
+      actual_cases = sorted(
+          actual_suite.findall('testcase'), key=lambda x: x.attrib['name']
+      )
       expected_cases = sorted(expected_suite['cases'], key=lambda x: x['name'])
       for actual_case, expected_case in zip(actual_cases, expected_cases):
         self.assertEqual(actual_case.attrib['name'], expected_case['name'])
-        self.assertEqual(actual_case.attrib['classname'],
-                         expected_case['classname'])
+        self.assertEqual(
+            actual_case.attrib['classname'], expected_case['classname']
+        )
         if 'error' in expected_case:
           actual_error = actual_case.find('error')
-          self.assertEqual(actual_error.attrib['message'],
-                           expected_case['error'])
+          self.assertEqual(
+              actual_error.attrib['message'], expected_case['error']
+          )
         if 'failure' in expected_case:
           actual_failure = actual_case.find('failure')
-          self.assertEqual(actual_failure.attrib['message'],
-                           expected_case['failure'])
+          self.assertEqual(
+              actual_failure.attrib['message'], expected_case['failure']
+          )
 
     return xml
 
@@ -1128,105 +1172,161 @@ class XmlReporterFixtureTest(absltest.TestCase):
         flag='--set_up_module_error',
         num_errors=1,
         num_failures=0,
-        suites=[{'name': '__main__',
-                 'cases': [{'name': 'setUpModule',
-                            'classname': '__main__',
-                            'error': 'setUpModule Errored!'}]}])
+        suites=[{
+            'name': '__main__',
+            'cases': [{
+                'name': 'setUpModule',
+                'classname': '__main__',
+                'error': 'setUpModule Errored!',
+            }],
+        }],
+    )
 
   def test_tear_down_module_error(self):
     self._run_test(
         flag='--tear_down_module_error',
         num_errors=1,
         num_failures=0,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'test',
-                            'classname': '__main__.FailableTest'}]},
-                {'name': '__main__',
-                 'cases': [{'name': 'tearDownModule',
-                            'classname': '__main__',
-                            'error': 'tearDownModule Errored!'}]}])
+        suites=[
+            {
+                'name': 'FailableTest',
+                'cases': [
+                    {'name': 'test', 'classname': '__main__.FailableTest'}
+                ],
+            },
+            {
+                'name': '__main__',
+                'cases': [{
+                    'name': 'tearDownModule',
+                    'classname': '__main__',
+                    'error': 'tearDownModule Errored!',
+                }],
+            },
+        ],
+    )
 
   def test_set_up_class_error(self):
     self._run_test(
         flag='--set_up_class_error',
         num_errors=1,
         num_failures=0,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'setUpClass',
-                            'classname': '__main__.FailableTest',
-                            'error': 'setUpClass Errored!'}]}])
+        suites=[{
+            'name': 'FailableTest',
+            'cases': [{
+                'name': 'setUpClass',
+                'classname': '__main__.FailableTest',
+                'error': 'setUpClass Errored!',
+            }],
+        }],
+    )
 
   def test_tear_down_class_error(self):
     self._run_test(
         flag='--tear_down_class_error',
         num_errors=1,
         num_failures=0,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'test',
-                            'classname': '__main__.FailableTest'},
-                           {'name': 'tearDownClass',
-                            'classname': '__main__.FailableTest',
-                            'error': 'tearDownClass Errored!'}]}])
+        suites=[{
+            'name': 'FailableTest',
+            'cases': [
+                {'name': 'test', 'classname': '__main__.FailableTest'},
+                {
+                    'name': 'tearDownClass',
+                    'classname': '__main__.FailableTest',
+                    'error': 'tearDownClass Errored!',
+                },
+            ],
+        }],
+    )
 
   def test_set_up_error(self):
     self._run_test(
         flag='--set_up_error',
         num_errors=1,
         num_failures=0,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'test',
-                            'classname': '__main__.FailableTest',
-                            'error': 'setUp Errored!'}]}])
+        suites=[{
+            'name': 'FailableTest',
+            'cases': [{
+                'name': 'test',
+                'classname': '__main__.FailableTest',
+                'error': 'setUp Errored!',
+            }],
+        }],
+    )
 
   def test_tear_down_error(self):
     self._run_test(
         flag='--tear_down_error',
         num_errors=1,
         num_failures=0,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'test',
-                            'classname': '__main__.FailableTest',
-                            'error': 'tearDown Errored!'}]}])
+        suites=[{
+            'name': 'FailableTest',
+            'cases': [{
+                'name': 'test',
+                'classname': '__main__.FailableTest',
+                'error': 'tearDown Errored!',
+            }],
+        }],
+    )
 
   def test_test_error(self):
     self._run_test(
         flag='--test_error',
         num_errors=1,
         num_failures=0,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'test',
-                            'classname': '__main__.FailableTest',
-                            'error': 'test Errored!'}]}])
+        suites=[{
+            'name': 'FailableTest',
+            'cases': [{
+                'name': 'test',
+                'classname': '__main__.FailableTest',
+                'error': 'test Errored!',
+            }],
+        }],
+    )
 
   def test_set_up_failure(self):
     self._run_test(
         flag='--set_up_fail',
         num_errors=0,
         num_failures=1,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'test',
-                            'classname': '__main__.FailableTest',
-                            'failure': 'setUp Failed!'}]}])
+        suites=[{
+            'name': 'FailableTest',
+            'cases': [{
+                'name': 'test',
+                'classname': '__main__.FailableTest',
+                'failure': 'setUp Failed!',
+            }],
+        }],
+    )
 
   def test_tear_down_failure(self):
     self._run_test(
         flag='--tear_down_fail',
         num_errors=0,
         num_failures=1,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'test',
-                            'classname': '__main__.FailableTest',
-                            'failure': 'tearDown Failed!'}]}])
+        suites=[{
+            'name': 'FailableTest',
+            'cases': [{
+                'name': 'test',
+                'classname': '__main__.FailableTest',
+                'failure': 'tearDown Failed!',
+            }],
+        }],
+    )
 
   def test_test_fail(self):
     self._run_test(
         flag='--test_fail',
         num_errors=0,
         num_failures=1,
-        suites=[{'name': 'FailableTest',
-                 'cases': [{'name': 'test',
-                            'classname': '__main__.FailableTest',
-                            'failure': 'test Failed!'}]}])
+        suites=[{
+            'name': 'FailableTest',
+            'cases': [{
+                'name': 'test',
+                'classname': '__main__.FailableTest',
+                'failure': 'test Failed!',
+            }],
+        }],
+    )
 
   def test_test_randomization_seed_logging(self):
     # We expect the resulting XML to start as follows:
@@ -1239,7 +1339,8 @@ class XmlReporterFixtureTest(absltest.TestCase):
     out = self._run_test_and_get_xml('--test_randomize_ordering_seed=17')
     expected_attrib = {'name': 'test_randomize_ordering_seed', 'value': '17'}
     property_attributes = [
-        prop.attrib for prop in out.findall('./properties/property')]
+        prop.attrib for prop in out.findall('./properties/property')
+    ]
     self.assertIn(expected_attrib, property_attributes)
 
 

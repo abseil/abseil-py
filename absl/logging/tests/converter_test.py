@@ -36,19 +36,26 @@ class ConverterTest(absltest.TestCase):
 
   def test_absl_to_standard(self):
     self.assertEqual(
-        logging.DEBUG, converter.absl_to_standard(absl_logging.DEBUG))
+        logging.DEBUG, converter.absl_to_standard(absl_logging.DEBUG)
+    )
     self.assertEqual(
-        logging.INFO, converter.absl_to_standard(absl_logging.INFO))
+        logging.INFO, converter.absl_to_standard(absl_logging.INFO)
+    )
     self.assertEqual(
-        logging.WARNING, converter.absl_to_standard(absl_logging.WARN))
+        logging.WARNING, converter.absl_to_standard(absl_logging.WARN)
+    )
     self.assertEqual(
-        logging.WARN, converter.absl_to_standard(absl_logging.WARN))
+        logging.WARN, converter.absl_to_standard(absl_logging.WARN)
+    )
     self.assertEqual(
-        logging.ERROR, converter.absl_to_standard(absl_logging.ERROR))
+        logging.ERROR, converter.absl_to_standard(absl_logging.ERROR)
+    )
     self.assertEqual(
-        logging.FATAL, converter.absl_to_standard(absl_logging.FATAL))
+        logging.FATAL, converter.absl_to_standard(absl_logging.FATAL)
+    )
     self.assertEqual(
-        logging.CRITICAL, converter.absl_to_standard(absl_logging.FATAL))
+        logging.CRITICAL, converter.absl_to_standard(absl_logging.FATAL)
+    )
     # vlog levels.
     self.assertEqual(9, converter.absl_to_standard(2))
     self.assertEqual(8, converter.absl_to_standard(3))
@@ -58,19 +65,26 @@ class ConverterTest(absltest.TestCase):
 
   def test_standard_to_absl(self):
     self.assertEqual(
-        absl_logging.DEBUG, converter.standard_to_absl(logging.DEBUG))
+        absl_logging.DEBUG, converter.standard_to_absl(logging.DEBUG)
+    )
     self.assertEqual(
-        absl_logging.INFO, converter.standard_to_absl(logging.INFO))
+        absl_logging.INFO, converter.standard_to_absl(logging.INFO)
+    )
     self.assertEqual(
-        absl_logging.WARN, converter.standard_to_absl(logging.WARN))
+        absl_logging.WARN, converter.standard_to_absl(logging.WARN)
+    )
     self.assertEqual(
-        absl_logging.WARN, converter.standard_to_absl(logging.WARNING))
+        absl_logging.WARN, converter.standard_to_absl(logging.WARNING)
+    )
     self.assertEqual(
-        absl_logging.ERROR, converter.standard_to_absl(logging.ERROR))
+        absl_logging.ERROR, converter.standard_to_absl(logging.ERROR)
+    )
     self.assertEqual(
-        absl_logging.FATAL, converter.standard_to_absl(logging.FATAL))
+        absl_logging.FATAL, converter.standard_to_absl(logging.FATAL)
+    )
     self.assertEqual(
-        absl_logging.FATAL, converter.standard_to_absl(logging.CRITICAL))
+        absl_logging.FATAL, converter.standard_to_absl(logging.CRITICAL)
+    )
     # vlog levels.
     self.assertEqual(2, converter.standard_to_absl(logging.DEBUG - 1))
     self.assertEqual(3, converter.standard_to_absl(logging.DEBUG - 2))

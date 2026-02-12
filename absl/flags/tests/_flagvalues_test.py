@@ -34,10 +34,12 @@ from absl.testing import parameterized
 class FlagValuesTest(absltest.TestCase):
 
   def test_bool_flags(self):
-    for arg, expected in (('--nothing', True),
-                          ('--nothing=true', True),
-                          ('--nothing=false', False),
-                          ('--nonothing', False)):
+    for arg, expected in (
+        ('--nothing', True),
+        ('--nothing=true', True),
+        ('--nothing=false', False),
+        ('--nonothing', False),
+    ):
       fv = _flagvalues.FlagValues()
       _defines.DEFINE_boolean('nothing', None, '', flag_values=fv)
       fv(('./program', arg))
@@ -50,10 +52,12 @@ class FlagValuesTest(absltest.TestCase):
         fv(('./program', arg))
 
   def test_boolean_flag_parser_gets_string_argument(self):
-    for arg, expected in (('--nothing', 'true'),
-                          ('--nothing=true', 'true'),
-                          ('--nothing=false', 'false'),
-                          ('--nonothing', 'false')):
+    for arg, expected in (
+        ('--nothing', 'true'),
+        ('--nothing=true', 'true'),
+        ('--nothing=false', 'false'),
+        ('--nonothing', 'false'),
+    ):
       fv = _flagvalues.FlagValues()
       _defines.DEFINE_boolean('nothing', None, '', flag_values=fv)
       with mock.patch.object(fv['nothing'].parser, 'parse') as mock_parse:
@@ -68,104 +72,133 @@ class FlagValuesTest(absltest.TestCase):
     _defines.DEFINE_integer('cores', 4, '', flag_values=fv, short_name='c')
     old_cores_flag = fv['cores']
     fv.register_key_flag_for_module(module_name, old_cores_flag)
-    self.assertEqual(fv.flags_by_module_dict(),
-                     {module_name: [old_cores_flag]})
-    self.assertEqual(fv.flags_by_module_id_dict(),
-                     {id(module): [old_cores_flag]})
-    self.assertEqual(fv.key_flags_by_module_dict(),
-                     {module_name: [old_cores_flag]})
+    self.assertEqual(fv.flags_by_module_dict(), {module_name: [old_cores_flag]})
+    self.assertEqual(
+        fv.flags_by_module_id_dict(), {id(module): [old_cores_flag]}
+    )
+    self.assertEqual(
+        fv.key_flags_by_module_dict(), {module_name: [old_cores_flag]}
+    )
 
     # Redefine the same flag.
     _defines.DEFINE_integer(
-        'cores', 4, '', flag_values=fv, short_name='c', allow_override=True)
+        'cores', 4, '', flag_values=fv, short_name='c', allow_override=True
+    )
     new_cores_flag = fv['cores']
     self.assertNotEqual(old_cores_flag, new_cores_flag)
-    self.assertEqual(fv.flags_by_module_dict(),
-                     {module_name: [new_cores_flag]})
-    self.assertEqual(fv.flags_by_module_id_dict(),
-                     {id(module): [new_cores_flag]})
+    self.assertEqual(fv.flags_by_module_dict(), {module_name: [new_cores_flag]})
+    self.assertEqual(
+        fv.flags_by_module_id_dict(), {id(module): [new_cores_flag]}
+    )
     # old_cores_flag is removed from key flags, and the new_cores_flag is
     # not automatically added because it must be registered explicitly.
     self.assertEqual(fv.key_flags_by_module_dict(), {module_name: []})
 
     # Define a new flag but with the same short_name.
     _defines.DEFINE_integer(
-        'changelist',
-        0,
-        '',
-        flag_values=fv,
-        short_name='c',
-        allow_override=True)
+        'changelist', 0, '', flag_values=fv, short_name='c', allow_override=True
+    )
     old_changelist_flag = fv['changelist']
     fv.register_key_flag_for_module(module_name, old_changelist_flag)
     # The short named flag -c is overridden to be the old_changelist_flag.
     self.assertEqual(fv['c'], old_changelist_flag)
     self.assertNotEqual(fv['c'], new_cores_flag)
-    self.assertEqual(fv.flags_by_module_dict(),
-                     {module_name: [new_cores_flag, old_changelist_flag]})
-    self.assertEqual(fv.flags_by_module_id_dict(),
-                     {id(module): [new_cores_flag, old_changelist_flag]})
-    self.assertEqual(fv.key_flags_by_module_dict(),
-                     {module_name: [old_changelist_flag]})
+    self.assertEqual(
+        fv.flags_by_module_dict(),
+        {module_name: [new_cores_flag, old_changelist_flag]},
+    )
+    self.assertEqual(
+        fv.flags_by_module_id_dict(),
+        {id(module): [new_cores_flag, old_changelist_flag]},
+    )
+    self.assertEqual(
+        fv.key_flags_by_module_dict(), {module_name: [old_changelist_flag]}
+    )
 
     # Define a flag only with the same long name.
     _defines.DEFINE_integer(
-        'changelist',
-        0,
-        '',
-        flag_values=fv,
-        short_name='l',
-        allow_override=True)
+        'changelist', 0, '', flag_values=fv, short_name='l', allow_override=True
+    )
     new_changelist_flag = fv['changelist']
     self.assertNotEqual(old_changelist_flag, new_changelist_flag)
-    self.assertEqual(fv.flags_by_module_dict(),
-                     {module_name: [new_cores_flag,
-                                    old_changelist_flag,
-                                    new_changelist_flag]})
-    self.assertEqual(fv.flags_by_module_id_dict(),
-                     {id(module): [new_cores_flag,
-                                   old_changelist_flag,
-                                   new_changelist_flag]})
-    self.assertEqual(fv.key_flags_by_module_dict(),
-                     {module_name: [old_changelist_flag]})
+    self.assertEqual(
+        fv.flags_by_module_dict(),
+        {
+            module_name: [
+                new_cores_flag,
+                old_changelist_flag,
+                new_changelist_flag,
+            ]
+        },
+    )
+    self.assertEqual(
+        fv.flags_by_module_id_dict(),
+        {
+            id(module): [
+                new_cores_flag,
+                old_changelist_flag,
+                new_changelist_flag,
+            ]
+        },
+    )
+    self.assertEqual(
+        fv.key_flags_by_module_dict(), {module_name: [old_changelist_flag]}
+    )
 
     # Delete the new changelist's long name, it should still be registered
     # because of its short name.
     del fv.changelist
     self.assertNotIn('changelist', fv)
-    self.assertEqual(fv.flags_by_module_dict(),
-                     {module_name: [new_cores_flag,
-                                    old_changelist_flag,
-                                    new_changelist_flag]})
-    self.assertEqual(fv.flags_by_module_id_dict(),
-                     {id(module): [new_cores_flag,
-                                   old_changelist_flag,
-                                   new_changelist_flag]})
-    self.assertEqual(fv.key_flags_by_module_dict(),
-                     {module_name: [old_changelist_flag]})
+    self.assertEqual(
+        fv.flags_by_module_dict(),
+        {
+            module_name: [
+                new_cores_flag,
+                old_changelist_flag,
+                new_changelist_flag,
+            ]
+        },
+    )
+    self.assertEqual(
+        fv.flags_by_module_id_dict(),
+        {
+            id(module): [
+                new_cores_flag,
+                old_changelist_flag,
+                new_changelist_flag,
+            ]
+        },
+    )
+    self.assertEqual(
+        fv.key_flags_by_module_dict(), {module_name: [old_changelist_flag]}
+    )
 
     # Delete the new changelist's short name, it should be removed.
     del fv.l
     self.assertNotIn('l', fv)
-    self.assertEqual(fv.flags_by_module_dict(),
-                     {module_name: [new_cores_flag,
-                                    old_changelist_flag]})
-    self.assertEqual(fv.flags_by_module_id_dict(),
-                     {id(module): [new_cores_flag,
-                                   old_changelist_flag]})
-    self.assertEqual(fv.key_flags_by_module_dict(),
-                     {module_name: [old_changelist_flag]})
+    self.assertEqual(
+        fv.flags_by_module_dict(),
+        {module_name: [new_cores_flag, old_changelist_flag]},
+    )
+    self.assertEqual(
+        fv.flags_by_module_id_dict(),
+        {id(module): [new_cores_flag, old_changelist_flag]},
+    )
+    self.assertEqual(
+        fv.key_flags_by_module_dict(), {module_name: [old_changelist_flag]}
+    )
 
   def _test_find_module_or_id_defining_flag(self, test_id):
     """Tests for find_module_defining_flag and find_module_id_defining_flag.
 
     Args:
       test_id: True to test find_module_id_defining_flag, False to test
-          find_module_defining_flag.
+        find_module_defining_flag.
     """
     fv = _flagvalues.FlagValues()
     current_module, current_module_name = (
-        _helpers.get_calling_module_object_and_name())
+        _helpers.get_calling_module_object_and_name()
+    )
     alt_module_name = _flagvalues.__name__
 
     if test_id:
@@ -192,7 +225,8 @@ class FlagValuesTest(absltest.TestCase):
         flag_values=fv,
         module_name=alt_module_name,
         short_name='c',
-        allow_override=True)
+        allow_override=True,
+    )
     module_or_id_cores = testing_fn('cores')
     self.assertEqual(module_or_id_cores, alt_module_or_id)
     module_or_id_c = testing_fn('c')
@@ -200,12 +234,8 @@ class FlagValuesTest(absltest.TestCase):
 
     # Define a new flag but with the same short_name.
     _defines.DEFINE_integer(
-        'changelist',
-        0,
-        '',
-        flag_values=fv,
-        short_name='c',
-        allow_override=True)
+        'changelist', 0, '', flag_values=fv, short_name='c', allow_override=True
+    )
     module_or_id_cores = testing_fn('cores')
     self.assertEqual(module_or_id_cores, alt_module_or_id)
     module_or_id_changelist = testing_fn('changelist')
@@ -221,7 +251,8 @@ class FlagValuesTest(absltest.TestCase):
         flag_values=fv,
         module_name=alt_module_name,
         short_name='l',
-        allow_override=True)
+        allow_override=True,
+    )
     module_or_id_cores = testing_fn('cores')
     self.assertEqual(module_or_id_cores, alt_module_or_id)
     module_or_id_changelist = testing_fn('changelist')
@@ -275,39 +306,49 @@ class FlagValuesTest(absltest.TestCase):
     run_test(
         argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
         defined_py_flags=[],
-        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '))
+        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+    )
     run_test(
         argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
         defined_py_flags=['f1'],
-        expected_argv='0 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '))
+        expected_argv='0 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
+    )
     run_test(
         argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
         defined_py_flags=['f2'],
-        expected_argv='0 --f1=v1 cmd --b1 --f3 v3 --nob2'.split(' '))
+        expected_argv='0 --f1=v1 cmd --b1 --f3 v3 --nob2'.split(' '),
+    )
     run_test(
         argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
         defined_py_flags=['b1'],
-        expected_argv='0 --f1=v1 cmd --f2 v2 --f3 v3 --nob2'.split(' '))
+        expected_argv='0 --f1=v1 cmd --f2 v2 --f3 v3 --nob2'.split(' '),
+    )
     run_test(
         argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
         defined_py_flags=['f3'],
-        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --nob2'.split(' '))
+        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --nob2'.split(' '),
+    )
     run_test(
         argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3 --nob2'.split(' '),
         defined_py_flags=['b2'],
-        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3'.split(' '))
+        expected_argv='0 --f1=v1 cmd --f2 v2 --b1 --f3 v3'.split(' '),
+    )
     run_test(
-        argv=('0 --f1=v1 cmd --undefok=f1 --f2 v2 --b1 '
-              '--f3 v3 --nob2').split(' '),
+        argv=('0 --f1=v1 cmd --undefok=f1 --f2 v2 --b1 --f3 v3 --nob2').split(
+            ' '
+        ),
         defined_py_flags=['b2'],
-        expected_argv='0 cmd --f2 v2 --b1 --f3 v3'.split(' '))
+        expected_argv='0 cmd --f2 v2 --b1 --f3 v3'.split(' '),
+    )
     run_test(
-        argv=('0 --f1=v1 cmd --undefok f1,f2 --f2 v2 --b1 '
-              '--f3 v3 --nob2').split(' '),
+        argv=(
+            '0 --f1=v1 cmd --undefok f1,f2 --f2 v2 --b1 --f3 v3 --nob2'
+        ).split(' '),
         defined_py_flags=['b2'],
         # Note v2 is preserved here, since undefok requires the flag being
         # specified in the form of --flag=value.
-        expected_argv='0 cmd v2 --b1 --f3 v3'.split(' '))
+        expected_argv='0 cmd v2 --b1 --f3 v3'.split(' '),
+    )
 
   def test_invalid_flag_name(self):
     with self.assertRaises(_exceptions.Error):
@@ -335,7 +376,8 @@ class FlagValuesTest(absltest.TestCase):
     self.assertTrue(fv)
 
     _defines.DEFINE_boolean(
-        'bool', False, 'help', short_name='b', flag_values=fv)
+        'bool', False, 'help', short_name='b', flag_values=fv
+    )
     self.assertLen(fv, 3)
     self.assertTrue(fv)
 
@@ -349,8 +391,9 @@ class FlagValuesTest(absltest.TestCase):
     _defines.DEFINE_integer('answer', 0, 'help', flag_values=fv)
     fv(['', '--answer=1'])
 
-    with self.assertRaisesRegex(TypeError,
-                                'FlagValues does not support shallow copies'):
+    with self.assertRaisesRegex(
+        TypeError, 'FlagValues does not support shallow copies'
+    ):
       copy.copy(fv)
 
     fv2 = copy.deepcopy(fv)
@@ -369,7 +412,8 @@ class FlagValuesTest(absltest.TestCase):
         False,
         'help',
         flag_values=fv,
-        allow_using_method_names=True)
+        allow_using_method_names=True,
+    )
     self.assertFalse(fv['is_gnu_getopt'].value)
     self.assertIsInstance(fv.is_gnu_getopt, types.MethodType)
 
@@ -382,22 +426,28 @@ class FlagValuesTest(absltest.TestCase):
     self.assertEqual({'foo'}, {flag.name for flag in flags})
 
     flags = fv.get_flags_for_module(module_foo)
-    self.assertEqual({'tmod_foo_bool', 'tmod_foo_int', 'tmod_foo_str'},
-                     {flag.name for flag in flags})
+    self.assertEqual(
+        {'tmod_foo_bool', 'tmod_foo_int', 'tmod_foo_str'},
+        {flag.name for flag in flags},
+    )
 
   def test_get_help(self):
     fv = _flagvalues.FlagValues()
-    self.assertMultiLineEqual('''\
+    self.assertMultiLineEqual(
+        """\
 --flagfile: Insert flag definitions from the given file into the command line.
   (default: '')
 --undefok: comma-separated list of flag names that it is okay to specify on the
   command line even if the program does not define a flag with that name.
   IMPORTANT: flags in this list that have arguments MUST use the --flag=value
   format.
-  (default: '')''', fv.get_help())
+  (default: '')""",
+        fv.get_help(),
+    )
 
     module_foo.define_flags(fv)
-    self.assertMultiLineEqual('''
+    self.assertMultiLineEqual(
+        """
 absl.flags.tests.module_bar:
   --tmod_bar_t: Sample int flag.
     (default: '4')
@@ -431,9 +481,12 @@ absl.flags:
     the command line even if the program does not define a flag with that name.
     IMPORTANT: flags in this list that have arguments MUST use the --flag=value
     format.
-    (default: '')''', fv.get_help())
+    (default: '')""",
+        fv.get_help(),
+    )
 
-    self.assertMultiLineEqual('''
+    self.assertMultiLineEqual(
+        """
 xxxxabsl.flags.tests.module_bar:
 xxxx  --tmod_bar_t: Sample int flag.
 xxxx    (default: '4')
@@ -468,9 +521,12 @@ xxxx  --undefok: comma-separated list of flag names that it is okay to specify
 xxxx    on the command line even if the program does not define a flag with that
 xxxx    name.  IMPORTANT: flags in this list that have arguments MUST use the
 xxxx    --flag=value format.
-xxxx    (default: '')''', fv.get_help(prefix='xxxx'))
+xxxx    (default: '')""",
+        fv.get_help(prefix='xxxx'),
+    )
 
-    self.assertMultiLineEqual('''
+    self.assertMultiLineEqual(
+        """
 absl.flags.tests.module_bar:
   --tmod_bar_t: Sample int flag.
     (default: '4')
@@ -495,7 +551,9 @@ absl.flags.tests.module_foo:
     (default: '3')
     (an integer)
   --tmod_foo_str: String flag.
-    (default: 'default')''', fv.get_help(include_special_flags=False))
+    (default: 'default')""",
+        fv.get_help(include_special_flags=False),
+    )
 
   def test_str(self):
     fv = _flagvalues.FlagValues()
@@ -522,39 +580,46 @@ absl.flags.tests.module_foo:
     flag_name3 = 'float_flag'
     description = 'Description'
     _defines.DEFINE_boolean(
-        flag_name1, None, description, flag_values=flag_values)
+        flag_name1, None, description, flag_values=flag_values
+    )
     _defines.DEFINE_string(
-        flag_name2, None, description, flag_values=flag_values)
+        flag_name2, None, description, flag_values=flag_values
+    )
     self.assertEqual(sorted([flag_name1, flag_name2]), dir(flag_values))
 
     _defines.DEFINE_float(
-        flag_name3, None, description, flag_values=flag_values)
+        flag_name3, None, description, flag_values=flag_values
+    )
     self.assertEqual(
-        sorted([flag_name1, flag_name2, flag_name3]), dir(flag_values))
+        sorted([flag_name1, flag_name2, flag_name3]), dir(flag_values)
+    )
 
   def test_flags_into_string_deterministic(self):
     flag_values = _flagvalues.FlagValues()
     _defines.DEFINE_string(
-        'fa', 'x', '', flag_values=flag_values, module_name='mb')
+        'fa', 'x', '', flag_values=flag_values, module_name='mb'
+    )
     _defines.DEFINE_string(
-        'fb', 'x', '', flag_values=flag_values, module_name='mb')
+        'fb', 'x', '', flag_values=flag_values, module_name='mb'
+    )
     _defines.DEFINE_string(
-        'fc', 'x', '', flag_values=flag_values, module_name='ma')
+        'fc', 'x', '', flag_values=flag_values, module_name='ma'
+    )
     _defines.DEFINE_string(
-        'fd', 'x', '', flag_values=flag_values, module_name='ma')
+        'fd', 'x', '', flag_values=flag_values, module_name='ma'
+    )
 
-    expected = ('--fc=x\n'
-                '--fd=x\n'
-                '--fa=x\n'
-                '--fb=x\n')
+    expected = '--fc=x\n--fd=x\n--fa=x\n--fb=x\n'
 
     flags_by_module_items = sorted(
-        flag_values.flags_by_module_dict().items(), reverse=True)
+        flag_values.flags_by_module_dict().items(), reverse=True
+    )
     for _, module_flags in flags_by_module_items:
       module_flags.sort(reverse=True)
 
     flag_values.__dict__['__flags_by_module'] = collections.OrderedDict(
-        flags_by_module_items)
+        flags_by_module_items
+    )
 
     actual = flag_values.flags_into_string()
     self.assertEqual(expected, actual)
@@ -620,7 +685,8 @@ class FlagSubstrMatchingTests(parameterized.TestCase):
       fv(argv)
 
   @parameterized.parameters(
-      FAIL_TEST_CASES + [('./program', 'unused', '--st=blah')])
+      FAIL_TEST_CASES + [('./program', 'unused', '--st=blah')]
+  )
   def test_gnu_getopt_raise(self, *argv):
     """Test that raising works when combined with GNU-style getopt."""
     fv = self._get_test_flag_values()
@@ -658,6 +724,7 @@ class SettingUnknownFlagTest(absltest.TestCase):
   def test_re_raise_undefined(self):
     def setter(unused_name, unused_val):
       raise NameError()
+
     new_flags = _flagvalues.FlagValues()
     new_flags._register_unknown_flag_setter(setter)
     with self.assertRaises(_exceptions.UnrecognizedFlagError):
@@ -666,6 +733,7 @@ class SettingUnknownFlagTest(absltest.TestCase):
   def test_re_raise_invalid(self):
     def setter(unused_name, unused_val):
       raise ValueError()
+
     new_flags = _flagvalues.FlagValues()
     new_flags._register_unknown_flag_setter(setter)
     with self.assertRaises(_exceptions.IllegalFlagValueError):
@@ -678,9 +746,11 @@ class SetAttributesTest(absltest.TestCase):
     super().setUp()
     self.new_flags = _flagvalues.FlagValues()
     _defines.DEFINE_boolean(
-        'defined_flag', None, '', flag_values=self.new_flags)
+        'defined_flag', None, '', flag_values=self.new_flags
+    )
     _defines.DEFINE_boolean(
-        'another_defined_flag', None, '', flag_values=self.new_flags)
+        'another_defined_flag', None, '', flag_values=self.new_flags
+    )
     self.setter_called = 0
 
   def set_undef(self, unused_name, unused_val):
@@ -688,7 +758,8 @@ class SetAttributesTest(absltest.TestCase):
 
   def test_two_defined_flags(self):
     self.new_flags._set_attributes(
-        defined_flag=False, another_defined_flag=False)
+        defined_flag=False, another_defined_flag=False
+    )
     self.assertEqual(self.setter_called, 0)
 
   def test_one_defined_one_undefined_flag(self):
@@ -707,7 +778,8 @@ class FlagsDashSyntaxTest(absltest.TestCase):
     super().setUp()
     self.fv = _flagvalues.FlagValues()
     _defines.DEFINE_string(
-        'long_name', 'default', 'help', flag_values=self.fv, short_name='s')
+        'long_name', 'default', 'help', flag_values=self.fv, short_name='s'
+    )
 
   def test_long_name_one_dash(self):
     self.fv(['./program', '-long_name=new'])
@@ -771,9 +843,11 @@ class UnparseFlagsTest(absltest.TestCase):
   def test_allow_overwrite_false(self):
     fv = _flagvalues.FlagValues()
     _defines.DEFINE_string(
-        'default_none', None, 'help', allow_overwrite=False, flag_values=fv)
+        'default_none', None, 'help', allow_overwrite=False, flag_values=fv
+    )
     _defines.DEFINE_string(
-        'default_foo', 'foo', 'help', allow_overwrite=False, flag_values=fv)
+        'default_foo', 'foo', 'help', allow_overwrite=False, flag_values=fv
+    )
 
     fv.mark_as_parsed()
     self.assertEqual('foo', fv.default_foo)
@@ -823,7 +897,8 @@ class UnparseFlagsTest(absltest.TestCase):
   def test_multi_string_default_list(self):
     fv = _flagvalues.FlagValues()
     _defines.DEFINE_multi_string(
-        'foo', ['xx', 'yy', 'zz'], 'help', flag_values=fv)
+        'foo', ['xx', 'yy', 'zz'], 'help', flag_values=fv
+    )
     expected_default = ['xx', 'yy', 'zz']
     fv.mark_as_parsed()
     self.assertEqual(expected_default, fv.foo)
@@ -867,7 +942,8 @@ class FlagHolderTest(absltest.TestCase):
     super().setUp()
     self.fv = _flagvalues.FlagValues()
     self.name_flag = _defines.DEFINE_string(
-        'name', 'default', 'help', flag_values=self.fv)
+        'name', 'default', 'help', flag_values=self.fv
+    )
 
   def parse_flags(self, *argv):
     self.fv.unparse_flags()
@@ -905,9 +981,11 @@ class FlagHolderTest(absltest.TestCase):
 
   def test_allow_override(self):
     first = _defines.DEFINE_integer(
-        'int_flag', 1, 'help', flag_values=self.fv, allow_override=1)
+        'int_flag', 1, 'help', flag_values=self.fv, allow_override=1
+    )
     second = _defines.DEFINE_integer(
-        'int_flag', 2, 'help', flag_values=self.fv, allow_override=1)
+        'int_flag', 2, 'help', flag_values=self.fv, allow_override=1
+    )
     self.parse_flags('--int_flag=3')
     self.assertEqual(3, first.value)
     self.assertEqual(3, second.value)

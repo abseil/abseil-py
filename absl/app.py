@@ -62,20 +62,32 @@ flags.DEFINE_boolean(
     'can be used to specify a custom one.',
 )
 flags.DEFINE_alias('pdb', 'pdb_post_mortem')
-flags.DEFINE_boolean('run_with_profiling', False,
-                     'Set to true for profiling the script. '
-                     'Execution will be slower, and the output format might '
-                     'change over time.')
-flags.DEFINE_string('profile_file', None,
-                    'Dump profile information to a file (for python -m '
-                    'pstats). Implies --run_with_profiling.')
-flags.DEFINE_boolean('use_cprofile_for_profiling', True,
-                     'Use cProfile instead of the profile module for '
-                     'profiling. This has no effect unless '
-                     '--run_with_profiling is set.')
-flags.DEFINE_boolean('only_check_args', False,
-                     'Set to true to validate args and exit.',
-                     allow_hide_cpp=True)
+flags.DEFINE_boolean(
+    'run_with_profiling',
+    False,
+    'Set to true for profiling the script. '
+    'Execution will be slower, and the output format might '
+    'change over time.',
+)
+flags.DEFINE_string(
+    'profile_file',
+    None,
+    'Dump profile information to a file (for python -m '
+    'pstats). Implies --run_with_profiling.',
+)
+flags.DEFINE_boolean(
+    'use_cprofile_for_profiling',
+    True,
+    'Use cProfile instead of the profile module for '
+    'profiling. This has no effect unless '
+    '--run_with_profiling is set.',
+)
+flags.DEFINE_boolean(
+    'only_check_args',
+    False,
+    'Set to true to validate args and exit.',
+    allow_hide_cpp=True,
+)
 
 
 def _exit_before_main(status_code) -> None:
@@ -148,6 +160,7 @@ class UsageError(Error):
 
 class HelpFlag(flags.BooleanFlag):
   """Special boolean flag that displays usage and raises SystemExit."""
+
   NAME = 'help'
   SHORT_NAME = '?'
 
@@ -171,6 +184,7 @@ class HelpFlag(flags.BooleanFlag):
 
 class HelpshortFlag(HelpFlag):
   """--helpshort is an alias for --help."""
+
   NAME = 'helpshort'
   SHORT_NAME = None
 
@@ -209,7 +223,7 @@ def parse_flags_with_usage(args):
 
   Args:
     args: [str], a non-empty list of the command line arguments including
-        program name.
+      program name.
 
   Returns:
     [str], a non-empty list of remaining command line arguments after parsing
@@ -221,7 +235,8 @@ def parse_flags_with_usage(args):
     message = str(error)
     if '\n' in message:
       final_message = 'FATAL Flags parsing error:\n%s\n' % textwrap.indent(
-          message, '  ')
+          message, '  '
+      )
     else:
       final_message = 'FATAL Flags parsing error: %s\n' % message
     sys.stderr.write(final_message)
@@ -292,6 +307,7 @@ def _register_and_parse_flags_with_usage(
 
   return args_to_main
 
+
 _register_and_parse_flags_with_usage.done = False
 
 
@@ -304,6 +320,7 @@ def _run_main(main, argv):
     # ones) won't be run with profiling.
     # pylint: disable=g-import-not-at-top
     import atexit
+
     if FLAGS.use_cprofile_for_profiling:
       import cProfile as profile
     else:
@@ -394,6 +411,7 @@ def run(
     _call_exception_handlers(e)
     raise
 
+
 # Callbacks which have been deferred until after _run_init has been called.
 _init_callbacks = collections.deque()
 
@@ -412,8 +430,8 @@ def call_after_init(callback):
 
   Args:
     callback: a callable to be called once ABSL has finished initialization.
-      This may be immediate if initialization has already finished. It
-      takes no arguments and returns nothing.
+      This may be immediate if initialization has already finished. It takes no
+      arguments and returns nothing.
   """
   if _run_init.done:
     callback()
@@ -449,18 +467,19 @@ def _run_init(
 _run_init.done = False
 
 
-def usage(shorthelp=False, writeto_stdout=False, detailed_error=None,
-          exitcode=None):
+def usage(
+    shorthelp=False, writeto_stdout=False, detailed_error=None, exitcode=None
+):
   """Writes __main__'s docstring to stderr with some help text.
 
   Args:
-    shorthelp: bool, if True, prints only flags from the main module,
-        rather than all flags.
-    writeto_stdout: bool, if True, writes help message to stdout,
-        rather than to stderr.
+    shorthelp: bool, if True, prints only flags from the main module, rather
+      than all flags.
+    writeto_stdout: bool, if True, writes help message to stdout, rather than to
+      stderr.
     detailed_error: str, additional detail about why usage info was presented.
     exitcode: optional integer, if set, exits with this status code after
-        writing help.
+      writing help.
   """
   if writeto_stdout:
     stdfile = sys.stdout
@@ -540,6 +559,8 @@ def install_exception_handler(handler):
   FlagsError or UsageError.
   """
   if not isinstance(handler, ExceptionHandler):
-    raise TypeError('handler of type %s does not inherit from ExceptionHandler'
-                    % type(handler))
+    raise TypeError(
+        'handler of type %s does not inherit from ExceptionHandler'
+        % type(handler)
+    )
   EXCEPTION_HANDLERS.append(handler)

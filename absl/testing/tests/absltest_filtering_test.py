@@ -95,21 +95,25 @@ class TestFilteringTest(absltest.TestCase):
     self.assertNotIn('class B', out)
 
   def test_method_filter(self, use_env_variable, use_app_run):
-    out, exit_code = self._run_filtered('ClassB.testA', use_env_variable,
-                                        use_app_run)
+    out, exit_code = self._run_filtered(
+        'ClassB.testA', use_env_variable, use_app_run
+    )
     self.assertEqual(0, exit_code)
     self.assertNotIn('class A', out)
     self.assertNotIn('class B test B', out)
 
-    out, exit_code = self._run_filtered('ClassB.testE', use_env_variable,
-                                        use_app_run)
+    out, exit_code = self._run_filtered(
+        'ClassB.testE', use_env_variable, use_app_run
+    )
     self.assertEqual(1, exit_code)
     self.assertNotIn('class A', out)
 
-  def test_multiple_class_and_method_filter(self, use_env_variable,
-                                            use_app_run):
+  def test_multiple_class_and_method_filter(
+      self, use_env_variable, use_app_run
+  ):
     out, exit_code = self._run_filtered(
-        'ClassA.testA ClassA.testB ClassB.testC', use_env_variable, use_app_run)
+        'ClassA.testA ClassA.testB ClassB.testC', use_env_variable, use_app_run
+    )
     self.assertEqual(0, exit_code)
     self.assertIn('class A test A', out)
     self.assertIn('class A test B', out)
@@ -118,8 +122,7 @@ class TestFilteringTest(absltest.TestCase):
     self.assertNotIn('class B test A', out)
 
   def test_substring(self, use_env_variable, use_app_run):
-    out, exit_code = self._run_filtered(
-        'testA', use_env_variable, use_app_run)
+    out, exit_code = self._run_filtered('testA', use_env_variable, use_app_run)
     self.assertEqual(0, exit_code)
     self.assertIn('Ran 2 tests', out)
     self.assertIn('ClassA.testA', out)
@@ -127,15 +130,17 @@ class TestFilteringTest(absltest.TestCase):
 
   def test_glob_pattern(self, use_env_variable, use_app_run):
     out, exit_code = self._run_filtered(
-        '__main__.Class*.testA', use_env_variable, use_app_run)
+        '__main__.Class*.testA', use_env_variable, use_app_run
+    )
     self.assertEqual(0, exit_code)
     self.assertIn('Ran 2 tests', out)
     self.assertIn('ClassA.testA', out)
     self.assertIn('ClassB.testA', out)
 
   def test_not_found_filters_py37(self, use_env_variable, use_app_run):
-    out, exit_code = self._run_filtered('NotExistedClass.not_existed_method',
-                                        use_env_variable, use_app_run)
+    out, exit_code = self._run_filtered(
+        'NotExistedClass.not_existed_method', use_env_variable, use_app_run
+    )
     if not use_env_variable and sys.version_info[:2] >= (3, 12):
       # When test filter is requested with the unittest `-k` flag, absltest
       # respect unittest to fail when no tests run on Python 3.12+.
@@ -145,16 +150,18 @@ class TestFilteringTest(absltest.TestCase):
     self.assertIn('Ran 0 tests', out)
 
   def test_parameterized_unnamed(self, use_env_variable, use_app_run):
-    out, exit_code = self._run_filtered('ParameterizedTest.test_unnamed',
-                                        use_env_variable, use_app_run)
+    out, exit_code = self._run_filtered(
+        'ParameterizedTest.test_unnamed', use_env_variable, use_app_run
+    )
     self.assertEqual(0, exit_code)
     self.assertIn('Ran 2 tests', out)
     self.assertIn('parameterized unnamed 1', out)
     self.assertIn('parameterized unnamed 2', out)
 
   def test_parameterized_named(self, use_env_variable, use_app_run):
-    out, exit_code = self._run_filtered('ParameterizedTest.test_named',
-                                        use_env_variable, use_app_run)
+    out, exit_code = self._run_filtered(
+        'ParameterizedTest.test_named', use_env_variable, use_app_run
+    )
     self.assertEqual(0, exit_code)
     self.assertIn('Ran 2 tests', out)
     self.assertIn('parameterized named 1', out)

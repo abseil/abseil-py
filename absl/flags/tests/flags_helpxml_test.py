@@ -39,15 +39,19 @@ class CreateXMLDOMElement(absltest.TestCase):
   def test_create_xml_dom_element(self):
     self._check('tag', '', b'<tag></tag>\n')
     self._check('tag', 'plain text', b'<tag>plain text</tag>\n')
-    self._check('tag', '(x < y) && (a >= b)',
-                b'<tag>(x &lt; y) &amp;&amp; (a &gt;= b)</tag>\n')
+    self._check(
+        'tag',
+        '(x < y) && (a >= b)',
+        b'<tag>(x &lt; y) &amp;&amp; (a &gt;= b)</tag>\n',
+    )
 
     # If the value is bytes with invalid unicode:
     bytes_with_invalid_unicodes = b'\x81\xff'
     # In python 3 the string representation is "b'\x81\xff'" so they are kept
     # as "b'\x81\xff'".
-    self._check('tag', bytes_with_invalid_unicodes,
-                b"<tag>b'\\x81\\xff'</tag>\n")
+    self._check(
+        'tag', bytes_with_invalid_unicodes, b"<tag>b'\\x81\\xff'</tag>\n"
+    )
 
     # Some unicode chars are illegal in xml
     # (http://www.w3.org/TR/REC-xml/#charsets):
@@ -61,12 +65,11 @@ def _list_separators_in_xmlformat(separators, indent=''):
   """Generates XML encoding of a list of list separators.
 
   Args:
-    separators: A list of list separators.  Usually, this should be a
-      string whose characters are the valid list separators, e.g., ','
-      means that both comma (',') and space (' ') are valid list
-      separators.
-    indent: A string that is added at the beginning of each generated
-      XML element.
+    separators: A list of list separators.  Usually, this should be a string
+      whose characters are the valid list separators, e.g., ',' means that both
+      comma (',') and space (' ') are valid list separators.
+    indent: A string that is added at the beginning of each generated XML
+      element.
 
   Returns:
     A string.
@@ -75,8 +78,10 @@ def _list_separators_in_xmlformat(separators, indent=''):
   separators = list(separators)
   separators.sort()
   for sep_char in separators:
-    result += ('%s<list_separator>%s</list_separator>\n' %
-               (indent, repr(sep_char)))
+    result += '%s<list_separator>%s</list_separator>\n' % (
+        indent,
+        repr(sep_char),
+    )
   return result
 
 
@@ -91,8 +96,9 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
     # test registers one flag with this FlagValues.
     self.fv = flags.FlagValues()
 
-  def _check_flag_help_in_xml(self, flag_name, module_name,
-                              expected_output, is_key=False):
+  def _check_flag_help_in_xml(
+      self, flag_name, module_name, expected_output, is_key=False
+  ):
     flag_obj = self.fv[flag_name]
     doc = xml.dom.minidom.Document()
     element = flag_obj._create_xml_dom_element(doc, module_name, is_key=is_key)
@@ -109,19 +115,27 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <default>17</default>\n'
         '  <current>%d</current>\n'
         '  <type>int</type>\n'
-        '</flag>\n')
-    self._check_flag_help_in_xml('index', 'module.name',
-                                 expected_output_pattern % 17)
+        '</flag>\n'
+    )
+    self._check_flag_help_in_xml(
+        'index', 'module.name', expected_output_pattern % 17
+    )
     # Check that the output is correct even when the current value of
     # a flag is different from the default one.
     self.fv['index'].value = 20
-    self._check_flag_help_in_xml('index', 'module.name',
-                                 expected_output_pattern % 20)
+    self._check_flag_help_in_xml(
+        'index', 'module.name', expected_output_pattern % 20
+    )
 
   def test_flag_help_in_xml_int_with_bounds(self):
-    flags.DEFINE_integer('nb_iters', 17, 'An integer flag',
-                         lower_bound=5, upper_bound=27,
-                         flag_values=self.fv)
+    flags.DEFINE_integer(
+        'nb_iters',
+        17,
+        'An integer flag',
+        lower_bound=5,
+        upper_bound=27,
+        flag_values=self.fv,
+    )
     expected_output = (
         '<flag>\n'
         '  <key>yes</key>\n'
@@ -133,13 +147,19 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <type>int</type>\n'
         '  <lower_bound>5</lower_bound>\n'
         '  <upper_bound>27</upper_bound>\n'
-        '</flag>\n')
-    self._check_flag_help_in_xml('nb_iters', 'module.name', expected_output,
-                                 is_key=True)
+        '</flag>\n'
+    )
+    self._check_flag_help_in_xml(
+        'nb_iters', 'module.name', expected_output, is_key=True
+    )
 
   def test_flag_help_in_xml_string(self):
-    flags.DEFINE_string('file_path', '/path/to/my/dir', 'A test string flag.',
-                        flag_values=self.fv)
+    flags.DEFINE_string(
+        'file_path',
+        '/path/to/my/dir',
+        'A test string flag.',
+        flag_values=self.fv,
+    )
     expected_output = (
         '<flag>\n'
         '  <file>simple_module</file>\n'
@@ -148,12 +168,17 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <default>/path/to/my/dir</default>\n'
         '  <current>/path/to/my/dir</current>\n'
         '  <type>string</type>\n'
-        '</flag>\n')
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('file_path', 'simple_module', expected_output)
 
   def test_flag_help_in_xml_string_with_xmlillegal_chars(self):
-    flags.DEFINE_string('file_path', '/path/to/\x08my/dir',
-                        'A test string flag.', flag_values=self.fv)
+    flags.DEFINE_string(
+        'file_path',
+        '/path/to/\x08my/dir',
+        'A test string flag.',
+        flag_values=self.fv,
+    )
     # '\x08' is not a legal character in XML 1.0 documents.  Our
     # current code purges such characters from the generated XML.
     expected_output = (
@@ -164,12 +189,14 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <default>/path/to/my/dir</default>\n'
         '  <current>/path/to/my/dir</current>\n'
         '  <type>string</type>\n'
-        '</flag>\n')
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('file_path', 'simple_module', expected_output)
 
   def test_flag_help_in_xml_boolean(self):
-    flags.DEFINE_boolean('use_gpu', False, 'Use gpu for performance.',
-                         flag_values=self.fv)
+    flags.DEFINE_boolean(
+        'use_gpu', False, 'Use gpu for performance.', flag_values=self.fv
+    )
     expected_output = (
         '<flag>\n'
         '  <key>yes</key>\n'
@@ -179,13 +206,20 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <default>false</default>\n'
         '  <current>false</current>\n'
         '  <type>bool</type>\n'
-        '</flag>\n')
-    self._check_flag_help_in_xml('use_gpu', 'a_module', expected_output,
-                                 is_key=True)
+        '</flag>\n'
+    )
+    self._check_flag_help_in_xml(
+        'use_gpu', 'a_module', expected_output, is_key=True
+    )
 
   def test_flag_help_in_xml_enum(self):
-    flags.DEFINE_enum('cc_version', 'stable', ['stable', 'experimental'],
-                      'Compiler version to use.', flag_values=self.fv)
+    flags.DEFINE_enum(
+        'cc_version',
+        'stable',
+        ['stable', 'experimental'],
+        'Compiler version to use.',
+        flag_values=self.fv,
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
@@ -197,7 +231,8 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <type>string enum</type>\n'
         '  <enum_value>stable</enum_value>\n'
         '  <enum_value>experimental</enum_value>\n'
-        '</flag>\n')
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('cc_version', 'tool', expected_output)
 
   def test_flag_help_in_xml_enum_class(self):
@@ -205,54 +240,72 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
       STABLE = 0
       EXPERIMENTAL = 1
 
-    flags.DEFINE_enum_class('cc_version', 'STABLE', Version,
-                            'Compiler version to use.', flag_values=self.fv)
-    expected_output = ('<flag>\n'
-                       '  <file>tool</file>\n'
-                       '  <name>cc_version</name>\n'
-                       '  <meaning>&lt;stable|experimental&gt;: '
-                       'Compiler version to use.</meaning>\n'
-                       '  <default>stable</default>\n'
-                       '  <current>Version.STABLE</current>\n'
-                       '  <type>enum class</type>\n'
-                       '  <enum_value>STABLE</enum_value>\n'
-                       '  <enum_value>EXPERIMENTAL</enum_value>\n'
-                       '</flag>\n')
+    flags.DEFINE_enum_class(
+        'cc_version',
+        'STABLE',
+        Version,
+        'Compiler version to use.',
+        flag_values=self.fv,
+    )
+    expected_output = (
+        '<flag>\n'
+        '  <file>tool</file>\n'
+        '  <name>cc_version</name>\n'
+        '  <meaning>&lt;stable|experimental&gt;: '
+        'Compiler version to use.</meaning>\n'
+        '  <default>stable</default>\n'
+        '  <current>Version.STABLE</current>\n'
+        '  <type>enum class</type>\n'
+        '  <enum_value>STABLE</enum_value>\n'
+        '  <enum_value>EXPERIMENTAL</enum_value>\n'
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('cc_version', 'tool', expected_output)
 
   def test_flag_help_in_xml_comma_separated_list(self):
-    flags.DEFINE_list('files', 'a.cc,a.h,archive/old.zip',
-                      'Files to process.', flag_values=self.fv)
+    flags.DEFINE_list(
+        'files',
+        'a.cc,a.h,archive/old.zip',
+        'Files to process.',
+        flag_values=self.fv,
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
         '  <name>files</name>\n'
         '  <meaning>Files to process.</meaning>\n'
         '  <default>a.cc,a.h,archive/old.zip</default>\n'
-        '  <current>[\'a.cc\', \'a.h\', \'archive/old.zip\']</current>\n'
+        "  <current>['a.cc', 'a.h', 'archive/old.zip']</current>\n"
         '  <type>comma separated list of strings</type>\n'
-        '  <list_separator>\',\'</list_separator>\n'
-        '</flag>\n')
+        "  <list_separator>','</list_separator>\n"
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('files', 'tool', expected_output)
 
   def test_list_as_default_argument_comma_separated_list(self):
-    flags.DEFINE_list('allow_users', ['alice', 'bob'],
-                      'Users with access.', flag_values=self.fv)
+    flags.DEFINE_list(
+        'allow_users',
+        ['alice', 'bob'],
+        'Users with access.',
+        flag_values=self.fv,
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
         '  <name>allow_users</name>\n'
         '  <meaning>Users with access.</meaning>\n'
         '  <default>alice,bob</default>\n'
-        '  <current>[\'alice\', \'bob\']</current>\n'
+        "  <current>['alice', 'bob']</current>\n"
         '  <type>comma separated list of strings</type>\n'
-        '  <list_separator>\',\'</list_separator>\n'
-        '</flag>\n')
+        "  <list_separator>','</list_separator>\n"
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('allow_users', 'tool', expected_output)
 
   def test_none_as_default_arguments_comma_separated_list(self):
-    flags.DEFINE_list('allow_users', None,
-                      'Users with access.', flag_values=self.fv)
+    flags.DEFINE_list(
+        'allow_users', None, 'Users with access.', flag_values=self.fv
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
@@ -261,13 +314,15 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <default></default>\n'
         '  <current>None</current>\n'
         '  <type>comma separated list of strings</type>\n'
-        '  <list_separator>\',\'</list_separator>\n'
-        '</flag>\n')
+        "  <list_separator>','</list_separator>\n"
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('allow_users', 'tool', expected_output)
 
   def test_flag_help_in_xml_space_separated_list(self):
-    flags.DEFINE_spaceseplist('dirs', 'src libs bin',
-                              'Directories to search.', flag_values=self.fv)
+    flags.DEFINE_spaceseplist(
+        'dirs', 'src libs bin', 'Directories to search.', flag_values=self.fv
+    )
     expected_separators = sorted(string.whitespace)
     expected_output = (
         '<flag>\n'
@@ -275,18 +330,24 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <name>dirs</name>\n'
         '  <meaning>Directories to search.</meaning>\n'
         '  <default>src libs bin</default>\n'
-        '  <current>[\'src\', \'libs\', \'bin\']</current>\n'
+        "  <current>['src', 'libs', 'bin']</current>\n"
         '  <type>whitespace separated list of strings</type>\n'
         'LIST_SEPARATORS'
-        '</flag>\n').replace('LIST_SEPARATORS',
-                             _list_separators_in_xmlformat(expected_separators,
-                                                           indent='  '))
+        '</flag>\n'
+    ).replace(
+        'LIST_SEPARATORS',
+        _list_separators_in_xmlformat(expected_separators, indent='  '),
+    )
     self._check_flag_help_in_xml('dirs', 'tool', expected_output)
 
   def test_flag_help_in_xml_space_separated_list_with_comma_compat(self):
-    flags.DEFINE_spaceseplist('dirs', 'src libs,bin',
-                              'Directories to search.', comma_compat=True,
-                              flag_values=self.fv)
+    flags.DEFINE_spaceseplist(
+        'dirs',
+        'src libs,bin',
+        'Directories to search.',
+        comma_compat=True,
+        flag_values=self.fv,
+    )
     expected_separators = sorted(string.whitespace + ',')
     expected_output = (
         '<flag>\n'
@@ -294,32 +355,37 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <name>dirs</name>\n'
         '  <meaning>Directories to search.</meaning>\n'
         '  <default>src libs bin</default>\n'
-        '  <current>[\'src\', \'libs\', \'bin\']</current>\n'
+        "  <current>['src', 'libs', 'bin']</current>\n"
         '  <type>whitespace or comma separated list of strings</type>\n'
         'LIST_SEPARATORS'
-        '</flag>\n').replace('LIST_SEPARATORS',
-                             _list_separators_in_xmlformat(expected_separators,
-                                                           indent='  '))
+        '</flag>\n'
+    ).replace(
+        'LIST_SEPARATORS',
+        _list_separators_in_xmlformat(expected_separators, indent='  '),
+    )
     self._check_flag_help_in_xml('dirs', 'tool', expected_output)
 
   def test_flag_help_in_xml_multi_string(self):
-    flags.DEFINE_multi_string('to_delete', ['a.cc', 'b.h'],
-                              'Files to delete', flag_values=self.fv)
+    flags.DEFINE_multi_string(
+        'to_delete', ['a.cc', 'b.h'], 'Files to delete', flag_values=self.fv
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
         '  <name>to_delete</name>\n'
         '  <meaning>Files to delete;\n'
         '    repeat this option to specify a list of values</meaning>\n'
-        '  <default>[\'a.cc\', \'b.h\']</default>\n'
-        '  <current>[\'a.cc\', \'b.h\']</current>\n'
+        "  <default>['a.cc', 'b.h']</default>\n"
+        "  <current>['a.cc', 'b.h']</current>\n"
         '  <type>multi string</type>\n'
-        '</flag>\n')
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('to_delete', 'tool', expected_output)
 
   def test_flag_help_in_xml_multi_int(self):
-    flags.DEFINE_multi_integer('cols', [5, 7, 23],
-                               'Columns to select', flag_values=self.fv)
+    flags.DEFINE_multi_integer(
+        'cols', [5, 7, 23], 'Columns to select', flag_values=self.fv
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
@@ -329,26 +395,32 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <default>[5, 7, 23]</default>\n'
         '  <current>[5, 7, 23]</current>\n'
         '  <type>multi int</type>\n'
-        '</flag>\n')
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('cols', 'tool', expected_output)
 
   def test_flag_help_in_xml_multi_enum(self):
-    flags.DEFINE_multi_enum('flavours', ['APPLE', 'BANANA'],
-                            ['APPLE', 'BANANA', 'CHERRY'],
-                            'Compilation flavour.', flag_values=self.fv)
+    flags.DEFINE_multi_enum(
+        'flavours',
+        ['APPLE', 'BANANA'],
+        ['APPLE', 'BANANA', 'CHERRY'],
+        'Compilation flavour.',
+        flag_values=self.fv,
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
         '  <name>flavours</name>\n'
         '  <meaning>&lt;APPLE|BANANA|CHERRY&gt;: Compilation flavour.;\n'
         '    repeat this option to specify a list of values</meaning>\n'
-        '  <default>[\'APPLE\', \'BANANA\']</default>\n'
-        '  <current>[\'APPLE\', \'BANANA\']</current>\n'
+        "  <default>['APPLE', 'BANANA']</default>\n"
+        "  <current>['APPLE', 'BANANA']</current>\n"
         '  <type>multi string enum</type>\n'
         '  <enum_value>APPLE</enum_value>\n'
         '  <enum_value>BANANA</enum_value>\n'
         '  <enum_value>CHERRY</enum_value>\n'
-        '</flag>\n')
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('flavours', 'tool', expected_output)
 
   def test_flag_help_in_xml_multi_enum_class_singleton_default(self):
@@ -356,9 +428,9 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
       ORANGE = 0
       BANANA = 1
 
-    flags.DEFINE_multi_enum_class('fruit', ['ORANGE'],
-                                  Fruit,
-                                  'The fruit flag.', flag_values=self.fv)
+    flags.DEFINE_multi_enum_class(
+        'fruit', ['ORANGE'], Fruit, 'The fruit flag.', flag_values=self.fv
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
@@ -370,7 +442,8 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <type>multi enum class</type>\n'
         '  <enum_value>ORANGE</enum_value>\n'
         '  <enum_value>BANANA</enum_value>\n'
-        '</flag>\n')
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('fruit', 'tool', expected_output)
 
   def test_flag_help_in_xml_multi_enum_class_list_default(self):
@@ -378,9 +451,13 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
       ORANGE = 0
       BANANA = 1
 
-    flags.DEFINE_multi_enum_class('fruit', ['ORANGE', 'BANANA'],
-                                  Fruit,
-                                  'The fruit flag.', flag_values=self.fv)
+    flags.DEFINE_multi_enum_class(
+        'fruit',
+        ['ORANGE', 'BANANA'],
+        Fruit,
+        'The fruit flag.',
+        flag_values=self.fv,
+    )
     expected_output = (
         '<flag>\n'
         '  <file>tool</file>\n'
@@ -392,8 +469,10 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
         '  <type>multi enum class</type>\n'
         '  <enum_value>ORANGE</enum_value>\n'
         '  <enum_value>BANANA</enum_value>\n'
-        '</flag>\n')
+        '</flag>\n'
+    )
     self._check_flag_help_in_xml('fruit', 'tool', expected_output)
+
 
 # The next EXPECTED_HELP_XML_* constants are parts of a template for
 # the expected XML output from WriteHelpInXMLFormatTest below.  When
@@ -589,27 +668,49 @@ class WriteHelpInXMLFormatTest(absltest.TestCase):
     fv = flags.FlagValues()
     # Since these flags are defined by the top module, they are all key.
     flags.DEFINE_integer('index', 17, 'An integer flag', flag_values=fv)
-    flags.DEFINE_integer('nb_iters', 17, 'An integer flag',
-                         lower_bound=5, upper_bound=27, flag_values=fv)
-    flags.DEFINE_string('file_path', '/path/to/my/dir', 'A test string flag.',
-                        flag_values=fv)
-    flags.DEFINE_boolean('use_gpu', False, 'Use gpu for performance.',
-                         flag_values=fv)
-    flags.DEFINE_enum('cc_version', 'stable', ['stable', 'experimental'],
-                      'Compiler version to use.', flag_values=fv)
-    flags.DEFINE_list('files', 'a.cc,a.h,archive/old.zip',
-                      'Files to process.', flag_values=fv)
-    flags.DEFINE_list('allow_users', ['alice', 'bob'],
-                      'Users with access.', flag_values=fv)
-    flags.DEFINE_spaceseplist('dirs', 'src libs bins',
-                              'Directories to create.', flag_values=fv)
-    flags.DEFINE_multi_string('to_delete', ['a.cc', 'b.h'],
-                              'Files to delete', flag_values=fv)
-    flags.DEFINE_multi_integer('cols', [5, 7, 23],
-                               'Columns to select', flag_values=fv)
-    flags.DEFINE_multi_enum('flavours', ['APPLE', 'BANANA'],
-                            ['APPLE', 'BANANA', 'CHERRY'],
-                            'Compilation flavour.', flag_values=fv)
+    flags.DEFINE_integer(
+        'nb_iters',
+        17,
+        'An integer flag',
+        lower_bound=5,
+        upper_bound=27,
+        flag_values=fv,
+    )
+    flags.DEFINE_string(
+        'file_path', '/path/to/my/dir', 'A test string flag.', flag_values=fv
+    )
+    flags.DEFINE_boolean(
+        'use_gpu', False, 'Use gpu for performance.', flag_values=fv
+    )
+    flags.DEFINE_enum(
+        'cc_version',
+        'stable',
+        ['stable', 'experimental'],
+        'Compiler version to use.',
+        flag_values=fv,
+    )
+    flags.DEFINE_list(
+        'files', 'a.cc,a.h,archive/old.zip', 'Files to process.', flag_values=fv
+    )
+    flags.DEFINE_list(
+        'allow_users', ['alice', 'bob'], 'Users with access.', flag_values=fv
+    )
+    flags.DEFINE_spaceseplist(
+        'dirs', 'src libs bins', 'Directories to create.', flag_values=fv
+    )
+    flags.DEFINE_multi_string(
+        'to_delete', ['a.cc', 'b.h'], 'Files to delete', flag_values=fv
+    )
+    flags.DEFINE_multi_integer(
+        'cols', [5, 7, 23], 'Columns to select', flag_values=fv
+    )
+    flags.DEFINE_multi_enum(
+        'flavours',
+        ['APPLE', 'BANANA'],
+        ['APPLE', 'BANANA', 'CHERRY'],
+        'Compilation flavour.',
+        flag_values=fv,
+    )
     # Define a few flags in a different module.
     module_bar.define_flags(flag_values=fv)
     # And declare only a few of them to be key.  This way, we have
@@ -637,15 +738,16 @@ class WriteHelpInXMLFormatTest(absltest.TestCase):
     expected_output_template += EXPECTED_HELP_XML_END
 
     # XML representation of the whitespace list separators.
-    whitespace_separators = _list_separators_in_xmlformat(string.whitespace,
-                                                          indent='    ')
-    expected_output = (
-        expected_output_template %
-        {'basename_of_argv0': os.path.basename(sys.argv[0]),
-         'usage_doc': sys.modules['__main__'].__doc__,
-         'main_module_name': main_module_name,
-         'module_bar_name': module_bar_name,
-         'whitespace_separators': whitespace_separators})
+    whitespace_separators = _list_separators_in_xmlformat(
+        string.whitespace, indent='    '
+    )
+    expected_output = expected_output_template % {
+        'basename_of_argv0': os.path.basename(sys.argv[0]),
+        'usage_doc': sys.modules['__main__'].__doc__,
+        'main_module_name': main_module_name,
+        'module_bar_name': module_bar_name,
+        'whitespace_separators': whitespace_separators,
+    }
 
     actual_output = sio.getvalue()
     self.assertMultiLineEqual(expected_output, actual_output)

@@ -207,7 +207,8 @@ def _construct_overrider(flag_overrider_cls, *args, **kwargs):
   if len(args) == 1 and callable(args[0]):
     if kwargs:
       raise ValueError(
-          "It's invalid to specify both positional and keyword parameters.")
+          "It's invalid to specify both positional and keyword parameters."
+      )
     func = args[0]
     if inspect.isclass(func):
       raise TypeError('@flagsaver.flagsaver cannot be applied to a class.')
@@ -367,7 +368,8 @@ class _ParsingFlagOverrider(_FlagOverrider):
         continue
       raise TypeError(
           f'flagsaver.as_parsed() cannot parse {flag_name}. Expected a single '
-          f'string or sequence of strings but {type(new_value)} was provided.')
+          f'string or sequence of strings but {type(new_value)} was provided.'
+      )
     super().__init__(**overrides)
 
   def __enter__(self):

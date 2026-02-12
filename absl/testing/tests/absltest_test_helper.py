@@ -34,7 +34,8 @@ def validate_name(value):
   # absltest.main() won't actually trigger side effects of the flag parsing.
   if len(value) > 2:
     raise flags.ValidationError(
-        f'No more than two names should be specified, found {len(value)} names')
+        f'No more than two names should be specified, found {len(value)} names'
+    )
   return True
 
 
@@ -51,32 +52,40 @@ class HelperTest(absltest.TestCase):
       self.assertTrue(
           absltest.TEST_TMPDIR.value.startswith(expected_prefix),
           '--test_tmpdir={} does not start with {}'.format(
-              absltest.TEST_TMPDIR.value, expected_prefix))
+              absltest.TEST_TMPDIR.value, expected_prefix
+          ),
+      )
       self.assertTrue(os.access(absltest.TEST_TMPDIR.value, os.W_OK))
     elif _TEST_ID.value == 2:
       self.assertEqual(FLAGS.test_random_seed, 321)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
-          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'],
+      )
       self.assertEqual(
           absltest.TEST_TMPDIR.value,
-          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'],
+      )
     elif _TEST_ID.value == 3:
       self.assertEqual(FLAGS.test_random_seed, 123)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
-          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'],
+      )
       self.assertEqual(
           absltest.TEST_TMPDIR.value,
-          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'],
+      )
     elif _TEST_ID.value == 4:
       self.assertEqual(FLAGS.test_random_seed, 221)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
-          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'])
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'],
+      )
       self.assertEqual(
           absltest.TEST_TMPDIR.value,
-          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'])
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'],
+      )
     else:
       raise unittest.SkipTest(f'Not asked to run: --test_id={_TEST_ID.value}')
 
@@ -91,7 +100,8 @@ class HelperTest(absltest.TestCase):
     if _TEST_ID.value == 6:
       self.assertEqual(
           FLAGS.xml_output_file,
-          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE'])
+          os.environ['ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE'],
+      )
     else:
       raise unittest.SkipTest(f'Not asked to run: --test_id={_TEST_ID.value}')
 
@@ -105,8 +115,9 @@ class HelperTest(absltest.TestCase):
 class TempFileHelperTest(absltest.TestCase):
   """Helper test case for tempfile cleanup tests."""
 
-  tempfile_cleanup = absltest.TempFileCleanup[os.environ.get(
-      'ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP', 'SUCCESS')]
+  tempfile_cleanup = absltest.TempFileCleanup[
+      os.environ.get('ABSLTEST_TEST_HELPER_TEMPFILE_CLEANUP', 'SUCCESS')
+  ]
 
   def test_failure(self):
     self.create_tempfile('failure')

@@ -23,7 +23,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.coverage',
     'sphinxcontrib.apidoc',  # convert .py sources to .rst docs.
-    'm2r2',                  # for .md files
+    'm2r2',  # for .md files
 ]
 
 # sphinxcontrib.apidoc vars
@@ -56,5 +56,5 @@ html_theme = 'sphinx_rtd_theme'
 # -- Options for EPUB output
 epub_show_urls = 'footnote'
 
-sys.path.insert(0, os.path.abspath('../..'))       # access to README.md
+sys.path.insert(0, os.path.abspath('../..'))  # access to README.md
 sys.path.insert(0, os.path.abspath('../../absl'))  # access to python sources

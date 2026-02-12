@@ -26,9 +26,13 @@ from absl.flags.tests import module_bar
 FLAGS = flags.FLAGS
 
 
-DECLARED_KEY_FLAGS = ['tmod_bar_x', 'tmod_bar_z', 'tmod_bar_t',
-                      # Special (not user-defined) flag:
-                      'flagfile']
+DECLARED_KEY_FLAGS = [
+    'tmod_bar_x',
+    'tmod_bar_z',
+    'tmod_bar_t',
+    # Special (not user-defined) flag:
+    'flagfile',
+]
 
 
 def define_flags(flag_values=FLAGS):
@@ -36,12 +40,18 @@ def define_flags(flag_values=FLAGS):
   module_bar.define_flags(flag_values=flag_values)
   # The 'tmod_foo_' prefix (short for 'test_module_foo') ensures that we
   # have no name clash with existing flags.
-  flags.DEFINE_boolean('tmod_foo_bool', True, 'Boolean flag from module foo.',
-                       flag_values=flag_values)
-  flags.DEFINE_string('tmod_foo_str', 'default', 'String flag.',
-                      flag_values=flag_values)
-  flags.DEFINE_integer('tmod_foo_int', 3, 'Sample int flag.',
-                       flag_values=flag_values)
+  flags.DEFINE_boolean(
+      'tmod_foo_bool',
+      True,
+      'Boolean flag from module foo.',
+      flag_values=flag_values,
+  )
+  flags.DEFINE_string(
+      'tmod_foo_str', 'default', 'String flag.', flag_values=flag_values
+  )
+  flags.DEFINE_integer(
+      'tmod_foo_int', 3, 'Sample int flag.', flag_values=flag_values
+  )
 
 
 def declare_key_flags(flag_values=FLAGS):
@@ -114,8 +124,9 @@ def duplicate_flags(flagnames=None):
   """
   flag_values = flags.FlagValues()
   for name in flagnames:
-    flags.DEFINE_boolean(name, False, 'Flag named %s' % (name,),
-                         flag_values=flag_values)
+    flags.DEFINE_boolean(
+        name, False, 'Flag named %s' % (name,), flag_values=flag_values
+    )
   return flag_values
 
 

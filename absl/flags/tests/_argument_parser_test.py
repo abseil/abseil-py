@@ -173,12 +173,14 @@ class EnumClassParserTest(parameterized.TestCase):
     with self.assertRaises(ValueError):
       parser.parse('ORANGE')
 
-  @parameterized.parameters((Fruit.BANANA, False, 'BANANA'),
-                            (Fruit.BANANA, True, 'banana'))
+  @parameterized.parameters(
+      (Fruit.BANANA, False, 'BANANA'), (Fruit.BANANA, True, 'banana')
+  )
   def test_serialize_parse(self, value, lowercase, expected):
     serializer = _argument_parser.EnumClassSerializer(lowercase=lowercase)
     parser = _argument_parser.EnumClassParser(
-        Fruit, case_sensitive=not lowercase)
+        Fruit, case_sensitive=not lowercase
+    )
     serialized = serializer.serialize(value)
     self.assertEqual(serialized, expected)
     self.assertEqual(value, parser.parse(expected))
@@ -197,7 +199,8 @@ class SerializerTest(parameterized.TestCase):
   def test_enum_class_list_serializer(self, lowercase, expected):
     values = [Fruit.APPLE, Fruit.BANANA]
     serializer = _argument_parser.EnumClassListSerializer(
-        list_sep='+', lowercase=lowercase)
+        list_sep='+', lowercase=lowercase
+    )
     serialized = serializer.serialize(values)
     self.assertEqual(expected, serialized)
 

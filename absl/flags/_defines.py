@@ -95,7 +95,8 @@ def DEFINE(  # pylint: disable=invalid-name
     serializer=None,
     module_name=None,
     required=False,
-    **args):
+    **args
+):
   """Registers a generic Flag object.
 
   NOTE: in the docstrings of all DEFINE* functions, "registers" is short
@@ -150,10 +151,8 @@ def DEFINE_flag(  # pylint: disable=invalid-name
 
 
 def DEFINE_flag(  # pylint: disable=invalid-name
-    flag,
-    flag_values=_flagvalues.FLAGS,
-    module_name=None,
-    required=False):
+    flag, flag_values=_flagvalues.FLAGS, module_name=None, required=False
+):
   """Registers a :class:`Flag` object with a :class:`FlagValues` object.
 
   By default, the global :const:`FLAGS` ``FlagValue`` object is used.
@@ -193,7 +192,8 @@ def DEFINE_flag(  # pylint: disable=invalid-name
     _validators.mark_flag_as_required(flag.name, fv)
   ensure_non_none_value = (flag.default is not None) or required
   return _flagvalues.FlagHolder(
-      fv, flag, ensure_non_none_value=ensure_non_none_value)
+      fv, flag, ensure_non_none_value=ensure_non_none_value
+  )
 
 
 def set_default(flag_holder: _flagvalues.FlagHolder[_T], value: _T) -> None:
@@ -289,10 +289,10 @@ def declare_key_flag(
   Args:
     flag_name: str | :class:`FlagHolder`, the name or holder of an already
       declared flag. (Redeclaring flags as key, including flags implicitly key
-      because they were declared in this module, is a no-op.)
-      Positional-only parameter.
-    flag_values: :class:`FlagValues`, the FlagValues instance in which the
-      flag will be declared as a key flag. This should almost never need to be
+      because they were declared in this module, is a no-op.) Positional-only
+      parameter.
+    flag_values: :class:`FlagValues`, the FlagValues instance in which the flag
+      will be declared as a key flag. This should almost never need to be
       overridden.
 
   Raises:
@@ -304,15 +304,19 @@ def declare_key_flag(
     # These flags are defined in SPECIAL_FLAGS, and are treated
     # specially during flag parsing, taking precedence over the
     # user-defined flags.
-    _internal_declare_key_flags([flag_name],
-                                flag_values=_helpers.SPECIAL_FLAGS,
-                                key_flag_values=flag_values)
+    _internal_declare_key_flags(
+        [flag_name],
+        flag_values=_helpers.SPECIAL_FLAGS,
+        key_flag_values=flag_values,
+    )
     return
   try:
     _internal_declare_key_flags([flag_name], flag_values=flag_values)
   except KeyError:
-    raise ValueError('Flag --%s is undefined. To set a flag as a key flag '
-                     'first define it in Python.' % flag_name)
+    raise ValueError(
+        'Flag --%s is undefined. To set a flag as a key flag '
+        'first define it in Python.' % flag_name
+    )
 
 
 def adopt_module_key_flags(
@@ -323,8 +327,8 @@ def adopt_module_key_flags(
   Args:
     module: module, the module object from which all key flags will be declared
       as key flags to the current module.
-    flag_values: :class:`FlagValues`, the FlagValues instance in which the
-      flags will be declared as key flags. This should almost never need to be
+    flag_values: :class:`FlagValues`, the FlagValues instance in which the flags
+      will be declared as key flags. This should almost never need to be
       overridden.
 
   Raises:
@@ -335,7 +339,8 @@ def adopt_module_key_flags(
     raise _exceptions.Error('Expected a module object, not %r.' % (module,))
   _internal_declare_key_flags(
       [f.name for f in flag_values.get_key_flags_for_module(module.__name__)],
-      flag_values=flag_values)
+      flag_values=flag_values,
+  )
   # If module is this flag module, take _helpers.SPECIAL_FLAGS into account.
   if module == _helpers.FLAGS_MODULE:
     _internal_declare_key_flags(
@@ -346,7 +351,8 @@ def adopt_module_key_flags(
         # FlagValues, where no other module should register flags).
         [_helpers.SPECIAL_FLAGS[name].name for name in _helpers.SPECIAL_FLAGS],
         flag_values=_helpers.SPECIAL_FLAGS,
-        key_flag_values=flag_values)
+        key_flag_values=flag_values,
+    )
 
 
 def disclaim_key_flags() -> None:
@@ -1010,7 +1016,8 @@ def DEFINE_spaceseplist(  # pylint: disable=invalid-name
     a handle to defined flag.
   """
   parser = _argument_parser.WhitespaceSeparatedListParser(
-      comma_compat=comma_compat)
+      comma_compat=comma_compat
+  )
   serializer = _argument_parser.ListSerializer(' ')
   return DEFINE(
       parser,
@@ -1699,4 +1706,8 @@ def DEFINE_alias(  # pylint: disable=invalid-name
           name,
           flag.default,
           help_msg,
-          boolean=flag.boolean), flag_values, module_name)
+          boolean=flag.boolean,
+      ),
+      flag_values,
+      module_name,
+  )

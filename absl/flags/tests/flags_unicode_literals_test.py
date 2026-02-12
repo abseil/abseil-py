@@ -18,8 +18,11 @@ from absl import flags
 from absl.testing import absltest
 
 
-flags.DEFINE_string('seen_in_crittenden', 'alleged mountain lion',
-                    'This tests if unicode input to these functions works.')
+flags.DEFINE_string(
+    'seen_in_crittenden',
+    'alleged mountain lion',
+    'This tests if unicode input to these functions works.',
+)
 
 
 class FlagsUnicodeLiteralsTest(absltest.TestCase):

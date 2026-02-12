@@ -35,11 +35,12 @@ class Validator:
     """Constructor to create all validators.
 
     Args:
-      checker: function to verify the constraint.
-          Input of this method varies, see SingleFlagValidator and
-          multi_flags_validator for a detailed description.
+      checker: function to verify the constraint. Input of this method varies,
+        see SingleFlagValidator and multi_flags_validator for a detailed
+        description.
       message: str, error message to be shown to the user.
     """
+
     self.checker = checker
     self.message = message
     Validator.validators_count += 1
@@ -53,6 +54,7 @@ class Validator:
 
     Args:
       flag_values: flags.FlagValues, the FlagValues instance to get flags from.
+
     Raises:
       Error: Raised if constraint is not satisfied.
     """
@@ -76,6 +78,7 @@ class Validator:
 
     Args:
       flag_values: flags.FlagValues, containing all flags.
+
     Returns:
       The input to be given to checker. The return type depends on the specific
       validator.
@@ -92,6 +95,7 @@ class SingleFlagValidator(Validator):
   """
 
   def __init__(self, flag_name, checker, message):
+    # fmt: off
     """Constructor.
 
     Args:
@@ -102,8 +106,10 @@ class SingleFlagValidator(Validator):
               If constraint is not satisfied, it should either return False or
               raise flags.ValidationError(desired_error_message).
       message: str, error message to be shown to the user if validator's
-          condition is not satisfied.
+        condition is not satisfied.
     """
+    # fmt: on
+
     super().__init__(checker, message)
     self.flag_name = flag_name
 
@@ -118,6 +124,7 @@ class SingleFlagValidator(Validator):
 
     Args:
       flag_values: flags.FlagValues, the FlagValues instance to get flags from.
+
     Returns:
       object, the input to be given to checker.
     """
@@ -133,20 +140,22 @@ class MultiFlagsValidator(Validator):
   """
 
   def __init__(self, flag_names, checker, message):
+    # fmt: off
     """Constructor.
 
     Args:
       flag_names: [str], containing names of the flags used by checker.
       checker: function to verify the validator.
-          input  - dict, with keys() being flag_names, and value for each
-              key being the value of the corresponding flag (string, boolean,
-              etc).
-          output - bool, True if validator constraint is satisfied.
-              If constraint is not satisfied, it should either return False or
-              raise flags.ValidationError(desired_error_message).
+        input  - dict, with keys() being flag_names, and value for each
+            key being the value of the corresponding flag (string, boolean,
+            etc).
+        output - bool, True if validator constraint is satisfied.
+            If constraint is not satisfied, it should either return False or
+            raise flags.ValidationError(desired_error_message).
       message: str, error message to be shown to the user if validator's
-          condition is not satisfied
+        condition is not satisfied
     """
+    # fmt: on
     super().__init__(checker, message)
     self.flag_names = flag_names
 
@@ -155,6 +164,7 @@ class MultiFlagsValidator(Validator):
 
     Args:
       flag_values: flags.FlagValues, the FlagValues instance to get flags from.
+
     Returns:
       dict, with keys() being self.flag_names, and value for each key
       being the value of the corresponding flag (string, boolean, etc).

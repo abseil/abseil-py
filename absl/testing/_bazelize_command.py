@@ -33,7 +33,7 @@ def get_executable_path(py_binary_name):
 
   Args:
     py_binary_name: string, the name of a py_binary that is in another Bazel
-        target's data dependencies.
+      target's data dependencies.
 
   Raises:
     RuntimeError: Raised when it cannot locate the executable path.
@@ -53,7 +53,9 @@ def get_executable_path(py_binary_name):
           return tokens[1]
     raise RuntimeError(
         'Cannot locate executable path for {}, MANIFEST file: {}.'.format(
-            py_binary_name, manifest_file))
+            py_binary_name, manifest_file
+        )
+    )
   else:
     # NOTE: __file__ may be .py or .pyc, depending on how the module was
     # loaded and executed.

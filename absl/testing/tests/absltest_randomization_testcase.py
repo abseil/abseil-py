@@ -24,7 +24,8 @@ from absl.testing import absltest
 # the absltest library.
 if os.environ.get('LATE_SET_TEST_RANDOMIZE_ORDERING_SEED', ''):
   os.environ['TEST_RANDOMIZE_ORDERING_SEED'] = os.environ[
-      'LATE_SET_TEST_RANDOMIZE_ORDERING_SEED']
+      'LATE_SET_TEST_RANDOMIZE_ORDERING_SEED'
+  ]
 
 
 class ClassA(absltest.TestCase):

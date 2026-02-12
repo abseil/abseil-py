@@ -19,14 +19,17 @@ from absl.testing import absltest
 
 
 FLAGS = flags.FLAGS
-flags.DEFINE_boolean('set_up_module_error', False,
-                     'Cause setupModule to error.')
-flags.DEFINE_boolean('tear_down_module_error', False,
-                     'Cause tearDownModule to error.')
+flags.DEFINE_boolean(
+    'set_up_module_error', False, 'Cause setupModule to error.'
+)
+flags.DEFINE_boolean(
+    'tear_down_module_error', False, 'Cause tearDownModule to error.'
+)
 
 flags.DEFINE_boolean('set_up_class_error', False, 'Cause setUpClass to error.')
-flags.DEFINE_boolean('tear_down_class_error', False,
-                     'Cause tearDownClass to error.')
+flags.DEFINE_boolean(
+    'tear_down_class_error', False, 'Cause tearDownClass to error.'
+)
 
 flags.DEFINE_boolean('set_up_error', False, 'Cause setUp to error.')
 flags.DEFINE_boolean('tear_down_error', False, 'Cause tearDown to error.')
@@ -36,9 +39,13 @@ flags.DEFINE_boolean('set_up_fail', False, 'Cause setUp to fail.')
 flags.DEFINE_boolean('tear_down_fail', False, 'Cause tearDown to fail.')
 flags.DEFINE_boolean('test_fail', False, 'Cause the test to fail.')
 
-flags.DEFINE_float('random_error', 0.0,
-                   '0 - 1.0: fraction of a random failure at any step',
-                   lower_bound=0.0, upper_bound=1.0)
+flags.DEFINE_float(
+    'random_error',
+    0.0,
+    '0 - 1.0: fraction of a random failure at any step',
+    lower_bound=0.0,
+    upper_bound=1.0,
+)
 
 
 def _random_error():
