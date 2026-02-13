@@ -106,7 +106,7 @@ class Flag(Generic[_T]):
     self.name = name
 
     if not help_string:
-      help_string = '(no help available)'
+      raise ValueError(f'Flag --{name} MUST have a non-empty help string. Undocumented flags are technical debt.')
 
     self.help = help_string
     self.short_name = short_name
