@@ -298,6 +298,13 @@ class FunctionalTests(absltest.TestCase):
     )
     self.assertIn('<AllFlags>', stdout)
 
+  def test_only_check_flags(self):
+    self.run_helper(
+        expect_success=True,
+        arguments=['--only_check_flags'],
+        expected_stdout_substring='SUCCESS: All Abseil flags are valid.',
+    )
+
   def test_custom_main(self):
     self.run_helper(
         expect_success=True,

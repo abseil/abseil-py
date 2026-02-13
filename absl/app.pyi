@@ -31,6 +31,10 @@ class HelpXMLFlag(_flag.BooleanFlag):
   def __init__(self):
     ...
 
+class OnlyCheckFlagsFlag(_flag.BooleanFlag):
+  def __init__(self):
+    ...
+
 def define_help_flags() -> None:
   ...
 
