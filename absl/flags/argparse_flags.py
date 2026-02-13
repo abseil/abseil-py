@@ -102,6 +102,7 @@ _BUILT_IN_FLAGS = frozenset({
     'helpfull',
     'helpxml',
     'flagfile',
+    'only_check_flags',
     'undefok',
 })
 
