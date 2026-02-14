@@ -170,7 +170,7 @@ def _get_default_randomize_ordering_seed() -> int:
         above.
   """
   if FLAGS['test_randomize_ordering_seed'].present:
-    randomize = FLAGS.test_randomize_ordering_seed
+    randomize = TEST_RANDOMIZE_ORDERING_SEED.value
   elif 'TEST_RANDOMIZE_ORDERING_SEED' in os.environ:
     randomize = os.environ['TEST_RANDOMIZE_ORDERING_SEED']
   else:
@@ -203,7 +203,7 @@ TEST_TMPDIR = flags.DEFINE_string(
     allow_override_cpp=True,
 )
 
-flags.DEFINE_integer(
+TEST_RANDOM_SEED = flags.DEFINE_integer(
     'test_random_seed',
     _get_default_test_random_seed(),
     'Random seed for testing. Some test frameworks may '
@@ -211,7 +211,7 @@ flags.DEFINE_integer(
     'it is not appropriate for seeding probabilistic tests.',
     allow_override_cpp=True,
 )
-flags.DEFINE_string(
+TEST_RANDOMIZE_ORDERING_SEED = flags.DEFINE_string(
     'test_randomize_ordering_seed',
     '',
     'If positive, use this as a seed to randomize the '
@@ -221,7 +221,9 @@ flags.DEFINE_string(
     'the TEST_RANDOMIZE_ORDERING_SEED environment variable.',
     allow_override_cpp=True,
 )
-flags.DEFINE_string('xml_output_file', '', 'File to store XML test results')
+XML_OUTPUT_FILE = flags.DEFINE_string(
+    'xml_output_file', '', 'File to store XML test results'
+)
 
 
 def _open(
@@ -2884,8 +2886,9 @@ def _run_and_get_tests_result(
   # XML file name is based upon (sorted by priority):
   # --xml_output_file flag, XML_OUTPUT_FILE variable,
   # TEST_XMLOUTPUTDIR variable or RUNNING_UNDER_TEST_DAEMON variable.
-  if FLAGS.xml_output_file:
-    xml_output_file = FLAGS.xml_output_file
+  xml_output_file: str | None
+  if XML_OUTPUT_FILE.value:
+    xml_output_file = XML_OUTPUT_FILE.value
   else:
     xml_output_file = get_default_xml_output_filename()
     if xml_output_file:
@@ -2939,7 +2942,7 @@ def _run_and_get_tests_result(
   elif kwargs.get('testRunner') is None:
     kwargs['testRunner'] = _pretty_print_reporter.TextTestRunner
 
-  if FLAGS.pdb_post_mortem:
+  if app.PDB_POST_MORTEM.value:
     runner = kwargs['testRunner']
     # testRunner can be a class or an instance, which must be tested for
     # differently.
@@ -2973,7 +2976,7 @@ def _run_and_get_tests_result(
     test_program = unittest.TestProgram(*args, **kwargs)
     return test_program.result, fail_when_no_tests_ran
   finally:
-    if xml_buffer:
+    if xml_output_file and xml_buffer:
       try:
         with _open(xml_output_file, 'w') as f:
           f.write(xml_buffer.getvalue())

@@ -16,9 +16,7 @@
 
 import os
 
-from absl import flags
-
-FLAGS = flags.FLAGS
+from absl.testing import absltest
 
 
 def get_executable_path(py_binary_name):
@@ -41,7 +39,7 @@ def get_executable_path(py_binary_name):
 
   if os.name == 'nt':
     py_binary_name += '.exe'
-    manifest_file = os.path.join(FLAGS.test_srcdir, 'MANIFEST')
+    manifest_file = os.path.join(absltest.TEST_SRCDIR.value, 'MANIFEST')
     workspace_name = os.environ['TEST_WORKSPACE']
     manifest_entry = f'{workspace_name}/{py_binary_name}'
     with open(manifest_file) as manifest_fd:
