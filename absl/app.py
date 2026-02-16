@@ -46,14 +46,14 @@ except ImportError:
 
 FLAGS = flags.FLAGS
 
-flags.DEFINE_boolean(
+RUN_WITH_PDB = flags.DEFINE_boolean(
     'run_with_pdb',
     False,
     'Set to true for debug mode. PDB is used by default; $PYTHONBREAKPOINT '
     '(https://docs.python.org/3/using/cmdline.html#envvar-PYTHONBREAKPOINT) '
     'can be used to specify a custom debugger.',
 )
-flags.DEFINE_boolean(
+PDB_POST_MORTEM = flags.DEFINE_boolean(
     'pdb_post_mortem',
     False,
     'Set to true to handle uncaught exceptions with the post mortem debugger. '
@@ -61,28 +61,28 @@ flags.DEFINE_boolean(
     '(https://docs.python.org/3/using/cmdline.html#envvar-PYTHONBREAKPOINT) '
     'can be used to specify a custom one.',
 )
-flags.DEFINE_alias('pdb', 'pdb_post_mortem')
-flags.DEFINE_boolean(
+PDB = flags.DEFINE_alias('pdb', 'pdb_post_mortem')
+RUN_WITH_PROFILING = flags.DEFINE_boolean(
     'run_with_profiling',
     False,
     'Set to true for profiling the script. '
     'Execution will be slower, and the output format might '
     'change over time.',
 )
-flags.DEFINE_string(
+PROFILE_FILE = flags.DEFINE_string(
     'profile_file',
     None,
     'Dump profile information to a file (for python -m '
     'pstats). Implies --run_with_profiling.',
 )
-flags.DEFINE_boolean(
+USE_CPROFILE_FOR_PROFILING = flags.DEFINE_boolean(
     'use_cprofile_for_profiling',
     True,
     'Use cProfile instead of the profile module for '
     'profiling. This has no effect unless '
     '--run_with_profiling is set.',
 )
-flags.DEFINE_boolean(
+_ONLY_CHECK_ARGS = flags.DEFINE_boolean(
     'only_check_args',
     False,
     'Set to true to validate args and exit.',
@@ -297,7 +297,7 @@ def _register_and_parse_flags_with_usage(
     raise Error('FLAGS must be parsed after flags_parser is called.')
 
   # Exit when told so.
-  if FLAGS.only_check_args:
+  if _ONLY_CHECK_ARGS.value:
     _exit_before_main(0)
   # Immediately after flags are parsed, bump verbosity to INFO if the flag has
   # not been set.
@@ -313,21 +313,21 @@ _register_and_parse_flags_with_usage.done = False
 
 def _run_main(main, argv):
   """Calls main, optionally with a debugger or profiler."""
-  if FLAGS.run_with_pdb:
+  if RUN_WITH_PDB.value:
     sys.exit(_get_debugger_module_with_function('runcall').runcall(main, argv))
-  elif FLAGS.run_with_profiling or FLAGS.profile_file:
+  elif RUN_WITH_PROFILING.value or PROFILE_FILE.value:
     # Avoid import overhead since most apps (including performance-sensitive
     # ones) won't be run with profiling.
     # pylint: disable=g-import-not-at-top
     import atexit
 
-    if FLAGS.use_cprofile_for_profiling:
+    if USE_CPROFILE_FOR_PROFILING.value:
       import cProfile as profile
     else:
       import profile
     profiler = profile.Profile()
-    if FLAGS.profile_file:
-      atexit.register(profiler.dump_stats, FLAGS.profile_file)
+    if PROFILE_FILE.value:
+      atexit.register(profiler.dump_stats, PROFILE_FILE.value)
     else:
       atexit.register(profiler.print_stats)
     sys.exit(profiler.runcall(main, argv))
@@ -400,7 +400,7 @@ def run(
 
       # Check the tty so that we don't hang waiting for input in an
       # non-interactive scenario.
-      if FLAGS.pdb_post_mortem and sys.stdout.isatty():
+      if PDB_POST_MORTEM.value and sys.stdout.isatty():
         traceback.print_exc()
         print()
         print(' *** Entering post-mortem debugging ***')

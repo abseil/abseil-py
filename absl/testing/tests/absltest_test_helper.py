@@ -22,7 +22,6 @@ from absl import app
 from absl import flags
 from absl.testing import absltest
 
-FLAGS = flags.FLAGS
 
 _TEST_ID = flags.DEFINE_integer('test_id', 0, 'Which test to run.')
 _NAME = flags.DEFINE_multi_string('name', [], 'List of names to print.')
@@ -43,7 +42,7 @@ class HelperTest(absltest.TestCase):
 
   def test_flags(self):
     if _TEST_ID.value == 1:
-      self.assertEqual(FLAGS.test_random_seed, 301)
+      self.assertEqual(absltest.TEST_RANDOM_SEED.value, 301)
       if os.name == 'nt':
         # On Windows, it's always in the temp dir, which doesn't start with '/'.
         expected_prefix = tempfile.gettempdir()
@@ -57,7 +56,7 @@ class HelperTest(absltest.TestCase):
       )
       self.assertTrue(os.access(absltest.TEST_TMPDIR.value, os.W_OK))
     elif _TEST_ID.value == 2:
-      self.assertEqual(FLAGS.test_random_seed, 321)
+      self.assertEqual(absltest.TEST_RANDOM_SEED.value, 321)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'],
@@ -67,7 +66,7 @@ class HelperTest(absltest.TestCase):
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'],
       )
     elif _TEST_ID.value == 3:
-      self.assertEqual(FLAGS.test_random_seed, 123)
+      self.assertEqual(absltest.TEST_RANDOM_SEED.value, 123)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'],
@@ -77,7 +76,7 @@ class HelperTest(absltest.TestCase):
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_TMPDIR'],
       )
     elif _TEST_ID.value == 4:
-      self.assertEqual(FLAGS.test_random_seed, 221)
+      self.assertEqual(absltest.TEST_RANDOM_SEED.value, 221)
       self.assertEqual(
           absltest.TEST_SRCDIR.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_TEST_SRCDIR'],
@@ -99,7 +98,7 @@ class HelperTest(absltest.TestCase):
   def test_xml_env_vars(self):
     if _TEST_ID.value == 6:
       self.assertEqual(
-          FLAGS.xml_output_file,
+          absltest.XML_OUTPUT_FILE.value,
           os.environ['ABSLTEST_TEST_HELPER_EXPECTED_XML_OUTPUT_FILE'],
       )
     else:
