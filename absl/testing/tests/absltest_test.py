@@ -91,17 +91,15 @@ class BaseTestCase(parameterized.TestCase):
       self.assertEqual(
           0,
           process.returncode,
-          'Expected success, but failed with exit code {},'
-          ' stdout:\n{}\nstderr:\n{}\n'.format(
-              process.returncode, stdout, stderr
-          ),
+          f'Expected success, but failed with exit code {process.returncode},'
+          f' stdout:\n{stdout}\nstderr:\n{stderr}\n',
       )
     else:
       self.assertGreater(
           process.returncode,
           0,
           'Expected failure, but succeeded with '
-          'stdout:\n{}\nstderr:\n{}\n'.format(stdout, stderr),
+          f'stdout:\n{stdout}\nstderr:\n{stderr}\n',
       )
     return stdout, stderr, process.returncode
 
@@ -1458,7 +1456,7 @@ test case
         return hash(self.x)
 
       def __repr__(self):
-        return 'A(%r, %r)' % (self.x, self.y)
+        return f'A({self.x!r}, {self.y!r})'
 
       def __eq__(self, other):
         try:
@@ -2223,8 +2221,8 @@ class AssertSequenceStartsWithTest(parameterized.TestCase):
   def test_raise_if_empty_prefix_with_non_empty_whole(self):
     with self.assertRaisesRegex(
         AssertionError,
-        'Prefix length is 0 but whole length is %d: %s'
-        % (len(self.a), r"\[5, 'foo', \{'c': 'd'\}, None\]"),
+        f'Prefix length is 0 but whole length is {len(self.a)}: '
+        r"\[5, 'foo', \{'c': 'd'\}, None\]",
     ):
       self.assertSequenceStartsWith([], self.a)
 
@@ -2420,7 +2418,7 @@ class TestAssertLen(absltest.TestCase):
         bytearray(b'ghij'),
     ]
     for container in containers:
-      regexp = r'.* has length of %d, expected 100\.$' % len(container)
+      regexp = rf'.* has length of {len(container)}, expected 100\.$'
       with self.assertRaisesRegex(AssertionError, regexp):
         self.assertLen(container, 100)
 
@@ -2661,14 +2659,16 @@ class TempFileTest(BaseTestCase):
     stdout, stderr, _ = self.run_helper(
         0, ['TempFileHelperTest'], env, expect_success=False
     )
-    output = (
-        '\n=== Helper output ===\n'
-        '----- stdout -----\n{}\n'
-        '----- end stdout -----\n'
-        '----- stderr -----\n{}\n'
-        '----- end stderr -----\n'
-        '===== end helper output ====='
-    ).format(stdout, stderr)
+    output = textwrap.dedent(f"""\
+        === Helper output ===
+        ----- stdout -----
+        {stdout}
+        ----- end stdout -----
+        ----- stderr -----
+        {stderr}
+        ----- end stderr -----
+        ===== end helper output =====
+        """)
     self.assertIn('test_failure', stderr, output)
 
     # Adjust paths to match on Windows

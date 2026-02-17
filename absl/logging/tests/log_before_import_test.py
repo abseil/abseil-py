@@ -94,7 +94,7 @@ class LoggingInitWarningTest(absltest.TestCase):
     if not traceback_re.search(captured_stderr):
       self.fail(
           'Cannot find traceback message from logging.exception '
-          'in stderr:\n{}'.format(captured_stderr)
+          f'in stderr:\n{captured_stderr}'
       )
     # Remove the traceback so the rest of the stderr is deterministic.
     captured_stderr = traceback_re.sub('', captured_stderr)

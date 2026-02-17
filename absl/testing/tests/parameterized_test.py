@@ -57,13 +57,13 @@ def dict_decorator(key, value):
         # each test is a ('test_suffix', dict) tuple
         new_dict = old_test[1].copy()
         new_dict[key] = value
-        test_suffix = '%s_%s_%s' % (old_test[0], key, value)
+        test_suffix = f'{old_test[0]}_{key}_{value}'
         actual_tests.append((test_suffix, new_dict))
 
       test_method.testcases = actual_tests
       return test_method
     else:
-      test_suffix = '_%s_%s' % (key, value)
+      test_suffix = f'_{key}_{value}'
       tests_to_make = ((test_suffix, {key: value}),)
       # 'test_method' here is the original test method
       return parameterized.named_parameters(*tests_to_make)(test_method)
@@ -477,8 +477,9 @@ class ParameterizedTestsTest(absltest.TestCase):
     )
     test = list(ts)[0]
 
-    expected = 'test_addition0 (1, 2, 3) ({})'.format(
-        unittest.util.strclass(self.GoodAdditionParams)
+    expected = (
+        'test_addition0 (1, 2, 3)'
+        f' ({unittest.util.strclass(self.GoodAdditionParams)})'
     )
     self.assertEqual(expected, str(test))
 

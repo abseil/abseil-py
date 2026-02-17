@@ -19,6 +19,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import textwrap
 from unittest import mock
 
 from absl import flags
@@ -553,16 +554,13 @@ class ArgparseWithAppRunTest(parameterized.TestCase):
     try:
       stdout = subprocess.check_output([helper] + args, env=env, text=True)
     except subprocess.CalledProcessError as e:
-      error_info = (
-          'ERROR: argparse_helper failed\n'
-          'Command: {}\n'
-          'Exit code: {}\n'
-          '----- output -----\n{}'
-          '------------------'
-      )
-      error_info = error_info.format(
-          e.cmd, e.returncode, e.output + '\n' if e.output else '<empty>'
-      )
+      error_info = textwrap.dedent(f"""\
+        ERROR: argparse_helper failed
+        Command: {e.cmd}
+        Exit code: {e.returncode}
+        ----- output -----
+        {e.output or "<empty>"}
+        ------------------""")
       print(error_info, file=sys.stderr)
       raise
 

@@ -31,8 +31,9 @@ class FlagsUnicodeLiteralsTest(absltest.TestCase):
     alleged_mountain_lion = flags.FLAGS.seen_in_crittenden
     self.assertTrue(
         isinstance(alleged_mountain_lion, str),
-        msg='expected flag value to be a {} not {}'.format(
-            str, type(alleged_mountain_lion)
+        msg=(
+            f'expected flag value to be a {str} not'
+            f' {type(alleged_mountain_lion)}'
         ),
     )
     self.assertEqual(alleged_mountain_lion, 'alleged mountain lion')

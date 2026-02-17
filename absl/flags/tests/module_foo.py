@@ -125,7 +125,7 @@ def duplicate_flags(flagnames=None):
   flag_values = flags.FlagValues()
   for name in flagnames:
     flags.DEFINE_boolean(
-        name, False, 'Flag named %s' % (name,), flag_values=flag_values
+        name, False, f'Flag named {name}', flag_values=flag_values
     )
   return flag_values
 

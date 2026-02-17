@@ -16,19 +16,17 @@
 
 import logging
 
-assert (
-    logging.root.getEffectiveLevel() == logging.WARN
-), 'default logging.root level should be WARN, but found {}'.format(
-    logging.root.getEffectiveLevel()
+assert logging.root.getEffectiveLevel() == logging.WARN, (
+    'default logging.root level should be WARN, but found'
+    f' {logging.root.getEffectiveLevel()}'
 )
 
 # This is here to test importing logging won't change the level.
 logging.root.setLevel(logging.ERROR)
 
-assert (
-    logging.root.getEffectiveLevel() == logging.ERROR
-), 'logging.root level should be changed to ERROR, but found {}'.format(
-    logging.root.getEffectiveLevel()
+assert logging.root.getEffectiveLevel() == logging.ERROR, (
+    'logging.root level should be changed to ERROR, but found'
+    f' {logging.root.getEffectiveLevel()}'
 )
 
 # pylint: disable=g-import-not-at-top
@@ -43,10 +41,9 @@ assert (
     FLAGS['verbosity'].value == -1
 ), '-v/--verbosity should be -1 before flags are parsed.'
 
-assert (
-    logging.root.getEffectiveLevel() == logging.ERROR
-), 'logging.root level should be kept to ERROR, but found {}'.format(
-    logging.root.getEffectiveLevel()
+assert logging.root.getEffectiveLevel() == logging.ERROR, (
+    'logging.root level should be kept to ERROR, but found'
+    f' {logging.root.getEffectiveLevel()}'
 )
 
 

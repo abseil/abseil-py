@@ -61,7 +61,7 @@ class MyExceptionHandler(app.ExceptionHandler):
 def real_main(argv):
   """The main function."""
   if os.environ.get('APP_TEST_PRINT_ARGV', False):
-    sys.stdout.write('argv: {}\n'.format(' '.join(argv)))
+    sys.stdout.write(f'argv: {" ".join(argv)}\n')
 
   if FLAGS.raise_exception:
     raise MyException
@@ -122,7 +122,7 @@ def flags_parser_main(argv):
   if argv is not flags_parser_argv_sentinel:
     sys.exit(
         'FAILED: main function should be called with the return value of '
-        'flags_parser, but found: {}'.format(argv)
+        f'flags_parser, but found: {argv}'
     )
 
 

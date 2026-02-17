@@ -135,7 +135,7 @@ class TestShardingTest(parameterized.TestCase):
       self.assertGreaterEqual(
           len(outerr_by_shard[i]),
           (NUM_TEST_METHODS / total_shards) - 1,
-          'Shard %d of %d out of balance' % (i, len(outerr_by_shard)),
+          f'Shard {i} of {len(outerr_by_shard)} out of balance',
       )
 
   def test_shard_file(self):
@@ -149,7 +149,7 @@ class TestShardingTest(parameterized.TestCase):
     self.assertGreaterEqual(
         out.find('Bad sharding values. index=0, total=0'),
         0,
-        'Bad output: %s' % (out),
+        f'Bad output: {out}',
     )
 
   def test_with_four_shards(self):

@@ -207,11 +207,10 @@ def _get_fatal_log_expectation(testcase, message, include_stacktrace):
       # unusual way. Please contact the application's support team for more
       # information.
       logs = '\n'.join(logs.split('\n')[:-3])
-    format_string = (
-        'F1231 23:59:59.000000 12345 logging_functional_test_helper.py:175] '
-        '%s message\n'
+    expected_logs = (
+        'F1231 23:59:59.000000 12345 logging_functional_test_helper.py:175]'
+        f' {message} message\n'
     )
-    expected_logs = format_string % message
     if include_stacktrace:
       expected_logs += 'Stack trace:\n'
     faulthandler_start = 'Fatal Python error: Aborted'
@@ -245,7 +244,7 @@ def _munge_log(buf):
   if matched:
     threadid = matched.group(3)
     if int(threadid) < 0:
-      raise AssertionError("Negative threadid '%s' in '%s'" % (threadid, buf))
+      raise AssertionError(f"Negative threadid '{threadid}' in '{buf}'")
 
   # Timestamp
   buf = re.sub(
@@ -297,8 +296,8 @@ def _munge_log(buf):
 def _verify_status(expected, actual, output):
   if expected != actual:
     raise AssertionError(
-        'Test exited with unexpected status code %d (expected %d). '
-        'Output was:\n%s' % (actual, expected, output)
+        f'Test exited with unexpected status code {actual} (expected'
+        f' {expected}). Output was:\n{output}'
     )
 
 
@@ -404,7 +403,7 @@ class FunctionalTest(parameterized.TestCase):
       AssertionError: Assertion error when test fails.
     """
     # fmt: on
-    args = ['--log_dir=%s' % self._log_dir]
+    args = [f'--log_dir={self._log_dir}']
     if pass_logtostderr:
       args.append('--logtostderr')
     if not show_info_prefix:
@@ -415,13 +414,13 @@ class FunctionalTest(parameterized.TestCase):
     env = os.environ.copy()
     env.update({
         'TEST_NAME': test_name,
-        'USE_ABSL_LOG_FILE': '%d' % (use_absl_log_file,),
-        'CALL_DICT_CONFIG': '%d' % (call_dict_config,),
+        'USE_ABSL_LOG_FILE': str(int(use_absl_log_file)),
+        'CALL_DICT_CONFIG': str(int(call_dict_config)),
     })
     cmd = [self._get_helper()] + args
 
-    print('env: %s' % env, file=sys.stderr)
-    print('cmd: %s' % cmd, file=sys.stderr)
+    print(f'env: {env}', file=sys.stderr)
+    print(f'cmd: {cmd}', file=sys.stderr)
     process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
@@ -454,7 +453,7 @@ class FunctionalTest(parameterized.TestCase):
         assert log_type is None
         pattern = 'stderr'
       else:
-        pattern = r'%s[.].*[.]log[.]%s[.][\d.-]*$' % (log_prefix, log_type)
+        pattern = rf'{log_prefix}[.].*[.]log[.]{log_type}[.][\d.-]*$'
 
       # Is it there
       for basename in logs:
@@ -466,19 +465,15 @@ class FunctionalTest(parameterized.TestCase):
         unmatched.append(pattern)
 
     # Mismatch?
-    errors = ''
+    errors: list[str] = []
     if unmatched:
-      errors += 'The following log files were expected but not found: %s' % (
-          '\n '.join(unmatched)
-      )
+      errors.append('The following log files were expected but not found:')
+      errors.append('\n '.join(unmatched))
     if unexpected:
-      if errors:
-        errors += '\n'
-      errors += 'The following log files were not expected: %s' % (
-          '\n '.join(unexpected)
-      )
+      errors.append('The following log files were not expected:')
+      errors.append('\n '.join(unexpected))
     if errors:
-      raise AssertionError(errors)
+      raise AssertionError('\n'.join(errors))
 
     # Compare contents of matches.
     for expected, basename in matched:
@@ -497,21 +492,19 @@ class FunctionalTest(parameterized.TestCase):
           expected(actual)
         except AssertionError:
           print(
-              'expected_logs assertion failed, actual {} log:\n{}'.format(
-                  basename, actual
-              ),
+              f'expected_logs assertion failed, actual {basename}'
+              f' log:\n{actual}',
               file=sys.stderr,
           )
           raise
       elif isinstance(expected, str):
         self.assertMultiLineEqual(
-            _munge_log(expected), _munge_log(actual), '%s differs' % basename
+            _munge_log(expected), _munge_log(actual), f'{basename} differs'
         )
       else:
         self.fail(
-            'Invalid value found for expected logs: {}, type: {}'.format(
-                expected, type(expected)
-            )
+            f'Invalid value found for expected logs: {expected}, type:'
+            f' {type(expected)}'
         )
 
   @parameterized.named_parameters(('', False), ('logtostderr', True))
@@ -642,7 +635,7 @@ class FunctionalTest(parameterized.TestCase):
   @parameterized.named_parameters(*_VERBOSITY_FLAG_TEST_PARAMETERS)
   def test_py_logging_verbosity_stderr(self, verbosity):
     """Tests -v/--verbosity flag with python logging to stderr."""
-    v_flag = '-v=%d' % verbosity
+    v_flag = f'-v={verbosity}'
     self._exec_test(
         _verify_ok,
         [['stderr', None, self._get_logs(verbosity)]],
@@ -652,7 +645,7 @@ class FunctionalTest(parameterized.TestCase):
   @parameterized.named_parameters(*_VERBOSITY_FLAG_TEST_PARAMETERS)
   def test_py_logging_verbosity_file(self, verbosity):
     """Tests -v/--verbosity flag with Python logging to stderr."""
-    v_flag = '-v=%d' % verbosity
+    v_flag = f'-v={verbosity}'
     self._exec_test(
         _verify_ok,
         [

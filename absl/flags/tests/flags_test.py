@@ -663,7 +663,7 @@ class FlagsUnitTest(absltest.TestCase):
         ('testspace_or_comma_list', ','),
     ):
       for lst in lists:
-        argv = ('./program', '--%s=%s' % (name, sep.join(lst)))
+        argv = ('./program', f'--{name}={sep.join(lst)}')
         argv = FLAGS(argv)
         self.assertEqual(getattr(FLAGS, name), lst)
 
@@ -829,11 +829,11 @@ class FlagsUnitTest(absltest.TestCase):
       for name in flagnames:
         flag_value = FLAGS.get_flag_value(name, None)
         if not isinstance(FLAGS[name], flags.BooleanFlag):
-          nonbool_flags.append('--%s %s' % (name, flag_value))
+          nonbool_flags.append(f'--{name} {flag_value}')
         elif flag_value:
-          truebool_flags.append('--%s' % name)
+          truebool_flags.append(f'--{name}')
         else:
-          falsebool_flags.append('--no%s' % name)
+          falsebool_flags.append(f'--no{name}')
       all_flags = nonbool_flags + truebool_flags + falsebool_flags
       all_flags.sort()
       return all_flags
@@ -1462,7 +1462,7 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
 
     helpstr = fv.main_module_help()
-    expected_help = '\n%s:\n  --fruit: <apple|orange>: ?' % sys.argv[0]
+    expected_help = f'\n{sys.argv[0]}:\n  --fruit: <apple|orange>: ?'
 
     self.assertEqual(helpstr, expected_help)
 
@@ -2044,19 +2044,19 @@ class LoadFromFlagFileTest(absltest.TestCase):
     file_list = [tmp_flag_file_1.name]
     # this one includes test file 1
     tmp_flag_file_2.write('//A Different Fake Comment\n')
-    tmp_flag_file_2.write('--flagfile=%s\n' % tmp_flag_file_1.name)
+    tmp_flag_file_2.write(f'--flagfile={tmp_flag_file_1.name}\n')
     tmp_flag_file_2.write('--unittest_message2=setFromTempFile2\n')
     tmp_flag_file_2.write('\t\t\n')
     tmp_flag_file_2.write('--unittest_number=6789a\n')
     file_list.append(tmp_flag_file_2.name)
     # this file points to itself
-    tmp_flag_file_3.write('--flagfile=%s\n' % tmp_flag_file_3.name)
+    tmp_flag_file_3.write(f'--flagfile={tmp_flag_file_3.name}\n')
     tmp_flag_file_3.write('--unittest_message1=setFromTempFile3\n')
     tmp_flag_file_3.write('#YAFC\n')
     tmp_flag_file_3.write('--unittest_boolflag\n')
     file_list.append(tmp_flag_file_3.name)
     # this file is unreadable
-    tmp_flag_file_4.write('--flagfile=%s\n' % tmp_flag_file_3.name)
+    tmp_flag_file_4.write(f'--flagfile={tmp_flag_file_3.name}\n')
     tmp_flag_file_4.write('--unittest_message1=setFromTempFile4\n')
     tmp_flag_file_4.write('--unittest_message1=setFromTempFile4\n')
     os.chmod(self.tmp_path + '/UnitTestFile4.tst', 0)
@@ -2095,7 +2095,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Tests parsing one file + arguments off simulated argv."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = 'fooScript --q --flagfile=%s' % tmp_files[0]
+    fake_cmd_line = f'fooScript --q --flagfile={tmp_files[0]}'
     fake_argv = fake_cmd_line.split(' ')
 
     # We should see the original cmd line with the file's contents spliced in.
@@ -2117,9 +2117,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Tests parsing nested files + arguments of simulated argv."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = (
-        'fooScript --unittest_number=77 --flagfile=%s' % tmp_files[1]
-    )
+    fake_cmd_line = f'fooScript --unittest_number=77 --flagfile={tmp_files[1]}'
     fake_argv = fake_cmd_line.split(' ')
 
     expected_results = [
@@ -2144,9 +2142,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = (
-        'fooScript --unittest_number 77 --flagfile=%s' % tmp_files[1]
-    )
+    fake_cmd_line = f'fooScript --unittest_number 77 --flagfile={tmp_files[1]}'
     fake_argv = fake_cmd_line.split(' ')
 
     expected_results = [
@@ -2171,7 +2167,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
     fake_cmd_line = (
-        'fooScript --unittest_boolflag 77 --flagfile=%s' % tmp_files[1]
+        f'fooScript --unittest_boolflag 77 --flagfile={tmp_files[1]}'
     )
     fake_argv = fake_cmd_line.split(' ')
 
@@ -2179,7 +2175,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
         'fooScript',
         '--unittest_boolflag',
         '77',
-        '--flagfile=%s' % tmp_files[1],
+        f'--flagfile={tmp_files[1]}',
     ]
     with _use_gnu_getopt(self.flag_values, False):
       test_results = self._read_flags_from_files(fake_argv, False)
@@ -2192,9 +2188,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = (
-        'fooScript --flagfile=%s --nounittest_boolflag' % tmp_files[2]
-    )
+    fake_cmd_line = f'fooScript --flagfile={tmp_files[2]} --nounittest_boolflag'
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
         'fooScript',
@@ -2210,13 +2204,13 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Test that --flagfile parsing respects the '--' end-of-options marker."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = 'fooScript --some_flag -- --flagfile=%s' % tmp_files[0]
+    fake_cmd_line = f'fooScript --some_flag -- --flagfile={tmp_files[0]}'
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
         'fooScript',
         '--some_flag',
         '--',
-        '--flagfile=%s' % tmp_files[0],
+        f'--flagfile={tmp_files[0]}',
     ]
 
     test_results = self._read_flags_from_files(fake_argv, False)
@@ -2226,15 +2220,13 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Test that --flagfile parsing stops at non-options (non-GNU behavior)."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = (
-        'fooScript --some_flag some_arg --flagfile=%s' % tmp_files[0]
-    )
+    fake_cmd_line = f'fooScript --some_flag some_arg --flagfile={tmp_files[0]}'
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
         'fooScript',
         '--some_flag',
         'some_arg',
-        '--flagfile=%s' % tmp_files[0],
+        f'--flagfile={tmp_files[0]}',
     ]
 
     with _use_gnu_getopt(self.flag_values, False):
@@ -2246,9 +2238,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     self.flag_values.set_gnu_getopt()
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = (
-        'fooScript --some_flag some_arg --flagfile=%s' % tmp_files[0]
-    )
+    fake_cmd_line = f'fooScript --some_flag some_arg --flagfile={tmp_files[0]}'
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
         'fooScript',
@@ -2266,9 +2256,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Test that --flagfile parsing respects force_gnu=True."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = (
-        'fooScript --some_flag some_arg --flagfile=%s' % tmp_files[0]
-    )
+    fake_cmd_line = f'fooScript --some_flag some_arg --flagfile={tmp_files[0]}'
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
         'fooScript',
@@ -2286,9 +2274,8 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Tests that parsing repeated non-circular flagfiles works."""
     tmp_files = self._setup_test_files()
     # specify our temp files on the fake cmd line
-    fake_cmd_line = 'fooScript --flagfile=%s --flagfile=%s' % (
-        tmp_files[1],
-        tmp_files[0],
+    fake_cmd_line = (
+        f'fooScript --flagfile={tmp_files[1]} --flagfile={tmp_files[0]}'
     )
     fake_argv = fake_cmd_line.split(' ')
     expected_results = [
@@ -2314,9 +2301,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     """Test that --flagfile raises except on file that is unreadable."""
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
-    fake_cmd_line = (
-        'fooScript --some_flag some_arg --flagfile=%s' % tmp_files[3]
-    )
+    fake_cmd_line = f'fooScript --some_flag some_arg --flagfile={tmp_files[3]}'
     fake_argv = fake_cmd_line.split(' ')
     self.assertRaises(
         flags.CantOpenFlagFileError,
@@ -2330,7 +2315,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
     tmp_files = self._setup_test_files()
     # specify our temp file on the fake cmd line
     fake_cmd_line = (
-        'fooScript --some_flag some_arg --flagfile=%sNOTEXIST' % tmp_files[3]
+        f'fooScript --some_flag some_arg --flagfile={tmp_files[3]}NOTEXIST'
     )
     fake_argv = fake_cmd_line.split(' ')
     self.assertRaises(
@@ -3247,7 +3232,7 @@ class KeyFlagsTest(absltest.TestCase):
           '    (an integer)'
       )
 
-      expected_help += '\n%s:\n%s' % (sys.argv[0], main_module_int_fg_help)
+      expected_help += f'\n{sys.argv[0]}:\n{main_module_int_fg_help}'
       self.assertMultiLineEqual(
           expected_help, self.flag_values.main_module_help()
       )
@@ -3523,11 +3508,10 @@ class FlagsErrorMessagesTest(absltest.TestCase):
       self.flag_values.__setattr__(flag_name, flag_value)
       raise AssertionError('Bounds exception not raised!')
     except flags.IllegalFlagValueError as e:
-      expected = 'flag --%(name)s=%(value)s: %(value)s is not %(suffix)s' % {
-          'name': flag_name,
-          'value': flag_value,
-          'suffix': expected_message_suffix,
-      }
+      expected = (
+          f'flag --{flag_name}={flag_value}: '
+          f'{flag_value} is not {expected_message_suffix}'
+      )
       self.assertEqual(str(e), expected)
 
 

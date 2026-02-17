@@ -78,10 +78,7 @@ def _list_separators_in_xmlformat(separators, indent=''):
   separators = list(separators)
   separators.sort()
   for sep_char in separators:
-    result += '%s<list_separator>%s</list_separator>\n' % (
-        indent,
-        repr(sep_char),
-    )
+    result += f'{indent}<list_separator>{sep_char!r}</list_separator>\n'
   return result
 
 

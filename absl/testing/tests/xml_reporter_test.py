@@ -977,7 +977,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
       result.delete_pending_test_case_result(test)
 
     for i in range(50):
-      add_and_delete_pending_test_case_result('add_and_delete_test%s' % i)
+      add_and_delete_pending_test_case_result(f'add_and_delete_test{i}')
     self.assertEqual(result.pending_test_case_results, {})
 
   def test_concurrent_test_runs(self):
@@ -997,9 +997,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     names = []
     result.startTestRun()
     for i in range(num_passing_tests):
-      name = 'passing_concurrent_test_%s' % i
+      name = f'passing_concurrent_test_{i}'
       names.append(name)
-      test_name = '__main__.MockTest.%s' % name
+      test_name = f'__main__.MockTest.{name}'
       # xml_reporter uses id(test) as the test identifier.
       # In a real testing scenario, all the test instances are created before
       # running them. So all ids will be unique.
@@ -1011,9 +1011,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
           )
       )
     for i in range(num_failing_tests):
-      name = 'failing_concurrent_test_%s' % i
+      name = f'failing_concurrent_test_{i}'
       names.append(name)
-      test_name = '__main__.MockTest.%s' % name
+      test_name = f'__main__.MockTest.{name}'
       test = MockTest(test_name)
       threads.append(
           threading.Thread(
@@ -1021,9 +1021,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
           )
       )
     for i in range(num_error_tests):
-      name = 'error_concurrent_test_%s' % i
+      name = f'error_concurrent_test_{i}'
       names.append(name)
-      test_name = '__main__.MockTest.%s' % name
+      test_name = f'__main__.MockTest.{name}'
       test = MockTest(test_name)
       threads.append(
           threading.Thread(
@@ -1042,9 +1042,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
       if tn not in self.xml_stream.getvalue():
         tests_not_in_xml.append(tn)
     msg = (
-        'Expected xml_stream to contain all test %s results, but %s tests '
-        'are missing. List of missing tests: %s'
-        % (total_num_tests, len(tests_not_in_xml), tests_not_in_xml)
+        f'Expected xml_stream to contain all test {total_num_tests} results,'
+        f' but {len(tests_not_in_xml)} tests are missing. List of missing'
+        f' tests: {tests_not_in_xml}'
     )
     self.assertEqual([], tests_not_in_xml, msg)
 
@@ -1110,7 +1110,7 @@ class XmlReporterFixtureTest(absltest.TestCase):
 
     try:
       binary = self._get_helper()
-      args = [binary, flag, '--xml_output_file=%s' % xml_fname]
+      args = [binary, flag, f'--xml_output_file={xml_fname}']
       ret = subprocess.call(args)
       self.assertEqual(ret, 0)
 
@@ -1126,7 +1126,7 @@ class XmlReporterFixtureTest(absltest.TestCase):
 
     try:
       binary = self._get_helper()
-      args = [binary, flag, '--xml_output_file=%s' % xml_fname]
+      args = [binary, flag, f'--xml_output_file={xml_fname}']
       ret = subprocess.call(args)
       self.assertNotEqual(ret, 0)
 

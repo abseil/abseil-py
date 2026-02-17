@@ -732,9 +732,7 @@ class ABSLLogPrefixTest(parameterized.TestCase):
     # Use UTC so the test passes regardless of the local time zone.
     with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
       self.assertEqual(
-          '{}0509 01:38:00.378885 {} source.py:13] '.format(
-              level_prefix, thread_id
-          ),
+          f'{level_prefix}0509 01:38:00.378885 {thread_id} source.py:13] ',
           logging.get_absl_log_prefix(self.record),
       )
       time.localtime.assert_called_once_with(self.record.created)
@@ -783,9 +781,7 @@ class ABSLLogPrefixTest(parameterized.TestCase):
     # Use UTC so the test passes regardless of the local time zone.
     with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
       self.assertEqual(
-          'E0509 01:38:00.378885 {} source.py:13] CRITICAL - '.format(
-              thread_id
-          ),
+          f'E0509 01:38:00.378885 {thread_id} source.py:13] CRITICAL - ',
           logging.get_absl_log_prefix(self.record),
       )
       time.localtime.assert_called_once_with(self.record.created)
@@ -878,7 +874,7 @@ class LoggingTest(absltest.TestCase):
       mock_gethostname.return_value = host
       mock_find_log_dir.return_value = log_dir
 
-      prefix = '%s.%s.%s.log' % (program_name, host, user)
+      prefix = f'{program_name}.{host}.{user}.log'
       self.assertEqual(
           (log_dir, prefix, program_name),
           logging.find_log_dir_and_names(
@@ -898,7 +894,7 @@ class LoggingTest(absltest.TestCase):
       getpass.getuser.return_value = user
       socket.gethostname.return_value = host
       mock_find_log_dir.return_value = log_dir
-      prefix = '%s.%s.%s.log' % (py_program_name, host, user)
+      prefix = f'{py_program_name}.{host}.{user}.log'
       self.assertEqual(
           (log_dir, prefix, py_program_name), logging.find_log_dir_and_names()
       )
@@ -931,7 +927,7 @@ class LoggingTest(absltest.TestCase):
       mock_gethostname.return_value = host
       mock_find_log_dir.return_value = log_dir
 
-      prefix = '%s.%s.%s.log' % (program_name, host, logged_uid)
+      prefix = f'{program_name}.{host}.{logged_uid}.log'
       self.assertEqual(
           (log_dir, prefix, program_name),
           logging.find_log_dir_and_names(
