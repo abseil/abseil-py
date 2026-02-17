@@ -117,7 +117,7 @@ class SingleFlagValidator(Validator):
     return [self.flag_name]
 
   def print_flags_with_values(self, flag_values):
-    return 'flag --%s=%s' % (self.flag_name, flag_values[self.flag_name].value)
+    return f'flag --{self.flag_name}={flag_values[self.flag_name].value}'
 
   def _get_input_to_checker_function(self, flag_values):
     """Given flag values, returns the input to be given to checker.
@@ -175,7 +175,7 @@ class MultiFlagsValidator(Validator):
     prefix = 'flags '
     flags_with_values = []
     for key in self.flag_names:
-      flags_with_values.append('%s=%s' % (key, flag_values[key].value))
+      flags_with_values.append(f'{key}={flag_values[key].value}')
     return prefix + ', '.join(flags_with_values)
 
   def get_flags_names(self):

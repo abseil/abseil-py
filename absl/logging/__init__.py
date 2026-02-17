@@ -288,7 +288,7 @@ class _StderrthresholdFlag(flags.Flag):
       raise ValueError(
           '--stderrthreshold must be one of (case-insensitive) '
           "'debug', 'info', 'warning', 'error', 'fatal', "
-          "or '0', '1', '2', '3', not '%s'" % v
+          f"or '0', '1', '2', '3', not '{v}'"
       )
 
     self._value = v
@@ -409,7 +409,7 @@ def set_stderrthreshold(s):
         'set_stderrthreshold only accepts integer absl logging level '
         'from -3 to 1, or case-insensitive string values '
         "'debug', 'info', 'warning', 'error', and 'fatal'. "
-        'But found "{}" ({}).'.format(s, type(s))
+        f'But found "{s}" ({type(s)}).'
     )
 
 
@@ -756,7 +756,7 @@ def find_log_dir_and_names(program_name=None, log_dir=None):
 
     # Prepend py_ to files so that python code gets a unique file, and
     # so that C++ libraries do not try to write to the same log files as us.
-    program_name = 'py_%s' % program_name
+    program_name = f'py_{program_name}'
 
   actual_log_dir = find_log_dir(log_dir=log_dir)
 
@@ -770,7 +770,7 @@ def find_log_dir_and_names(program_name=None, log_dir=None):
     else:
       username = 'unknown'
   hostname = socket.gethostname()
-  file_prefix = '%s.%s.%s.log' % (program_name, hostname, username)
+  file_prefix = f'{program_name}.{hostname}.{username}.log'
 
   return actual_log_dir, file_prefix, program_name
 
@@ -806,7 +806,7 @@ def find_log_dir(log_dir=None):
     if os.path.isdir(d) and os.access(d, os.W_OK):
       return d
   raise FileNotFoundError(
-      "Can't find a writable directory for logs, tried %s" % dirs
+      f"Can't find a writable directory for logs, tried {dirs}"
   )
 
 
@@ -913,11 +913,8 @@ class PythonHandler(logging.StreamHandler):
         program_name=program_name, log_dir=log_dir
     )
 
-    basename = '%s.INFO.%s.%d' % (
-        file_prefix,
-        time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time())),
-        os.getpid(),
-    )
+    timestamp = time.strftime('%Y%m%d-%H%M%S', time.localtime(time.time()))
+    basename = f'{file_prefix}.INFO.{timestamp}.{os.getpid()}'
     filename = os.path.join(actual_log_dir, basename)
 
     self.stream = open(filename, 'a', encoding='utf-8')

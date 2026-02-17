@@ -234,11 +234,10 @@ def parse_flags_with_usage(args):
   except flags.Error as error:
     message = str(error)
     if '\n' in message:
-      final_message = 'FATAL Flags parsing error:\n%s\n' % textwrap.indent(
-          message, '  '
-      )
+      message = textwrap.indent(message, '  ')
+      final_message = f'FATAL Flags parsing error:\n{message}\n'
     else:
-      final_message = 'FATAL Flags parsing error: %s\n' % message
+      final_message = f'FATAL Flags parsing error: {message}\n'
     sys.stderr.write(final_message)
     sys.stderr.write('Pass --helpshort or --helpfull to see help on flags.\n')
     _exit_before_main(1)
@@ -488,7 +487,7 @@ def usage(
 
   doc = sys.modules['__main__'].__doc__
   if not doc:
-    doc = '\nUSAGE: %s [flags]\n' % sys.argv[0]
+    doc = f'\nUSAGE: {sys.argv[0]} [flags]\n'
     doc = flags.text_wrap(doc, indent='       ', firstline_indent='')
   else:
     # Replace all '%s' with sys.argv[0], and all '%%' with '%'.
@@ -509,7 +508,7 @@ def usage(
       stdfile.write(flag_str)
     stdfile.write('\n')
     if detailed_error is not None:
-      stdfile.write('\n%s\n' % detailed_error)
+      stdfile.write(f'\n{detailed_error}\n')
   except OSError as e:
     # We avoid printing a huge backtrace if we get EPIPE, because
     # "foo.par --help | less" is a frequent use case.
@@ -560,7 +559,7 @@ def install_exception_handler(handler):
   """
   if not isinstance(handler, ExceptionHandler):
     raise TypeError(
-        'handler of type %s does not inherit from ExceptionHandler'
-        % type(handler)
+        f'handler of type {type(handler)} does not inherit from'
+        ' ExceptionHandler'
     )
   EXCEPTION_HANDLERS.append(handler)

@@ -217,12 +217,12 @@ def _construct_overrider(flag_overrider_cls, *args, **kwargs):
   # In which case they augment any specified kwargs.
   for arg in args:
     if not isinstance(arg, tuple) or len(arg) != 2:
-      raise ValueError('Expected (FlagHolder, value) pair, found %r' % (arg,))
+      raise ValueError(f'Expected (FlagHolder, value) pair, found {arg!r}')
     holder, value = arg
     if not isinstance(holder, flags.FlagHolder):
-      raise ValueError('Expected (FlagHolder, value) pair, found %r' % (arg,))
+      raise ValueError(f'Expected (FlagHolder, value) pair, found {arg!r}')
     if holder.name in kwargs:
-      raise ValueError('Cannot set --%s multiple times' % holder.name)
+      raise ValueError(f'Cannot set --{holder.name} multiple times')
     kwargs[holder.name] = value
   return flag_overrider_cls(**kwargs)
 

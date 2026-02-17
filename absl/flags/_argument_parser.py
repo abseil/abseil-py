@@ -108,9 +108,7 @@ class ArgumentParser(Generic[_T], metaclass=_ArgumentParserCache):
       The parsed value in native type.
     """
     if not isinstance(argument, str):
-      raise TypeError(
-          'flag value must be a string, found "{}"'.format(type(argument))
-      )
+      raise TypeError(f'flag value must be a string, found "{type(argument)}"')
     return argument  # type: ignore[return-value]
 
   def flag_type(self) -> str:
@@ -156,7 +154,7 @@ class NumericParser(ArgumentParser[_N]):
     """See base class."""
     val = self.convert(argument)
     if self.is_outside_bounds(val):
-      raise ValueError('%s is not %s' % (val, self.syntactic_help))
+      raise ValueError(f'{val} is not {self.syntactic_help}')
     return val
 
   def _custom_xml_dom_elements(
@@ -209,15 +207,15 @@ class FloatParser(NumericParser[float]):
     self.upper_bound = upper_bound
     sh = self.syntactic_help
     if lower_bound is not None and upper_bound is not None:
-      sh = '%s in the range [%s, %s]' % (sh, lower_bound, upper_bound)
+      sh = f'{sh} in the range [{lower_bound}, {upper_bound}]'
     elif lower_bound == 0:
-      sh = 'a non-negative %s' % self.number_name
+      sh = f'a non-negative {self.number_name}'
     elif upper_bound == 0:
-      sh = 'a non-positive %s' % self.number_name
+      sh = f'a non-positive {self.number_name}'
     elif upper_bound is not None:
-      sh = '%s <= %s' % (self.number_name, upper_bound)
+      sh = f'{self.number_name} <= {upper_bound}'
     elif lower_bound is not None:
-      sh = '%s >= %s' % (self.number_name, lower_bound)
+      sh = f'{self.number_name} >= {lower_bound}'
     self.syntactic_help = sh
 
   def convert(self, argument: int | float | str) -> float:
@@ -230,9 +228,8 @@ class FloatParser(NumericParser[float]):
       return float(argument)
     else:
       raise TypeError(
-          'Expect argument to be a string, int, or float, found {}'.format(
-              type(argument)
-          )
+          'Expect argument to be a string, int, or float, found'
+          f' {type(argument)}'
       )
 
   def flag_type(self) -> str:
@@ -258,19 +255,19 @@ class IntegerParser(NumericParser[int]):
     self.upper_bound = upper_bound
     sh = self.syntactic_help
     if lower_bound is not None and upper_bound is not None:
-      sh = '%s in the range [%s, %s]' % (sh, lower_bound, upper_bound)
+      sh = f'{sh} in the range [{lower_bound}, {upper_bound}]'
     elif lower_bound == 1:
-      sh = 'a positive %s' % self.number_name
+      sh = f'a positive {self.number_name}'
     elif upper_bound == -1:
-      sh = 'a negative %s' % self.number_name
+      sh = f'a negative {self.number_name}'
     elif lower_bound == 0:
-      sh = 'a non-negative %s' % self.number_name
+      sh = f'a non-negative {self.number_name}'
     elif upper_bound == 0:
-      sh = 'a non-positive %s' % self.number_name
+      sh = f'a non-positive {self.number_name}'
     elif upper_bound is not None:
-      sh = '%s <= %s' % (self.number_name, upper_bound)
+      sh = f'{self.number_name} <= {upper_bound}'
     elif lower_bound is not None:
-      sh = '%s >= %s' % (self.number_name, lower_bound)
+      sh = f'{self.number_name} >= {lower_bound}'
     self.syntactic_help = sh
 
   def convert(self, argument: int | str) -> int:
@@ -287,9 +284,7 @@ class IntegerParser(NumericParser[int]):
       return int(argument, base)
     else:
       raise TypeError(
-          'Expect argument to be a string or int, found {}'.format(
-              type(argument)
-          )
+          f'Expect argument to be a string or int, found {type(argument)}'
       )
 
   def flag_type(self) -> str:
@@ -362,16 +357,14 @@ class EnumParser(ArgumentParser[str]):
     """
     if self.case_sensitive:
       if argument not in self.enum_values:
-        raise ValueError(
-            'value should be one of <%s>' % '|'.join(self.enum_values)
-        )
+        expected_values = '|'.join(self.enum_values)
+        raise ValueError(f'value should be one of <{expected_values}>')
       else:
         return argument
     else:
       if argument.upper() not in [value.upper() for value in self.enum_values]:
-        raise ValueError(
-            'value should be one of <%s>' % '|'.join(self.enum_values)
-        )
+        expected_values = '|'.join(self.enum_values)
+        raise ValueError(f'value should be one of <{expected_values}>')
       else:
         return [
             value
@@ -405,7 +398,7 @@ class EnumClassParser(ArgumentParser[_ET]):
       raise TypeError(f'{enum_class} is not a subclass of Enum.')
     if not enum_class.__members__:
       raise ValueError(
-          'enum_class cannot be empty, but "{}" is empty.'.format(enum_class)
+          f'enum_class cannot be empty, but "{enum_class}" is empty.'
       )
     if not case_sensitive:
       members = collections.Counter(
@@ -416,9 +409,8 @@ class EnumClassParser(ArgumentParser[_ET]):
       }
       if duplicate_keys:
         raise ValueError(
-            'Duplicate enum values for {} using case_sensitive=False'.format(
-                duplicate_keys
-            )
+            f'Duplicate enum values for {duplicate_keys} using '
+            'case_sensitive=False'
         )
 
     super().__init__()
@@ -452,9 +444,8 @@ class EnumClassParser(ArgumentParser[_ET]):
       return argument  # pytype: disable=bad-return-type
     elif not isinstance(argument, str):
       raise ValueError(
-          '{} is not an enum member or a name of a member in {}'.format(
-              argument, self.enum_class
-          )
+          f'{argument} is not an enum member or a name of a member in '
+          f'{self.enum_class}'
       )
     key = EnumParser(
         self._member_names, case_sensitive=self._case_sensitive
@@ -562,7 +553,7 @@ class BaseListParser(ArgumentParser):
     super().__init__()
     self._token = token
     self._name = name
-    self.syntactic_help = 'a %s separated list' % self._name
+    self.syntactic_help = f'a {self._name} separated list'
 
   def parse(self, argument: str) -> list[str]:
     """See base class."""
@@ -575,7 +566,7 @@ class BaseListParser(ArgumentParser):
 
   def flag_type(self) -> str:
     """See base class."""
-    return '%s separated list of strings' % self._name
+    return f'{self._name} separated list of strings'
 
 
 class ListParser(BaseListParser):
@@ -600,8 +591,8 @@ class ListParser(BaseListParser):
         # was previously "reported" by allowing csv.Error to
         # propagate.
         raise ValueError(
-            'Unable to parse the value %r as a %s: %s'
-            % (argument, self.flag_type(), e)
+            f'Unable to parse the value {argument!r} as a '
+            f'{self.flag_type()}: {e}'
         )
 
   def _custom_xml_dom_elements(

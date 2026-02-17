@@ -237,12 +237,10 @@ class DuplicateTestNameError(Exception):
 
   def __init__(self, test_class_name, new_test_name, original_test_name):
     super().__init__(
-        'Duplicate parameterized test name in {}: generated test name {!r} '
-        '(generated from {!r}) already exists. Consider using '
-        'named_parameters() to give your tests unique names and/or renaming '
-        'the conflicting test method.'.format(
-            test_class_name, new_test_name, original_test_name
-        )
+        f'Duplicate parameterized test name in {test_class_name}: generated'
+        f' test name {new_test_name!r} (generated from {original_test_name!r})'
+        ' already exists. Consider using named_parameters() to give your tests'
+        ' unique names and/or renaming the conflicting test method.'
     )
 
 
@@ -261,7 +259,7 @@ def _non_string_or_bytes_iterable(obj):
 def _format_parameter_list(testcase_params):
   if isinstance(testcase_params, abc.Mapping):
     return ', '.join(
-        '%s=%s' % (argname, _clean_repr(value))
+        f'{argname}={_clean_repr(value)}'
         for argname, value in testcase_params.items()
     )
   elif _non_string_or_bytes_iterable(testcase_params):
@@ -341,7 +339,7 @@ class _ParameterizedTestIter:
         if isinstance(testcase_params, abc.Mapping):
           if _NAMED_DICT_KEY not in testcase_params:
             raise RuntimeError(
-                'Dict for named tests must contain key "%s"' % _NAMED_DICT_KEY
+                f'Dict for named tests must contain key "{_NAMED_DICT_KEY}"'
             )
           # Create a new dict to avoid modifying the supplied testcase_params.
           testcase_name = testcase_params[_NAMED_DICT_KEY]
@@ -381,17 +379,17 @@ class _ParameterizedTestIter:
         # To keep test names descriptive, only the original method name is used.
         # To make sure test names are unique, we add a unique descriptive suffix
         # __x_params_repr__ for every test.
-        params_repr = '(%s)' % (_format_parameter_list(testcase_params),)
+        params_repr = f'({_format_parameter_list(testcase_params)})'
         bound_param_test.__x_params_repr__ = params_repr
       else:
-        raise RuntimeError('%s is not a valid naming type.' % (naming_type,))
+        raise RuntimeError(f'{naming_type} is not a valid naming type.')
 
-      bound_param_test.__doc__ = '%s(%s)' % (
-          bound_param_test.__name__,
-          _format_parameter_list(testcase_params),
+      bound_param_test.__doc__ = (
+          f'{bound_param_test.__name__}'
+          f'({_format_parameter_list(testcase_params)})'
       )
       if test_method.__doc__:
-        bound_param_test.__doc__ += '\n%s' % (test_method.__doc__,)
+        bound_param_test.__doc__ += f'\n{test_method.__doc__}'
       if inspect.iscoroutinefunction(test_method):
         return _async_wrapped(bound_param_test)
       return bound_param_test
@@ -401,9 +399,8 @@ class _ParameterizedTestIter:
 
 def _modify_class(class_object, testcases, naming_type):
   assert not getattr(class_object, '_test_params_reprs', None), (
-      'Cannot add parameters to %s. Either it already has parameterized '
-      'methods, or its super class is also a parameterized class.'
-      % (class_object,)
+      f'Cannot add parameters to {class_object}. Either it already has '
+      'parameterized methods, or its super class is also a parameterized class.'
   )
   # NOTE: _test_params_repr is private to parameterized.TestCase and it's
   # metaclass; do not use it outside of those classes.
@@ -535,9 +532,7 @@ def product(*kwargs_seqs, **testgrid):
   for name, values in testgrid.items():
     assert isinstance(
         values, (list, tuple)
-    ), 'Values of {} must be given as list or tuple, found {}'.format(
-        name, type(values)
-    )
+    ), f'Values of {name} must be given as list or tuple, found {type(values)}'
 
   prior_arg_names = set()
   for kwargs_seq in kwargs_seqs:
@@ -545,26 +540,24 @@ def product(*kwargs_seqs, **testgrid):
         isinstance(kwargs, dict) for kwargs in kwargs_seq
     ), (
         'Positional parameters must be a sequence of keyword arg'
-        'dicts, found {}'.format(kwargs_seq)
+        f'dicts, found {kwargs_seq}'
     )
     if kwargs_seq:
       arg_names = set(kwargs_seq[0])
       assert all(set(kwargs) == arg_names for kwargs in kwargs_seq), (
           'Keyword argument dicts within a single parameter must all have the '
-          'same keys, found {}'.format(kwargs_seq)
+          f'same keys, found {kwargs_seq}'
       )
       assert not (arg_names & prior_arg_names), (
           'Keyword argument dict sequences must all have distinct argument '
-          'names, found duplicate(s) {}'.format(
-              sorted(arg_names & prior_arg_names)
-          )
+          f'names, found duplicate(s) {sorted(arg_names & prior_arg_names)}'
       )
       prior_arg_names |= arg_names
 
   assert not (prior_arg_names & set(testgrid)), (
       'Arguments supplied in kwargs dicts in positional parameters must not '
       'overlap with arguments supplied as named parameters; found duplicate '
-      'argument(s) {}'.format(sorted(prior_arg_names & set(testgrid)))
+      f'argument(s) {sorted(prior_arg_names & set(testgrid))}'
   )
 
   # Convert testgrid into a sequence of sequences of kwargs dicts and combine
@@ -652,17 +645,15 @@ def _update_class_dict_for_param_test_case(
     RuntimeError: If non-parameterized functions are generated.
   """
   for idx, func in enumerate(iterator):
-    assert callable(func), 'Test generators must yield callables, got %r' % (
-        func,
-    )
+    assert callable(func), f'Test generators must yield callables, got {func!r}'
     if not (
         getattr(func, '__x_use_name__', None)
         or getattr(func, '__x_params_repr__', None)
     ):
       raise RuntimeError(
-          '{}.{} generated a test function without using the parameterized '
-          'decorators. Only tests generated using the decorators are '
-          'supported.'.format(test_class_name, name)
+          f'{test_class_name}.{name} generated a test function without using'
+          ' the parameterized decorators. Only tests generated using the'
+          ' decorators are supported.'
       )
 
     if getattr(func, '__x_use_name__', False):
@@ -670,7 +661,7 @@ def _update_class_dict_for_param_test_case(
       new_name = original_name
     else:
       original_name = name
-      new_name = '%s%d' % (original_name, idx)
+      new_name = f'{original_name}{idx}'
 
     if new_name in dct:
       raise DuplicateTestNameError(test_class_name, new_name, original_name)

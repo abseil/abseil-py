@@ -32,9 +32,9 @@ class TextTestResult(unittest.TextTestResult):
       if test_id.startswith('__main__.'):
         test_id = test_id[len('__main__.') :]
       if reason:
-        print('[%s] %s - %s' % (tag, test_id, reason), file=self.stream)
+        print(f'[{tag}] {test_id} - {reason}', file=self.stream)
       else:
-        print('[%s] %s' % (tag, test_id), file=self.stream)
+        print(f'[{tag}] {test_id}', file=self.stream)
       self.stream.flush()
 
   def startTest(self, test):

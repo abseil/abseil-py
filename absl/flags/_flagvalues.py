@@ -540,7 +540,7 @@ class FlagValues:
       return flag_entry.value
     else:
       raise _exceptions.UnparsedFlagAccessError(
-          'Trying to access flag --%s before flags were parsed.' % name
+          f'Trying to access flag --{name} before flags were parsed.'
       )
 
   def __setattr__(self, name: str, value: _T) -> _T:
@@ -624,7 +624,7 @@ class FlagValues:
         elif isinstance(validator, _validators_classes.MultiFlagsValidator):
           bad_flags.update(set(validator.flag_names))
         message = validator.print_flags_with_values(self)
-        messages.append('%s: %s' % (message, str(e)))
+        messages.append(f'{message}: {e}')
     if messages:
       raise _exceptions.IllegalFlagValueError('\n'.join(messages))
 
@@ -996,7 +996,7 @@ class FlagValues:
     """Returns a help string for a given module."""
     if not isinstance(module, str):
       module = module.__name__
-    output_lines.append('\n%s%s:' % (prefix, module))
+    output_lines.append(f'\n{prefix}{module}:')
     self._render_flag_list(flags, output_lines, prefix + '  ')
 
   def _render_our_module_flags(self, module, output_lines, prefix=''):
@@ -1058,11 +1058,11 @@ class FlagValues:
       flagset[flag] = 1
       flaghelp = ''
       if flag.short_name:
-        flaghelp += '-%s,' % flag.short_name
+        flaghelp += f'-{flag.short_name},'
       if flag.boolean:
-        flaghelp += '--[no]%s:' % flag.name
+        flaghelp += f'--[no]{flag.name}:'
       else:
-        flaghelp += '--%s:' % flag.name
+        flaghelp += f'--{flag.name}:'
       flaghelp += ' '
       if flag.help:
         flaghelp += flag.help
@@ -1072,12 +1072,12 @@ class FlagValues:
       if flag.default_as_str:
         flaghelp += '\n'
         flaghelp += _helpers.text_wrap(
-            '(default: %s)' % flag.default_as_str, indent=prefix + '  '
+            f'(default: {flag.default_as_str})', indent=prefix + '  '
         )
       if flag.parser.syntactic_help:
         flaghelp += '\n'
         flaghelp += _helpers.text_wrap(
-            '(%s)' % flag.parser.syntactic_help, indent=prefix + '  '
+            f'({flag.parser.syntactic_help})', indent=prefix + '  '
         )
       output_lines.append(flaghelp)
 
@@ -1134,7 +1134,7 @@ class FlagValues:
     elif flagfile_str.startswith('-flagfile='):
       return os.path.expanduser((flagfile_str[(len('-flagfile=')) :]).strip())
     else:
-      raise _exceptions.Error('Hit illegal --flagfile type: %s' % flagfile_str)
+      raise _exceptions.Error(f'Hit illegal --flagfile type: {flagfile_str}')
 
   def _get_flag_file_lines(self, filename, parsed_file_stack=None):
     """Returns the useful (!=comments, etc) lines from a file with flags.
@@ -1164,8 +1164,8 @@ class FlagValues:
     # at a previous depth.
     if filename in parsed_file_stack:
       sys.stderr.write(
-          'Warning: Hit circular flagfile dependency. Ignoring flagfile: %s\n'
-          % (filename,)
+          'Warning: Hit circular flagfile dependency. Ignoring flagfile:'
+          f' {filename}\n'
       )
       return []
     else:
@@ -1177,7 +1177,7 @@ class FlagValues:
       file_obj = open(filename)
     except OSError as e_msg:
       raise _exceptions.CantOpenFlagFileError(
-          'ERROR:: Unable to open flagfile: %s' % e_msg
+          f'ERROR:: Unable to open flagfile: {e_msg}'
       )
 
     with file_obj:
@@ -1357,7 +1357,7 @@ class FlagValues:
 
     usage_doc = sys.modules['__main__'].__doc__
     if not usage_doc:
-      usage_doc = '\nUSAGE: %s [flags]\n' % sys.argv[0]
+      usage_doc = f'\nUSAGE: {sys.argv[0]} [flags]\n'
     else:
       usage_doc = usage_doc.replace('%s', sys.argv[0])
     all_flag.appendChild(
@@ -1393,14 +1393,13 @@ class FlagValues:
     flag_names = {name} if short_name is None else {name, short_name}
     for flag_name in flag_names:
       if flag_name in self.__dict__['__banned_flag_names']:
+        class_name = type(self).__name__
         raise _exceptions.FlagNameConflictsWithMethodError(
-            'Cannot define a flag named "{name}". It conflicts with a method '
-            'on class "{class_name}". To allow defining it, use '
-            'allow_using_method_names and access the flag value with '
-            "FLAGS['{name}'].value. FLAGS.{name} returns the method, "
-            'not the flag value.'.format(
-                name=flag_name, class_name=type(self).__name__
-            )
+            f'Cannot define a flag named "{flag_name}". It conflicts with a'
+            f' method on class "{class_name}". To allow defining it, use'
+            ' allow_using_method_names and access the flag value with'
+            f" FLAGS['{flag_name}'].value. FLAGS.{flag_name} returns the"
+            ' method, not the flag value.'
         )
 
 
@@ -1460,17 +1459,18 @@ class FlagHolder(Generic[_T_co]):
     self._ensure_non_none_value = ensure_non_none_value
 
   def __eq__(self, other):
+    self_name = type(self).__name__
+    other_name = type(other).__name__
     raise TypeError(
-        "unsupported operand type(s) for ==: '{0}' and '{1}' "
-        "(did you mean to use '{0}.value' instead?)".format(
-            type(self).__name__, type(other).__name__
-        )
+        f"unsupported operand type(s) for ==: '{self_name}' and '{other_name}'"
+        f" (did you mean to use '{self_name}.value' instead?)"
     )
 
   def __bool__(self):
+    name = type(self).__name__
     raise TypeError(
-        "bool() not supported for instances of type '{0}' "
-        "(did you mean to use '{0}.value' instead?)".format(type(self).__name__)
+        f"bool() not supported for instances of type '{name}' (did you mean to"
+        f" use '{name}.value' instead?)"
     )
 
   __nonzero__ = __bool__
@@ -1493,7 +1493,7 @@ class FlagHolder(Generic[_T_co]):
     val = getattr(self._flagvalues, self._name)
     if self._ensure_non_none_value and val is None:
       raise _exceptions.IllegalFlagValueError(
-          'Unexpected None value for flag %s' % self._name
+          f'Unexpected None value for flag {self._name}'
       )
     return val
 

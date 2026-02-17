@@ -50,9 +50,8 @@ def get_executable_path(py_binary_name):
         if manifest_entry == tokens[0]:
           return tokens[1]
     raise RuntimeError(
-        'Cannot locate executable path for {}, MANIFEST file: {}.'.format(
-            py_binary_name, manifest_file
-        )
+        f'Cannot locate executable path for {py_binary_name}, MANIFEST file:'
+        f' {manifest_file}.'
     )
   else:
     # NOTE: __file__ may be .py or .pyc, depending on how the module was

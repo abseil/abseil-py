@@ -49,7 +49,7 @@ def _register_bounds_validator_if_needed(parser, name, flag_values):
 
     def checker(value):
       if value is not None and parser.is_outside_bounds(value):
-        message = '%s is not %s' % (value, parser.syntactic_help)
+        message = f'{value} is not {parser.syntactic_help}'
         raise _exceptions.ValidationError(message)
       return True
 
@@ -176,7 +176,7 @@ def DEFINE_flag(  # pylint: disable=invalid-name
   """
   if required and flag.default is not None:
     raise ValueError(
-        'Required flag --%s needs to have None as default' % flag.name
+        f'Required flag --{flag.name} needs to have None as default'
     )
   # Copying the reference to flag_values prevents pychecker warnings.
   fv = flag_values
@@ -232,8 +232,8 @@ def override_value(flag_holder: _flagvalues.FlagHolder[_T], value: _T) -> None:
   parsed = fv[flag_holder.name]._parse(value)  # pylint: disable=protected-access
   if parsed != value:
     raise _exceptions.IllegalFlagValueError(
-        'flag %s: parsed value %r not equal to original %r'
-        % (flag_holder.name, parsed, value)
+        f'flag {flag_holder.name}: parsed value {parsed!r} not equal to '
+        f'original {value!r}'
     )
   setattr(fv, flag_holder.name, value)
 
@@ -314,8 +314,8 @@ def declare_key_flag(
     _internal_declare_key_flags([flag_name], flag_values=flag_values)
   except KeyError:
     raise ValueError(
-        'Flag --%s is undefined. To set a flag as a key flag '
-        'first define it in Python.' % flag_name
+        f'Flag --{flag_name} is undefined. To set a flag as a key flag first '
+        'define it in Python.'
     )
 
 
@@ -336,7 +336,7 @@ def adopt_module_key_flags(
         instead of a module object.
   """
   if not isinstance(module, types.ModuleType):
-    raise _exceptions.Error('Expected a module object, not %r.' % (module,))
+    raise _exceptions.Error(f'Expected a module object, not {module!r}.')
   _internal_declare_key_flags(
       [f.name for f in flag_values.get_key_flags_for_module(module.__name__)],
       flag_values=flag_values,
@@ -1499,12 +1499,13 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name
   """
   parser = _argument_parser.EnumParser(enum_values, case_sensitive)
   serializer = _argument_parser.ArgumentSerializer()
+  joined_values = '|'.join(enum_values)
   return DEFINE_multi(
       parser,
       serializer,
       name,
       default,
-      '<%s>: %s' % ('|'.join(enum_values), help),
+      f'<{joined_values}>: {help}',
       flag_values,
       required=True if required else False,
       **args,
@@ -1697,7 +1698,7 @@ def DEFINE_alias(  # pylint: disable=invalid-name
     def value(self, value):
       flag.value = value
 
-  help_msg = 'Alias for --%s.' % flag.name
+  help_msg = f'Alias for --{flag.name}.'
   # If alias_name has been used, flags.DuplicatedFlag will be raised.
   return DEFINE_flag(
       _FlagAlias(

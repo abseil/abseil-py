@@ -161,8 +161,8 @@ class Flag(Generic[_T]):
 
   def __copy__(self):
     raise TypeError(
-        '%s does not support shallow copies. Use copy.deepcopy instead.'
-        % type(self).__name__
+        f'{type(self).__name__} does not support shallow copies. Use'
+        ' copy.deepcopy instead.'
     )
 
   def __deepcopy__(self, memo: dict[int, Any]) -> 'Flag[_T]':
@@ -191,8 +191,7 @@ class Flag(Generic[_T]):
     """
     if self.present and not self.allow_overwrite:
       raise _exceptions.IllegalFlagValueError(
-          'flag --%s=%s: already defined as %s'
-          % (self.name, argument, self.value)
+          f'flag --{self.name}={argument}: already defined as {self.value}'
       )
     self.value = self._parse(argument)
     self.present += 1
@@ -213,7 +212,7 @@ class Flag(Generic[_T]):
     except (TypeError, ValueError, OverflowError) as e:
       # Recast as IllegalFlagValueError.
       raise _exceptions.IllegalFlagValueError(
-          'flag --%s=%s: %s' % (self.name, argument, e)
+          f'flag --{self.name}={argument}: {e}'
       )
 
   def unparse(self) -> None:
@@ -231,15 +230,13 @@ class Flag(Generic[_T]):
       return ''
     if self.boolean:
       if value:
-        return '--%s' % self.name
+        return f'--{self.name}'
       else:
-        return '--no%s' % self.name
+        return f'--no{self.name}'
     else:
       if not self.serializer:
-        raise _exceptions.Error(
-            'Serializer not present for flag %s' % self.name
-        )
-      return '--%s=%s' % (self.name, self.serializer.serialize(value))
+        raise _exceptions.Error(f'Serializer not present for flag {self.name}')
+      return f'--{self.name}={self.serializer.serialize(value)}'
 
   def _set_default(self, value: _T | None | str) -> None:
     """Changes the default value (and current value too) for this Flag."""
@@ -393,7 +390,8 @@ class EnumFlag(Flag[str]):
     g = _argument_parser.ArgumentSerializer()
     super().__init__(p, g, name, default, help, short_name, **args)
     self.parser = p
-    self.help = '<%s>: %s' % ('|'.join(p.enum_values), self.help)
+    joined_values = '|'.join(p.enum_values)
+    self.help = f'<{joined_values}>: {self.help}'
 
   def _extra_xml_dom_elements(
       self, doc: minidom.Document
@@ -428,7 +426,8 @@ class EnumClassFlag(Flag[_ET]):
     g = _argument_parser.EnumClassSerializer(lowercase=not case_sensitive)
     super().__init__(p, g, name, default, help, short_name, **args)
     self.parser = p
-    self.help = '<%s>: %s' % ('|'.join(p.member_names), self.help)
+    joined_names = '|'.join(p.member_names)
+    self.help = f'<{joined_names}>: {self.help}'
 
   def _extra_xml_dom_elements(
       self, doc: minidom.Document
@@ -498,7 +497,7 @@ class MultiFlag(Generic[_T], Flag[list[_T]]):
   def _serialize(self, value: list[_T] | None) -> str:
     """See base class."""
     if not self.serializer:
-      raise _exceptions.Error('Serializer not present for flag %s' % self.name)
+      raise _exceptions.Error(f'Serializer not present for flag {self.name}')
     if value is None:
       return ''
 
@@ -557,9 +556,11 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
     self.parser = p
     # NOTE: serializer should be non-Optional but this isn't inferred.
     self.serializer = g
+    joined_names = '|'.join(p.member_names)
     self.help = (
-        '<%s>: %s;\n    repeat this option to specify a list of values'
-        % ('|'.join(p.member_names), help_string or '(no help available)')
+        f'<{joined_names}>: '
+        f'{help_string or "(no help available)"};\n'
+        '    repeat this option to specify a list of values'
     )
 
   def _extra_xml_dom_elements(
@@ -576,9 +577,7 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
     """See base class."""
     if value is not None:
       if not self.serializer:
-        raise _exceptions.Error(
-            'Serializer not present for flag %s' % self.name
-        )
+        raise _exceptions.Error(f'Serializer not present for flag {self.name}')
       value_serialized = self.serializer.serialize(value)
     else:
       value_serialized = ''

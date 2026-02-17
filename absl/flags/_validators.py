@@ -235,9 +235,9 @@ def mark_flag_as_required(flag_name, flag_values=_flagvalues.FLAGS):
   flag_name, flag_values = _flagvalues.resolve_flag_ref(flag_name, flag_values)
   if flag_values[flag_name].default is not None:
     warnings.warn(
-        'Flag --%s has a non-None default value; therefore, '
+        f'Flag --{flag_name} has a non-None default value; therefore, '
         'mark_flag_as_required will pass even if flag is not specified in the '
-        'command line!' % flag_name,
+        'command line!',
         stacklevel=2,
     )
   register_validator(
@@ -302,9 +302,9 @@ def mark_flags_as_mutual_exclusive(
   for flag_name in flag_names:
     if flag_values[flag_name].default is not None:
       warnings.warn(
-          'Flag --{} has a non-None default value. That does not make sense '
-          'with mark_flags_as_mutual_exclusive, which checks whether the '
-          'listed flags have a value other than None.'.format(flag_name),
+          f'Flag --{flag_name} has a non-None default value. That does not '
+          'make sense with mark_flags_as_mutual_exclusive, which checks '
+          'whether the listed flags have a value other than None.',
           stacklevel=2,
       )
 
@@ -313,9 +313,8 @@ def mark_flags_as_mutual_exclusive(
     if flag_count == 1 or (not required and flag_count == 0):
       return True
     raise _exceptions.ValidationError(
-        '{} one of ({}) must have a value other than None.'.format(
-            'Exactly' if required else 'At most', ', '.join(flag_names)
-        )
+        f'{"Exactly" if required else "At most"} one of '
+        f'({", ".join(flag_names)}) must have a value other than None.'
     )
 
   register_multi_flags_validator(
@@ -348,8 +347,8 @@ def mark_bool_flags_as_mutual_exclusive(
   for flag_name in flag_names:
     if not flag_values[flag_name].boolean:
       raise _exceptions.ValidationError(
-          'Flag --{} is not Boolean, which is required for flags used in '
-          'mark_bool_flags_as_mutual_exclusive.'.format(flag_name)
+          f'Flag --{flag_name} is not Boolean, which is required for flags '
+          'used in mark_bool_flags_as_mutual_exclusive.'
       )
 
   def validate_boolean_mutual_exclusion(flags_dict):
@@ -357,9 +356,8 @@ def mark_bool_flags_as_mutual_exclusive(
     if flag_count == 1 or (not required and flag_count == 0):
       return True
     raise _exceptions.ValidationError(
-        '{} one of ({}) must be True.'.format(
-            'Exactly' if required else 'At most', ', '.join(flag_names)
-        )
+        f'{"Exactly" if required else "At most"} one of '
+        f'({", ".join(flag_names)}) must be True.'
     )
 
   register_multi_flags_validator(

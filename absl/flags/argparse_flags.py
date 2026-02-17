@@ -126,7 +126,7 @@ class ArgumentParser(argparse.ArgumentParser):
     if prefix_chars != '-':
       raise ValueError(
           'argparse_flags.ArgumentParser only supports "-" as the prefix '
-          'character, found "{}".'.format(prefix_chars)
+          f'character, found "{prefix_chars}"'
       )
 
     # Remove inherited_absl_flags before calling super.

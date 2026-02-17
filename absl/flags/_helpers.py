@@ -324,26 +324,26 @@ def flag_dict_to_args(
   # fmt: on
   for key, value in flag_map.items():
     if value is None:
-      yield '--%s' % key
+      yield f'--{key}'
     elif isinstance(value, bool):
       if value:
-        yield '--%s' % key
+        yield f'--{key}'
       else:
-        yield '--no%s' % key
+        yield f'--no{key}'
     elif isinstance(value, (bytes, str)):
       # We don't want strings to be handled like python collections.
-      yield '--%s=%s' % (key, value)  # type: ignore[str-bytes-safe]
+      yield f'--{key}={value}'  # type: ignore[str-bytes-safe]
     else:
       # Now we attempt to deal with collections.
       try:
         if multi_flags and key in multi_flags:
           for item in value:
-            yield '--%s=%s' % (key, str(item))
+            yield f'--{key}={item}'
         else:
-          yield '--%s=%s' % (key, ','.join(str(item) for item in value))
+          yield f"--{key}={','.join(str(item) for item in value)}"
       except TypeError:
         # Default case.
-        yield '--%s=%s' % (key, value)
+        yield f'--{key}={value}'
 
 
 def trim_docstring(docstring: str) -> str:

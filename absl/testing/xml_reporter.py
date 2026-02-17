@@ -103,14 +103,14 @@ def _print_xml_element_header(element, attributes, stream, indentation=''):
     stream: output stream to write test report XML to
     indentation: indentation added to the element header
   """
-  stream.write('%s<%s' % (indentation, element))
+  stream.write(f'{indentation}<{element}')
   for attribute in attributes:
     if (
         len(attribute) == 2
         and attribute[0] is not None
         and attribute[1] is not None
     ):
-      stream.write(' %s="%s"' % (attribute[0], attribute[1]))
+      stream.write(f' {attribute[0]}="{attribute[1]}"')
   stream.write('>\n')
 
 
@@ -124,10 +124,7 @@ def _safe_str(obj: object) -> str:
   try:
     return str(obj)
   except Exception:  # pylint: disable=broad-except
-    return '<unprintable %s.%s object>' % (
-        type(obj).__module__,
-        type(obj).__name__,
-    )
+    return f'<unprintable {type(obj).__module__}.{type(obj).__name__} object>'
 
 
 class _TestCaseResult:
@@ -213,10 +210,10 @@ class _TestCaseResult:
       result = 'suppressed'
 
     test_case_attributes = [
-        ('name', '%s' % self.name),
-        ('status', '%s' % status),
-        ('result', '%s' % result),
-        ('time', '%.3f' % self.run_time),
+        ('name', self.name),
+        ('status', status),
+        ('result', result),
+        ('time', f'{self.run_time:.3f}'),
         ('classname', self.full_class_name),
         ('timestamp', _iso8601_timestamp(self.start_time)),
     ]
@@ -231,8 +228,8 @@ class _TestCaseResult:
       exception_type = _escape_xml_attr(str(exception_type))
       error_msg = _escape_cdata(error_msg)
       stream.write(
-          '  <%s message="%s" type="%s"><![CDATA[%s]]></%s>\n'
-          % (outcome, message, exception_type, error_msg, outcome)
+          f'  <{outcome} message="{message}" type="{exception_type}">'
+          f'<![CDATA[{error_msg}]]></{outcome}>\n'
       )
 
 
@@ -274,12 +271,13 @@ class _TestSuiteResult:
     overall_test_count = sum(len(x) for x in self.suites.values())
     overall_failures = sum(self.failure_counts.values())
     overall_errors = sum(self.error_counts.values())
+    overall_time = self.overall_end_time - self.overall_start_time
     overall_attributes = [
         ('name', ''),
-        ('tests', '%d' % overall_test_count),
-        ('failures', '%d' % overall_failures),
-        ('errors', '%d' % overall_errors),
-        ('time', '%.3f' % (self.overall_end_time - self.overall_start_time)),
+        ('tests', str(overall_test_count)),
+        ('failures', str(overall_failures)),
+        ('errors', str(overall_errors)),
+        ('time', f'{overall_time:.3f}'),
         ('timestamp', _iso8601_timestamp(self.overall_start_time)),
     ]
     _print_xml_element_header('testsuites', overall_attributes, stream)
@@ -287,8 +285,8 @@ class _TestSuiteResult:
       stream.write('    <properties>\n')
       for name, value in sorted(self._testsuites_properties.items()):
         stream.write(
-            '      <property name="%s" value="%s"></property>\n'
-            % (_escape_xml_attr(name), _escape_xml_attr(str(value)))
+            f'      <property name="{_escape_xml_attr(name)}" '
+            f'value="{_escape_xml_attr(str(value))}"></property>\n'
         )
       stream.write('    </properties>\n')
 
@@ -298,12 +296,13 @@ class _TestSuiteResult:
       suite_start_time = min(x.start_time for x in suite)
       failures = self.failure_counts[suite_name]
       errors = self.error_counts[suite_name]
+      suite_time = suite_end_time - suite_start_time
       suite_attributes = [
-          ('name', '%s' % suite_name),
-          ('tests', '%d' % len(suite)),
-          ('failures', '%d' % failures),
-          ('errors', '%d' % errors),
-          ('time', '%.3f' % (suite_end_time - suite_start_time)),
+          ('name', suite_name),
+          ('tests', str(len(suite))),
+          ('failures', str(failures)),
+          ('errors', str(errors)),
+          ('time', f'{suite_time:.3f}'),
           ('timestamp', _iso8601_timestamp(suite_start_time)),
       ]
       _print_xml_element_header('testsuite', suite_attributes, stream)
@@ -384,7 +383,7 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
       result = self.get_pending_test_case_result(test)
       if not result:
         test_name = test.id() or str(test)
-        sys.stderr.write('No pending test case: %s\n' % test_name)
+        sys.stderr.write(f'No pending test case: {test_name}\n')
         return
       if getattr(self, 'start_time', None) is None:
         # startTest may not be called for skipped tests since Python 3.12.1.
@@ -524,7 +523,7 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
         'error',
         '',
         '',
-        'Test case %s should have failed, but passed.' % (test_name),
+        f'Test case {test_name} should have failed, but passed.',
     )
     self.add_pending_test_case_result(test, error_summary=error_summary)
 
