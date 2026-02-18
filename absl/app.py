@@ -218,6 +218,27 @@ class HelpXMLFlag(flags.BooleanFlag):
       _exit_before_main(1)
 
 
+class OnlyCheckFlagsFlag(flags.BooleanFlag):
+  """Similar to HelpFlag, but only checks flag definitions.
+
+  In the process it will load all modules defining flags and verify there are no
+  duplicate flag definitions.
+  """
+
+  def __init__(self):
+    super().__init__(
+        'only_check_flags',
+        False,
+        'Check if all flag definitions are valid and exit before main.',
+        allow_hide_cpp=True,
+    )
+
+  def parse(self, arg):
+    if self._parse(arg):
+      sys.stdout.write('SUCCESS: All Abseil flags are valid.\n')
+      _exit_before_main(0)
+
+
 def parse_flags_with_usage(args):
   """Tries to parse the flags, print usage, and exit if unparsable.
 
@@ -256,6 +277,7 @@ def define_help_flags():
     flags.DEFINE_flag(HelpshortFlag())  # alias for --help
     flags.DEFINE_flag(HelpfullFlag())
     flags.DEFINE_flag(HelpXMLFlag())
+    flags.DEFINE_flag(OnlyCheckFlagsFlag())
     _define_help_flags_called = True
 
 
