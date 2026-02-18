@@ -49,7 +49,7 @@ from unittest import mock  # pylint: disable=unused-import Allow absltest.mock.
 import unittest.case
 from urllib import parse
 
-from absl import app  # pylint: disable=g-import-not-at-top
+from absl import app
 from absl import flags
 from absl import logging
 from absl.testing import _pretty_print_reporter
@@ -302,7 +302,7 @@ class _TempDir:
     Returns:
       A _TempFile representing the created file.
     """
-    tf, _ = _TempFile._create(
+    tf, _ = _TempFile._create(  # pylint: disable=protected-access
         self._path, file_path, content, mode, encoding, errors
     )
     return tf
@@ -693,7 +693,7 @@ class TestCase(unittest.TestCase):
       usage.
     """
     test_path = self._get_tempdir_path_test()
-    tf, cleanup_path = _TempFile._create(
+    tf, cleanup_path = _TempFile._create(  # pylint: disable=protected-access
         test_path,
         file_path,
         content=content,
@@ -743,6 +743,7 @@ class TestCase(unittest.TestCase):
   def _enter_context_cls(
       cls, manager: contextlib.AbstractContextManager[_T]
   ) -> _T:
+    """A classmethod version of enter_context."""
     if sys.version_info >= (3, 11):
       return cls.enterClassContext(manager)
 
@@ -1190,8 +1191,8 @@ class TestCase(unittest.TestCase):
     msg = self._formatMessage(
         msg, f'"{value!r}" unexpectedly not between "{minv!r}" and "{maxv!r}"'
     )
-    self.assertTrue(minv <= value, msg)
-    self.assertTrue(maxv >= value, msg)
+    self.assertLessEqual(minv, value, msg)
+    self.assertGreaterEqual(maxv, value, msg)
 
   def assertRegexMatch(self, actual_str, regexes, message=None):
     r"""Asserts that at least one regex in regexes matches str.
@@ -1358,6 +1359,7 @@ class TestCase(unittest.TestCase):
     )
 
   class _AssertRaisesContext:
+    """Context manager for assertRaises* methods."""
 
     def __init__(self, expected_exception, test_case, test_func, msg=None):
       self.expected_exception = expected_exception
@@ -1487,8 +1489,9 @@ class TestCase(unittest.TestCase):
 
     def Check(err):
       actual_exception_message = str(err)
-      self.assertTrue(
-          expected_exception_message == actual_exception_message,
+      self.assertEqual(
+          expected_exception_message,
+          actual_exception_message,
           'Exception message does not match.\n'
           f'Expected: {expected_exception_message!r}\n'
           f'Actual: {actual_exception_message!r}',
@@ -1632,6 +1635,7 @@ class TestCase(unittest.TestCase):
       **kwargs: optional msg keyword argument can be passed.
     """
 
+    # pylint: disable=g-generic-assert
     def CheckOrder(small, big):
       """Ensures small is ordered before big."""
       self.assertFalse(
@@ -1699,7 +1703,7 @@ class TestCase(unittest.TestCase):
           self._formatMessage(msg, f'{b!r} unexpectedly less than {a!r}'),
       )
       self.assertLessEqual(a, b, msg)
-      self.assertLessEqual(b, a, msg)  # pylint: disable=arguments-out-of-order
+      self.assertLessEqual(b, a, msg)
       self.assertFalse(
           a > b,
           self._formatMessage(msg, f'{a!r} unexpectedly greater than {b!r}'),
@@ -1709,7 +1713,8 @@ class TestCase(unittest.TestCase):
           self._formatMessage(msg, f'{b!r} unexpectedly greater than {a!r}'),
       )
       self.assertGreaterEqual(a, b, msg)
-      self.assertGreaterEqual(b, a, msg)  # pylint: disable=arguments-out-of-order
+      self.assertGreaterEqual(b, a, msg)
+    # pylint: enable=g-generic-assert
 
     msg = kwargs.get('msg')
 
@@ -1746,7 +1751,7 @@ class TestCase(unittest.TestCase):
     """
     self.assertDictEqual({**dictionary}, {**dictionary, **subset}, msg)
 
-  def assertDictEqual(self, a, b, msg=None):
+  def assertDictEqual(self, a, b, msg=None):  # pylint: disable=arguments-renamed
     """Raises AssertionError if a and b are not equal dictionaries.
 
     Args:
@@ -2003,9 +2008,9 @@ class TestCase(unittest.TestCase):
     self.assertEqual(parsed_a.netloc, parsed_b.netloc, msg)
     self.assertEqual(parsed_a.path, parsed_b.path, msg)
     self.assertEqual(parsed_a.fragment, parsed_b.fragment, msg)
-    self.assertEqual(
-        sorted(parsed_a.params.split(';')),
-        sorted(parsed_b.params.split(';')),
+    self.assertCountEqual(
+        parsed_a.params.split(';'),
+        parsed_b.params.split(';'),
         msg,
     )
     self.assertDictEqual(
@@ -2071,7 +2076,7 @@ class TestCase(unittest.TestCase):
           self._formatMessage(
               msg, f'could not decode first JSON value {first}: {e}'
           )
-      )
+      ) from e
 
     try:
       second_structured = json.loads(second)
@@ -2080,7 +2085,7 @@ class TestCase(unittest.TestCase):
           self._formatMessage(
               msg, f'could not decode second JSON value {second}: {e}'
           )
-      )
+      ) from e
 
     self.assertSameStructure(
         first_structured,
