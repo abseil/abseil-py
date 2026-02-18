@@ -223,7 +223,7 @@ class _TestCaseResult:
 
   def _print_testcase_details(self, stream):
     for error in self.errors:
-      outcome, exception_type, message, error_msg = error  # pylint: disable=unpacking-non-sequence
+      outcome, exception_type, message, error_msg = error
       message = _escape_xml_attr(_safe_str(message))
       exception_type = _escape_xml_attr(str(exception_type))
       error_msg = _escape_cdata(error_msg)
@@ -245,12 +245,14 @@ class _TestSuiteResult:
     self._testsuites_properties = {}
 
   def add_test_case_result(self, test_case_result):
+    """Adds a test case result to the test suite."""
+
     suite_name = type(test_case_result.test).__name__
     if suite_name == '_ErrorHolder':
       # _ErrorHolder is a special case created by unittest for class / module
       # level functions.
       suite_name = test_case_result.full_class_name.rsplit('.')[-1]
-    if isinstance(test_case_result.test, unittest.case._SubTest):
+    if isinstance(test_case_result.test, unittest.case._SubTest):  # pylint: disable=protected-access
       # If the test case is a _SubTest, the real TestCase instance is
       # available as _SubTest.test_case.
       suite_name = type(test_case_result.test.test_case).__name__
@@ -268,6 +270,8 @@ class _TestSuiteResult:
         break
 
   def print_xml_summary(self, stream):
+    """Writes the test summary in XML format to the stream."""
+
     overall_test_count = sum(len(x) for x in self.suites.values())
     overall_failures = sum(self.failure_counts.values())
     overall_errors = sum(self.error_counts.values())

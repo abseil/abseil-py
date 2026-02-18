@@ -2840,7 +2840,7 @@ class SkipClassTest(absltest.TestCase):
       # @absltest.skipThisClass is being used incorrectly.
       # pytype: disable=wrong-arg-types
       @absltest.skipThisClass
-      class Test(absltest.TestCase):  # pylint: disable=unused-variable
+      class Test(absltest.TestCase):
         pass
 
       # pytype: enable=wrong-arg-types
@@ -2852,7 +2852,7 @@ class SkipClassTest(absltest.TestCase):
       # @absltest.skipThisClass is being used incorrectly.
       # pytype: disable=wrong-arg-types
       @absltest.skipThisClass('reason')
-      def test_method():  # pylint: disable=unused-variable
+      def test_method():
         pass
 
       # pytype: enable=wrong-arg-types

@@ -33,7 +33,6 @@ import pdb
 import sys
 import textwrap
 import traceback
-from typing import NoReturn
 
 from absl import command_name
 from absl import flags

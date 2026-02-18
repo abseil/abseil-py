@@ -312,11 +312,11 @@ def declare_key_flag(
     return
   try:
     _internal_declare_key_flags([flag_name], flag_values=flag_values)
-  except KeyError:
+  except KeyError as e:
     raise ValueError(
         f'Flag --{flag_name} is undefined. To set a flag as a key flag first '
         'define it in Python.'
-    )
+    ) from e
 
 
 def adopt_module_key_flags(

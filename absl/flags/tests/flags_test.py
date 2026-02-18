@@ -1381,8 +1381,8 @@ class FlagsUnitTest(absltest.TestCase):
       from absl.flags.tests import module_baz
 
       importlib.reload(module_baz)
-    except flags.DuplicateFlagError:
-      raise AssertionError('Module reload caused flag duplication error')
+    except flags.DuplicateFlagError as e:
+      raise AssertionError('Module reload caused flag duplication error') from e
 
     # Make sure that re-importing a module does not cause a DuplicateFlagError
     # to be raised.
@@ -1394,8 +1394,10 @@ class FlagsUnitTest(absltest.TestCase):
       import absl.flags.tests.module_baz  # pylint: disable=g-import-not-at-top
 
       del absl
-    except flags.DuplicateFlagError:
-      raise AssertionError('Module reimport caused flag duplication error')
+    except flags.DuplicateFlagError as e:
+      raise AssertionError(
+          'Module reimport caused flag duplication error'
+      ) from e
 
   def test_string_flag_with_wrong_type(self):
     fv = flags.FlagValues()

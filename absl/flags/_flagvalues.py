@@ -23,7 +23,7 @@ from importlib import abc
 import logging
 import os
 import sys
-from typing import Any, Generic, TextIO, TypeVar
+from typing import Any, Generic, NoReturn, TextIO, TypeVar
 from xml.dom import minidom
 
 from absl.flags import _exceptions
@@ -46,6 +46,7 @@ class ReloadDetector(abc.MetaPathFinder):
     self.reloading_modules = set()
 
   def find_spec(self, fullname, path, target=None):
+    del path, target
     if fullname in sys.modules:  # Indicates a reload.
       self.reloading_modules.add(fullname)
     return None
@@ -417,10 +418,10 @@ class FlagValues:
       try:
         setter(name, value)
         return value
-      except (TypeError, ValueError):  # Flag value is not valid.
+      except (TypeError, ValueError) as e:  # Flag value is not valid.
         raise _exceptions.IllegalFlagValueError(
             f'"{value}" is not valid for --{name}'
-        )
+        ) from e
       except NameError:  # Flag name is not valid.
         pass
     raise _exceptions.UnrecognizedFlagError(name, value)
@@ -440,10 +441,10 @@ class FlagValues:
       if flag_name == flag.name:
         try:
           self[flag_name] = flag
-        except _exceptions.DuplicateFlagError:
+        except _exceptions.DuplicateFlagError as e:
           raise _exceptions.DuplicateFlagError.from_flag(
               flag_name, self, other_flag_values=flag_values
-          )
+          ) from e
 
   def remove_flag_values(
       self, flag_values: 'FlagValues | Iterable[str]'
@@ -1040,6 +1041,7 @@ class FlagValues:
     return self.module_help(sys.argv[0])
 
   def _render_flag_list(self, flaglist, output_lines, prefix='  '):
+    """Adds flags to output_lines list."""
     fl = self._flags()
     special_fl = _helpers.SPECIAL_FLAGS._flags()  # pylint: disable=protected-access  # pytype: disable=attribute-error
     flaglist = [(flag.name, flag) for flag in flaglist]
@@ -1081,7 +1083,7 @@ class FlagValues:
         )
       output_lines.append(flaghelp)
 
-  def get_flag_value(self, name: str, default: Any) -> Any:  # pylint: disable=invalid-name
+  def get_flag_value(self, name: str, default: Any) -> Any:
     """Returns the value of a flag (if not None) or a default value.
 
     Args:
@@ -1458,7 +1460,7 @@ class FlagHolder(Generic[_T_co]):
     # This allows future use of this for "required flags with None default"
     self._ensure_non_none_value = ensure_non_none_value
 
-  def __eq__(self, other):
+  def __eq__(self, other) -> NoReturn:
     self_name = type(self).__name__
     other_name = type(other).__name__
     raise TypeError(
@@ -1466,7 +1468,7 @@ class FlagHolder(Generic[_T_co]):
         f" (did you mean to use '{self_name}.value' instead?)"
     )
 
-  def __bool__(self):
+  def __bool__(self) -> NoReturn:  # pylint: disable=invalid-bool-returned
     name = type(self).__name__
     raise TypeError(
         f"bool() not supported for instances of type '{name}' (did you mean to"

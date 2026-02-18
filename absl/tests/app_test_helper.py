@@ -30,7 +30,7 @@ from absl import flags
 
 FLAGS = flags.FLAGS
 flags.DEFINE_boolean('faulthandler_sigsegv', False, 'raise SIGSEGV')
-flags.DEFINE_boolean('raise_exception', False, 'Raise MyException from main.')
+flags.DEFINE_boolean('raise_exception', False, 'Raise MyError from main.')
 flags.DEFINE_boolean(
     'raise_usage_error', False, 'Raise app.UsageError from main.'
 )
@@ -45,17 +45,17 @@ flags.DEFINE_boolean(
 )
 
 
-class MyException(Exception):
+class MyError(Exception):
   pass
 
 
-class MyExceptionHandler(app.ExceptionHandler):
+class MyErrorHandler(app.ExceptionHandler):
 
   def __init__(self, message):
     self.message = message
 
   def handle(self, exc):
-    sys.stdout.write(f'MyExceptionHandler: {self.message}\n')
+    sys.stdout.write(f'MyErrorHandler: {self.message}\n')
 
 
 def real_main(argv):
@@ -64,7 +64,7 @@ def real_main(argv):
     sys.stdout.write(f'argv: {" ".join(argv)}\n')
 
   if FLAGS.raise_exception:
-    raise MyException
+    raise MyError
 
   if FLAGS.raise_usage_error:
     if FLAGS.usage_error_exitcode is not None:
@@ -148,8 +148,8 @@ if __name__ == '__main__':
     kwargs['flags_parser'] = flags_parser
 
   app.call_after_init(lambda: _callback_results.append('before app.run'))
-  app.install_exception_handler(MyExceptionHandler('first'))
-  app.install_exception_handler(MyExceptionHandler('second'))
+  app.install_exception_handler(MyErrorHandler('first'))
+  app.install_exception_handler(MyErrorHandler('second'))
   app.run(**kwargs)
 
   sys.exit('This is not reachable.')

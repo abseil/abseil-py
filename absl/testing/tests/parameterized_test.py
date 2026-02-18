@@ -828,7 +828,7 @@ class ParameterizedTestsTest(absltest.TestCase):
 
   def test_parameterized_test_iter_has_testcases_property(self):
     @parameterized.parameters(1, 2, 3, 4, 5, 6)
-    def test_something(unused_self, unused_obj):  # pylint: disable=invalid-name
+    def test_something(unused_self, unused_obj):
       pass
 
     expected_testcases = [1, 2, 3, 4, 5, 6]

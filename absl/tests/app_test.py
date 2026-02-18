@@ -334,7 +334,7 @@ class FunctionalTests(absltest.TestCase):
         env_overrides={'GOOGLE_STATUS_DIR': tmpdir},
     )
     with open(os.path.join(tmpdir, 'STATUS')) as status_file:
-      self.assertIn('MyException:', status_file.read())
+      self.assertIn('MyError:', status_file.read())
 
   def test_faulthandler_dumps_stack_on_sigsegv(self):
     return_code, _, _ = self.run_helper(
@@ -350,7 +350,7 @@ class FunctionalTests(absltest.TestCase):
     self.run_helper(
         expect_success=False,
         arguments=['--raise_exception'],
-        expected_stderr_substring='MyException',
+        expected_stderr_substring='MyError',
     )
 
   def test_only_check_args(self):
@@ -384,7 +384,7 @@ class FunctionalTests(absltest.TestCase):
 
   def test_exception_handler(self):
     exception_handler_messages = (
-        'MyExceptionHandler: first\nMyExceptionHandler: second\n'
+        'MyErrorHandler: first\nMyErrorHandler: second\n'
     )
     self.run_helper(
         expect_success=False,
@@ -394,7 +394,7 @@ class FunctionalTests(absltest.TestCase):
 
   def test_exception_handler_not_called(self):
     _, _, stdout = self.run_helper(expect_success=True)
-    self.assertNotIn('MyExceptionHandler', stdout)
+    self.assertNotIn('MyErrorHandler', stdout)
 
   def test_print_init_callbacks(self):
     _, stdout, _ = self.run_helper(

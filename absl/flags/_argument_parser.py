@@ -593,7 +593,7 @@ class ListParser(BaseListParser):
         raise ValueError(
             f'Unable to parse the value {argument!r} as a '
             f'{self.flag_type()}: {e}'
-        )
+        ) from e
 
   def _custom_xml_dom_elements(
       self, doc: minidom.Document
