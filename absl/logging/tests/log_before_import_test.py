@@ -14,6 +14,7 @@
 
 """Test of logging behavior before app.run(), aka flag and logging init()."""
 
+from collections.abc import Iterator
 import contextlib
 import io
 import os
@@ -35,7 +36,7 @@ class Error(Exception):
 
 
 @contextlib.contextmanager
-def captured_stderr_filename():
+def captured_stderr_filename() -> Iterator[str]:
   """Captures stderr and writes them to a temporary file.
 
   This uses os.dup/os.dup2 to redirect the stderr fd for capturing standard
@@ -127,4 +128,4 @@ class LoggingInitWarningTest(absltest.TestCase):
 
 
 if __name__ == '__main__':
-  absltest.main()  # This calls the app.run() init equivalent.
+  absltest.main()

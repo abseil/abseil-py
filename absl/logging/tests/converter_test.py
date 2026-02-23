@@ -12,133 +12,135 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for converter.py."""
-
 import logging
 
 from absl import logging as absl_logging
 from absl.logging import converter
 from absl.testing import absltest
+from absl.testing import parameterized
 
 
-class ConverterTest(absltest.TestCase):
+class ConverterTest(parameterized.TestCase):
   """Tests the converter module."""
 
-  def test_absl_to_cpp(self):
-    self.assertEqual(0, converter.absl_to_cpp(absl_logging.DEBUG))
-    self.assertEqual(0, converter.absl_to_cpp(absl_logging.INFO))
-    self.assertEqual(1, converter.absl_to_cpp(absl_logging.WARN))
-    self.assertEqual(2, converter.absl_to_cpp(absl_logging.ERROR))
-    self.assertEqual(3, converter.absl_to_cpp(absl_logging.FATAL))
+  @parameterized.parameters([
+      (absl_logging.DEBUG, 0),
+      (absl_logging.INFO, 0),
+      (absl_logging.WARN, 1),
+      (absl_logging.ERROR, 2),
+      (absl_logging.FATAL, 3),
+      (100, 0),
+  ])
+  def test_absl_to_cpp(self, absl_level: int, expected_cpp_level: int):
+    self.assertEqual(expected_cpp_level, converter.absl_to_cpp(absl_level))
 
+  def test_absl_to_cpp_raises_on_invalid_input(self):
     with self.assertRaises(TypeError):
       converter.absl_to_cpp('')
 
-  def test_absl_to_standard(self):
+  @parameterized.parameters([
+      (absl_logging.DEBUG, logging.DEBUG),
+      (absl_logging.INFO, logging.INFO),
+      (absl_logging.WARN, logging.WARNING),
+      (absl_logging.WARN, logging.WARN),
+      (absl_logging.ERROR, logging.ERROR),
+      (absl_logging.FATAL, logging.FATAL),
+      (absl_logging.FATAL, logging.CRITICAL),
+      # vlog levels:
+      (2, 9),
+      (3, 8),
+  ])
+  def test_absl_to_standard(
+      self, absl_level: int, expected_standard_level: int
+  ):
     self.assertEqual(
-        logging.DEBUG, converter.absl_to_standard(absl_logging.DEBUG)
+        expected_standard_level, converter.absl_to_standard(absl_level)
     )
-    self.assertEqual(
-        logging.INFO, converter.absl_to_standard(absl_logging.INFO)
-    )
-    self.assertEqual(
-        logging.WARNING, converter.absl_to_standard(absl_logging.WARN)
-    )
-    self.assertEqual(
-        logging.WARN, converter.absl_to_standard(absl_logging.WARN)
-    )
-    self.assertEqual(
-        logging.ERROR, converter.absl_to_standard(absl_logging.ERROR)
-    )
-    self.assertEqual(
-        logging.FATAL, converter.absl_to_standard(absl_logging.FATAL)
-    )
-    self.assertEqual(
-        logging.CRITICAL, converter.absl_to_standard(absl_logging.FATAL)
-    )
-    # vlog levels.
-    self.assertEqual(9, converter.absl_to_standard(2))
-    self.assertEqual(8, converter.absl_to_standard(3))
 
+  def test_absl_to_standard_raises_on_invalid_input(self):
     with self.assertRaises(TypeError):
       converter.absl_to_standard('')
 
-  def test_standard_to_absl(self):
+  @parameterized.parameters([
+      (logging.DEBUG, absl_logging.DEBUG),
+      (logging.INFO, absl_logging.INFO),
+      (logging.WARN, absl_logging.WARN),
+      (logging.WARNING, absl_logging.WARN),
+      (logging.ERROR, absl_logging.ERROR),
+      (logging.FATAL, absl_logging.FATAL),
+      (logging.CRITICAL, absl_logging.FATAL),
+      # vlog levels:
+      (logging.DEBUG - 1, 2),
+      (logging.DEBUG - 2, 3),
+  ])
+  def test_standard_to_absl(
+      self, standard_level: int, expected_absl_level: int
+  ):
     self.assertEqual(
-        absl_logging.DEBUG, converter.standard_to_absl(logging.DEBUG)
+        expected_absl_level, converter.standard_to_absl(standard_level)
     )
-    self.assertEqual(
-        absl_logging.INFO, converter.standard_to_absl(logging.INFO)
-    )
-    self.assertEqual(
-        absl_logging.WARN, converter.standard_to_absl(logging.WARN)
-    )
-    self.assertEqual(
-        absl_logging.WARN, converter.standard_to_absl(logging.WARNING)
-    )
-    self.assertEqual(
-        absl_logging.ERROR, converter.standard_to_absl(logging.ERROR)
-    )
-    self.assertEqual(
-        absl_logging.FATAL, converter.standard_to_absl(logging.FATAL)
-    )
-    self.assertEqual(
-        absl_logging.FATAL, converter.standard_to_absl(logging.CRITICAL)
-    )
-    # vlog levels.
-    self.assertEqual(2, converter.standard_to_absl(logging.DEBUG - 1))
-    self.assertEqual(3, converter.standard_to_absl(logging.DEBUG - 2))
 
+  def test_standard_to_absl_raises_on_invalid_input(self):
     with self.assertRaises(TypeError):
       converter.standard_to_absl('')
 
-  def test_standard_to_cpp(self):
-    self.assertEqual(0, converter.standard_to_cpp(logging.DEBUG))
-    self.assertEqual(0, converter.standard_to_cpp(logging.INFO))
-    self.assertEqual(1, converter.standard_to_cpp(logging.WARN))
-    self.assertEqual(1, converter.standard_to_cpp(logging.WARNING))
-    self.assertEqual(2, converter.standard_to_cpp(logging.ERROR))
-    self.assertEqual(3, converter.standard_to_cpp(logging.FATAL))
-    self.assertEqual(3, converter.standard_to_cpp(logging.CRITICAL))
+  @parameterized.parameters([
+      (logging.DEBUG, 0),
+      (logging.INFO, 0),
+      (logging.WARN, 1),
+      (logging.WARNING, 1),
+      (logging.ERROR, 2),
+      (logging.FATAL, 3),
+      (logging.CRITICAL, 3),
+  ])
+  def test_standard_to_cpp(self, standard_level: int, expected_cpp_level: int):
+    self.assertEqual(
+        expected_cpp_level, converter.standard_to_cpp(standard_level)
+    )
 
+  def test_standard_to_cpp_raises_on_invalid_input(self):
     with self.assertRaises(TypeError):
       converter.standard_to_cpp('')
 
-  def test_get_initial_for_level(self):
-    self.assertEqual('F', converter.get_initial_for_level(logging.CRITICAL))
-    self.assertEqual('E', converter.get_initial_for_level(logging.ERROR))
-    self.assertEqual('W', converter.get_initial_for_level(logging.WARNING))
-    self.assertEqual('I', converter.get_initial_for_level(logging.INFO))
-    self.assertEqual('I', converter.get_initial_for_level(logging.DEBUG))
-    self.assertEqual('I', converter.get_initial_for_level(logging.NOTSET))
+  @parameterized.parameters([
+      (logging.CRITICAL, 'F'),
+      (logging.ERROR, 'E'),
+      (logging.WARNING, 'W'),
+      (logging.INFO, 'I'),
+      (logging.DEBUG, 'I'),
+      (logging.NOTSET, 'I'),
+      (51, 'F'),
+      (49, 'E'),
+      (41, 'E'),
+      (39, 'W'),
+      (31, 'W'),
+      (29, 'I'),
+      (21, 'I'),
+      (19, 'I'),
+      (11, 'I'),
+      (9, 'I'),
+      (1, 'I'),
+      (-1, 'I'),
+  ])
+  def test_get_initial_for_level(self, level: int, expected_initial: str):
+    self.assertEqual(expected_initial, converter.get_initial_for_level(level))
 
-    self.assertEqual('F', converter.get_initial_for_level(51))
-    self.assertEqual('E', converter.get_initial_for_level(49))
-    self.assertEqual('E', converter.get_initial_for_level(41))
-    self.assertEqual('W', converter.get_initial_for_level(39))
-    self.assertEqual('W', converter.get_initial_for_level(31))
-    self.assertEqual('I', converter.get_initial_for_level(29))
-    self.assertEqual('I', converter.get_initial_for_level(21))
-    self.assertEqual('I', converter.get_initial_for_level(19))
-    self.assertEqual('I', converter.get_initial_for_level(11))
-    self.assertEqual('I', converter.get_initial_for_level(9))
-    self.assertEqual('I', converter.get_initial_for_level(1))
-    self.assertEqual('I', converter.get_initial_for_level(-1))
-
-  def test_string_to_standard(self):
-    self.assertEqual(logging.DEBUG, converter.string_to_standard('debug'))
-    self.assertEqual(logging.INFO, converter.string_to_standard('info'))
-    self.assertEqual(logging.WARNING, converter.string_to_standard('warn'))
-    self.assertEqual(logging.WARNING, converter.string_to_standard('warning'))
-    self.assertEqual(logging.ERROR, converter.string_to_standard('error'))
-    self.assertEqual(logging.CRITICAL, converter.string_to_standard('fatal'))
-
-    self.assertEqual(logging.DEBUG, converter.string_to_standard('DEBUG'))
-    self.assertEqual(logging.INFO, converter.string_to_standard('INFO'))
-    self.assertEqual(logging.WARNING, converter.string_to_standard('WARN'))
-    self.assertEqual(logging.WARNING, converter.string_to_standard('WARNING'))
-    self.assertEqual(logging.ERROR, converter.string_to_standard('ERROR'))
-    self.assertEqual(logging.CRITICAL, converter.string_to_standard('FATAL'))
+  @parameterized.parameters([
+      ('debug', logging.DEBUG),
+      ('info', logging.INFO),
+      ('warn', logging.WARNING),
+      ('warning', logging.WARNING),
+      ('error', logging.ERROR),
+      ('fatal', logging.CRITICAL),
+      ('DEBUG', logging.DEBUG),
+      ('INFO', logging.INFO),
+      ('WARN', logging.WARNING),
+      ('WARNING', logging.WARNING),
+      ('ERROR', logging.ERROR),
+      ('FATAL', logging.CRITICAL),
+  ])
+  def test_string_to_standard(self, level_string: str, expected_level: int):
+    self.assertEqual(expected_level, converter.string_to_standard(level_string))
 
 
 if __name__ == '__main__':

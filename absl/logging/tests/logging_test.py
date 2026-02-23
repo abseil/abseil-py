@@ -14,6 +14,7 @@
 
 """Unit tests for absl.logging."""
 
+from collections.abc import Callable, Iterator, Mapping
 import contextlib
 import functools
 import getpass
@@ -27,6 +28,7 @@ import tempfile
 import threading
 import time
 import traceback
+from typing import Any, TextIO
 import unittest
 from unittest import mock
 
@@ -52,6 +54,17 @@ class ConfigurationTest(absltest.TestCase):
     )
 
 
+@contextlib.contextmanager
+def set_logger_levels(levels: Mapping[str, str]) -> Iterator[None]:
+  original_levels = {name: std_logging.getLogger(name).level for name in levels}
+  try:
+    with flagsaver.flagsaver(logger_levels=levels):
+      yield
+  finally:
+    for name, level in original_levels.items():
+      std_logging.getLogger(name).setLevel(level)
+
+
 class LoggerLevelsTest(parameterized.TestCase):
 
   def setUp(self):
@@ -59,28 +72,14 @@ class LoggerLevelsTest(parameterized.TestCase):
     # Since these tests muck with the flag, always save/restore in case the
     # tests forget to clean up properly.
     # enter_context() is py3-only, but manually enter/exit should suffice.
-    cm = self.set_logger_levels({})
-    cm.__enter__()
-    self.addCleanup(lambda: cm.__exit__(None, None, None))
+    cm = set_logger_levels({})
+    self.enter_context(cm)
 
-  @contextlib.contextmanager
-  def set_logger_levels(self, levels):
-    original_levels = {
-        name: std_logging.getLogger(name).level for name in levels
-    }
-
-    try:
-      with flagsaver.flagsaver(logger_levels=levels):
-        yield
-    finally:
-      for name, level in original_levels.items():
-        std_logging.getLogger(name).setLevel(level)
-
-  def assert_logger_level(self, name, expected_level):
+  def assert_logger_level(self, name, expected_level) -> None:
     logger = std_logging.getLogger(name)
     self.assertEqual(logger.level, expected_level)
 
-  def assert_logged(self, logger_name, expected_msgs):
+  def assert_logged(self, logger_name, expected_msgs) -> None:
     logger = std_logging.getLogger(logger_name)
     # NOTE: assertLogs() sets the logger to INFO if not specified.
     with self.assertLogs(logger, logger.level) as cm:
@@ -97,7 +96,7 @@ class LoggerLevelsTest(parameterized.TestCase):
     # Other tests change the root logging level, so we can't
     # assume it's the default.
     orig_root_level = std_logging.root.getEffectiveLevel()
-    with self.set_logger_levels({'foo': 'ERROR', 'bar': 'DEBUG'}):
+    with set_logger_levels({'foo': 'ERROR', 'bar': 'DEBUG'}):
 
       self.assert_logger_level('foo', std_logging.ERROR)
       self.assert_logger_level('bar', std_logging.DEBUG)
@@ -131,33 +130,7 @@ class PythonHandlerTest(absltest.TestCase):
 
   def setUp(self):
     super().setUp()
-    year, month, day, hour, minute, sec, dunno, dayofyear, dst_flag = (
-        1979,
-        10,
-        21,
-        18,
-        17,
-        16,
-        3,
-        15,
-        0,
-    )
-    self.now_tuple = (
-        year,
-        month,
-        day,
-        hour,
-        minute,
-        sec,
-        dunno,
-        dayofyear,
-        dst_flag,
-    )
     self.python_handler = logging.PythonHandler()
-
-  def tearDown(self):
-    mock.patch.stopall()
-    super().tearDown()
 
   @flagsaver.flagsaver(logtostderr=False)
   def test_set_google_log_file_no_log_to_stderr(self):
@@ -173,36 +146,30 @@ class PythonHandlerTest(absltest.TestCase):
     self.python_handler.use_absl_log_file()
     self.assertEqual(sys.stderr, self.python_handler.stream)
 
-  @mock.patch.object(logging, 'find_log_dir_and_names')
-  @mock.patch.object(time, 'localtime')
-  @mock.patch.object(time, 'time')
-  @mock.patch.object(os.path, 'islink')
-  @mock.patch.object(os, 'unlink')
-  @mock.patch.object(os, 'getpid')
-  def test_start_logging_to_file(
-      self,
-      mock_getpid,
-      mock_unlink,
-      mock_islink,
-      mock_time,
-      mock_localtime,
-      mock_find_log_dir_and_names,
-  ):
-    mock_find_log_dir_and_names.return_value = ('here', 'prog1', 'prog1')
-    mock_time.return_value = '12345'
-    mock_localtime.return_value = self.now_tuple
-    mock_getpid.return_value = 4321
-    symlink = os.path.join('here', 'prog1.INFO')
-    mock_islink.return_value = True
-    with mock.patch.object(
-        logging, 'open', return_value=sys.stdout, create=True
+  def test_start_logging_to_file(self):
+    with (
+        mock.patch.object(
+            logging,
+            'find_log_dir_and_names',
+            return_value=('here', 'prog1', 'prog1'),
+        ),
+        mock.patch.object(
+            logging, 'open', return_value=sys.stdout, create=True
+        ),
+        mock.patch.object(
+            time, 'localtime', return_value=(1979, 10, 21, 18, 17, 16, 3, 15, 0)
+        ),
+        mock.patch.object(os.path, 'islink', return_value=True),
+        mock.patch.object(os, 'getpid', return_value=4321),
+        mock.patch.object(os, 'unlink') as mock_unlink,
     ):
       if getattr(os, 'symlink', None):
-        with mock.patch.object(os, 'symlink'):
+        expected_symlink = os.path.join('here', 'prog1.INFO')
+        with mock.patch.object(os, 'symlink') as mock_symlink:
           self.python_handler.start_logging_to_file()
-          mock_unlink.assert_called_once_with(symlink)
-          os.symlink.assert_called_once_with(
-              'prog1.INFO.19791021-181716.4321', symlink
+          mock_unlink.assert_called_once_with(expected_symlink)
+          mock_symlink.assert_called_once_with(
+              'prog1.INFO.19791021-181716.4321', expected_symlink
           )
       else:
         self.python_handler.start_logging_to_file()
@@ -259,27 +226,29 @@ class PythonHandlerTest(absltest.TestCase):
 
   def test_log_to_std_err(self):
     record = std_logging.LogRecord(
-        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
-    with mock.patch.object(std_logging.StreamHandler, 'emit'):
+    with mock.patch.object(std_logging.StreamHandler, 'emit') as mock_emit:
       self.python_handler._log_to_stderr(record)
-      std_logging.StreamHandler.emit.assert_called_once_with(record)
+      mock_emit.assert_called_once_with(record)
 
   @flagsaver.flagsaver(logtostderr=True)
   def test_emit_log_to_stderr(self):
     record = std_logging.LogRecord(
-        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
-    with mock.patch.object(self.python_handler, '_log_to_stderr'):
+    with mock.patch.object(
+        self.python_handler, '_log_to_stderr'
+    ) as mock_log_to_stderr:
       self.python_handler.emit(record)
-      self.python_handler._log_to_stderr.assert_called_once_with(record)
+      mock_log_to_stderr.assert_called_once_with(record)
 
   def test_emit(self):
     stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     handler.stderr_threshold = std_logging.FATAL
     record = std_logging.LogRecord(
-        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
     handler.emit(record)
     self.assertEqual(1, stream.getvalue().count('logging_msg'))
@@ -290,9 +259,9 @@ class PythonHandlerTest(absltest.TestCase):
     stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     record = std_logging.LogRecord(
-        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
-    with mock.patch.object(sys, 'stderr', new=mock_stderr) as mock_stderr:
+    with mock.patch.object(sys, 'stderr', new=mock_stderr):
       handler.emit(record)
       self.assertEqual(1, stream.getvalue().count('logging_msg'))
       self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
@@ -304,96 +273,96 @@ class PythonHandlerTest(absltest.TestCase):
     handler = logging.PythonHandler(stream)
     handler.stderr_threshold = std_logging.FATAL
     record = std_logging.LogRecord(
-        'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False
+        'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
-    with mock.patch.object(sys, 'stderr', new=mock_stderr) as mock_stderr:
+    with mock.patch.object(sys, 'stderr', new=mock_stderr):
       handler.emit(record)
       self.assertEqual(1, stream.getvalue().count('logging_msg'))
       self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
 
   def test_emit_on_stderr(self):
     mock_stderr = io.StringIO()
-    with mock.patch.object(sys, 'stderr', new=mock_stderr) as mock_stderr:
+    with mock.patch.object(sys, 'stderr', new=mock_stderr):
       handler = logging.PythonHandler()
       handler.stderr_threshold = std_logging.INFO
       record = std_logging.LogRecord(
-          'name', std_logging.INFO, 'path', 12, 'logging_msg', [], False
+          'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
       )
       handler.emit(record)
       self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
 
-  def test_emit_fatal_absl(self):
+  @mock.patch.object(os, 'abort')
+  def test_emit_fatal_absl(self, mock_abort: mock.MagicMock):
     stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     record = std_logging.LogRecord(
-        'name', std_logging.FATAL, 'path', 12, 'logging_msg', [], False
+        'name', std_logging.FATAL, 'path', 12, 'logging_msg', None, None
     )
-    record.__dict__[logging._ABSL_LOG_FATAL] = True
+    record.__dict__[logging._ABSL_LOG_FATAL] = True  # type: ignore[attr-defined]
     with mock.patch.object(handler, 'flush') as mock_flush:
-      with mock.patch.object(os, 'abort') as mock_abort:
-        handler.emit(record)
-        mock_abort.assert_called_once()
-        mock_flush.assert_called()  # flush is also called by super class.
+      handler.emit(record)
+      mock_abort.assert_called_once()
+      mock_flush.assert_called()  # flush is also called by super class.
 
-  def test_emit_fatal_non_absl(self):
+  @mock.patch.object(os, 'abort')
+  def test_emit_fatal_non_absl(self, mock_abort: mock.MagicMock):
     stream = io.StringIO()
     handler = logging.PythonHandler(stream)
     record = std_logging.LogRecord(
-        'name', std_logging.FATAL, 'path', 12, 'logging_msg', [], False
+        'name', std_logging.FATAL, 'path', 12, 'logging_msg', None, None
     )
-    with mock.patch.object(os, 'abort') as mock_abort:
-      handler.emit(record)
-      mock_abort.assert_not_called()
+    handler.emit(record)
+    mock_abort.assert_not_called()
 
-  def test_close(self):
+  @mock.patch.object(std_logging.StreamHandler, 'close')
+  def test_close(self, mock_close: mock.MagicMock):
     stream = mock.Mock()
     stream.isatty.return_value = True
     handler = logging.PythonHandler(stream)
     with mock.patch.object(handler, 'flush') as mock_flush:
-      with mock.patch.object(std_logging.StreamHandler, 'close') as super_close:
-        handler.close()
-        mock_flush.assert_called_once()
-        super_close.assert_called_once()
-        stream.close.assert_not_called()
+      handler.close()
+      mock_flush.assert_called_once()
+      mock_close.assert_called_once()
+      stream.close.assert_not_called()
 
-  def test_close_afile(self):
+  @mock.patch.object(std_logging.StreamHandler, 'close')
+  def test_close_afile(self, mock_close: mock.MagicMock):
     stream = mock.Mock()
     stream.isatty.return_value = False
     stream.close.side_effect = ValueError
     handler = logging.PythonHandler(stream)
     with mock.patch.object(handler, 'flush') as mock_flush:
-      with mock.patch.object(std_logging.StreamHandler, 'close') as super_close:
-        handler.close()
-        mock_flush.assert_called_once()
-        super_close.assert_called_once()
-
-  def test_close_stderr(self):
-    with mock.patch.object(sys, 'stderr') as mock_stderr:
-      mock_stderr.isatty.return_value = False
-      handler = logging.PythonHandler(sys.stderr)
       handler.close()
-      mock_stderr.close.assert_not_called()
+      mock_flush.assert_called_once()
+      mock_close.assert_called_once()
 
-  def test_close_stdout(self):
-    with mock.patch.object(sys, 'stdout') as mock_stdout:
-      mock_stdout.isatty.return_value = False
-      handler = logging.PythonHandler(sys.stdout)
-      handler.close()
-      mock_stdout.close.assert_not_called()
+  @mock.patch.object(sys, 'stderr')
+  def test_close_stderr(self, mock_stderr: mock.MagicMock):
+    mock_stderr.isatty.return_value = False
+    handler = logging.PythonHandler(sys.stderr)
+    handler.close()
+    mock_stderr.close.assert_not_called()
 
-  def test_close_original_stderr(self):
-    with mock.patch.object(sys, '__stderr__') as mock_original_stderr:
-      mock_original_stderr.isatty.return_value = False
-      handler = logging.PythonHandler(sys.__stderr__)
-      handler.close()
-      mock_original_stderr.close.assert_not_called()
+  @mock.patch.object(sys, 'stdout')
+  def test_close_stdout(self, mock_stdout: mock.MagicMock):
+    mock_stdout.isatty.return_value = False
+    handler = logging.PythonHandler(sys.stdout)
+    handler.close()
+    mock_stdout.close.assert_not_called()
 
-  def test_close_original_stdout(self):
-    with mock.patch.object(sys, '__stdout__') as mock_original_stdout:
-      mock_original_stdout.isatty.return_value = False
-      handler = logging.PythonHandler(sys.__stdout__)
-      handler.close()
-      mock_original_stdout.close.assert_not_called()
+  @mock.patch.object(sys, '__stderr__')
+  def test_close_original_stderr(self, mock_original_stderr: mock.MagicMock):
+    mock_original_stderr.isatty.return_value = False
+    handler = logging.PythonHandler(sys.__stderr__)
+    handler.close()
+    mock_original_stderr.close.assert_not_called()
+
+  @mock.patch.object(sys, '__stdout__')
+  def test_close_original_stdout(self, mock_original_stdout: mock.MagicMock):
+    mock_original_stdout.isatty.return_value = False
+    handler = logging.PythonHandler(sys.__stdout__)
+    handler.close()
+    mock_original_stdout.close.assert_not_called()
 
   def test_close_fake_file(self):
 
@@ -433,7 +402,7 @@ class ABSLLoggerTest(absltest.TestCase):
   """Tests the ABSLLogger class."""
 
   def set_up_mock_frames(self):
-    """Sets up mock frames for use with the testFindCaller methods."""
+    """Set up mock frames for use with the testFindCaller methods."""
     logging_file = os.path.join('absl', 'logging', '__init__.py')
 
     # Set up mock frame 0
@@ -488,8 +457,10 @@ class ABSLLoggerTest(absltest.TestCase):
     mock_frame_1.f_back = mock_frame_2
     mock_frame_0.f_back = mock_frame_1
 
-    mock.patch.object(sys, '_getframe').start()
-    sys._getframe.return_value = mock_frame_0
+    mock_getframe = mock.patch.object(
+        sys, '_getframe', return_value=mock_frame_0
+    )
+    self.enter_context(mock_getframe)
 
   def setUp(self):
     super().setUp()
@@ -497,7 +468,6 @@ class ABSLLoggerTest(absltest.TestCase):
     self.logger = logging.ABSLLogger('')
 
   def tearDown(self):
-    mock.patch.stopall()
     self.logger._frames_to_skip.clear()
     super().tearDown()
 
@@ -558,60 +528,53 @@ class ABSLLoggerTest(absltest.TestCase):
   def test_find_caller_stack_info(self):
     self.set_up_mock_frames()
     self.logger.register_frame_to_skip('myfile.py', 'Method1')
-    with mock.patch.object(traceback, 'print_stack') as print_stack:
+    with mock.patch.object(traceback, 'print_stack') as mock_print_stack:
       self.assertEqual(
           ('myfile.py', 125, 'Method2', 'Stack (most recent call last):'),
           self.logger.findCaller(stack_info=True),
       )
-    print_stack.assert_called_once()
+    mock_print_stack.assert_called_once()
 
   def test_critical(self):
-    with mock.patch.object(self.logger, 'log'):
+    with mock.patch.object(self.logger, 'log') as mock_log:
       self.logger.critical(self.message)
-      self.logger.log.assert_called_once_with(
-          std_logging.CRITICAL, self.message
-      )
+      mock_log.assert_called_once_with(std_logging.CRITICAL, self.message)
 
   def test_fatal(self):
-    with mock.patch.object(self.logger, 'log'):
+    with mock.patch.object(self.logger, 'log') as mock_log:
       self.logger.fatal(self.message)
-      self.logger.log.assert_called_once_with(std_logging.FATAL, self.message)
+      mock_log.assert_called_once_with(std_logging.FATAL, self.message)
 
   def test_error(self):
-    with mock.patch.object(self.logger, 'log'):
+    with mock.patch.object(self.logger, 'log') as mock_log:
       self.logger.error(self.message)
-      self.logger.log.assert_called_once_with(std_logging.ERROR, self.message)
+      mock_log.assert_called_once_with(std_logging.ERROR, self.message)
 
   def test_warn(self):
-    with mock.patch.object(self.logger, 'log'):
+    with mock.patch.object(self.logger, 'log') as mock_log:
       self.logger.warn(self.message)
-      self.logger.log.assert_called_once_with(std_logging.WARN, self.message)
+      mock_log.assert_called_once_with(std_logging.WARN, self.message)
 
   def test_warning(self):
-    with mock.patch.object(self.logger, 'log'):
+    with mock.patch.object(self.logger, 'log') as mock_log:
       self.logger.warning(self.message)
-      self.logger.log.assert_called_once_with(std_logging.WARNING, self.message)
+      mock_log.assert_called_once_with(std_logging.WARNING, self.message)
 
   def test_info(self):
-    with mock.patch.object(self.logger, 'log'):
+    with mock.patch.object(self.logger, 'log') as mock_log:
       self.logger.info(self.message)
-      self.logger.log.assert_called_once_with(std_logging.INFO, self.message)
+      mock_log.assert_called_once_with(std_logging.INFO, self.message)
 
   def test_debug(self):
-    with mock.patch.object(self.logger, 'log'):
+    with mock.patch.object(self.logger, 'log') as mock_log:
       self.logger.debug(self.message)
-      self.logger.log.assert_called_once_with(std_logging.DEBUG, self.message)
+      mock_log.assert_called_once_with(std_logging.DEBUG, self.message)
 
+  @flagsaver.flagsaver(verbosity=1)
   def test_log_debug_with_python(self):
-    with mock.patch.object(self.logger, 'log'):
-      FLAGS.verbosity = 1
+    with mock.patch.object(self.logger, 'log') as mock_log:
       self.logger.debug(self.message)
-      self.logger.log.assert_called_once_with(std_logging.DEBUG, self.message)
-
-  def test_log_fatal_with_python(self):
-    with mock.patch.object(self.logger, 'log'):
-      self.logger.fatal(self.message)
-      self.logger.log.assert_called_once_with(std_logging.FATAL, self.message)
+      mock_log.assert_called_once_with(std_logging.DEBUG, self.message)
 
   def test_register_frame_to_skip(self):
     # This is basically just making sure that if I put something in a
@@ -669,7 +632,8 @@ class ABSLLoggerTest(absltest.TestCase):
         self.logger.findCaller(stacklevel=2),
         ('myfile.py', 125, 'Method3', None),
     )
-    # 3 exceeds the unfiltered stack depth, so it returns the bottom unfiltered frame.
+    # stacklevel=3 exceeds the unfiltered stack depth, so it returns the bottom
+    # unfiltered frame.
     self.assertEqual(
         self.logger.findCaller(stacklevel=3),
         ('myfile.py', 125, 'Method3', None),
@@ -710,13 +674,13 @@ class ABSLLogPrefixTest(parameterized.TestCase):
   def setUp(self):
     super().setUp()
     self.record = std_logging.LogRecord(
-        'name',
-        std_logging.INFO,
-        'path/to/source.py',
-        13,
-        'log message',
-        None,
-        None,
+        name='name',
+        level=std_logging.INFO,
+        pathname='path/to/source.py',
+        lineno=13,
+        msg='log message',
+        args=None,
+        exc_info=None,
     )
 
   @parameterized.named_parameters(
@@ -807,7 +771,12 @@ class LogCountTest(absltest.TestCase):
     self.assertEqual(counts, {i for i in range(100)})
 
 
-class LoggingTest(absltest.TestCase):
+class LoggingTest(parameterized.TestCase):
+
+  def setUp(self):
+    super().setUp()
+    original_verbosity = logging.get_verbosity()
+    self.addCleanup(logging.set_verbosity, original_verbosity)
 
   def test_fatal(self):
     with mock.patch.object(os, 'abort') as mock_abort:
@@ -815,123 +784,101 @@ class LoggingTest(absltest.TestCase):
       mock_abort.assert_called_once()
 
   def test_find_log_dir_with_arg(self):
-    with mock.patch.object(os, 'access'), mock.patch.object(os.path, 'isdir'):
-      os.path.isdir.return_value = True
-      os.access.return_value = True
-      log_dir = logging.find_log_dir(log_dir='./')
-      self.assertEqual('./', log_dir)
+    with (
+        mock.patch.object(os, 'access', return_value=True),
+        mock.patch.object(os.path, 'isdir', return_value=True),
+    ):
+      self.assertEqual('./', logging.find_log_dir(log_dir='./'))
 
   @flagsaver.flagsaver(log_dir='./')
   def test_find_log_dir_with_flag(self):
-    with mock.patch.object(os, 'access'), mock.patch.object(os.path, 'isdir'):
-      os.path.isdir.return_value = True
-      os.access.return_value = True
-      log_dir = logging.find_log_dir()
-      self.assertEqual('./', log_dir)
+    with (
+        mock.patch.object(os, 'access', return_value=True),
+        mock.patch.object(os.path, 'isdir', return_value=True),
+    ):
+      self.assertEqual('./', logging.find_log_dir())
 
   @flagsaver.flagsaver(log_dir='')
   def test_find_log_dir_with_hda_tmp(self):
-    with mock.patch.object(os, 'access'), mock.patch.object(
-        os.path, 'exists'
-    ), mock.patch.object(os.path, 'isdir'):
-      os.path.exists.return_value = True
-      os.path.isdir.return_value = True
-      os.access.return_value = True
+    with (
+        mock.patch.object(os, 'access', return_value=True),
+        mock.patch.object(os.path, 'exists', return_value=True),
+        mock.patch.object(os.path, 'isdir', return_value=True),
+    ):
       log_dir = logging.find_log_dir()
       self.assertEqual(tempfile.gettempdir(), log_dir)
 
   @flagsaver.flagsaver(log_dir='')
   def test_find_log_dir_with_tmp(self):
-    with mock.patch.object(os, 'access'), mock.patch.object(
-        os.path, 'exists'
-    ), mock.patch.object(os.path, 'isdir'):
-      os.path.exists.return_value = False
-      os.path.isdir.side_effect = lambda path: path == tempfile.gettempdir()
-      os.access.return_value = True
-      log_dir = logging.find_log_dir()
-      self.assertEqual(tempfile.gettempdir(), log_dir)
+    with (
+        mock.patch.object(os, 'access', return_value=True),
+        mock.patch.object(os.path, 'exists', return_value=False),
+        mock.patch.object(
+            os.path,
+            'isdir',
+            side_effect=lambda path: path == tempfile.gettempdir(),
+        ),
+    ):
+      self.assertEqual(tempfile.gettempdir(), logging.find_log_dir())
 
   def test_find_log_dir_with_nothing(self):
-    with mock.patch.object(os.path, 'exists'), mock.patch.object(
-        os.path, 'isdir'
+    with (
+        mock.patch.object(os.path, 'exists', return_value=False),
+        mock.patch.object(os.path, 'isdir', return_value=False),
     ):
-      os.path.exists.return_value = False
-      os.path.isdir.return_value = False
       with self.assertRaises(FileNotFoundError):
         logging.find_log_dir()
 
   def test_find_log_dir_and_names_with_args(self):
-    user = 'test_user'
-    host = 'test_host'
-    log_dir = 'here'
-    program_name = 'prog1'
-    with mock.patch.object(getpass, 'getuser'), mock.patch.object(
-        logging, 'find_log_dir'
-    ) as mock_find_log_dir, mock.patch.object(
-        socket, 'gethostname'
-    ) as mock_gethostname:
-      getpass.getuser.return_value = user
-      mock_gethostname.return_value = host
-      mock_find_log_dir.return_value = log_dir
-
-      prefix = f'{program_name}.{host}.{user}.log'
+    with (
+        mock.patch.object(getpass, 'getuser', return_value='test_user'),
+        mock.patch.object(logging, 'find_log_dir', return_value='foo_dir'),
+        mock.patch.object(socket, 'gethostname', return_value='test_host'),
+    ):
       self.assertEqual(
-          (log_dir, prefix, program_name),
+          ('foo_dir', 'prog1.test_host.test_user.log', 'prog1'),
           logging.find_log_dir_and_names(
-              program_name=program_name, log_dir=log_dir
+              program_name='prog1', log_dir='foo_dir'
           ),
       )
 
   def test_find_log_dir_and_names_without_args(self):
-    user = 'test_user'
-    host = 'test_host'
-    log_dir = 'here'
-    py_program_name = 'py_prog1'
     sys.argv[0] = 'path/to/prog1'
-    with mock.patch.object(getpass, 'getuser'), mock.patch.object(
-        logging, 'find_log_dir'
-    ) as mock_find_log_dir, mock.patch.object(socket, 'gethostname'):
-      getpass.getuser.return_value = user
-      socket.gethostname.return_value = host
-      mock_find_log_dir.return_value = log_dir
-      prefix = f'{py_program_name}.{host}.{user}.log'
+    with (
+        mock.patch.object(getpass, 'getuser', return_value='test_user'),
+        mock.patch.object(socket, 'gethostname', return_value='test_host'),
+        mock.patch.object(logging, 'find_log_dir', return_value='my_log_dir'),
+    ):
       self.assertEqual(
-          (log_dir, prefix, py_program_name), logging.find_log_dir_and_names()
+          ('my_log_dir', 'py_prog1.test_host.test_user.log', 'py_prog1'),
+          logging.find_log_dir_and_names(),
       )
 
   def test_find_log_dir_and_names_wo_username(self):
     # Windows doesn't have os.getuid at all
     if hasattr(os, 'getuid'):
-      mock_getuid = mock.patch.object(os, 'getuid')
-      uid = 100
+      mock_getuid = mock.patch.object(os, 'getuid', return_value=100)
       logged_uid = '100'
     else:
       # The function doesn't exist, but our test code still tries to mock
       # it, so just use a fake thing.
-      mock_getuid = _mock_windows_os_getuid()
-      uid = -1
+      mock_getuid = mock.MagicMock()
       logged_uid = 'unknown'
 
-    host = 'test_host'
-    log_dir = 'here'
-    program_name = 'prog1'
-    with mock.patch.object(
-        getpass, 'getuser'
-    ), mock_getuid as getuid, mock.patch.object(
-        logging, 'find_log_dir'
-    ) as mock_find_log_dir, mock.patch.object(
-        socket, 'gethostname'
-    ) as mock_gethostname:
-      getpass.getuser.side_effect = KeyError()
-      getuid.return_value = uid
-      mock_gethostname.return_value = host
-      mock_find_log_dir.return_value = log_dir
-
-      prefix = f'{program_name}.{host}.{logged_uid}.log'
+    with (
+        mock.patch.object(getpass, 'getuser', side_effect=KeyError()),
+        mock_getuid,
+        mock.patch.object(logging, 'find_log_dir', return_value='my_log_dir'),
+        mock.patch.object(socket, 'gethostname', return_value='test_host'),
+    ):
       self.assertEqual(
-          (log_dir, prefix, program_name),
+          (
+              'my_log_dir',
+              f'my_program.test_host.{logged_uid}.log',
+              'my_program',
+          ),
           logging.find_log_dir_and_names(
-              program_name=program_name, log_dir=log_dir
+              program_name='my_program', log_dir='my_log_dir'
           ),
       )
 
@@ -954,82 +901,46 @@ class LoggingTest(absltest.TestCase):
     logging.exception('exc_info=True', exc_info=True)
     logging.exception('exc_info=False', exc_info=False)
 
-  def test_logging_levels(self):
-    old_level = logging.get_verbosity()
+  @parameterized.parameters(
+      (logging.DEBUG, (True, True, True, True)),
+      (logging.INFO, (False, True, True, True)),
+      (logging.WARNING, (False, False, True, True)),
+      (logging.ERROR, (False, False, False, True)),
+  )
+  def test_logging_levels(
+      self, verbosity: int, expected_levels: tuple[bool, bool, bool, bool]
+  ):
+    logging.set_verbosity(verbosity)
+    levels = (
+        logging.level_debug(),
+        logging.level_info(),
+        logging.level_warning(),
+        logging.level_error(),
+    )
+    self.assertEqual(levels, expected_levels)
 
-    logging.set_verbosity(logging.DEBUG)
-    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
-    self.assertTrue(logging.level_debug())
-    self.assertTrue(logging.level_info())
-    self.assertTrue(logging.level_warning())
-    self.assertTrue(logging.level_error())
-
-    logging.set_verbosity(logging.INFO)
-    self.assertEqual(logging.get_verbosity(), logging.INFO)
-    self.assertFalse(logging.level_debug())
-    self.assertTrue(logging.level_info())
-    self.assertTrue(logging.level_warning())
-    self.assertTrue(logging.level_error())
-
-    logging.set_verbosity(logging.WARNING)
-    self.assertEqual(logging.get_verbosity(), logging.WARNING)
-    self.assertFalse(logging.level_debug())
-    self.assertFalse(logging.level_info())
-    self.assertTrue(logging.level_warning())
-    self.assertTrue(logging.level_error())
-
-    logging.set_verbosity(logging.ERROR)
-    self.assertEqual(logging.get_verbosity(), logging.ERROR)
-    self.assertFalse(logging.level_debug())
-    self.assertFalse(logging.level_info())
-    self.assertTrue(logging.level_error())
-
-    logging.set_verbosity(old_level)
-
-  def test_set_verbosity_strings(self):
-    old_level = logging.get_verbosity()
-
-    # Lowercase names.
-    logging.set_verbosity('debug')
-    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
-    logging.set_verbosity('info')
-    self.assertEqual(logging.get_verbosity(), logging.INFO)
-    logging.set_verbosity('warning')
-    self.assertEqual(logging.get_verbosity(), logging.WARNING)
-    logging.set_verbosity('warn')
-    self.assertEqual(logging.get_verbosity(), logging.WARNING)
-    logging.set_verbosity('error')
-    self.assertEqual(logging.get_verbosity(), logging.ERROR)
-    logging.set_verbosity('fatal')
-
-    # Uppercase names.
-    self.assertEqual(logging.get_verbosity(), logging.FATAL)
-    logging.set_verbosity('DEBUG')
-    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
-    logging.set_verbosity('INFO')
-    self.assertEqual(logging.get_verbosity(), logging.INFO)
-    logging.set_verbosity('WARNING')
-    self.assertEqual(logging.get_verbosity(), logging.WARNING)
-    logging.set_verbosity('WARN')
-    self.assertEqual(logging.get_verbosity(), logging.WARNING)
-    logging.set_verbosity('ERROR')
-    self.assertEqual(logging.get_verbosity(), logging.ERROR)
-    logging.set_verbosity('FATAL')
-    self.assertEqual(logging.get_verbosity(), logging.FATAL)
-
-    # Integers as strings.
-    logging.set_verbosity(str(logging.DEBUG))
-    self.assertEqual(logging.get_verbosity(), logging.DEBUG)
-    logging.set_verbosity(str(logging.INFO))
-    self.assertEqual(logging.get_verbosity(), logging.INFO)
-    logging.set_verbosity(str(logging.WARNING))
-    self.assertEqual(logging.get_verbosity(), logging.WARNING)
-    logging.set_verbosity(str(logging.ERROR))
-    self.assertEqual(logging.get_verbosity(), logging.ERROR)
-    logging.set_verbosity(str(logging.FATAL))
-    self.assertEqual(logging.get_verbosity(), logging.FATAL)
-
-    logging.set_verbosity(old_level)
+  @parameterized.parameters(
+      ('debug', logging.DEBUG),
+      ('info', logging.INFO),
+      ('warning', logging.WARNING),
+      ('warn', logging.WARNING),
+      ('error', logging.ERROR),
+      ('fatal', logging.FATAL),
+      ('DEBUG', logging.DEBUG),
+      ('INFO', logging.INFO),
+      ('WARNING', logging.WARNING),
+      ('WARN', logging.WARNING),
+      ('ERROR', logging.ERROR),
+      ('FATAL', logging.FATAL),
+      (str(logging.DEBUG), logging.DEBUG),
+      (str(logging.INFO), logging.INFO),
+      (str(logging.WARNING), logging.WARNING),
+      (str(logging.ERROR), logging.ERROR),
+      (str(logging.FATAL), logging.FATAL),
+  )
+  def test_set_verbosity_strings(self, verbosity: str, expected_level: int):
+    logging.set_verbosity(verbosity)
+    self.assertEqual(logging.get_verbosity(), expected_level)
 
   def test_key_flags(self):
     key_flags = FLAGS.get_key_flags_for_module(logging)
@@ -1048,49 +959,57 @@ class LoggingTest(absltest.TestCase):
 class LogSkipPrefixTest(absltest.TestCase):
   """Tests for logging.skip_log_prefix."""
 
-  def _log_some_info(self):
+  def _log_some_info(self) -> None:
     """Logging helper function for LogSkipPrefixTest."""
     logging.info('info')
 
-  def _log_nested_outer(self):
+  def _log_nested_outer(self) -> Callable[[], None]:
     """Nested logging helper functions for LogSkipPrefixTest."""
 
-    def _log_nested_inner():
+    def _log_nested_inner() -> None:
       logging.info('info nested')
 
     return _log_nested_inner
 
-  def test_skip_log_prefix_with_name(self, mock_skip_register):
+  def test_skip_log_prefix_with_name(self, mock_skip_register: mock.MagicMock):
     retval = logging.skip_log_prefix('_log_some_info')
     mock_skip_register.assert_called_once_with(__file__, '_log_some_info', None)
     self.assertEqual(retval, '_log_some_info')
 
-  def test_skip_log_prefix_with_func(self, mock_skip_register):
+  def test_skip_log_prefix_with_func(self, mock_skip_register: mock.MagicMock):
     retval = logging.skip_log_prefix(self._log_some_info)
     mock_skip_register.assert_called_once_with(
         __file__, '_log_some_info', mock.ANY
     )
     self.assertEqual(retval, self._log_some_info)
 
-  def test_skip_log_prefix_with_functools_partial(self, mock_skip_register):
+  def test_skip_log_prefix_with_functools_partial(
+      self, mock_skip_register: mock.MagicMock
+  ):
     partial_input = functools.partial(self._log_some_info)
     with self.assertRaises(ValueError):
       _ = logging.skip_log_prefix(partial_input)
     mock_skip_register.assert_not_called()
 
-  def test_skip_log_prefix_with_lambda(self, mock_skip_register):
+  def test_skip_log_prefix_with_lambda(
+      self, mock_skip_register: mock.MagicMock
+  ):
     lambda_input = lambda _: self._log_some_info()
     retval = logging.skip_log_prefix(lambda_input)
     mock_skip_register.assert_called_once_with(__file__, '<lambda>', mock.ANY)
     self.assertEqual(retval, lambda_input)
 
-  def test_skip_log_prefix_with_bad_input(self, mock_skip_register):
+  def test_skip_log_prefix_with_bad_input(
+      self, mock_skip_register: mock.MagicMock
+  ):
     dict_input = {1: 2, 2: 3}
     with self.assertRaises(TypeError):
-      _ = logging.skip_log_prefix(dict_input)
+      _ = logging.skip_log_prefix(dict_input)  # type: ignore[type-var]
     mock_skip_register.assert_not_called()
 
-  def test_skip_log_prefix_with_nested_func(self, mock_skip_register):
+  def test_skip_log_prefix_with_nested_func(
+      self, mock_skip_register: mock.MagicMock
+  ):
     nested_input = self._log_nested_outer()
     retval = logging.skip_log_prefix(nested_input)
     mock_skip_register.assert_called_once_with(
@@ -1098,7 +1017,7 @@ class LogSkipPrefixTest(absltest.TestCase):
     )
     self.assertEqual(retval, nested_input)
 
-  def test_skip_log_prefix_decorator(self, mock_skip_register):
+  def test_skip_log_prefix_decorator(self, mock_skip_register: mock.MagicMock):
 
     @logging.skip_log_prefix
     def _log_decorated():
@@ -1111,7 +1030,7 @@ class LogSkipPrefixTest(absltest.TestCase):
 
 
 @contextlib.contextmanager
-def override_python_handler_stream(stream):
+def override_python_handler_stream(stream: TextIO) -> Iterator[None]:
   handler = logging.get_absl_handler().python_handler
   old_stream = handler.stream
   handler.stream = stream
@@ -1127,7 +1046,7 @@ class GetLogFileNameTest(parameterized.TestCase):
       ('err', sys.stderr),
       ('out', sys.stdout),
   )
-  def test_get_log_file_name_py_std(self, stream):
+  def test_get_log_file_name_py_std(self, stream: TextIO):
     with override_python_handler_stream(stream):
       self.assertEqual('', logging.get_log_file_name())
 
@@ -1144,11 +1063,6 @@ class GetLogFileNameTest(parameterized.TestCase):
     with open(filename, 'a') as stream:
       with override_python_handler_stream(stream):
         self.assertEqual(filename, logging.get_log_file_name())
-
-
-@contextlib.contextmanager
-def _mock_windows_os_getuid():
-  yield mock.MagicMock()
 
 
 if __name__ == '__main__':

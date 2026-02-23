@@ -33,7 +33,7 @@ FLAGS = flags.FLAGS
 class VerboseDel:
   """Dummy class to test __del__ running."""
 
-  def __init__(self, msg):
+  def __init__(self, msg: str):
     self._msg = msg
 
   def __del__(self):
@@ -41,7 +41,7 @@ class VerboseDel:
     sys.stderr.flush()
 
 
-def _test_do_logging():
+def _test_do_logging() -> None:
   """Do some log operations."""
   logging.vlog(3, 'This line is VLOG level 3')
   logging.vlog(2, 'This line is VLOG level 2')
@@ -92,7 +92,7 @@ def _test_do_logging():
     )
   # We call this twice on the same line to make sure the call stack is
   # distinguishing function calls on the same line.
-  _ = [_test_do_logging_subfunc(), _test_do_logging_subfunc()]
+  _ = _test_do_logging_subfunc(), _test_do_logging_subfunc()  # type: ignore[func-returns-value]
 
   logging.vlog(-1, 'This line is VLOG level -1')
   logging.log(-1, 'This line is log level -1')
@@ -107,16 +107,10 @@ def _test_do_logging():
     raise OSError('Fake Error')
   except OSError:
     saved_exc_info = sys.exc_info()
-    logging.exception('An Exception %s')
+    logging.exception('An Exception %s')  # pylint: disable=logging-too-few-args
     logging.exception('Once more, %(reason)s', {'reason': 'just because'})
-    logging.error('Exception 2 %s', exc_info=True)
+    logging.error('Exception 2 %s', exc_info=True)  # pylint: disable=logging-too-few-args
     logging.error('Non-exception', exc_info=False)
-
-  try:
-    sys.exc_clear()
-  except AttributeError:
-    # No sys.exc_clear() in Python 3, but this will clear sys.exc_info() too.
-    pass
 
   logging.error('Exception %s', '3', exc_info=saved_exc_info)
   logging.error('No traceback', exc_info=saved_exc_info[:2] + (None,))
@@ -128,7 +122,7 @@ def _test_do_logging():
   logging.flush()
 
 
-def _test_do_logging_subfunc():
+def _test_do_logging_subfunc() -> None:
   for i in range(1, 5):
     logging.log_first_n(
         logging.INFO,
@@ -148,7 +142,7 @@ def _test_do_logging_subfunc():
     )
 
 
-def _test_fatal_main_thread_only():
+def _test_fatal_main_thread_only() -> None:
   """Test logging.fatal from main thread, no other threads running."""
   v = VerboseDel('fatal_main_thread_only main del called\n')
   try:
@@ -157,7 +151,7 @@ def _test_fatal_main_thread_only():
     del v
 
 
-def _test_fatal_with_other_threads():
+def _test_fatal_with_other_threads() -> None:
   """Test logging.fatal from main thread, other threads running."""
 
   lock = threading.Lock()
@@ -190,7 +184,7 @@ def _test_fatal_with_other_threads():
     del v
 
 
-def _test_fatal_non_main_thread():
+def _test_fatal_non_main_thread() -> None:
   """Test logging.fatal from non main thread."""
 
   lock = threading.Lock()
@@ -224,13 +218,13 @@ def _test_fatal_non_main_thread():
     del v
 
 
-def _test_critical_from_non_absl_logger():
+def _test_critical_from_non_absl_logger() -> None:
   """Test CRITICAL logs from non-absl loggers."""
 
   std_logging.critical('A critical message')
 
 
-def _test_register_frame_to_skip():
+def _test_register_frame_to_skip() -> None:
   """Test skipping frames for line number reporting."""
 
   def _getline():
@@ -251,67 +245,70 @@ def _test_register_frame_to_skip():
   assert line2 != line3, (line2, line3)
 
 
-def _test_flush():
+def _test_flush() -> None:
   """Test flush in various difficult cases."""
   # Flush, but one of the logfiles is closed
-  log_filename = os.path.join(FLAGS.log_dir, 'a_thread_with_logfile.txt')
+  log_filename = os.path.join(
+      logging.LOG_DIR.value, 'a_thread_with_logfile.txt'
+  )
   with open(log_filename, 'w') as log_file:
     logging.get_absl_handler().python_handler.stream = log_file
   logging.flush()
 
 
-def _test_stderrthreshold():
-  """Tests modifying --stderrthreshold after flag parsing will work."""
+def _test_stderrthreshold() -> None:
+  """Test modifying --stderrthreshold after flag parsing works."""
 
   def log_things():
-    logging.debug('FLAGS.stderrthreshold=%s, debug log', FLAGS.stderrthreshold)
-    logging.info('FLAGS.stderrthreshold=%s, info log', FLAGS.stderrthreshold)
-    logging.warning(
-        'FLAGS.stderrthreshold=%s, warning log', FLAGS.stderrthreshold
+    logging.debug(
+        'FLAGS.stderrthreshold=%s, debug log', logging.STDERRTHRESHOLD.value
     )
-    logging.error('FLAGS.stderrthreshold=%s, error log', FLAGS.stderrthreshold)
+    logging.info(
+        'FLAGS.stderrthreshold=%s, info log', logging.STDERRTHRESHOLD.value
+    )
+    logging.warning(
+        'FLAGS.stderrthreshold=%s, warning log', logging.STDERRTHRESHOLD.value
+    )
+    logging.error(
+        'FLAGS.stderrthreshold=%s, error log', logging.STDERRTHRESHOLD.value
+    )
 
-  FLAGS.stderrthreshold = 'debug'
+  FLAGS.stderrthreshold = 'debug'  # type: ignore[assignment]
   log_things()
-  FLAGS.stderrthreshold = 'info'
+  FLAGS.stderrthreshold = 'info'  # type: ignore[assignment]
   log_things()
-  FLAGS.stderrthreshold = 'warning'
+  FLAGS.stderrthreshold = 'warning'  # type: ignore[assignment]
   log_things()
-  FLAGS.stderrthreshold = 'error'
+  FLAGS.stderrthreshold = 'error'  # type: ignore[assignment]
   log_things()
 
 
-def _test_std_logging():
-  """Tests logs from std logging."""
+def _test_std_logging() -> None:
+  """Test logs from std logging."""
   std_logging.debug('std debug log')
   std_logging.info('std info log')
   std_logging.warning('std warning log')
   std_logging.error('std error log')
 
 
-def _test_bad_exc_info():
-  """Tests when a bad exc_info valud is provided."""
+def _test_bad_exc_info() -> None:
+  """Test when a bad exc_info value is provided."""
   logging.info('Bad exc_info', exc_info=(None, None))
 
 
-def _test_none_exc_info():
-  """Tests when exc_info is requested but not available."""
-  # Clear exc_info first.
-  try:
-    sys.exc_clear()
-  except AttributeError:
-    # No sys.exc_clear() in Python 3, but this will clear sys.exc_info() too.
-    pass
+def _test_none_exc_info() -> None:
+  """Test when exc_info is requested but not available."""
   logging.info('None exc_info', exc_info=True)
 
 
-def _test_unicode():
-  """Tests unicode handling."""
+def _test_unicode() -> None:
+  """Test unicode handling."""
 
   test_names = []
 
   def log(name, msg, *args):
-    """Logs the message, and ensures the same name is not logged again."""
+    """Log the message, and ensure the same name is not logged again."""
+
     assert (
         name not in test_names
     ), f'test_unicode expects unique names to work, found existing name {name}'
@@ -336,8 +333,8 @@ def _test_unicode():
   log('str % exception', 'exception: %s', Exception('Ch\u00e2tonnaye'))
 
 
-def _test_log_if_exc_info():
-  """Tests exc_info forwarding for log_first_n, log_every_n, etc."""
+def _test_log_if_exc_info() -> None:
+  """Test exc_info forwarding for log_first_n, log_every_n, etc."""
   try:
     raise OSError('Fake Error')
   except OSError:
@@ -357,9 +354,7 @@ def _test_log_if_exc_info():
     )
 
 
-def main(argv):
-  del argv  # Unused.
-
+def main(_: object) -> None:
   test_name = os.environ.get('TEST_NAME', None)
   test_fn = globals().get('_test_%s' % test_name)
   if test_fn is None:
@@ -368,7 +363,9 @@ def main(argv):
   # file with use_absl_log_file.
   logging.flush()
   if os.environ.get('USE_ABSL_LOG_FILE') == '1':
-    logging.get_absl_handler().use_absl_log_file('absl_log_file', FLAGS.log_dir)
+    logging.get_absl_handler().use_absl_log_file(
+        'absl_log_file', logging.LOG_DIR.value
+    )
 
   test_fn()
 

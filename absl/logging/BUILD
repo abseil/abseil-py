@@ -31,6 +31,7 @@ py_test(
         ":converter",
         ":logging",
         "//absl/testing:absltest",
+        "//absl/testing:parameterized",
     ],
 )
 

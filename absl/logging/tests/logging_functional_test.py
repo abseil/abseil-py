@@ -14,6 +14,7 @@
 
 """Functional tests for absl.logging."""
 
+from collections.abc import Callable, Sequence
 import fnmatch
 import os
 import re
@@ -186,12 +187,14 @@ _VERBOSITY_FLAG_TEST_PARAMETERS = (
 )
 
 
-def _get_fatal_log_expectation(testcase, message, include_stacktrace):
+def _get_fatal_log_expectation(
+    testcase: absltest.TestCase, message: str, include_stacktrace: bool
+) -> Callable[[str], None]:
   """Returns the expectation for fatal logging tests.
 
   Args:
-    testcase: The TestCase instance.
-    message: The extra fatal logging message.
+    testcase: A TestCase instance.
+    message: An extra fatal logging message.
     include_stacktrace: Whether or not to include stacktrace.
 
   Returns:
@@ -200,7 +203,7 @@ def _get_fatal_log_expectation(testcase, message, include_stacktrace):
     See _exec_test's docstring for more information.
   """
 
-  def assert_logs(logs):
+  def assert_logs(logs: str) -> None:
     if os.name == 'nt':
       # On Windows, it also dumps extra information at the end, something like:
       # This application has requested the Runtime to terminate it in an
@@ -221,7 +224,7 @@ def _get_fatal_log_expectation(testcase, message, include_stacktrace):
   return assert_logs
 
 
-def _munge_log(buf):
+def _munge_log(buf: str) -> str:
   """Remove timestamps, thread ids, filenames and line numbers from logs."""
 
   # Remove all messages produced before the output to be tested.
@@ -293,7 +296,7 @@ def _munge_log(buf):
   return buf
 
 
-def _verify_status(expected, actual, output):
+def _verify_status(expected: int, actual: int, output) -> None:
   if expected != actual:
     raise AssertionError(
         f'Test exited with unexpected status code {actual} (expected'
@@ -301,12 +304,12 @@ def _verify_status(expected, actual, output):
     )
 
 
-def _verify_ok(status, output):
+def _verify_ok(status: int, output: str) -> None:
   """Check that helper exited with no errors."""
   _verify_status(0, status, output)
 
 
-def _verify_fatal(status, output):
+def _verify_fatal(status: int, output: str) -> None:
   """Check that helper died as expected."""
   # os.abort generates a SIGABRT signal (-6). On Windows, the process
   # immediately returns an exit code of 3.
@@ -315,7 +318,7 @@ def _verify_fatal(status, output):
   _verify_status(expected_exit_code, status, output)
 
 
-def _verify_assert(status, output):
+def _verify_assert(status: int, output: str) -> None:
   """.Check that helper failed with assertion."""
   _verify_status(1, status, output)
 
@@ -329,9 +332,9 @@ class FunctionalTest(parameterized.TestCase):
 
   def _get_logs(
       self,
-      verbosity,
-      include_info_prefix=True,
-  ):
+      verbosity: int,
+      include_info_prefix: bool = True,
+  ) -> str:
     logs = []
     if verbosity >= 3:
       logs.append(_PY_VLOG3_LOG_MESSAGE)
@@ -366,38 +369,40 @@ class FunctionalTest(parameterized.TestCase):
 
   def _exec_test(
       self,
-      verify_exit_fn,
-      expected_logs,
-      test_name='do_logging',
-      pass_logtostderr=False,
-      use_absl_log_file=False,
-      show_info_prefix=1,
-      call_dict_config=False,
-      extra_args=(),
-  ):
+      verify_exit_fn: Callable[[int, str], None],
+      expected_logs: (
+          Sequence[tuple[str, str | None, str | Callable[[str], None] | None]]
+          | None
+      ),
+      test_name: str = 'do_logging',
+      pass_logtostderr: bool = False,
+      use_absl_log_file: bool = False,
+      show_info_prefix: bool = True,
+      call_dict_config: bool = False,
+      extra_args: Sequence[str] = (),
+  ) -> None:
     # fmt: off
     """Execute the helper script and verify its output.
 
     Args:
       verify_exit_fn: A function taking (status, output).
       expected_logs: List of tuples, or None if output shouldn't be checked.
-          Tuple is (log prefix, log type, expected contents):
-          - log prefix: A program name, or 'stderr'.
-          - log type: 'INFO', 'ERROR', etc.
-          - expected: Can be the following:
-            - A string
-            - A callable, called with the logs as a single argument
-            - None, means don't check contents of log file
+        Tuple is (log prefix, log type, expected contents):
+        - log prefix: A program name, or 'stderr'.
+        - log type: 'INFO', 'ERROR', etc.
+        - expected: Can be the following:
+          - A string
+          - A callable, called with the logs as a single argument
+          - None, means don't check contents of log file
       test_name: Name to pass to helper.
       pass_logtostderr: Pass --logtostderr to the helper script if True.
       use_absl_log_file: If True, call
         logging.get_absl_handler().use_absl_log_file() before test_fn in
         logging_functional_test_helper.
-      show_info_prefix: --showprefixforinfo value passed to the helper script.
+      show_info_prefix: Pass --showprefixforinfo to the helper script if True.
       call_dict_config: True if helper script should call
         logging.config.dictConfig.
-      extra_args: Iterable of str (optional, defaults to ()) - extra arguments
-        to pass to the helper script.
+      extra_args: Extra arguments to pass to the helper script.
 
     Raises:
       AssertionError: Assertion error when test fails.
@@ -408,7 +413,7 @@ class FunctionalTest(parameterized.TestCase):
       args.append('--logtostderr')
     if not show_info_prefix:
       args.append('--noshowprefixforinfo')
-    args += extra_args
+    args.extend(extra_args)
 
     # Execute helper in subprocess.
     env = os.environ.copy()
@@ -547,39 +552,39 @@ class FunctionalTest(parameterized.TestCase):
             self._get_logs(logging.INFO, include_info_prefix=False),
         ]],
         pass_logtostderr=logtostderr,
-        show_info_prefix=0,
+        show_info_prefix=False,
     )
 
   def test_py_logging_noshowprefixforinfo_use_absl_log_file(self):
     self._exec_test(
         _verify_ok,
         [
-            ['stderr', None, ''],
-            ['absl_log_file', 'INFO', self._get_logs(logging.INFO)],
+            ('stderr', None, ''),
+            ('absl_log_file', 'INFO', self._get_logs(logging.INFO)),
         ],
-        show_info_prefix=0,
+        show_info_prefix=False,
         use_absl_log_file=True,
     )
 
   def test_py_logging_noshowprefixforinfo_use_absl_log_file_logtostderr(self):
     self._exec_test(
         _verify_ok,
-        [[
+        [(
             'stderr',
             None,
             self._get_logs(logging.INFO, include_info_prefix=False),
-        ]],
+        )],
         pass_logtostderr=True,
-        show_info_prefix=0,
+        show_info_prefix=False,
         use_absl_log_file=True,
     )
 
   def test_py_logging_noshowprefixforinfo_verbosity(self):
     self._exec_test(
         _verify_ok,
-        [['stderr', None, self._get_logs(logging.DEBUG)]],
+        [('stderr', None, self._get_logs(logging.DEBUG))],
         pass_logtostderr=True,
-        show_info_prefix=0,
+        show_info_prefix=False,
         use_absl_log_file=True,
         extra_args=['-v=1'],
     )
@@ -587,50 +592,50 @@ class FunctionalTest(parameterized.TestCase):
   def test_py_logging_fatal_main_thread_only(self):
     self._exec_test(
         _verify_fatal,
-        [[
+        [(
             'stderr',
             None,
             _get_fatal_log_expectation(self, 'fatal_main_thread_only', False),
-        ]],
+        )],
         test_name='fatal_main_thread_only',
     )
 
   def test_py_logging_fatal_with_other_threads(self):
     self._exec_test(
         _verify_fatal,
-        [[
+        [(
             'stderr',
             None,
             _get_fatal_log_expectation(self, 'fatal_with_other_threads', False),
-        ]],
+        )],
         test_name='fatal_with_other_threads',
     )
 
   def test_py_logging_fatal_non_main_thread(self):
     self._exec_test(
         _verify_fatal,
-        [[
+        [(
             'stderr',
             None,
             _get_fatal_log_expectation(self, 'fatal_non_main_thread', False),
-        ]],
+        )],
         test_name='fatal_non_main_thread',
     )
 
   def test_py_logging_critical_non_absl(self):
     self._exec_test(
         _verify_ok,
-        [['stderr', None, _CRITICAL_DOWNGRADE_TO_ERROR_MESSAGE]],
+        [('stderr', None, _CRITICAL_DOWNGRADE_TO_ERROR_MESSAGE)],
         test_name='critical_from_non_absl_logger',
     )
 
   def test_py_logging_skip_log_prefix(self):
     self._exec_test(
-        _verify_ok, [['stderr', None, '']], test_name='register_frame_to_skip'
+        _verify_ok, [('stderr', None, '')], test_name='register_frame_to_skip'
     )
 
   def test_py_logging_flush(self):
-    self._exec_test(_verify_ok, [['stderr', None, '']], test_name='flush')
+    self._exec_test(_verify_ok, [('stderr', None, '')], test_name='flush')
 
   @parameterized.named_parameters(*_VERBOSITY_FLAG_TEST_PARAMETERS)
   def test_py_logging_verbosity_stderr(self, verbosity):
@@ -638,7 +643,7 @@ class FunctionalTest(parameterized.TestCase):
     v_flag = f'-v={verbosity}'
     self._exec_test(
         _verify_ok,
-        [['stderr', None, self._get_logs(verbosity)]],
+        [('stderr', None, self._get_logs(verbosity))],
         extra_args=[v_flag],
     )
 
@@ -649,10 +654,10 @@ class FunctionalTest(parameterized.TestCase):
     self._exec_test(
         _verify_ok,
         [
-            ['stderr', None, ''],
+            ('stderr', None, ''),
             # When using python logging, it only creates a file named INFO,
             # unlike C++ it also creates WARNING and ERROR files.
-            ['absl_log_file', 'INFO', self._get_logs(verbosity)],
+            ('absl_log_file', 'INFO', self._get_logs(verbosity)),
         ],
         use_absl_log_file=True,
         extra_args=[v_flag],
@@ -675,8 +680,8 @@ E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] FLAGS.stderrt
 """
 
     expected_logs = [
-        ['stderr', None, stderr_logs],
-        ['absl_log_file', 'INFO', None],
+        ('stderr', None, stderr_logs),
+        ('absl_log_file', 'INFO', None),
     ]
     # Set verbosity to debug to test stderrthreshold == debug.
     extra_args = ['-v=1']
@@ -697,7 +702,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std info log
 W0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std warning log
 E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std error log
 """
-    expected_logs = [['stderr', None, stderr_logs]]
+    expected_logs = [('stderr', None, stderr_logs)]
 
     extra_args = ['-v=1', '--logtostderr']
     self._exec_test(
@@ -716,8 +721,8 @@ E0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] std error log
       self.assertIn('IndexError', stderr)
 
     expected_logs = [
-        ['stderr', None, assert_stderr],
-        ['absl_log_file', 'INFO', ''],
+        ('stderr', None, assert_stderr),
+        ('absl_log_file', 'INFO', ''),
     ]
 
     self._exec_test(
@@ -763,8 +768,8 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
     expected_info += 'NoneType: None\n'
 
     expected_logs = [
-        ['stderr', None, expected_stderr],
-        ['absl_log_file', 'INFO', expected_info],
+        ('stderr', None, expected_stderr),
+        ('absl_log_file', 'INFO', expected_info),
     ]
 
     self._exec_test(
@@ -807,7 +812,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
         logging.info('name = %s', name)
         self.assertEqual('', get_stderr_message(stderr, name))
 
-    expected_logs = [['stderr', None, assert_stderr]]
+    expected_logs = [('stderr', None, assert_stderr)]
 
     info_log = """\
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye
@@ -818,7 +823,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] b'G\\xc3\\xae
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: b'Ch\\xe2tonnaye'
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] exception: Ch\u00e2tonnaye
 """
-    expected_logs.append(['absl_log_file', 'INFO', info_log])
+    expected_logs.append(('absl_log_file', 'INFO', info_log))
 
     self._exec_test(
         _verify_ok, expected_logs, test_name='unicode', use_absl_log_file=True
@@ -827,7 +832,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] exception: Ch
   def test_log_if_exc_info(self):
     self._exec_test(
         _verify_ok,
-        [['stderr', None, _LOG_IF_EXC_INFO_LOG_MESSAGE]],
+        [('stderr', None, _LOG_IF_EXC_INFO_LOG_MESSAGE)],
         test_name='log_if_exc_info',
         pass_logtostderr=True,
     )
