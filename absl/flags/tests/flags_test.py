@@ -25,6 +25,7 @@ import unittest
 
 from absl import flags
 from absl.flags import _exceptions
+from absl.flags import _flagvalues
 from absl.flags import _helpers
 from absl.flags.tests import module_bar
 from absl.flags.tests import module_baz
@@ -1506,7 +1507,6 @@ class FlagsUnitTest(absltest.TestCase):
       flags.DEFINE_integer(
           name='int_flag', default=3, help='help', required=True, flag_values=fv
       )
-
 
 class MultiNumericalFlagsTest(absltest.TestCase):
 

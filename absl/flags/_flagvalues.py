@@ -20,6 +20,7 @@ aliases defined at the package level instead.
 from collections.abc import Callable, Iterable, Iterator, Sequence
 import copy
 from importlib import abc
+from importlib import machinery
 import logging
 import os
 import sys
@@ -53,10 +54,9 @@ class ReloadDetector(abc.MetaPathFinder):
 
 
 reload_detector = ReloadDetector()
+reload_detector_insert_position = -1
 
-# Register the hook by inserting it right before the last path finder.
-# This should play nicely with lazy imports.
-sys.meta_path.insert(-1, reload_detector)
+sys.meta_path.insert(reload_detector_insert_position, reload_detector)
 
 
 class FlagValues:

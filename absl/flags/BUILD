@@ -236,6 +236,7 @@ py_test(
     srcs = ["tests/flags_test.py"],
     deps = [
         ":_exceptions",
+        ":_flagvalues",
         ":_helpers",
         ":flags",
         ":tests/module_bar",
