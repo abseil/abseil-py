@@ -70,7 +70,7 @@ RUN_WITH_PROFILING = flags.DEFINE_boolean(
 )
 PROFILE_FILE = flags.DEFINE_string(
     'profile_file',
-    None,
+    os.getenv('ABSL_PYTHON_PROFILE_FILE'),
     'Dump profile information to a file (for python -m '
     'pstats). Implies --run_with_profiling.',
 )

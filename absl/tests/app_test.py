@@ -366,6 +366,27 @@ class FunctionalTests(absltest.TestCase):
         expected_stderr_substring='FATAL Flags parsing error',
     )
 
+  def test_run_with_profiling_from_env(self):
+    profile_path = os.path.join(self.create_tempdir().full_path, 'profile_file')
+    self.run_helper(
+        expect_success=True,
+        env_overrides={'ABSL_PYTHON_PROFILE_FILE': profile_path},
+    )
+    self.assertTrue(os.path.exists(profile_path))
+    self.assertGreater(os.path.getsize(profile_path), 0)
+
+  def test_profile_file_precedence(self):
+    temp_dir = self.create_tempdir().full_path
+    profile_path_env = os.path.join(temp_dir, 'profile_file_env')
+    profile_path_flag = os.path.join(temp_dir, 'profile_file_flag')
+    self.run_helper(
+        expect_success=True,
+        arguments=[f'--profile_file={profile_path_flag}'],
+        env_overrides={'ABSL_PYTHON_PROFILE_FILE': profile_path_env},
+    )
+    self.assertTrue(os.path.exists(profile_path_flag))
+    self.assertFalse(os.path.exists(profile_path_env))
+
   def test_usage_error(self):
     exitcode, _, _ = self.run_helper(
         expect_success=False,
