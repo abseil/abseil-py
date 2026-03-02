@@ -17,27 +17,27 @@
 import os
 import sys
 
-# This library must be kept small and stand alone.  It is used by small things
+# This library must be kept small and stand alone. It is used by small things
 # that require no extension modules.
 
 
-def make_process_name_useful():
+def make_process_name_useful() -> None:
   """Sets the process name to something better than 'python' if possible."""
   set_kernel_process_name(os.path.basename(sys.argv[0]))
 
 
-def set_kernel_process_name(name):
+def set_kernel_process_name(name: str | bytes) -> None:
   """Changes the Kernel's /proc/self/status process name on Linux.
 
   The kernel name is NOT what will be shown by the ps or top command.
   It is a 15 character string stored in the kernel's process table that
   is included in the kernel log when a process is OOM killed.
-  The first 15 bytes of name are used.  Non-ASCII unicode is replaced with '?'.
+  The first 15 bytes of name are used. Non-ASCII unicode is replaced with '?'.
 
   Does nothing if /proc/self/comm cannot be written or prctl() fails.
 
   Args:
-    name: bytes|unicode, the Linux kernel's command name to set.
+    name: The Linux kernel's command name to set.
   """
   if not isinstance(name, bytes):
     name = name.encode('ascii', 'replace')

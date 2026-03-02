@@ -22,19 +22,19 @@ from absl import command_name
 from absl.testing import absltest
 
 
-def _get_kernel_process_name():
+def _get_kernel_process_name() -> str:
   """Returns the Kernel's name for our process or an empty string."""
   try:
     with open('/proc/self/status') as status_file:
       for line in status_file:
         if line.startswith('Name:'):
-          return line.split(':', 2)[1].strip().encode('ascii', 'replace')
-      return b''
+          return line.split(':', 2)[1].strip()
+      return ''
   except OSError:
-    return b''
+    return ''
 
 
-def _is_prctl_syscall_available():
+def _is_prctl_syscall_available() -> bool:
   try:
     libc = ctypes.CDLL('libc.so.6', use_errno=True)
   except OSError:
@@ -54,9 +54,7 @@ def _is_prctl_syscall_available():
 )
 class CommandNameTest(absltest.TestCase):
 
-  def assertProcessNameSimilarTo(self, new_name):
-    if not isinstance(new_name, bytes):
-      new_name = new_name.encode('ascii', 'replace')
+  def assertProcessNameSimilarTo(self, new_name: str) -> None:
     actual_name = _get_kernel_process_name()
     self.assertTrue(actual_name)
     self.assertTrue(
@@ -77,25 +75,25 @@ class CommandNameTest(absltest.TestCase):
       not _is_prctl_syscall_available(),
       'prctl() system call missing from libc.so.6.',
   )
-  def test_set_kernel_process_name_no_proc_file(self):
-    new_name = b'NoProcFile0123456789abcdefghijklmnop'
-    mock_open = mock.mock_open()
-    with mock.patch.object(command_name, 'open', mock_open, create=True):
-      mock_open.side_effect = IOError('mock open that raises.')
-      command_name.set_kernel_process_name(new_name)
+  @mock.mock_open()
+  def test_set_kernel_process_name_no_proc_file(self, mock_open: mock.Mock):
+    new_name = 'NoProcFile0123456789abcdefghijklmnop'
+    mock_open.side_effect = IOError('mock open that raises.')
+
+    command_name.set_kernel_process_name(new_name)
+
     mock_open.assert_called_with('/proc/self/comm', mock.ANY)
     self.assertProcessNameSimilarTo(new_name)
 
-  def test_set_kernel_process_name_failure(self):
+  @mock.mock_open()
+  def test_set_kernel_process_name_failure(self, mock_open: mock.Mock):
     starting_name = _get_kernel_process_name()
-    new_name = b'NameTest'
-    mock_open = mock.mock_open()
-    with mock.patch.object(command_name, 'open', mock_open, create=True):
-      with mock.patch('ctypes.CDLL') as mock_ctypes_cdll:
-        mock_open.side_effect = IOError('mock open that raises.')
-        mock_libc = mock.Mock(['prctl'])
-        mock_ctypes_cdll.return_value = mock_libc
-        command_name.set_kernel_process_name(new_name)
+    mock_open.side_effect = IOError('mock open that raises.')
+
+    mock_libc = mock.Mock(['prctl'])
+    with mock.patch('ctypes.CDLL', return_value=mock_libc):
+      command_name.set_kernel_process_name('NewName')
+
     mock_open.assert_called_with('/proc/self/comm', mock.ANY)
     self.assertEqual(1, mock_libc.prctl.call_count)
     self.assertEqual(starting_name, _get_kernel_process_name())  # No change.
