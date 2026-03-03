@@ -14,18 +14,13 @@
 
 """Helper script used by app_test.py."""
 
+from collections.abc import Sequence
+import faulthandler
 import os
 import sys
-import types
 from typing import Any
 
-faulthandler: types.ModuleType | None
-try:
-  import faulthandler  # pylint: disable=g-import-not-at-top
-except ImportError:
-  faulthandler = None
-
-from absl import app  # pylint: disable=g-import-not-at-top
+from absl import app
 from absl import flags
 
 FLAGS = flags.FLAGS
@@ -51,14 +46,14 @@ class MyError(Exception):
 
 class MyErrorHandler(app.ExceptionHandler):
 
-  def __init__(self, message):
+  def __init__(self, message: str):
     self.message = message
 
-  def handle(self, exc):
+  def handle(self, exc: Exception) -> None:
     sys.stdout.write(f'MyErrorHandler: {self.message}\n')
 
 
-def real_main(argv):
+def real_main(argv: Sequence[str]) -> None:
   """The main function."""
   if os.environ.get('APP_TEST_PRINT_ARGV', False):
     sys.stdout.write(f'argv: {" ".join(argv)}\n')
@@ -72,8 +67,9 @@ def real_main(argv):
     else:
       raise app.UsageError('Error!')
 
-  if FLAGS.faulthandler_sigsegv:
-    faulthandler._sigsegv()  # pylint: disable=protected-access
+  sigsegv = getattr(faulthandler, '_sigsegv', None)
+  if FLAGS.faulthandler_sigsegv and sigsegv:
+    sigsegv()
     sys.exit(1)  # Should not reach here.
 
   if FLAGS.print_init_callbacks:
@@ -104,12 +100,12 @@ def real_main(argv):
     sys.exit(1)
 
 
-def custom_main(argv):
+def custom_main(argv: Sequence[str]) -> None:
   print('Function called: custom_main.')
   real_main(argv)
 
 
-def main(argv):
+def main(argv: Sequence[str]) -> None:
   print('Function called: main.')
   real_main(argv)
 
@@ -117,7 +113,7 @@ def main(argv):
 flags_parser_argv_sentinel = object()
 
 
-def flags_parser_main(argv):
+def flags_parser_main(argv: Sequence[str]) -> None:
   print('Function called: main_with_flags_parser.')
   if argv is not flags_parser_argv_sentinel:
     sys.exit(
@@ -126,7 +122,7 @@ def flags_parser_main(argv):
     )
 
 
-def flags_parser(argv):
+def flags_parser(argv: Sequence[str]) -> object:
   print('Function called: flags_parser.')
   if os.environ.get('APP_TEST_FLAGS_PARSER_PARSE_FLAGS', None):
     FLAGS(argv)

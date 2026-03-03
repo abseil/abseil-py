@@ -17,6 +17,7 @@
 Note: This docstring itself is used in some of the tests below.
 """
 
+from collections.abc import Iterable, Iterator, Mapping
 import contextlib
 import copy
 import enum
@@ -24,10 +25,10 @@ import importlib
 import io
 import os
 import pdb
-import re
 import subprocess
 import sys
 import tempfile
+import types
 from unittest import mock
 
 from absl import app
@@ -42,11 +43,8 @@ from absl.tests import app_test_helper
 FLAGS = flags.FLAGS
 
 
-_newline_regex = re.compile('(\r\n)|\r')
-
-
 @contextlib.contextmanager
-def patch_main_module_docstring(docstring):
+def patch_main_module_docstring(docstring: str) -> Iterator[None]:
   old_doc = sys.modules['__main__'].__doc__
   sys.modules['__main__'].__doc__ = docstring
   yield
@@ -120,21 +118,21 @@ class UnitTests(absltest.TestCase):
 class _MyDebuggerModule:
   """Imitates some aspects of the `pdb` interface."""
 
-  def post_mortem(self):
+  def post_mortem(self) -> None:
     pass
 
-  def runcall(self, *args, **kwargs):
+  def runcall(self, *args, **kwargs) -> None:
     del args, kwargs
 
 
 class _IncompleteDebuggerModule:
   """Provides `post_mortem` but not `runcall`."""
 
-  def post_mortem(self):
+  def post_mortem(self) -> None:
     pass
 
 
-def _pythonbreakpoint_variable(value):
+def _pythonbreakpoint_variable_mock(value: str | None):
   """Returns a context manager setting the $PYTHONBREAKPOINT env. variable."""
   new_environment = {} if value is None else {'PYTHONBREAKPOINT': value}
   return mock.patch.object(os, 'environ', new_environment)
@@ -147,7 +145,9 @@ class PythonBreakpointTest(parameterized.TestCase):
 
     importlib_import_module = importlib.import_module
 
-    def my_import_module(module, *args, **kwargs):
+    def my_import_module(
+        module: str, *args, **kwargs
+    ) -> _MyDebuggerModule | _IncompleteDebuggerModule | types.ModuleType:
       if module == 'my.debugger':
         return _MyDebuggerModule()
       if module == 'incomplete.debugger':
@@ -169,12 +169,12 @@ class PythonBreakpointTest(parameterized.TestCase):
       ('opt_out', '0'),
   )
   def test_python_breakpoint_pdb(self, value):
-    with _pythonbreakpoint_variable(value):
+    with _pythonbreakpoint_variable_mock(value):
       self.assertIs(app._get_debugger_module_with_function('runcall'), pdb)
       self.assertIs(app._get_debugger_module_with_function('post_mortem'), pdb)
 
   def test_my_debugger(self):
-    with _pythonbreakpoint_variable('my.debugger.set_trace'):
+    with _pythonbreakpoint_variable_mock('my.debugger.set_trace'):
       debugger_with_runcall = app._get_debugger_module_with_function('runcall')
       self.assertIsInstance(debugger_with_runcall, _MyDebuggerModule)
       self.assertTrue(hasattr(debugger_with_runcall, 'runcall'))
@@ -186,7 +186,7 @@ class PythonBreakpointTest(parameterized.TestCase):
       self.assertTrue(hasattr(debugger_with_post_mortem, 'post_mortem'))
 
   def test_incomplete_debugger(self):
-    with _pythonbreakpoint_variable('incomplete.debugger.set_trace'):
+    with _pythonbreakpoint_variable_mock('incomplete.debugger.set_trace'):
       debugger_with_runcall = app._get_debugger_module_with_function('runcall')
       self.assertIs(debugger_with_runcall, pdb)
       self.assertTrue(hasattr(debugger_with_runcall, 'runcall'))
@@ -208,11 +208,11 @@ class FunctionalTests(absltest.TestCase):
   def run_helper(
       self,
       *,
-      expect_success,
-      expected_stdout_substring=None,
-      expected_stderr_substring=None,
-      arguments=(),
-      env_overrides=None,
+      expect_success: bool,
+      expected_stdout_substring: str | None = None,
+      expected_stderr_substring: str | None = None,
+      arguments: Iterable[str] = (),
+      env_overrides: Mapping[str, str] | None = None,
   ):
     env = os.environ.copy()
     env['APP_TEST_HELPER_TYPE'] = self.helper_type
@@ -279,7 +279,6 @@ class FunctionalTests(absltest.TestCase):
     )
 
     self.assertIn('smile:\U0001F604', stdout)
-
     self.assertIn('thumb:\U0001F44D', stdout)
 
   def test_helpshort(self):
@@ -324,8 +323,7 @@ class FunctionalTests(absltest.TestCase):
 
   def test_gwq_status_file_on_exception(self):
     if self.helper_type == 'pure_python':
-      # Pure python binary does not write to GWQ Status.
-      return
+      self.skipTest('Pure python binary does not write to GWQ Status.')
 
     tmpdir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     self.run_helper(
