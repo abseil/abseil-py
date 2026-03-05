@@ -378,8 +378,7 @@ class _TempFile:
       if isinstance(content, str):
         tf.write_text(content, mode=mode, encoding=encoding, errors=errors)
       else:
-        assert isinstance(content, bytes)
-        tf.write_bytes(content, mode)
+        tf.write_bytes(content, mode)  # pyrefly: ignore[bad-argument-type]  # pyrefly#2644
 
     else:
       tf.write_bytes(b'')
