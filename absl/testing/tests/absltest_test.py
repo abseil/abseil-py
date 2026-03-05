@@ -2935,7 +2935,7 @@ class SkipClassTest(absltest.TestCase):
       bar: str | None
 
       @classmethod
-      def setUpClass(cls, foo, bar=None):  # pyrefly: ignore[bad-override]  # pyrefly#2546
+      def setUpClass(cls, foo, bar=None):  # pyrefly: ignore[bad-override]
         super().setUpClass()
         cls.foo = foo
         cls.bar = bar
@@ -2943,7 +2943,7 @@ class SkipClassTest(absltest.TestCase):
     class Subclass(Test):
 
       @classmethod
-      def setUpClass(cls):  # pyrefly: ignore[bad-override]  # pyrefly#2546
+      def setUpClass(cls):  # pyrefly: ignore[bad-override]
         super().setUpClass('foo', bar='baz')
 
     Subclass.setUpClass()
