@@ -373,7 +373,7 @@ class BooleanFlag(Flag[bool]):
 class EnumFlag(Flag[str]):
   """Basic enum flag; its value can be any string from list of enum_values."""
 
-  parser: _argument_parser.EnumParser
+  parser: _argument_parser.EnumParser  # pyrefly: ignore[bad-override]
 
   def __init__(
       self,
@@ -407,7 +407,7 @@ class EnumFlag(Flag[str]):
 class EnumClassFlag(Flag[_ET]):
   """Basic enum flag; its value is an enum class's member."""
 
-  parser: _argument_parser.EnumClassParser
+  parser: _argument_parser.EnumClassParser  # pyrefly: ignore[bad-override]
 
   def __init__(
       self,

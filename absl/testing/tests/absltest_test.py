@@ -578,7 +578,7 @@ Missing entries:
     # Confirm that safe_repr, not repr, is being used.
     class RaisesOnRepr:
 
-      def __repr__(self):
+      def __repr__(self):  # pyrefly: ignore[bad-override]
         return 1 / 0  # Intentionally broken __repr__ implementation.
 
     try:
@@ -2935,7 +2935,7 @@ class SkipClassTest(absltest.TestCase):
       bar: str | None
 
       @classmethod
-      def setUpClass(cls, foo, bar=None):
+      def setUpClass(cls, foo, bar=None):  # pyrefly: ignore[bad-override]  # pyrefly#2546
         super().setUpClass()
         cls.foo = foo
         cls.bar = bar
@@ -2943,7 +2943,7 @@ class SkipClassTest(absltest.TestCase):
     class Subclass(Test):
 
       @classmethod
-      def setUpClass(cls):
+      def setUpClass(cls):  # pyrefly: ignore[bad-override]  # pyrefly#2546
         super().setUpClass('foo', bar='baz')
 
     Subclass.setUpClass()

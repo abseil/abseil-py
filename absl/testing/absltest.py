@@ -303,7 +303,12 @@ class _TempDir:
       A _TempFile representing the created file.
     """
     tf, _ = _TempFile._create(  # pylint: disable=protected-access
-        self._path, file_path, content, mode, encoding, errors
+        self._path,
+        file_path,
+        content,  # pyrefly: ignore[bad-argument-type]  # pyrefly#2644
+        mode,
+        encoding,
+        errors,
     )
     return tf
 
@@ -373,6 +378,7 @@ class _TempFile:
       if isinstance(content, str):
         tf.write_text(content, mode=mode, encoding=encoding, errors=errors)
       else:
+        assert isinstance(content, bytes)
         tf.write_bytes(content, mode)
 
     else:
@@ -553,6 +559,9 @@ class TestCase(unittest.TestCase):
   longMessage = True
 
   # Exit stacks for per-test and per-class scopes.
+  _exit_stack: Any
+  _cls_exit_stack: Any
+
   if sys.version_info < (3, 11):
     _exit_stack = None
     _cls_exit_stack = None
@@ -562,7 +571,7 @@ class TestCase(unittest.TestCase):
     # This is to work around missing type stubs in unittest.pyi
     self._outcome: Any | None = getattr(self, '_outcome')
 
-  def setUp(self):
+  def setUp(self) -> None:
     super().setUp()
     # NOTE: Only Python 3 contextlib has ExitStack and
     # Python 3.11+ already has enterContext.
@@ -571,7 +580,7 @@ class TestCase(unittest.TestCase):
       self.addCleanup(self._exit_stack.close)
 
   @classmethod
-  def setUpClass(cls):
+  def setUpClass(cls) -> None:
     super().setUpClass()
     # NOTE: Only Python 3 contextlib has ExitStack, only Python 3.8+ has
     # addClassCleanup and Python 3.11+ already has enterClassContext.
@@ -696,7 +705,7 @@ class TestCase(unittest.TestCase):
     tf, cleanup_path = _TempFile._create(  # pylint: disable=protected-access
         test_path,
         file_path,
-        content=content,
+        content=content,  # pyrefly: ignore[bad-argument-type]  # pyrefly#2644
         mode=mode,
         encoding=encoding,
         errors=errors,
@@ -1241,7 +1250,10 @@ class TestCase(unittest.TestCase):
       regexes = [regex.decode('utf-8') for regex in regexes]
       regex_type = str
     elif regex_type is str and isinstance(actual_str, bytes):
-      regexes = [regex.encode('utf-8') for regex in regexes]
+      regexes = [
+          regex.encode('utf-8')
+          for regex in typing.cast(abc.Sequence[str], regexes)
+      ]
       regex_type = bytes
 
     if regex_type is str:
@@ -1281,7 +1293,10 @@ class TestCase(unittest.TestCase):
     # Accommodate code which listed their output regexes w/o the b'' prefix by
     # converting them to bytes for the user.
     if isinstance(regexes[0], str):
-      regexes = [regex.encode('utf-8') for regex in regexes]
+      regexes = [
+          regex.encode('utf-8')
+          for regex in typing.cast(abc.Sequence[str], regexes)
+      ]
 
     command_string = get_command_string(command)
     self.assertEqual(
@@ -1655,7 +1670,8 @@ class TestCase(unittest.TestCase):
       self.assertFalse(
           big <= small,
           self._formatMessage(
-              f'{big!r} unexpectedly less than or equal to {small!r}', msg
+              f'{big!r} unexpectedly less than or equal to {small!r}',
+              msg,  # pyrefly: ignore[bad-argument-type]
           ),
       )
       self.assertGreater(big, small, msg)
@@ -2112,6 +2128,7 @@ class TestCase(unittest.TestCase):
 
   def fail(self, msg=None, user_msg=None) -> NoReturn:
     """Fail immediately with the given standard message and user message."""
+    # pyrefly: ignore[bad-argument-type]
     super().fail(self._formatMessage(user_msg, msg))
 
 
@@ -2552,7 +2569,7 @@ def skipThisClass(
   if isinstance(reason, type):
     raise TypeError(f'Got {reason!r}, expected reason as string')
 
-  def _skip_class(test_case_class):
+  def _skip_class(test_case_class: Any) -> Any:
     if not issubclass(test_case_class, unittest.TestCase):
       raise TypeError(
           f'Decorating {test_case_class!r}, expected TestCase subclass'
@@ -2563,7 +2580,7 @@ def skipThisClass(
     # a reference to it.
     shadowed_setupclass = test_case_class.__dict__.get('setUpClass', None)
 
-    @classmethod
+    @classmethod  # type: ignore[misc]  # pyrefly: ignore[invalid-decorator]
     def replacement_setupclass(cls, *args, **kwargs):
       # Skip this class if it is the one that was decorated with @skipThisClass
       if cls is test_case_class:
@@ -2579,7 +2596,7 @@ def skipThisClass(
         # chain.
         return super(test_case_class, cls).setUpClass(*args, **kwargs)
 
-    test_case_class.setUpClass = replacement_setupclass
+    test_case_class.setUpClass = replacement_setupclass  # pyrefly: ignore[bad-assignment]
     return test_case_class
 
   return _skip_class
@@ -2600,6 +2617,9 @@ class TestLoader(unittest.TestLoader):
   is not one. This is often a bug. If you want it to be a test method,
   name it with 'test' in lowercase. If not, rename the method to not begin
   with 'Test'.""")
+
+  _randomize_ordering_seed: int | None
+  _random: random.Random | None
 
   def __init__(self, *args, **kwds):
     super().__init__(*args, **kwds)
@@ -2794,6 +2814,7 @@ def _setup_sharding(
     if has_shard_test_case_names:
       sharder = getattr(base_loader, 'shardTestCaseNames')
     else:
+      # pyrefly: ignore[bad-argument-type]
       sharder = lambda *args: TestLoader.shardTestCaseNames(base_loader, *args)
 
     names = sharder(

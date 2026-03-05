@@ -240,30 +240,35 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
     f = _flag.MultiEnumClassFlag(
         'fruit', ['apple', 'APPLE'], 'A sample enum flag.', Fruit
     )
+    assert f.value is not None
     self.assertListEqual([Fruit.APPLE, Fruit.APPLE], f.value)
 
   def test_accepts_literal_default(self):
     f = _flag.MultiEnumClassFlag(
         'fruit', Fruit.APPLE, 'A sample enum flag.', Fruit
     )
+    assert f.value is not None
     self.assertListEqual([Fruit.APPLE], f.value)
 
   def test_accepts_list_of_literal_default(self):
     f = _flag.MultiEnumClassFlag(
         'fruit', [Fruit.APPLE, Fruit.ORANGE], 'A sample enum flag.', Fruit
     )
+    assert f.value is not None
     self.assertListEqual([Fruit.APPLE, Fruit.ORANGE], f.value)
 
   def test_accepts_string_default(self):
     f = _flag.MultiEnumClassFlag(
         'fruit', 'ORANGE', 'A sample enum flag.', Fruit
     )
+    assert f.value is not None
     self.assertListEqual([Fruit.ORANGE], f.value)
 
   def test_accepts_list_of_string_default(self):
     f = _flag.MultiEnumClassFlag(
         'fruit', ['ORANGE', 'APPLE'], 'A sample enum flag.', Fruit
     )
+    assert f.value is not None
     self.assertListEqual([Fruit.ORANGE, Fruit.APPLE], f.value)
 
   def test_default_value_does_not_exist(self):

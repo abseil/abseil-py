@@ -104,7 +104,7 @@ _CallableT = TypeVar('_CallableT', bound=Callable)
 
 
 @overload
-def flagsaver(func: _CallableT) -> _CallableT:
+def flagsaver(func: _CallableT) -> _CallableT:  # pyrefly: ignore[inconsistent-overload]
   ...
 
 
@@ -343,6 +343,7 @@ class _FlagOverrider:
       raise
 
   def __exit__(self, exc_type, exc_value, traceback):
+    assert self._saved_flag_values is not None
     restore_flag_values(self._saved_flag_values, FLAGS)
 
 

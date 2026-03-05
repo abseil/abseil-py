@@ -1443,8 +1443,9 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name
     enum_values: Iterable[str],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
+    *,
     required: bool = ...,
-    **args: Any
+    **args: Any,
 ) -> _flagvalues.FlagHolder[list[str] | None]:
   ...
 
@@ -1456,8 +1457,9 @@ def DEFINE_multi_enum(  # pylint: disable=invalid-name
     enum_values: Iterable[str],
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
+    *,
     required: bool = ...,
-    **args: Any
+    **args: Any,
 ) -> _flagvalues.FlagHolder[list[str]]:
   ...
 
@@ -1554,8 +1556,9 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     module_name: str | None = ...,
+    *,
     required: bool = ...,
-    **args: Any
+    **args: Any,
 ) -> _flagvalues.FlagHolder[list[_ET] | None]:
   ...
 
@@ -1572,8 +1575,9 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     module_name: str | None = ...,
+    *,
     required: bool = ...,
-    **args: Any
+    **args: Any,
 ) -> _flagvalues.FlagHolder[list[_ET]]:
   ...
 
@@ -1586,8 +1590,9 @@ def DEFINE_multi_enum_class(  # pylint: disable=invalid-name
     help: str,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     module_name: str | None = ...,
+    *,
     required: bool = ...,
-    **args: Any
+    **args: Any,
 ) -> _flagvalues.FlagHolder[list[_ET]]:
   ...
 

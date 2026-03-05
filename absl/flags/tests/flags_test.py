@@ -1170,7 +1170,9 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_alias('alias_letters', 'letters')
     self.assertEqual(FLAGS['name'].default, FLAGS.alias_name)
     self.assertEqual(FLAGS['debug'].default, FLAGS.alias_debug)
+    # pyrefly: ignore[no-matching-overload, bad-argument-type]
     self.assertEqual(int(FLAGS['decimal'].default), FLAGS.alias_decimal)
+    # pyrefly: ignore[no-matching-overload, bad-argument-type]
     self.assertEqual(float(FLAGS['float'].default), FLAGS.alias_float)
     self.assertSameElements(FLAGS['letters'].default, FLAGS.alias_letters)
 
@@ -1521,7 +1523,7 @@ class MultiNumericalFlagsTest(absltest.TestCase):
         short_name='mi',
         flag_values=fv,
     )
-    self.assertListEqual(fv['m_int'].default, int_defaults)
+    self.assertEqual(fv['m_int'].default, int_defaults)
     argv = ('./program', '--m_int=-99', '--mi=101')
     fv(argv)
     self.assertListEqual(fv.get_flag_value('m_int', None), [-99, 101])
@@ -1657,7 +1659,7 @@ class MultiEnumFlagsTest(absltest.TestCase):
         short_name='me',
         flag_values=fv,
     )
-    self.assertListEqual(fv['m_enum'].default, enum_defaults)
+    self.assertEqual(fv['m_enum'].default, enum_defaults)
     argv = ('./program', '--m_enum=WHOOSH', '--me=FOO')
     fv(argv)
     self.assertListEqual(fv.get_flag_value('m_enum', None), ['WHOOSH', 'FOO'])
@@ -1690,7 +1692,7 @@ class MultiEnumFlagsTest(absltest.TestCase):
         'enum option that can occur multiple times',
         flag_values=fv,
     )
-    self.assertListEqual(fv['m_enum1'].default, [enum_default])
+    self.assertEqual(fv['m_enum1'].default, [enum_default])
 
   def test_case_sensitivity(self):
     """Test case sensitivity of multi_enum flag."""

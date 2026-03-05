@@ -24,10 +24,10 @@ from typing import Any, NamedTuple
 from xml.dom import minidom
 
 
-_DEFAULT_HELP_WIDTH = 80  # Default width of help output.
+_DEFAULT_HELP_WIDTH: int = 80  # Default width of help output.
 # Minimal "sane" width of help output. We assume that any value below 40 is
 # unreasonable.
-_MIN_HELP_WIDTH = 40
+_MIN_HELP_WIDTH: int = 40
 
 # Define the allowed error rate in an input string to get suggestions.
 #
@@ -38,7 +38,7 @@ _MIN_HELP_WIDTH = 40
 # For manual testing, consider "<command> --list" which produced a large number
 # of spurious suggestions when we used "least_errors > 0.5" instead of
 # "least_erros >= 0.5".
-_SUGGESTION_ERROR_RATE_THRESHOLD = 0.50
+_SUGGESTION_ERROR_RATE_THRESHOLD: float = 0.50
 
 # Characters that cannot appear or are highly discouraged in an XML 1.0
 # document. (See http://www.w3.org/TR/REC-xml/#charsets or

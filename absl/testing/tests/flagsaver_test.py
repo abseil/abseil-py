@@ -123,7 +123,7 @@ class CommonUsageTest(absltest.TestCase):
       self.assertFalse(INT_FLAG.present)
       # If you do chose to modify things about the flag (such as .present) those
       # changes will still be cleaned up when flagsaver.flagsaver() exits.
-      INT_FLAG.present = True
+      INT_FLAG.present = True  # pyrefly: ignore[read-only]
 
     self.assertEqual(1, INT_FLAG.value)
     # flagsaver.flagsaver() restored INT_FLAG.present to the state it was in
@@ -485,6 +485,7 @@ class AsParsedTest(absltest.TestCase):
     @flagsaver.as_parsed((MULTI_INT_FLAG, ['123', '456']))
     def assert_flags_updated():
       self.assertTrue(MULTI_INT_FLAG.present)
+      self.assertIsNotNone(MULTI_INT_FLAG.value)
       self.assertCountEqual([123, 456], MULTI_INT_FLAG.value)
 
     assert_flags_updated()
@@ -623,6 +624,7 @@ class BadUsageTest(parameterized.TestCase):
 
   def test_context_manager_no_call(self, flagsaver_method):
     # The exact exception that's raised appears to be system specific.
+    # pyrefly: ignore[no-matching-overload]  # pyrefly#2616
     with self.assertRaises((AttributeError, TypeError)):
       # Wrong. You must call the flagsaver method before using it as a CM.
       with flagsaver_method:

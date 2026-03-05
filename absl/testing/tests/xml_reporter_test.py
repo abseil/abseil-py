@@ -1156,11 +1156,13 @@ class XmlReporterFixtureTest(absltest.TestCase):
         )
         if 'error' in expected_case:
           actual_error = actual_case.find('error')
+          self.assertIsNotNone(actual_error)
           self.assertEqual(
               actual_error.attrib['message'], expected_case['error']
           )
         if 'failure' in expected_case:
           actual_failure = actual_case.find('failure')
+          self.assertIsNotNone(actual_failure)
           self.assertEqual(
               actual_failure.attrib['message'], expected_case['failure']
           )
