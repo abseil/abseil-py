@@ -480,17 +480,16 @@ class MultiFlag(Generic[_T], Flag[list[_T]]):
   def _parse(self, arguments: str | _T | Iterable[_T]) -> list[_T]:  # pylint: disable=arguments-renamed
     arguments_list: list[str | _T]
 
-    if isinstance(arguments, str):
-      arguments_list = [arguments]
-
-    elif isinstance(arguments, Iterable):
-      arguments_list = list(arguments)
-
-    else:
-      # Default value may be a list of values.  Most other arguments
-      # will not be, so convert them into a single-item list to make
-      # processing simpler below.
-      arguments_list = [arguments]
+    match arguments:
+      case str():
+        arguments_list = [arguments]
+      case Iterable():
+        arguments_list = list(arguments)
+      case _:
+        # Default value may be a list of values.  Most other arguments
+        # will not be, so convert them into a single-item list to make
+        # processing simpler below.
+        arguments_list = [arguments]
 
     return [super(MultiFlag, self)._parse(item) for item in arguments_list]  # type: ignore
 

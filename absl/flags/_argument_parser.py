@@ -276,20 +276,21 @@ class IntegerParser(NumericParser[int]):
 
   def convert(self, argument: int | str) -> int:
     """Returns the int value of argument."""
-    if isinstance(argument, int) and not isinstance(argument, bool):
-      return argument
-    elif isinstance(argument, str):
-      base = 10
-      if len(argument) > 2 and argument[0] == '0':
-        if argument[1] == 'o':
-          base = 8
-        elif argument[1] == 'x':
-          base = 16
-      return int(argument, base)
-    else:
-      raise TypeError(
-          f'Expect argument to be a string or int, found {type(argument)}'
-      )
+    match argument:
+      case int() if not isinstance(argument, bool):
+        return argument
+      case str():
+        base = 10
+        if len(argument) > 2 and argument[0] == '0':
+          if argument[1] == 'o':
+            base = 8
+          elif argument[1] == 'x':
+            base = 16
+        return int(argument, base)
+      case _:
+        raise TypeError(
+            f'Expect argument to be a string or int, found {type(argument)}'
+        )
 
   def flag_type(self) -> str:
     """See base class."""
@@ -301,23 +302,24 @@ class BooleanParser(ArgumentParser[bool]):
 
   def parse(self, argument: str | int) -> bool:
     """See base class."""
-    if isinstance(argument, str):
-      if argument.lower() in ('true', 't', '1'):
-        return True
-      elif argument.lower() in ('false', 'f', '0'):
-        return False
-      else:
-        raise ValueError('Non-boolean argument to boolean flag', argument)
-    elif isinstance(argument, int):
-      # Only allow bool or integer 0, 1.
-      # Note that float 1.0 == True, 0.0 == False.
-      bool_value = bool(argument)
-      if argument == bool_value:
-        return bool_value
-      else:
-        raise ValueError('Non-boolean argument to boolean flag', argument)
-
-    raise TypeError('Non-boolean argument to boolean flag', argument)
+    match argument:
+      case str():
+        if argument.lower() in ('true', 't', '1'):
+          return True
+        elif argument.lower() in ('false', 'f', '0'):
+          return False
+        else:
+          raise ValueError('Non-boolean argument to boolean flag', argument)
+      case int():
+        # Only allow bool or integer 0, 1.
+        # Note that float 1.0 == True, 0.0 == False.
+        bool_value = bool(argument)
+        if argument == bool_value:
+          return bool_value
+        else:
+          raise ValueError('Non-boolean argument to boolean flag', argument)
+      case _:
+        raise TypeError('Non-boolean argument to boolean flag', argument)
 
   def flag_type(self) -> str:
     """See base class."""

@@ -2222,66 +2222,67 @@ def _walk_structure_for_problems(
     # If they have different types there's no point continuing
     return
 
-  if isinstance(a, abc.Set):
-    for k in a:
-      if k not in b:
-        problem_list.append(f'{aname} has {k!r} but {bname} does not')
-    for k in b:
-      if k not in a:
-        problem_list.append(f'{aname} lacks {k!r} but {bname} has it')
+  match a:
+    case abc.Set():
+      for k in a:
+        if k not in b:
+          problem_list.append(f'{aname} has {k!r} but {bname} does not')
+      for k in b:
+        if k not in a:
+          problem_list.append(f'{aname} lacks {k!r} but {bname} has it')
 
-  # NOTE: a or b could be a defaultdict, so we must take care that the traversal
-  # doesn't modify the data.
-  elif isinstance(a, abc.Mapping):
-    for k in a:
-      if k in b:
+    # NOTE: a or b could be a defaultdict, so we must take care that the traversal
+    # doesn't modify the data.
+    case abc.Mapping():
+      for k in a:
+        if k in b:
+          _walk_structure_for_problems(
+              a[k],
+              b[k],
+              f'{aname}[{k!r}]',
+              f'{bname}[{k!r}]',
+              problem_list,
+              leaf_assert_equal_func,
+              failure_exception,
+          )
+        else:
+          problem_list.append(
+              f"{aname} has [{k!r}] with value {a[k]!r} but it's missing in"
+              f' {bname}'
+          )
+      for k in b:
+        if k not in a:
+          problem_list.append(
+              f'{aname} lacks [{k!r}] but {bname} has it with value {b[k]!r}'
+          )
+
+    # Strings/bytes are Sequences but we'll just do those with regular !=
+    case abc.Sequence() if not isinstance(a, _TEXT_OR_BINARY_TYPES):
+      minlen = min(len(a), len(b))
+      for i in range(minlen):
         _walk_structure_for_problems(
-            a[k],
-            b[k],
-            f'{aname}[{k!r}]',
-            f'{bname}[{k!r}]',
+            a[i],
+            b[i],
+            f'{aname}[{i:d}]',
+            f'{bname}[{i:d}]',
             problem_list,
             leaf_assert_equal_func,
             failure_exception,
         )
-      else:
+      for i in range(minlen, len(a)):
         problem_list.append(
-            f"{aname} has [{k!r}] with value {a[k]!r} but it's missing in"
-            f' {bname}'
+            f'{aname} has [{i:d}] with value {a[i]!r} but {bname} does not'
         )
-    for k in b:
-      if k not in a:
+      for i in range(minlen, len(b)):
         problem_list.append(
-            f'{aname} lacks [{k!r}] but {bname} has it with value {b[k]!r}'
+            f'{aname} lacks [{i:d}] but {bname} has it with value {b[i]!r}'
         )
 
-  # Strings/bytes are Sequences but we'll just do those with regular !=
-  elif isinstance(a, abc.Sequence) and not isinstance(a, _TEXT_OR_BINARY_TYPES):
-    minlen = min(len(a), len(b))
-    for i in range(minlen):
-      _walk_structure_for_problems(
-          a[i],
-          b[i],
-          f'{aname}[{i:d}]',
-          f'{bname}[{i:d}]',
-          problem_list,
-          leaf_assert_equal_func,
-          failure_exception,
-      )
-    for i in range(minlen, len(a)):
-      problem_list.append(
-          f'{aname} has [{i:d}] with value {a[i]!r} but {bname} does not'
-      )
-    for i in range(minlen, len(b)):
-      problem_list.append(
-          f'{aname} lacks [{i:d}] but {bname} has it with value {b[i]!r}'
-      )
-
-  else:
-    try:
-      leaf_assert_equal_func(a, b)
-    except failure_exception:
-      problem_list.append(f'{aname} is {a!r} but {bname} is {b!r}')
+    case _:
+      try:
+        leaf_assert_equal_func(a, b)
+      except failure_exception:
+        problem_list.append(f'{aname} is {a!r} but {bname} is {b!r}')
 
 
 def get_command_string(command):

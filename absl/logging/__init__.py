@@ -865,19 +865,20 @@ def skip_log_prefix(func):
     ValueError: The input is callable but does not have a function code object.
     TypeError: The input is neither callable nor a string.
   """
-  if callable(func):
-    func_code = getattr(func, '__code__', None)
-    if func_code is None:
-      raise ValueError('Input callable does not have a function code object.')
-    file_name = func_code.co_filename
-    func_name = func_code.co_name
-    func_lineno = func_code.co_firstlineno
-  elif isinstance(func, str):
-    file_name = get_absl_logger().findCaller()[0]
-    func_name = func
-    func_lineno = None
-  else:
-    raise TypeError('Input is neither callable nor a string.')
+  match func:
+    case _ if callable(func):
+      func_code = getattr(func, '__code__', None)
+      if func_code is None:
+        raise ValueError('Input callable does not have a function code object.')
+      file_name = func_code.co_filename
+      func_name = func_code.co_name
+      func_lineno = func_code.co_firstlineno
+    case str():
+      file_name = get_absl_logger().findCaller()[0]
+      func_name = func
+      func_lineno = None
+    case _:
+      raise TypeError('Input is neither callable nor a string.')
   ABSLLogger.register_frame_to_skip(file_name, func_name, func_lineno)
   return func
 

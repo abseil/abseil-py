@@ -611,19 +611,22 @@ class FlagValues:
     for validator in sorted(
         validators, key=lambda validator: validator.insertion_index
     ):
+      flag_names: set[str]
+      match validator:
+        case _validators_classes.SingleFlagValidator():
+          flag_names = {validator.flag_name}
+        case _validators_classes.MultiFlagsValidator():
+          flag_names = set(validator.flag_names)
+        case _:
+          flag_names = set()
+
+      if not flag_names.isdisjoint(bad_flags):
+        continue
+
       try:
-        if isinstance(validator, _validators_classes.SingleFlagValidator):
-          if validator.flag_name in bad_flags:
-            continue
-        elif isinstance(validator, _validators_classes.MultiFlagsValidator):
-          if bad_flags & set(validator.flag_names):
-            continue
         validator.verify(self)
       except _exceptions.ValidationError as e:
-        if isinstance(validator, _validators_classes.SingleFlagValidator):
-          bad_flags.add(validator.flag_name)
-        elif isinstance(validator, _validators_classes.MultiFlagsValidator):
-          bad_flags.update(set(validator.flag_names))
+        bad_flags.update(flag_names)
         message = validator.print_flags_with_values(self)
         messages.append(f'{message}: {e}')
     if messages:
