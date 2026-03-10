@@ -134,9 +134,11 @@ class PythonHandlerTest(absltest.TestCase):
 
   @flagsaver.flagsaver(logtostderr=False)
   def test_set_google_log_file_no_log_to_stderr(self):
-    with mock.patch.object(self.python_handler, 'start_logging_to_file'):
+    with mock.patch.object(
+        self.python_handler, 'start_logging_to_file', autospec=True
+    ) as mock_start_logging_to_file:
       self.python_handler.use_absl_log_file()
-      self.python_handler.start_logging_to_file.assert_called_once_with(
+      mock_start_logging_to_file.assert_called_once_with(
           program_name=None, log_dir=None
       )
 
@@ -591,7 +593,7 @@ class ABSLLoggerTest(absltest.TestCase):
   def test_logger_cannot_be_disabled(self):
     self.logger.disabled = True
     record = self.logger.makeRecord(
-        'name', std_logging.INFO, 'fn', 20, 'msg', [], False
+        'name', std_logging.INFO, 'fn', 20, 'msg', (), None
     )
     with mock.patch.object(self.logger, 'callHandlers') as mock_call_handlers:
       self.logger.handle(record)
@@ -694,12 +696,14 @@ class ABSLLogPrefixTest(parameterized.TestCase):
     self.record.created = 1494293880.378885
     thread_id = f'{logging._get_thread_id(): >5}'
     # Use UTC so the test passes regardless of the local time zone.
-    with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
+    with mock.patch.object(
+        time, 'localtime', side_effect=time.gmtime
+    ) as mock_localtime:
       self.assertEqual(
           f'{level_prefix}0509 01:38:00.378885 {thread_id} source.py:13] ',
           logging.get_absl_log_prefix(self.record),
       )
-      time.localtime.assert_called_once_with(self.record.created)
+      mock_localtime.assert_called_once_with(self.record.created)
 
   def test_absl_prefix_regex(self):
     self.record.created = 1226888258.0521369
@@ -708,7 +712,7 @@ class ABSLLogPrefixTest(parameterized.TestCase):
       prefix = logging.get_absl_log_prefix(self.record)
 
     match = re.search(logging.ABSL_LOGGING_PREFIX_REGEX, prefix)
-    self.assertTrue(match)
+    self.assertIsNotNone(match)
 
     expect = {
         'severity': 'I',
@@ -731,24 +735,28 @@ class ABSLLogPrefixTest(parameterized.TestCase):
     self.record._absl_log_fatal = True
     thread_id = f'{logging._get_thread_id(): >5}'
     # Use UTC so the test passes regardless of the local time zone.
-    with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
+    with mock.patch.object(
+        time, 'localtime', side_effect=time.gmtime
+    ) as mock_localtime:
       self.assertEqual(
           f'F0509 01:38:00.378885 {thread_id} source.py:13] ',
           logging.get_absl_log_prefix(self.record),
       )
-      time.localtime.assert_called_once_with(self.record.created)
+      mock_localtime.assert_called_once_with(self.record.created)
 
   def test_critical_non_absl(self):
     self.record.levelno = std_logging.CRITICAL
     self.record.created = 1494293880.378885
     thread_id = f'{logging._get_thread_id(): >5}'
     # Use UTC so the test passes regardless of the local time zone.
-    with mock.patch.object(time, 'localtime', side_effect=time.gmtime):
+    with mock.patch.object(
+        time, 'localtime', side_effect=time.gmtime
+    ) as mock_localtime:
       self.assertEqual(
           f'E0509 01:38:00.378885 {thread_id} source.py:13] CRITICAL - ',
           logging.get_absl_log_prefix(self.record),
       )
-      time.localtime.assert_called_once_with(self.record.created)
+      mock_localtime.assert_called_once_with(self.record.created)
 
 
 class LogCountTest(absltest.TestCase):
@@ -1052,10 +1060,7 @@ class GetLogFileNameTest(parameterized.TestCase):
 
   def test_get_log_file_name_py_no_name(self):
 
-    class FakeFile:
-      pass
-
-    with override_python_handler_stream(FakeFile()):
+    with override_python_handler_stream(io.StringIO()):
       self.assertEqual('', logging.get_log_file_name())
 
   def test_get_log_file_name_py_file(self):
