@@ -517,7 +517,7 @@ class FunctionalTest(parameterized.TestCase):
     # Python logging by default logs to stderr.
     self._exec_test(
         _verify_ok,
-        [['stderr', None, self._get_logs(logging.INFO)]],
+        [('stderr', None, self._get_logs(logging.INFO))],
         pass_logtostderr=logtostderr,
     )
 
@@ -526,8 +526,8 @@ class FunctionalTest(parameterized.TestCase):
     self._exec_test(
         _verify_ok,
         [
-            ['stderr', None, ''],
-            ['absl_log_file', 'INFO', self._get_logs(logging.INFO)],
+            ('stderr', None, ''),
+            ('absl_log_file', 'INFO', self._get_logs(logging.INFO)),
         ],
         use_absl_log_file=True,
     )
@@ -537,7 +537,7 @@ class FunctionalTest(parameterized.TestCase):
     # is called.
     self._exec_test(
         _verify_ok,
-        [['stderr', None, self._get_logs(logging.INFO)]],
+        [('stderr', None, self._get_logs(logging.INFO))],
         pass_logtostderr=True,
         use_absl_log_file=True,
     )
@@ -546,11 +546,11 @@ class FunctionalTest(parameterized.TestCase):
   def test_py_logging_noshowprefixforinfo(self, logtostderr):
     self._exec_test(
         _verify_ok,
-        [[
+        [(
             'stderr',
             None,
             self._get_logs(logging.INFO, include_info_prefix=False),
-        ]],
+        )],
         pass_logtostderr=logtostderr,
         show_info_prefix=False,
     )
@@ -787,7 +787,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
           stderr,
           re.MULTILINE | re.DOTALL,
       )
-      self.assertTrue(match, f'Cannot find stderr message for test {name}')
+      self.assertIsNotNone(match, f'Cannot find stderr message for test {name}')
       return match.group(1)
 
     def assert_stderr(stderr):
