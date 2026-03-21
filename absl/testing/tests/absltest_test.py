@@ -2751,6 +2751,27 @@ class TempFileTest(BaseTestCase):
     td = self.create_tempdir()
     td.create_file(content='text')
 
+  def test_tempdir_create_file_valid_relative_path(self):
+    td = self.create_tempdir()
+    tf = td.create_file('file.txt', content='ok')
+    self.assert_file_exists(tf, 'ok')
+
+  def test_tempdir_create_file_valid_nested_relative_path(self):
+    td = self.create_tempdir()
+    tf = td.create_file('nested/path/file.txt', content='ok')
+    self.assert_file_exists(tf, 'ok')
+
+  def test_tempdir_create_file_rejects_parent_traversal(self):
+    td = self.create_tempdir()
+    with self.assertRaisesRegex(ValueError, 'must stay within the base directory'):
+      td.create_file('../escape.txt', content='bad')
+
+  def test_tempdir_create_file_rejects_absolute_path(self):
+    td = self.create_tempdir()
+    absolute_path = os.path.join(tempfile.gettempdir(), 'absltest-escape.txt')
+    with self.assertRaisesRegex(ValueError, 'absolute paths are not allowed'):
+      td.create_file(absolute_path, content='bad')
+
   def test_tempfile_text(self):
     tf = self.create_tempfile(content='text')
     self.assert_file_exists(tf, 'text')
