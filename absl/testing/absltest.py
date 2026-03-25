@@ -2638,7 +2638,7 @@ def skipThisClass(
         # Because there's no setUpClass() defined directly on test_case_class,
         # we call super() ourselves to continue execution of the inheritance
         # chain.
-        return super(test_case_class, cls).setUpClass(*args, **kwargs)
+        return super(test_case_class, cls).setUpClass(*args, **kwargs)  # pyrefly: ignore[invalid-argument]
 
     test_case_class.setUpClass = replacement_setupclass  # pyrefly: ignore[bad-assignment]
     return test_case_class
