@@ -18,6 +18,7 @@ This module contains base classes and high-level functions for Abseil-style
 tests.
 """
 
+import collections
 from collections import abc
 import contextlib
 import dataclasses
@@ -569,6 +570,12 @@ class TestCase(unittest.TestCase):
     super().__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
     self._outcome: Any | None = getattr(self, '_outcome')
+    # Properties for the test itself.
+    self.__recorded_properties: dict[str, Any] = {}
+    # Property dicts per subtest, keyed by the subtest's id().
+    self.__subtest_properties: dict[str, dict[str, Any]] = (
+        collections.defaultdict(dict)
+    )
 
   def setUp(self) -> None:
     super().setUp()
@@ -590,6 +597,43 @@ class TestCase(unittest.TestCase):
     ):
       cls._cls_exit_stack = contextlib.ExitStack()
       cls.addClassCleanup(cls._cls_exit_stack.close)
+
+  def get_recorded_properties(self, subtest=None) -> dict[str, Any]:
+    """Returns any properties that the user has recorded.
+
+    If called from within a subtest and subtest is None, returns a dict made up
+    of *both* the subtest's properties *and* the outer test's properties. (The
+    subtest's properties take precedence in the event of a conflict.)
+
+    Args:
+      subtest: The subtest whose properties should be returned. Unlike the
+        default case, if subtest is set, *only* that subtest's properties are
+        returned, not those of the enclosing test.
+    """
+    if subtest:
+      return self.__subtest_properties[subtest.id()].copy()
+    ret = self.__recorded_properties.copy()
+    if hasattr(self, '_subtest') and self._subtest:
+      ret |= self.__subtest_properties[self._subtest.id()]
+    return ret
+
+  def record_property(self, property_name: str, property_value: Any) -> None:
+    """Record an arbitrary property for later use.
+
+    The property is attributed to the currently active subtest, if any,
+    or the test itself, otherwise.
+
+    Args:
+      property_name: Name of property to record; must be a valid XML attribute
+        name.
+      property_value: Value of property to record; must be a valid XML attribute
+        value.
+    """
+    if hasattr(self, '_subtest') and self._subtest:
+      recorded_properties = self.__subtest_properties[self._subtest.id()]
+    else:
+      recorded_properties = self.__recorded_properties
+    recorded_properties[property_name] = property_value
 
   def create_tempdir(
       self,

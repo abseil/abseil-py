@@ -188,6 +188,48 @@ class TestCaseTest(BaseTestCase):
         expect_success=True,
     )
 
+  def test_recorded_properties(self):
+    """Tests that a test can record a property and then retrieve it."""
+    self.record_property('test_property', 'test_value')
+    self.assertEqual(
+        self.get_recorded_properties(), {'test_property': 'test_value'}
+    )
+
+  def test_recorded_properties_sub_test(self):
+    """Tests that a test can record a subtest's property and retrieve it."""
+    self.record_property('test_property1', 'test_value1')
+    with self.subTest(name='sub1'):
+      subtest1 = getattr(self, '_subtest', None)
+      self.assertIsNotNone(subtest1)
+      self.record_property('subtest_property', 'sub_value1')
+      self.assertEqual(
+          self.get_recorded_properties(),
+          {'test_property1': 'test_value1', 'subtest_property': 'sub_value1'},
+      )
+    with self.subTest(name='sub2'):
+      subtest2 = getattr(self, '_subtest', None)
+      self.assertIsNotNone(subtest2)
+      self.record_property('subtest_property', 'sub_value2')
+      self.assertEqual(
+          self.get_recorded_properties(),
+          {'test_property1': 'test_value1', 'subtest_property': 'sub_value2'},
+      )
+    self.record_property('test_property2', 'test_value2')
+    self.assertEqual(
+        self.get_recorded_properties(),
+        {'test_property1': 'test_value1', 'test_property2': 'test_value2'},
+    )
+    # Verify that subtest1 and subtest2 have different dict entries and don't
+    # overwrite each others' values.
+    self.assertEqual(
+        self.get_recorded_properties(subtest1),
+        {'subtest_property': 'sub_value1'},
+    )
+    self.assertEqual(
+        self.get_recorded_properties(subtest2),
+        {'subtest_property': 'sub_value2'},
+    )
+
   def test_xml_output_file_from_xml_output_file_env(self):
     xml_dir = tempfile.mkdtemp(dir=absltest.TEST_TMPDIR.value)
     xml_output_file_env = os.path.join(xml_dir, 'xml_output_file.xml')
