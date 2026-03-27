@@ -65,8 +65,9 @@ def DEFINE(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     serializer: _argument_parser.ArgumentSerializer[_T] | None = ...,
     module_name: str | None = ...,
-    required: Literal[True] = ...,
-    **args: Any
+    *,
+    required: Literal[True],
+    **args: Any,
 ) -> _flagvalues.FlagHolder[_T]:
   ...
 
@@ -135,7 +136,8 @@ def DEFINE_flag(  # pylint: disable=invalid-name
     flag: _flag.Flag[_T],
     flag_values: _flagvalues.FlagValues = ...,
     module_name: str | None = ...,
-    required: Literal[True] = ...,
+    *,
+    required: Literal[True],
 ) -> _flagvalues.FlagHolder[_T]:
   ...
 
