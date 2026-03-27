@@ -107,6 +107,7 @@ def _test_do_logging() -> None:
     raise OSError('Fake Error')
   except OSError:
     saved_exc_info = sys.exc_info()
+    assert saved_exc_info[0] is not None
     logging.exception('An Exception %s')  # pylint: disable=logging-too-few-args
     logging.exception('Once more, %(reason)s', {'reason': 'just because'})
     logging.error('Exception 2 %s', exc_info=True)  # pylint: disable=logging-too-few-args
@@ -293,7 +294,7 @@ def _test_std_logging() -> None:
 
 def _test_bad_exc_info() -> None:
   """Test when a bad exc_info value is provided."""
-  logging.info('Bad exc_info', exc_info=(None, None))
+  logging.info('Bad exc_info', exc_info=(None, None))  # type: ignore[arg-type]
 
 
 def _test_none_exc_info() -> None:

@@ -12,11 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import logging
-from typing import Any, NoReturn, TypeVar
+import types
+import typing
+from typing import Any, NoReturn, TypeAlias, TypeVar
 
 from absl import flags
+
+_ExcInfo: TypeAlias = (
+    None
+    | bool
+    | tuple[type[BaseException], BaseException, types.TracebackType | None]
+    | tuple[None, None, None]
+    | BaseException
+)
 
 # Logging levels.
 FATAL: int
@@ -36,6 +46,8 @@ LOGGER_LEVELS: flags.FlagHolder[dict[str, str]]
 STDERRTHRESHOLD: flags.FlagHolder[str]
 SHOWPREFIXFORINFO: flags.FlagHolder[bool]
 
+_ABSL_LOG_FATAL: str
+
 def get_verbosity() -> int:
   ...
 
@@ -45,70 +57,147 @@ def set_verbosity(v: int | str) -> None:
 def set_stderrthreshold(s: int | str) -> None:
   ...
 
-# TODO(b/277607978): Provide actual args+kwargs shadowing stdlib's logging functions.
-def fatal(msg: Any, *args: Any, **kwargs: Any) -> NoReturn:
+def fatal(
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> NoReturn:
   ...
 
-def error(msg: Any, *args: Any, **kwargs: Any) -> None:
+def error(
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> None:
   ...
 
-def warning(msg: Any, *args: Any, **kwargs: Any) -> None:
+def warning(
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> None:
   ...
 
-def warn(msg: Any, *args: Any, **kwargs: Any) -> None:
+def warn(
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> None:
   ...
 
-def info(msg: Any, *args: Any, **kwargs: Any) -> None:
+def info(
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> None:
   ...
 
-def debug(msg: Any, *args: Any, **kwargs: Any) -> None:
+def debug(
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> None:
   ...
 
-def exception(msg: Any, *args: Any, **kwargs: Any) -> None:
+def exception(
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> None:
   ...
 
 def log_every_n(
     level: int,
-    msg: Any,
+    msg: object,
     n: int,
-    *args: Any,
+    *args: object,
     use_call_stack: bool = ...,
-    **kwargs: Any,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
 ) -> None:
   ...
 
 def log_every_n_seconds(
     level: int,
-    msg: Any,
+    msg: object,
     n_seconds: float,
-    *args: Any,
+    *args: object,
     use_call_stack: bool = ...,
-    **kwargs: Any,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
 ) -> None:
   ...
 
 def log_first_n(
     level: int,
-    msg: Any,
+    msg: object,
     n: int,
-    *args: Any,
+    *args: object,
     use_call_stack: bool = ...,
-    **kwargs: Any,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
 ) -> None:
   ...
 
-def log_if(level: int,
-  msg: Any,
-  condition: Any,
-  *args: Any,
-  **kwargs: Any,
+def log_if(
+    level: int,
+    msg: object,
+    condition: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
 ) -> None:
   ...
 
-def log(level: int, msg: Any, *args: Any, **kwargs: Any) -> None:
+def log(
+    level: int,
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> None:
   ...
 
-def vlog(level: int, msg: Any, *args: Any, **kwargs: Any) -> None:
+def vlog(
+    level: int,
+    msg: object,
+    *args: object,
+    exc_info: _ExcInfo = ...,
+    stack_info: bool = ...,
+    stacklevel: int = ...,
+    extra: Mapping[str, object] | None = ...,
+) -> None:
   ...
 
 def vlog_is_on(level: int) -> bool:
@@ -171,42 +260,18 @@ class PythonHandler(logging.StreamHandler[_StreamT]):  # type: ignore[type-var]
   ) -> None:
     ...
 
-  def flush(self) -> None:
-    ...
-
-  def emit(self, record: logging.LogRecord) -> None:
-    ...
-
-  def close(self) -> None:
+  def _log_to_stderr(self, record: logging.LogRecord) -> None:
     ...
 
 class ABSLHandler(logging.Handler):
 
+  _current_handler: PythonHandler[Any]
+
   def __init__(self, python_logging_formatter: PythonFormatter) -> None:
     ...
 
-  def format(self, record: logging.LogRecord) -> str:
-    ...
-
-  def setFormatter(self, fmt) -> None:
-    ...
-
-  def emit(self, record: logging.LogRecord) -> None:
-    ...
-
-  def flush(self) -> None:
-    ...
-
-  def close(self) -> None:
-    ...
-
-  def handle(self, record: logging.LogRecord) -> bool:
-    ...
-
   @property
-  def python_handler(self) -> PythonHandler:
-    ...
-
+  def python_handler(self) -> PythonHandler[Any]: ...
   def activate_python_handler(self) -> None:
     ...
 
@@ -218,45 +283,22 @@ class ABSLHandler(logging.Handler):
   def start_logging_to_file(self, program_name=None, log_dir=None) -> None:
     ...
 
-class PythonFormatter(logging.Formatter):
-
-  def format(self, record: logging.LogRecord) -> str:
-    ...
+class PythonFormatter(logging.Formatter): ...
 
 class ABSLLogger(logging.Logger):
 
-  def findCaller(
-      self, stack_info: bool = ..., stacklevel: int = ...
-  ) -> tuple[str, int, str, str | None]:
-    ...
+  _frames_to_skip: set[tuple[str, str] | tuple[str, str, int]]
 
-  def critical(self, msg: Any, *args: Any, **kwargs: Any) -> None:
-    ...
-
-  def fatal(self, msg: Any, *args: Any, **kwargs: Any) -> NoReturn:  # type: ignore[override]
-    ...
-
-  def error(self, msg: Any, *args: Any, **kwargs: Any) -> None:
-    ...
-
-  def warn(self, msg: Any, *args: Any, **kwargs: Any) -> None:
-    ...
-
-  def warning(self, msg: Any, *args: Any, **kwargs: Any) -> None:
-    ...
-
-  def info(self, msg: Any, *args: Any, **kwargs: Any) -> None:
-    ...
-
-  def debug(self, msg: Any, *args: Any, **kwargs: Any) -> None:
-    ...
-
-  def log(self, level: int, msg: Any, *args: Any, **kwargs: Any) -> None:
-    ...
-
-  def handle(self, record: logging.LogRecord) -> None:
-    ...
-
+  @typing.override
+  def fatal(
+      self,
+      msg: object,
+      *args: object,
+      exc_info: _ExcInfo = ...,
+      stack_info: bool = ...,
+      stacklevel: int = ...,
+      extra: Mapping[str, object] | None = ...,
+  ) -> NoReturn: ...
   @classmethod
   def register_frame_to_skip(
       cls, file_name: str, function_name: str, line_number: int | None = ...
@@ -276,3 +318,6 @@ def use_python_logging(quiet: bool = ...) -> None:
 
 def use_absl_handler() -> None:
   ...
+
+def _get_thread_id() -> int: ...
+def _get_next_log_count_per_token(token: object) -> int: ...
