@@ -359,8 +359,24 @@ class _TempFile:
   ) -> tuple['_TempFile', str]:
     """Module-private: create a tempfile instance."""
     if file_path:
-      cleanup_path = os.path.join(base_path, _get_first_part(file_path))
-      path = os.path.join(base_path, file_path)
+      normalized_file_path = os.path.normpath(file_path)
+      if os.path.isabs(normalized_file_path):
+        raise ValueError(
+            f'Invalid file_path {file_path!r}: absolute paths are not allowed'
+        )
+
+      base_path_real = os.path.realpath(base_path)
+      path = os.path.join(base_path, normalized_file_path)
+      path_real = os.path.realpath(path)
+      if os.path.commonpath([base_path_real, path_real]) != base_path_real:
+        raise ValueError(
+            f'Invalid file_path {file_path!r}: path must stay within the '
+            'base directory'
+        )
+
+      cleanup_path = os.path.join(
+          base_path, _get_first_part(normalized_file_path)
+      )
       os.makedirs(os.path.dirname(path), exist_ok=True)
       # The file may already exist, in which case, ensure it's writable so that
       # it can be truncated.
