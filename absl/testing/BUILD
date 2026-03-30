@@ -9,6 +9,7 @@ licenses(["notice"])
 py_library(
     name = "absltest",
     srcs = ["absltest.py"],
+    lazy_imports = True,
     visibility = ["//visibility:public"],
     deps = [
         ":_pretty_print_reporter",
