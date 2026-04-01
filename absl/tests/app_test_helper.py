@@ -82,14 +82,14 @@ def real_main(argv: Sequence[str]) -> None:
   # us that app.run() did the right thing in conjunction with C++ flags.
   helper_type = os.environ['APP_TEST_HELPER_TYPE']
   if helper_type == 'clif':
-    if 'heap_check_before_constructors' in flags.FLAGS:
+    if 'heap_check_ignore_global_live' in flags.FLAGS:
       print(f'PASS: C++ flag present and helper_type is {helper_type}')
       sys.exit(0)
     else:
       print(f'FAILED: C++ flag absent but helper_type is {helper_type}')
       sys.exit(1)
   elif helper_type == 'pure_python':
-    if 'heap_check_before_constructors' in flags.FLAGS:
+    if 'heap_check_ignore_global_live' in flags.FLAGS:
       print('FAILED: C++ flag present but helper_type is pure_python')
       sys.exit(1)
     else:
