@@ -170,7 +170,7 @@ class FlagsUnitTest(absltest.TestCase):
 
     The original registered Flag objects can be retrieved through the use
     """
-    doc = flags.doc_to_help(self.test_doc_to_help_flag_values.__doc__)
+    doc = flags.doc_to_help(self.test_doc_to_help_flag_values.__doc__ or '')
     # Test the general outline of the converted docs
     lines = doc.splitlines()
     self.assertLen(lines, 17)

@@ -65,8 +65,9 @@ def DEFINE(  # pylint: disable=invalid-name
     flag_values: _flagvalues.FlagValues = ...,
     serializer: _argument_parser.ArgumentSerializer[_T] | None = ...,
     module_name: str | None = ...,
-    required: Literal[True] = ...,
-    **args: Any
+    *,
+    required: Literal[True],
+    **args: Any,
 ) -> _flagvalues.FlagHolder[_T]:
   ...
 
@@ -75,14 +76,31 @@ def DEFINE(  # pylint: disable=invalid-name
 def DEFINE(  # pylint: disable=invalid-name
     parser: _argument_parser.ArgumentParser[_T],
     name: str,
-    default: Any | None,
+    default: None,
     help: str | None,  # pylint: disable=redefined-builtin
     flag_values: _flagvalues.FlagValues = ...,
     serializer: _argument_parser.ArgumentSerializer[_T] | None = ...,
     module_name: str | None = ...,
+    *,
     required: bool = ...,
-    **args: Any
+    **args: Any,
 ) -> _flagvalues.FlagHolder[_T | None]:
+  ...
+
+
+@overload
+def DEFINE(  # pylint: disable=invalid-name
+    parser: _argument_parser.ArgumentParser[_T],
+    name: str,
+    default: object,
+    help: str | None,  # pylint: disable=redefined-builtin
+    flag_values: _flagvalues.FlagValues = ...,
+    serializer: _argument_parser.ArgumentSerializer[_T] | None = ...,
+    module_name: str | None = ...,
+    *,
+    required: bool = ...,
+    **args: Any,
+) -> _flagvalues.FlagHolder[_T]:
   ...
 
 
@@ -94,8 +112,8 @@ def DEFINE(  # pylint: disable=invalid-name
     flag_values=_flagvalues.FLAGS,
     serializer=None,
     module_name=None,
-    required=False,
-    **args
+    required: bool = False,
+    **args,
 ):
   """Registers a generic Flag object.
 
@@ -131,6 +149,7 @@ def DEFINE(  # pylint: disable=invalid-name
 
 
 @overload
+# pyrefly: ignore[inconsistent-overload-default]
 def DEFINE_flag(  # pylint: disable=invalid-name
     flag: _flag.Flag[_T],
     flag_values: _flagvalues.FlagValues = ...,
