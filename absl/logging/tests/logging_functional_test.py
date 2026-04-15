@@ -22,6 +22,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from typing import Any
 
 from absl import logging
 from absl.testing import _bazelize_command
@@ -812,7 +813,7 @@ I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] None exc_info
         logging.info('name = %s', name)
         self.assertEqual('', get_stderr_message(stderr, name))
 
-    expected_logs = [('stderr', None, assert_stderr)]
+    expected_logs: list[Any] = [('stderr', None, assert_stderr)]
 
     info_log = """\
 I0000 00:00:00.000000 12345 logging_functional_test_helper.py:123] G\u00eete: Ch\u00e2tonnaye

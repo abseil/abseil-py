@@ -248,7 +248,7 @@ class PythonHandlerTest(absltest.TestCase):
   def test_emit(self):
     stream = io.StringIO()
     handler = logging.PythonHandler(stream)
-    handler.stderr_threshold = std_logging.FATAL
+    handler.stderr_threshold = std_logging.FATAL  # pyrefly: ignore[missing-attribute]
     record = std_logging.LogRecord(
         'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
@@ -273,7 +273,7 @@ class PythonHandlerTest(absltest.TestCase):
     mock_stderr = io.StringIO()
     stream = io.StringIO()
     handler = logging.PythonHandler(stream)
-    handler.stderr_threshold = std_logging.FATAL
+    handler.stderr_threshold = std_logging.FATAL  # pyrefly: ignore[missing-attribute]
     record = std_logging.LogRecord(
         'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
@@ -286,7 +286,7 @@ class PythonHandlerTest(absltest.TestCase):
     mock_stderr = io.StringIO()
     with mock.patch.object(sys, 'stderr', new=mock_stderr):
       handler = logging.PythonHandler()
-      handler.stderr_threshold = std_logging.INFO
+      handler.stderr_threshold = std_logging.INFO  # pyrefly: ignore[missing-attribute]
       record = std_logging.LogRecord(
           'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
       )
