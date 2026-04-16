@@ -154,7 +154,8 @@ def DEFINE_flag(  # pylint: disable=invalid-name
     flag: _flag.Flag[_T],
     flag_values: _flagvalues.FlagValues = ...,
     module_name: str | None = ...,
-    required: Literal[True] = ...,
+    *,
+    required: Literal[True],
 ) -> _flagvalues.FlagHolder[_T]:
   ...
 
