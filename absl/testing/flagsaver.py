@@ -240,7 +240,9 @@ def save_flag_values(
     Dictionary mapping keys to values. Keys are flag names, values are
     corresponding ``__dict__`` members. E.g. ``{'key': value_dict, ...}``.
   """
-  return {name: _copy_flag_dict(flag_values[name]) for name in flag_values}
+  return {
+      name: _copy_flag_dict(flag_values[name]) for name in list(flag_values)
+  }
 
 
 def restore_flag_values(
