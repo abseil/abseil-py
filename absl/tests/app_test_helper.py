@@ -130,7 +130,7 @@ def flags_parser(argv: Sequence[str]) -> object:
 
 
 # Holds results from callbacks triggered by `app.run_after_init`.
-_callback_results = []
+_callback_results: list[str] = []
 
 if __name__ == '__main__':
   kwargs: dict[str, Any] = {'main': main}
