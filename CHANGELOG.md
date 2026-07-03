@@ -12,6 +12,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 
+## 2.5.0 (2026-07-03)
+
+### Added
+
+*  (app) Add support for enabling Python profiling via the `ABSL_PYTHON_PROFILE_FILE` environment variable.
+*  (flags) Introduce `--only_check_flags` built-in flag to validate flag definitions without executing `main()`.
+*  (flagsaver) Add support for `async` test functions in `@flagsaver.flagsaver`.
+*  (testing) Add `record_property` and `get_recorded_properties` methods to `absltest.TestCase`.
+
+### Changed
+
+*  (flags) Apply defensive copying in `save_flag_values` to prevent dictionary mutation flakiness.
+*  (logging) Update type signatures for `absl.logging` functions to support standard `logging` arguments (`exc_info`, `stack_info`, `stacklevel`, `extra`).
+*  (cleanup) Expand usage of `FlagHolder` objects in `app` and `absltest`.
+
+### Fixed
+
+*  (flags) Improve formatting and clarity of `DuplicateFlagError` message.
+*  (testing) Fix assertion logic in `absltest.TestCase.create_file`.
+*  (typechecking) Fix type annotations and compatibility with MyPy and Pyrefly.
+
 ## 2.4.0 (2026-01-28)
 
 ### Added
