@@ -234,7 +234,7 @@ def find_log_dir(log_dir: str | None = ...) -> str:
 def get_absl_log_prefix(record: logging.LogRecord) -> str:
   ...
 
-_SkipLogT = TypeVar('_SkipLogT', str, Callable[..., Any])
+_SkipLogT = TypeVar('_SkipLogT', str, bound=Callable[..., Any])
 
 def skip_log_prefix(func: _SkipLogT) -> _SkipLogT:
   ...
