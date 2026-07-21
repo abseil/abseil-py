@@ -306,7 +306,7 @@ class _TempDir:
     tf, _ = _TempFile._create(  # pylint: disable=protected-access
         self._path,
         file_path,
-        content,  # pyrefly: ignore[bad-argument-type]  # pyrefly#2644
+        content,
         mode,
         encoding,
         errors,
@@ -379,7 +379,7 @@ class _TempFile:
       if isinstance(content, str):
         tf.write_text(content, mode=mode, encoding=encoding, errors=errors)
       else:
-        tf.write_bytes(content, mode)  # pyrefly: ignore[bad-argument-type]  # pyrefly#2644
+        tf.write_bytes(content, mode)
 
     else:
       tf.write_bytes(b'')
@@ -748,7 +748,7 @@ class TestCase(unittest.TestCase):
     tf, cleanup_path = _TempFile._create(  # pylint: disable=protected-access
         test_path,
         file_path,
-        content=content,  # pyrefly: ignore[bad-argument-type]  # pyrefly#2644
+        content=content,
         mode=mode,
         encoding=encoding,
         errors=errors,
@@ -2640,7 +2640,7 @@ def skipThisClass(
         # chain.
         return super(test_case_class, cls).setUpClass(*args, **kwargs)  # pyrefly: ignore[invalid-argument]
 
-    test_case_class.setUpClass = replacement_setupclass  # pyrefly: ignore[bad-assignment]
+    test_case_class.setUpClass = replacement_setupclass
     return test_case_class
 
   return _skip_class
