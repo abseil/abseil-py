@@ -52,11 +52,18 @@ _escape_xml_attr_conversions.update(_control_character_conversions)
 _CLASS_OR_MODULE_LEVEL_TEST_DESC_REGEX = re.compile(r'^(\w+) \((\S+)\)$')
 
 
+# Pattern matching ANSI escape sequences (CSI and OSC sequences).
+_ANSI_ESCAPE_PATTERN = re.compile(
+    r'\x1b(?:\[[0-?]*[ -/]*[@-~]|\].*?(?:\x07|\x1b\\))'
+)
+
+
 # NOTE: while saxutils.quoteattr() theoretically does the same thing; it
 # seems to often end up being too smart for it's own good not escaping properly.
 # This function is much more reliable.
 def _escape_xml_attr(content):
   """Escapes xml attributes."""
+  content = _ANSI_ESCAPE_PATTERN.sub('', str(content))
   # Note: saxutils doesn't escape the quotes.
   return saxutils.escape(content, _escape_xml_attr_conversions)
 
@@ -73,6 +80,7 @@ def _escape_cdata(s):
   Returns:
     An escaped version of the input string.
   """
+  s = _ANSI_ESCAPE_PATTERN.sub('', str(s))
   for char, escaped in _control_character_conversions.items():
     s = s.replace(char, escaped)
   return s.replace(']]>', ']] >')

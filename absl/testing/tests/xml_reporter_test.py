@@ -326,6 +326,14 @@ class TextAndXMLTestResultTest(absltest.TestCase):
       error_values = sys.exc_info()
       return error_values
 
+  def get_ansi_escape_sample_failure(self):
+    try:
+      esc = chr(27)
+      raise AssertionError(f'{esc}[35mcolored failure message{esc}[0m')
+    except AssertionError:
+      error_values = sys.exc_info()
+      return error_values
+
   def test_with_failing_test(self):
     start_time = 10
     end_time = 20
@@ -660,6 +668,25 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.printErrors()
 
     self._assert_valid_xml(self.xml_stream.getvalue())
+
+  def test_with_ansi_escape_error(self):
+    start_time = 100
+    end_time = 200
+    result = self._make_result((start_time, start_time, end_time, end_time))
+
+    test = MockTest('__main__.MockTest.failing_test')
+    result.startTestRun()
+    result.startTest(test)
+    result.addError(test, self.get_ansi_escape_sample_failure())
+    result.stopTest(test)
+    result.stopTestRun()
+    result.printErrors()
+
+    xml_val = self.xml_stream.getvalue()
+    self._assert_valid_xml(xml_val)
+    self.assertIn('colored failure message', xml_val)
+    self.assertNotIn('\\x1b[35m', xml_val)
+    self.assertNotIn('\x1b', xml_val)
 
   def test_with_expected_failure_test(self):
     start_time = 100
@@ -1082,6 +1109,22 @@ class XMLTest(absltest.TestCase):
     self.assertEqual(
         xml_reporter._escape_xml_attr('"Hi" <\'>\t\r\n'),
         '&quot;Hi&quot;&#x20;&lt;&apos;&gt;&#x9;&#xD;&#xA;',
+    )
+
+  def test_escape_xml_attr_strips_ansi(self):
+    self.assertEqual(
+        xml_reporter._escape_xml_attr(
+            '\x1b[35mHello\x1b[0m \x1b[1;32mWorld\x1b[0m'
+        ),
+        'Hello&#x20;World',
+    )
+
+  def test_escape_cdata_strips_ansi(self):
+    self.assertEqual(
+        xml_reporter._escape_cdata(
+            'File "\x1b[35mfoo_test.py\x1b[0m", line \x1b[32m42\x1b[0m'
+        ),
+        'File "foo_test.py", line 42',
     )
 
 
