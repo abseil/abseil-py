@@ -678,7 +678,28 @@ class TestCase(unittest.TestCase):
     test_path = self._get_tempdir_path_test()
 
     if name:
+      # Normalizing first also converts any altsep (e.g. "/" on Windows) to
+      # os.sep, so _get_first_part below sees a real first component rather
+      # than the whole string.
+      name = os.path.normpath(name)
+      if os.path.isabs(name):
+        raise ValueError(
+            f'Invalid name {name!r}: absolute paths are not allowed'
+        )
       path = os.path.join(test_path, name)
+      test_path_real = os.path.realpath(test_path)
+      try:
+        contained = (
+            os.path.commonpath([test_path_real, os.path.realpath(path)])
+            == test_path_real
+        )
+      except ValueError:
+        # Raised on Windows when the paths are on different drives.
+        contained = False
+      if not contained:
+        raise ValueError(
+            f'Invalid name {name!r}: path must stay within the test directory'
+        )
       cleanup_path = os.path.join(test_path, _get_first_part(name))
     else:
       os.makedirs(test_path, exist_ok=True)
