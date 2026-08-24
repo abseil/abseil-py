@@ -324,6 +324,9 @@ class _TempDir:
       A _TempDir representing the created directory.
     """
     if dir_path:
+      dir_path = _contained_relative_path(
+          self._path, dir_path, 'temporary directory'
+      )
       path = os.path.join(self._path, dir_path)
     else:
       path = tempfile.mkdtemp(dir=self._path)
@@ -678,28 +681,8 @@ class TestCase(unittest.TestCase):
     test_path = self._get_tempdir_path_test()
 
     if name:
-      # Normalizing first also converts any altsep (e.g. "/" on Windows) to
-      # os.sep, so _get_first_part below sees a real first component rather
-      # than the whole string.
-      name = os.path.normpath(name)
-      if os.path.isabs(name):
-        raise ValueError(
-            f'Invalid name {name!r}: absolute paths are not allowed'
-        )
+      name = _contained_relative_path(test_path, name, 'test directory')
       path = os.path.join(test_path, name)
-      test_path_real = os.path.realpath(test_path)
-      try:
-        contained = (
-            os.path.commonpath([test_path_real, os.path.realpath(path)])
-            == test_path_real
-        )
-      except ValueError:
-        # Raised on Windows when the paths are on different drives.
-        contained = False
-      if not contained:
-        raise ValueError(
-            f'Invalid name {name!r}: path must stay within the test directory'
-        )
       cleanup_path = os.path.join(test_path, _get_first_part(name))
     else:
       os.makedirs(test_path, exist_ok=True)
@@ -3097,6 +3080,39 @@ def _rmtree_ignore_errors(path: str) -> None:
       pass
   else:
     shutil.rmtree(path, ignore_errors=True)
+
+
+def _contained_relative_path(
+    base_path: str, name: str, base_label: str
+) -> str:
+  """Returns `name` normalized, if it stays inside `base_path`.
+
+  Args:
+    base_path: the directory the resulting path must remain inside.
+    name: a relative path supplied by the caller.
+    base_label: how to describe `base_path` in the error message.
+
+  Raises:
+    ValueError: if `name` is absolute, or escapes `base_path`.
+  """
+  # Normalizing first also converts any altsep (e.g. "/" on Windows) to
+  # os.sep, so _get_first_part sees a real first component rather than the
+  # whole string.
+  name = os.path.normpath(name)
+  if os.path.isabs(name):
+    raise ValueError(f'Invalid name {name!r}: absolute paths are not allowed')
+  base_real = os.path.realpath(base_path)
+  target_real = os.path.realpath(os.path.join(base_path, name))
+  try:
+    contained = os.path.commonpath([base_real, target_real]) == base_real
+  except ValueError:
+    # Raised on Windows when the paths are on different drives.
+    contained = False
+  if not contained:
+    raise ValueError(
+        f'Invalid name {name!r}: path must stay within the {base_label}'
+    )
+  return name
 
 
 def _get_first_part(path: str) -> str:

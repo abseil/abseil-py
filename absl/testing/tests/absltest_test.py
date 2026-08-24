@@ -2903,6 +2903,26 @@ class TempFileTest(BaseTestCase):
     d = self.create_tempdir('nested/inner')
     self.assertTrue(os.path.isdir(d.full_path))
 
+  def test_tempdir_mkdir_rejects_parent_traversal(self):
+    td = self.create_tempdir()
+    for name in ('../escape', '..' + os.sep + 'escape'):
+      with self.subTest(name=name):
+        with self.assertRaisesRegex(
+            ValueError, 'must stay within the temporary directory'
+        ):
+          td.mkdir(name)
+
+  def test_tempdir_mkdir_rejects_absolute_path(self):
+    td = self.create_tempdir()
+    absolute_path = os.path.join(tempfile.gettempdir(), 'absltest-mkdir-esc')
+    with self.assertRaisesRegex(ValueError, 'absolute paths are not allowed'):
+      td.mkdir(absolute_path)
+
+  def test_tempdir_mkdir_allows_nested_relative_path(self):
+    td = self.create_tempdir()
+    sub_dir = td.mkdir('nested/inner')
+    self.assertTrue(os.path.isdir(sub_dir.full_path))
+
 
 class SkipClassTest(absltest.TestCase):
 
