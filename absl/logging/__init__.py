@@ -762,8 +762,9 @@ def find_log_dir_and_names(program_name=None, log_dir=None):
 
   try:
     username = getpass.getuser()
-  except KeyError:
+  except (KeyError, OSError):
     # This can happen, e.g. when running under docker w/o passwd file.
+    # Python 3.13 and newer raise OSError here; older versions raise KeyError.
     if hasattr(os, 'getuid'):
       # Windows doesn't have os.getuid
       username = str(os.getuid())
