@@ -77,6 +77,9 @@ class Error(Exception):
 class UsageError(Error):
   exitcode: int
 
+  def __init__(self, message: object, exitcode: int = ...) -> None:
+    ...
+
 def parse_flags_with_usage(args: list[str]) -> list[str]:
   ...
 
