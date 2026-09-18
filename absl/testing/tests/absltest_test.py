@@ -2872,6 +2872,57 @@ class TempFileTest(BaseTestCase):
     }
     self.run_tempfile_helper('OFF', expected)
 
+  def test_create_tempdir_rejects_parent_traversal(self):
+    # Both separators, because _get_first_part splits on os.sep only: the
+    # native separator is the one that reduces cleanup_path to the parent.
+    for name in ('../escape', '..' + os.sep + 'escape'):
+      with self.subTest(name=name):
+        with self.assertRaisesRegex(
+            ValueError, 'must stay within the test directory'
+        ):
+          self.create_tempdir(name)
+
+  def test_create_tempdir_rejects_absolute_path(self):
+    absolute_path = os.path.join(tempfile.gettempdir(), 'absltest-escape-dir')
+    with self.assertRaisesRegex(ValueError, 'absolute paths are not allowed'):
+      self.create_tempdir(absolute_path)
+
+  def test_create_tempdir_cleanup_stays_within_test_dir(self):
+    # Regression: create_tempdir('..<sep>x') made cleanup_path the PARENT of
+    # the test directory, which _rmtree_ignore_errors then deleted.
+    test_dir = os.path.realpath(
+        os.path.dirname(self.create_tempfile('marker.txt').full_path)
+    )
+    sibling = os.path.join(os.path.dirname(test_dir), 'sibling_must_survive')
+    os.makedirs(sibling, exist_ok=True)
+    with self.assertRaises(ValueError):
+      self.create_tempdir('..' + os.sep + 'victim')
+    self.assertTrue(os.path.exists(sibling))
+
+  def test_create_tempdir_allows_nested_relative_path(self):
+    d = self.create_tempdir('nested/inner')
+    self.assertTrue(os.path.isdir(d.full_path))
+
+  def test_tempdir_mkdir_rejects_parent_traversal(self):
+    td = self.create_tempdir()
+    for name in ('../escape', '..' + os.sep + 'escape'):
+      with self.subTest(name=name):
+        with self.assertRaisesRegex(
+            ValueError, 'must stay within the temporary directory'
+        ):
+          td.mkdir(name)
+
+  def test_tempdir_mkdir_rejects_absolute_path(self):
+    td = self.create_tempdir()
+    absolute_path = os.path.join(tempfile.gettempdir(), 'absltest-mkdir-esc')
+    with self.assertRaisesRegex(ValueError, 'absolute paths are not allowed'):
+      td.mkdir(absolute_path)
+
+  def test_tempdir_mkdir_allows_nested_relative_path(self):
+    td = self.create_tempdir()
+    sub_dir = td.mkdir('nested/inner')
+    self.assertTrue(os.path.isdir(sub_dir.full_path))
+
 
 class SkipClassTest(absltest.TestCase):
 
