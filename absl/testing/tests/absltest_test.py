@@ -982,6 +982,59 @@ specify delta or places not both
         AssertionError, self.assertNotEndsWith, 'foobar', 'foobar'
     )
 
+  def test_assert_is_subclass(self):
+    self.assertIsSubclass(bool, int)
+    self.assertIsSubclass(int, int)
+    self.assertIsSubclass(bool, (str, int))
+    self.assertIsSubclass(bool, str | int)
+    self.assertIsSubclass(dict, Mapping)
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        "<class 'int'> is not a subclass of <class 'str'> : useful",
+        self.assertIsSubclass,
+        int,
+        str,
+        'useful',
+    )
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        "<class 'int'> is not a subclass of any of"
+        " (<class 'str'>, <class 'bytes'>)",
+        self.assertIsSubclass,
+        int,
+        (str, bytes),
+    )
+
+  def test_assert_not_is_subclass(self):
+    self.assertNotIsSubclass(int, bool)
+    self.assertNotIsSubclass(int, (str, bytes))
+    self.assertNotIsSubclass(list, Mapping)
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        "<class 'bool'> is a subclass of <class 'int'> : useful",
+        self.assertNotIsSubclass,
+        bool,
+        int,
+        'useful',
+    )
+    self.assertRaisesWithLiteralMatch(
+        AssertionError,
+        "<class 'bool'> is a subclass of <class 'int'>",
+        self.assertNotIsSubclass,
+        bool,
+        (str, int),
+    )
+
+  @parameterized.parameters('assertIsSubclass', 'assertNotIsSubclass')
+  def test_assert_subclass_rejects_non_class(self, method_name):
+    assertion = getattr(self, method_name)
+    self.assertRaisesWithLiteralMatch(
+        AssertionError, '1 is not a class : useful', assertion, 1, int, 'useful'
+    )
+    # A bad superclass is issubclass()'s TypeError, not a test failure.
+    with self.assertRaises(TypeError):
+      assertion(int, 1)
+
   def test_assert_regex_backports(self):
     self.assertRegex('regex', 'regex')
     self.assertNotRegex('not-regex', 'no-match')

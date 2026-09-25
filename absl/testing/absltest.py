@@ -954,6 +954,54 @@ class TestCase(unittest.TestCase):
     if actual.endswith(unexpected_end):
       self.fail(f'{actual!r} does end with {unexpected_end!r}', msg)
 
+  def assertIsSubclass(self, cls, superclass, msg=None):
+    """Asserts that issubclass(cls, superclass) is True.
+
+    Copied from unittest.TestCase.assertIsSubclass, added in Python 3.14.
+
+    Args:
+      cls: The class to check.
+      superclass: A class, or a tuple of classes, as accepted by issubclass().
+      msg: Optional message to report on failure.
+    """
+    try:
+      if issubclass(cls, superclass):
+        return
+    except TypeError:
+      if not isinstance(cls, type):
+        self.fail(self._formatMessage(msg, f'{cls!r} is not a class'))
+      raise
+    if isinstance(superclass, tuple):
+      standardMsg = f'{cls!r} is not a subclass of any of {superclass!r}'
+    else:
+      standardMsg = f'{cls!r} is not a subclass of {superclass!r}'
+    self.fail(self._formatMessage(msg, standardMsg))
+
+  def assertNotIsSubclass(self, cls, superclass, msg=None):
+    """Asserts that issubclass(cls, superclass) is False.
+
+    Copied from unittest.TestCase.assertNotIsSubclass, added in Python 3.14.
+
+    Args:
+      cls: The class to check.
+      superclass: A class, or a tuple of classes, as accepted by issubclass().
+      msg: Optional message to report on failure.
+    """
+    try:
+      if not issubclass(cls, superclass):
+        return
+    except TypeError:
+      if not isinstance(cls, type):
+        self.fail(self._formatMessage(msg, f'{cls!r} is not a class'))
+      raise
+    if isinstance(superclass, tuple):
+      for x in superclass:
+        if issubclass(cls, x):
+          superclass = x
+          break
+    standardMsg = f'{cls!r} is a subclass of {superclass!r}'
+    self.fail(self._formatMessage(msg, standardMsg))
+
   def assertSequenceStartsWith(self, prefix, whole, msg=None):
     """An equality assertion for the beginning of ordered sequences.
 

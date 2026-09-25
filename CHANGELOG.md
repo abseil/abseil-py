@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
+*  (testing) Add `assertIsSubclass` and `assertNotIsSubclass` to `absltest.TestCase`, matching the `unittest.TestCase` methods added in Python 3.14.
+
 ### Changed
 
 ### Fixed
