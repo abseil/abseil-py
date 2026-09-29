@@ -56,7 +56,8 @@ class ReloadDetector(abc.MetaPathFinder):
 reload_detector = ReloadDetector()
 reload_detector_insert_position = -1
 
-sys.meta_path.insert(reload_detector_insert_position, reload_detector)
+if os.environ.get('ABSL_RELOAD_DETECTOR', '1') == '1':
+  sys.meta_path.insert(reload_detector_insert_position, reload_detector)
 
 
 class FlagValues:
