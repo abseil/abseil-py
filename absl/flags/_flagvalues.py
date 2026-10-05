@@ -37,7 +37,7 @@ from absl.flags._flag import Flag
 _helpers.disclaim_module_ids.add(id(sys.modules[__name__]))
 
 _T = TypeVar('_T')
-_T_co = TypeVar('_T_co', covariant=True)  # pytype: disable=not-supported-yet
+_T_co = TypeVar('_T_co', covariant=True)
 
 
 class ReloadDetector(abc.MetaPathFinder):
@@ -991,7 +991,7 @@ class FlagValues:
     if include_special_flags:
       self._render_module_flags(
           'absl.flags',
-          _helpers.SPECIAL_FLAGS._flags().values(),  # pylint: disable=protected-access  # pytype: disable=attribute-error
+          _helpers.SPECIAL_FLAGS._flags().values(),  # pylint: disable=protected-access
           output_lines,
           prefix,
       )
@@ -1047,7 +1047,7 @@ class FlagValues:
   def _render_flag_list(self, flaglist, output_lines, prefix='  '):
     """Adds flags to output_lines list."""
     fl = self._flags()
-    special_fl = _helpers.SPECIAL_FLAGS._flags()  # pylint: disable=protected-access  # pytype: disable=attribute-error
+    special_fl = _helpers.SPECIAL_FLAGS._flags()  # pylint: disable=protected-access
     flaglist = [(flag.name, flag) for flag in flaglist]
     flaglist.sort()
     flagset = {}

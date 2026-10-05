@@ -211,7 +211,7 @@ DEFINE_string(
     '',
     'Insert flag definitions from the given file into the command line.',
     _helpers.SPECIAL_FLAGS,
-)  # pytype: disable=wrong-arg-types
+)
 
 DEFINE_string(
     'undefok',
@@ -221,7 +221,7 @@ DEFINE_string(
     'with that name.  IMPORTANT: flags in this list that have '
     'arguments MUST use the --flag=value format.',
     _helpers.SPECIAL_FLAGS,
-)  # pytype: disable=wrong-arg-types
+)
 
 #: The global FlagValues instance.
 FLAGS = _flagvalues.FLAGS

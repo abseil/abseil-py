@@ -516,14 +516,14 @@ class MultiFlag(Generic[_T], Flag[list[_T]]):
   ) -> list[minidom.Element]:
     elements = []
     if hasattr(self.parser, 'enum_values'):
-      for enum_value in self.parser.enum_values:  # pytype: disable=attribute-error
+      for enum_value in self.parser.enum_values:
         elements.append(
             _helpers.create_xml_dom_element(doc, 'enum_value', enum_value)
         )
     return elements
 
 
-class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
+class MultiEnumClassFlag(MultiFlag[_ET]):
   """A multi_enum_class flag.
 
   See the __doc__ for MultiFlag for most behaviors of this class.  In addition,
@@ -566,7 +566,7 @@ class MultiEnumClassFlag(MultiFlag[_ET]):  # pytype: disable=not-indexable
       self, doc: minidom.Document
   ) -> list[minidom.Element]:
     elements = []
-    for enum_value in self.parser.enum_class.__members__.keys():  # pytype: disable=attribute-error
+    for enum_value in self.parser.enum_class.__members__.keys():
       elements.append(
           _helpers.create_xml_dom_element(doc, 'enum_value', enum_value)
       )

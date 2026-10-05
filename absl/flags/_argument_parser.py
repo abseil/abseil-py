@@ -445,7 +445,7 @@ class EnumClassParser(ArgumentParser[_ET]):
       ValueError: Raised when argument didn't match anything in enum.
     """
     if isinstance(argument, self.enum_class):
-      return argument  # pytype: disable=bad-return-type
+      return argument
     elif not isinstance(argument, str):
       raise ValueError(
           f'{argument} is not an enum member or a name of a member in '

@@ -1170,9 +1170,9 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_alias('alias_letters', 'letters')
     self.assertEqual(FLAGS['name'].default, FLAGS.alias_name)
     self.assertEqual(FLAGS['debug'].default, FLAGS.alias_debug)
-    # pyrefly: ignore[no-matching-overload, bad-argument-type]
+    # pyrefly: ignore[bad-argument-type]
     self.assertEqual(int(FLAGS['decimal'].default), FLAGS.alias_decimal)
-    # pyrefly: ignore[no-matching-overload, bad-argument-type]
+    # pyrefly: ignore[bad-argument-type]
     self.assertEqual(float(FLAGS['float'].default), FLAGS.alias_float)
     self.assertSameElements(FLAGS['letters'].default, FLAGS.alias_letters)
 
@@ -2949,7 +2949,7 @@ class OverrideValueTest(absltest.TestCase):
     self.flag_values.mark_as_parsed()
 
     with self.assertRaises(flags.IllegalFlagValueError):
-      flags.override_value(int_holder, 'a')  # pytype: disable=wrong-arg-types
+      flags.override_value(int_holder, 'a')
 
     self.assertEqual(int_holder.value, 1)
 
@@ -2961,7 +2961,7 @@ class OverrideValueTest(absltest.TestCase):
     self.flag_values.mark_as_parsed()
 
     with self.assertRaises(flags.IllegalFlagValueError):
-      flags.override_value(int_holder, '2')  # pytype: disable=wrong-arg-types
+      flags.override_value(int_holder, '2')
 
   def test_failure_on_parser_rejection(self):
     int_holder = flags.DEFINE_integer(
