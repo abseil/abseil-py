@@ -499,7 +499,7 @@ class AsParsedTest(absltest.TestCase):
         r'Expected a single string or sequence of strings but .*int.* was '
         r'provided\.',
     ):
-      manager = flagsaver.as_parsed(flagsaver_test_int_flag=123)  # pytype: disable=wrong-arg-types
+      manager = flagsaver.as_parsed(flagsaver_test_int_flag=123)  # pyrefly: ignore[no-matching-overload]
       del manager
 
 
@@ -624,7 +624,6 @@ class BadUsageTest(parameterized.TestCase):
 
   def test_context_manager_no_call(self, flagsaver_method):
     # The exact exception that's raised appears to be system specific.
-    # pyrefly: ignore[no-matching-overload]  # pyrefly#2616
     with self.assertRaises((AttributeError, TypeError)):
       # Wrong. You must call the flagsaver method before using it as a CM.
       with flagsaver_method:

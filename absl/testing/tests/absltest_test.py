@@ -620,7 +620,7 @@ Missing entries:
     # Confirm that safe_repr, not repr, is being used.
     class RaisesOnRepr:
 
-      def __repr__(self):  # pyrefly: ignore[bad-override]
+      def __repr__(self):
         return 1 / 0  # Intentionally broken __repr__ implementation.
 
     try:
@@ -2933,24 +2933,18 @@ class SkipClassTest(absltest.TestCase):
 
       # Disabling type checking because pytype correctly picks up that
       # @absltest.skipThisClass is being used incorrectly.
-      # pytype: disable=wrong-arg-types
       @absltest.skipThisClass
       class Test(absltest.TestCase):
         pass
-
-      # pytype: enable=wrong-arg-types
 
   def test_incorrect_decorator_subclass(self):
     with self.assertRaises(TypeError):
 
       # Disabling type checking because pytype correctly picks up that
       # @absltest.skipThisClass is being used incorrectly.
-      # pytype: disable=wrong-arg-types
-      @absltest.skipThisClass('reason')
+      @absltest.skipThisClass('reason')  # pyrefly: ignore[bad-argument-type]
       def test_method():
         pass
-
-      # pytype: enable=wrong-arg-types
 
   def test_correct_decorator_class(self):
 

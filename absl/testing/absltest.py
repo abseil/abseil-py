@@ -877,7 +877,7 @@ class TestCase(unittest.TestCase):
       # Before Python 3.11 https://github.com/python/cpython/pull/28180, errors
       # were bufferred in _Outcome before calling cleanup.
       result = self.defaultTestResult()
-      self._feedErrorsToResult(result, outcome.errors)  # pytype: disable=attribute-error
+      self._feedErrorsToResult(result, outcome.errors)
       return result.wasSuccessful()
 
   def shortDescription(self) -> str:
@@ -1104,7 +1104,7 @@ class TestCase(unittest.TestCase):
           msg,
       )
     if len(container) != expected_len:
-      container_repr = unittest.util.safe_repr(container)  # pytype: disable=module-attr
+      container_repr = unittest.util.safe_repr(container)
       self.fail(
           f'{container_repr} has length of {len(container)}, expected'
           f' {expected_len}.',
@@ -1146,11 +1146,9 @@ class TestCase(unittest.TestCase):
         # assertAlmostEqual should be called with at most one of `places` and
         # `delta`. However, it's okay for assertSequenceAlmostEqual to pass
         # both because we want the latter to fail if the former does.
-        # pytype: disable=wrong-keyword-args
         self.assertAlmostEqual(
             exp_elem, act_elem, places=places, msg=msg, delta=delta
         )
-        # pytype: enable=wrong-keyword-args
       except self.failureException as err:
         err_list.append(f'At index {idx}: {err}')
 
@@ -1909,14 +1907,12 @@ class TestCase(unittest.TestCase):
           # assertAlmostEqual should be called with at most one of `places`
           # and `delta`. However, it's okay for assertMappingEqual to pass
           # both because we want the latter to fail if the former does.
-          # pytype: disable=wrong-keyword-args
-          self.assertAlmostEqual(
+          self.assertAlmostEqual(  # pyrefly: ignore[no-matching-overload]
               a_value,
               b_value,
               places=places,
               delta=delta,
           )
-        # pytype: enable=wrong-keyword-args
         except self.failureException as err:
           return False, err
         return True, None
@@ -2013,7 +2009,7 @@ class TestCase(unittest.TestCase):
     if not unexpected and not different and not missing:
       return
 
-    safe_repr = unittest.util.safe_repr  # pytype: disable=module-attr
+    safe_repr = unittest.util.safe_repr
 
     def Repr(dikt):
       """Deterministic repr for dict."""
@@ -2092,7 +2088,7 @@ class TestCase(unittest.TestCase):
         if f.compare and getattr(first, f.name) != getattr(second, f.name)
     ]
 
-    safe_repr = unittest.util.safe_repr  # pytype: disable=module-attr
+    safe_repr = unittest.util.safe_repr
     message = [f'{safe_repr(first)} != {safe_repr(second)}']
     if different:
       message.append('Fields that differ:')
@@ -2508,7 +2504,7 @@ def _register_sigterm_with_faulthandler() -> None:
     # faulthandler.register is not available on Windows.
     # faulthandler.enable() is already called by app.run.
     try:
-      faulthandler.register(signal.SIGTERM, chain=True)  # pytype: disable=module-attr
+      faulthandler.register(signal.SIGTERM, chain=True)
     except Exception as e:  # pylint: disable=broad-except
       sys.stderr.write(
           f'faulthandler.register(SIGTERM) failed {e!r}; ignoring.\n'
@@ -3026,7 +3022,7 @@ def _run_and_get_tests_result(
     # report, because some tools modify the file (e.g., create a placeholder
     # with partial information, in case the test process crashes).
     xml_buffer = io.StringIO()
-    kwargs['testRunner'].set_default_xml_stream(xml_buffer)  # pytype: disable=attribute-error
+    kwargs['testRunner'].set_default_xml_stream(xml_buffer)
 
     # If we've used a seed to randomize test case ordering, we want to record it
     # as a top-level attribute in the `testsuites` section of the XML output.

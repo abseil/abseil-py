@@ -219,7 +219,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.passing_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)  # pytype: disable=module-attr
+    subtest = unittest.case._SubTest(test, 'msg', None)  # pyrefly: ignore[missing-attribute]
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, None)
@@ -257,7 +257,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.passing_test')
-    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})  # pytype: disable=module-attr
+    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})  # pyrefly: ignore[missing-attribute]
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, None)
@@ -378,7 +378,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.failing_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)  # pytype: disable=module-attr
+    subtest = unittest.case._SubTest(test, 'msg', None)  # pyrefly: ignore[missing-attribute]
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, self.get_sample_failure())
@@ -455,7 +455,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result = self._make_result((start_time, start_time, end_time, end_time))
 
     test = MockTest('__main__.MockTest.error_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)  # pytype: disable=module-attr
+    subtest = unittest.case._SubTest(test, 'msg', None)  # pyrefly: ignore[missing-attribute]
     result.startTestRun()
     result.startTest(test)
     result.addSubTest(test, subtest, self.get_sample_error())

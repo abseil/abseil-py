@@ -104,7 +104,7 @@ _CallableT = TypeVar('_CallableT', bound=Callable)
 
 
 @overload
-def flagsaver(func: _CallableT) -> _CallableT:  # pyrefly: ignore[inconsistent-overload]
+def flagsaver(func: _CallableT) -> _CallableT:
   ...
 
 
