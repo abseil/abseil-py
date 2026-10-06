@@ -2644,14 +2644,14 @@ class TestAssertDataclassEqual(absltest.TestCase):
   def test_assert_dataclass_equal_checks_a_for_dataclass(self):
     b = _ExampleDataclass('a', 'b')
 
-    message = 'First argument is not a dataclass instance.'
+    message = "First argument 'a' is not a dataclass instance."
     with self.assertRaisesWithLiteralMatch(AssertionError, message):
       self.assertDataclassEqual('a', b)
 
   def test_assert_dataclass_equal_checks_b_for_dataclass(self):
     a = _ExampleDataclass('a', 'b')
 
-    message = 'Second argument is not a dataclass instance.'
+    message = "Second argument 'b' is not a dataclass instance."
     with self.assertRaisesWithLiteralMatch(AssertionError, message):
       self.assertDataclassEqual(a, 'b')
 

@@ -2066,10 +2066,12 @@ class TestCase(unittest.TestCase):
     """
 
     if not dataclasses.is_dataclass(first) or isinstance(first, type):
-      raise self.failureException('First argument is not a dataclass instance.')
+      raise self.failureException(
+          f'First argument {first!r} is not a dataclass instance.'
+      )
     if not dataclasses.is_dataclass(second) or isinstance(second, type):
       raise self.failureException(
-          'Second argument is not a dataclass instance.'
+          f'Second argument {second!r} is not a dataclass instance.'
       )
 
     if first == second:
