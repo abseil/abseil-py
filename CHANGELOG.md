@@ -8,96 +8,127 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 
-*  (testing) Add `assertIsSubclass` and `assertNotIsSubclass` to `absltest.TestCase`, matching the `unittest.TestCase` methods added in Python 3.14.
-
 ### Changed
 
 ### Fixed
+
+## 2.5.1 (2026-10-09)
+
+### Added
+
+*   (testing) Add `assertIsSubclass` and `assertNotIsSubclass` to
+    `absltest.TestCase`, matching the `unittest.TestCase` methods added in
+    Python 3.14.
+*   (flags) Add support for disabling `ReloadDetector` via the
+    `ABSL_RELOAD_DETECTOR` environment variable.
+
+### Changed
+
+*   (testing) Include argument `repr` in
+    `absltest.TestCase.assertDataclassEqual` failure message when an argument is
+    not a dataclass instance.
+
+### Fixed
+
+*   (app) Add `__init__` to the `app.UsageError` type stub.
+*   (logging) Fix the type signature of `logging.skip_log_prefix` to preserve
+    the decorated function's return type.
+*   (testing) Strip ANSI escape sequences from test output before XML escaping
+    in `xml_reporter`.
 
 ## 2.5.0 (2026-07-03)
 
 ### Added
 
-*  (app) Add support for enabling Python profiling via the `ABSL_PYTHON_PROFILE_FILE` environment variable.
-*  (flags) Introduce `--only_check_flags` built-in flag to validate flag definitions without executing `main()`.
-*  (flagsaver) Add support for `async` test functions in `@flagsaver.flagsaver`.
-*  (testing) Add `record_property` and `get_recorded_properties` methods to `absltest.TestCase`.
+*   (app) Add support for enabling Python profiling via the
+    `ABSL_PYTHON_PROFILE_FILE` environment variable.
+*   (flags) Introduce `--only_check_flags` built-in flag to validate flag
+    definitions without executing `main()`.
+*   (flagsaver) Add support for `async` test functions in
+    `@flagsaver.flagsaver`.
+*   (testing) Add `record_property` and `get_recorded_properties` methods to
+    `absltest.TestCase`.
 
 ### Changed
 
-*  (flags) Apply defensive copying in `save_flag_values` to prevent dictionary mutation flakiness.
-*  (logging) Update type signatures for `absl.logging` functions to support standard `logging` arguments (`exc_info`, `stack_info`, `stacklevel`, `extra`).
-*  (cleanup) Expand usage of `FlagHolder` objects in `app` and `absltest`.
+*   (flags) Apply defensive copying in `save_flag_values` to prevent dictionary
+    mutation flakiness.
+*   (logging) Update type signatures for `absl.logging` functions to support
+    standard `logging` arguments (`exc_info`, `stack_info`, `stacklevel`,
+    `extra`).
+*   (cleanup) Expand usage of `FlagHolder` objects in `app` and `absltest`.
 
 ### Fixed
 
-*  (flags) Improve formatting and clarity of `DuplicateFlagError` message.
-*  (testing) Fix assertion logic in `absltest.TestCase.create_file`.
-*  (typechecking) Fix type annotations and compatibility with MyPy and Pyrefly.
+*   (flags) Improve formatting and clarity of `DuplicateFlagError` message.
+*   (testing) Fix assertion logic in `absltest.TestCase.create_file`.
+*   (typechecking) Fix type annotations and compatibility with MyPy and Pyrefly.
 
 ## 2.4.0 (2026-01-28)
 
 ### Added
 
-*  Added support for Python 3.14.
-*  Allow `$PYTHONBREAKPOINT` to affect `runcall` and `post_mortem` debugging.
-*  (logging) Propagate `**kwargs` in conditional/rate-limited logging functions.
+*   Added support for Python 3.14.
+*   Allow `$PYTHONBREAKPOINT` to affect `runcall` and `post_mortem` debugging.
+*   (logging) Propagate `**kwargs` in conditional/rate-limited logging
+    functions.
 
 ### Changed
 
-*  Dropped support for Python 3.8 and 3.9.
-*  (flags) Change internals of `absl.flags.get_help_width()` implementation.
-*  (cleanup) Modernize Bazel setup with `MODULE.bazel`.
-*  (cleanup) Modernize type annotations using Python 3.10+ features.
+*   Dropped support for Python 3.8 and 3.9.
+*   (flags) Change internals of `absl.flags.get_help_width()` implementation.
+*   (cleanup) Modernize Bazel setup with `MODULE.bazel`.
+*   (cleanup) Modernize type annotations using Python 3.10+ features.
 
 ### Fixed
 
-*  (flags) Fix duplicate flag definition when reloading a module.
-*  (typechecking) Correct type signature of `absltest.skipThisClass`.
+*   (flags) Fix duplicate flag definition when reloading a module.
+*   (typechecking) Correct type signature of `absltest.skipThisClass`.
 
 ## 2.3.1 (2025-07-03)
 
 ### Changed
 
-*  (cleanup) Removed leftover code supporting Python < 3.8, as well as other
-  references to older Python versions.
+*   (cleanup) Removed leftover code supporting Python < 3.8, as well as other
+    references to older Python versions.
 
 ### Fixed
 
-*  (typechecking) Fixed typechecking errors that appeared under mypy release 1.16
+*   (typechecking) Fixed typechecking errors that appeared under mypy release
+    1.16
 
 ## 2.3.0 (2025-05-26)
 
 ### Added
 
-*  (testing) Add extension point for letting `TestLoader` specify a custom
-   sharding scheme.
+*   (testing) Add extension point for letting `TestLoader` specify a custom
+    sharding scheme.
 
 ### Changed
 
-*  Update package build and release process. Switched to using `pyproject.toml`,
-   `hatch`, and GitHub Actions.
+*   Update package build and release process. Switched to using
+    `pyproject.toml`, `hatch`, and GitHub Actions.
 
 ## 2.2.2 (2025-04-03)
 
 ### Added
 
-*  (testing) Added a new method `absltest.TestCase.assertMappingEqual` that
-   tests equality of Mapping objects not requiring them to be dicts. Similar to
-   `assertSequenceEqual` but for mappings.
-*  (testing) Added a new method `absltest.assertDictContainsSubset` that checks
-   that a dictionary contains a subset of keys and values. Similar to a removed
-   method `unittest.assertDictContainsSubset` (existed until Python 3.11).
-*  Added type annotations that are compliant with MyPy.
+*   (testing) Added a new method `absltest.TestCase.assertMappingEqual` that
+    tests equality of Mapping objects not requiring them to be dicts. Similar to
+    `assertSequenceEqual` but for mappings.
+*   (testing) Added a new method `absltest.assertDictContainsSubset` that checks
+    that a dictionary contains a subset of keys and values. Similar to a removed
+    method `unittest.assertDictContainsSubset` (existed until Python 3.11).
+*   Added type annotations that are compliant with MyPy.
 
 ### Changed
 
-*  Removed support for Python 3.7.
+*   Removed support for Python 3.7.
 
 ### Fixed
 
-*  (testing) Fixed an issue where the test reporter crashes with exceptions with
-   no string representation, starting with Python 3.11.
+*   (testing) Fixed an issue where the test reporter crashes with exceptions
+    with no string representation, starting with Python 3.11.
 
 ## 2.1.0 (2024-01-16)
 
@@ -113,16 +144,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Changed
 
-*   (flags) `absl.flags.argparse_flags.ArgumentParser` now correctly inherits
-    an empty instance of `FlagValues` to ensure that absl flags, such as
+*   (flags) `absl.flags.argparse_flags.ArgumentParser` now correctly inherits an
+    empty instance of `FlagValues` to ensure that absl flags, such as
     `--flagfile`, `--undefok` are supported.
 *   (testing) Do not exit 5 if tests were skipped on Python 3.12. This follows
     the CPython change in https://github.com/python/cpython/pull/113856.
 
 ### Fixed
 
-*   (flags) The flag `foo` no longer retains the value `bar` after
-    `FLAGS.foo = bar` fails due to a validation error.
+*   (flags) The flag `foo` no longer retains the value `bar` after `FLAGS.foo =
+    bar` fails due to a validation error.
 *   (testing) Fixed an issue caused by
     [this Python 3.12.1 change](https://github.com/python/cpython/pull/109725)
     where the test reporter crashes when all tests are skipped.
