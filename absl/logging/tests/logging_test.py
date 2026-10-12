@@ -862,7 +862,11 @@ class LoggingTest(parameterized.TestCase):
           logging.find_log_dir_and_names(),
       )
 
-  def test_find_log_dir_and_names_wo_username(self):
+  @parameterized.named_parameters(
+      ('key_error', KeyError()),
+      ('os_error', OSError('No username set in the environment')),
+  )
+  def test_find_log_dir_and_names_wo_username(self, getuser_error):
     # Windows doesn't have os.getuid at all
     if hasattr(os, 'getuid'):
       mock_getuid = mock.patch.object(os, 'getuid', return_value=100)
@@ -874,7 +878,7 @@ class LoggingTest(parameterized.TestCase):
       logged_uid = 'unknown'
 
     with (
-        mock.patch.object(getpass, 'getuser', side_effect=KeyError()),
+        mock.patch.object(getpass, 'getuser', side_effect=getuser_error),
         mock_getuid,
         mock.patch.object(logging, 'find_log_dir', return_value='my_log_dir'),
         mock.patch.object(socket, 'gethostname', return_value='test_host'),
