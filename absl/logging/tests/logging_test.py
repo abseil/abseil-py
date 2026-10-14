@@ -962,6 +962,34 @@ class LoggingTest(parameterized.TestCase):
   def test_get_absl_handler(self):
     self.assertIsInstance(logging.get_absl_handler(), logging.ABSLHandler)
 
+  def test_use_absl_handler_removes_stderr_stream_handlers(self):
+    mock_stderr = io.StringIO()
+    mock_original_stderr = io.StringIO()
+    mock_stdout = io.StringIO()
+    stderr_handler = std_logging.StreamHandler(mock_stderr)
+    original_stderr_handler = std_logging.StreamHandler(mock_original_stderr)
+    stdout_handler = std_logging.StreamHandler(mock_stdout)
+    std_logging.root.addHandler(stderr_handler)
+    std_logging.root.addHandler(original_stderr_handler)
+    std_logging.root.addHandler(stdout_handler)
+    self.addCleanup(std_logging.root.removeHandler, stderr_handler)
+    self.addCleanup(std_logging.root.removeHandler, original_stderr_handler)
+    self.addCleanup(std_logging.root.removeHandler, stdout_handler)
+
+    with (
+        mock.patch.object(
+            logging, '_attempted_to_remove_stderr_stream_handlers', False
+        ),
+        mock.patch.object(sys, 'stderr', new=mock_stderr),
+        mock.patch.object(sys, '__stderr__', new=mock_original_stderr),
+        mock.patch.object(sys, 'stdout', new=mock_stdout),
+    ):
+      logging.use_absl_handler()
+
+    self.assertNotIn(stderr_handler, std_logging.root.handlers)
+    self.assertNotIn(original_stderr_handler, std_logging.root.handlers)
+    self.assertIn(stdout_handler, std_logging.root.handlers)
+
 
 @mock.patch.object(logging.ABSLLogger, 'register_frame_to_skip')
 class LogSkipPrefixTest(absltest.TestCase):

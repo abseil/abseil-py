@@ -1328,7 +1328,8 @@ def use_absl_handler():
     handlers = [
         h
         for h in logging.root.handlers
-        if isinstance(h, logging.StreamHandler) and h.stream == sys.stderr
+        if isinstance(h, logging.StreamHandler)
+        and h.stream in (sys.stderr, sys.__stderr__)
     ]
     for h in handlers:
       logging.root.removeHandler(h)
