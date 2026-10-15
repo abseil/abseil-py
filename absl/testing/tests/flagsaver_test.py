@@ -492,6 +492,67 @@ class AsParsedTest(absltest.TestCase):
     self.assertFalse(MULTI_INT_FLAG.present)
     self.assertIsNone(MULTI_INT_FLAG.value)
 
+  def test_parse_restores_previously_parsed_multi_flag(self):
+    with flagsaver.flagsaver():
+      FLAGS[MULTI_INT_FLAG.name].parse(['1'])
+      original = MULTI_INT_FLAG.value
+      with flagsaver.as_parsed((MULTI_INT_FLAG, ['2'])):
+        self.assertEqual([1, 2], MULTI_INT_FLAG.value)
+      self.assertEqual([1], MULTI_INT_FLAG.value)
+      self.assertIs(original, MULTI_INT_FLAG.value)
+      self.assertEqual(1, MULTI_INT_FLAG.present)
+
+  def test_parse_restores_multi_flag_alias(self):
+    with flagsaver.flagsaver():
+      alias = flags.DEFINE_alias(
+          'flagsaver_test_multi_alias', MULTI_INT_FLAG.name
+      )
+      FLAGS[MULTI_INT_FLAG.name].parse(['1'])
+      original = MULTI_INT_FLAG.value
+      with flagsaver.as_parsed((alias, ['2'])):
+        self.assertEqual([1, 2], MULTI_INT_FLAG.value)
+        with flagsaver.as_parsed((MULTI_INT_FLAG, ['3'])):
+          self.assertEqual([1, 2, 3], MULTI_INT_FLAG.value)
+        self.assertEqual([1, 2], MULTI_INT_FLAG.value)
+      self.assertIs(original, MULTI_INT_FLAG.value)
+      self.assertEqual([1], alias.value)
+      self.assertEqual(0, alias.present)
+
+  def test_parse_restores_multi_flag_after_validation_error(self):
+    with flagsaver.flagsaver():
+      FLAGS[MULTI_INT_FLAG.name].parse(['1'])
+      original = MULTI_INT_FLAG.value
+      flags.register_validator(
+          MULTI_INT_FLAG.name, lambda values: len(values) == 1
+      )
+      with self.assertRaises(flags.IllegalFlagValueError):
+        with flagsaver.as_parsed((MULTI_INT_FLAG, ['2'])):
+          self.fail('Validation should fail on entry.')
+      self.assertIs(original, MULTI_INT_FLAG.value)
+      self.assertEqual([1], MULTI_INT_FLAG.value)
+      self.assertEqual(1, MULTI_INT_FLAG.present)
+
+  def test_parse_restores_multi_flag_default(self):
+    with flagsaver.flagsaver():
+      FLAGS.set_default(MULTI_INT_FLAG.name, [1])
+      original = MULTI_INT_FLAG.value
+      with flagsaver.as_parsed((MULTI_INT_FLAG, ['2'])):
+        self.assertEqual([2], MULTI_INT_FLAG.value)
+      self.assertIs(original, MULTI_INT_FLAG.value)
+      self.assertEqual([1], MULTI_INT_FLAG.value)
+      self.assertEqual(0, MULTI_INT_FLAG.present)
+
+  def test_parse_restores_multi_flag_after_invalid_input(self):
+    with flagsaver.flagsaver():
+      FLAGS[MULTI_INT_FLAG.name].parse(['1'])
+      original = MULTI_INT_FLAG.value
+      with self.assertRaises(flags.IllegalFlagValueError):
+        with flagsaver.as_parsed((MULTI_INT_FLAG, ['2', 'invalid'])):
+          self.fail('Parsing should fail on entry.')
+      self.assertIs(original, MULTI_INT_FLAG.value)
+      self.assertEqual([1], MULTI_INT_FLAG.value)
+      self.assertEqual(1, MULTI_INT_FLAG.present)
+
   def test_parse_raises_type_error(self):
     with self.assertRaisesRegex(
         TypeError,
