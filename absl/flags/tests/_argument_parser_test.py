@@ -110,6 +110,31 @@ class EnumParserTest(absltest.TestCase):
     with self.assertRaises(ValueError):
       _argument_parser.EnumParser([])
 
+  def test_empty_generator(self):
+    with self.assertRaises(ValueError):
+      _argument_parser.EnumParser((x for x in []))
+
+  def test_empty_iterator(self):
+    with self.assertRaises(ValueError):
+      _argument_parser.EnumParser(iter([]))
+
+  def test_generator_values(self):
+    parser = _argument_parser.EnumParser((x for x in ['apple', 'banana']))
+    self.assertEqual('apple', parser.parse('apple'))
+    self.assertEqual(['apple', 'banana'], parser.enum_values)
+
+  def test_iterator_values(self):
+    parser = _argument_parser.EnumParser(iter(['apple', 'banana']))
+    self.assertEqual('apple', parser.parse('apple'))
+    self.assertEqual(['apple', 'banana'], parser.enum_values)
+
+  def test_case_insensitive_generator(self):
+    parser = _argument_parser.EnumParser(
+        (x for x in ['Apple', 'Banana']), case_sensitive=False
+    )
+    self.assertEqual('Apple', parser.parse('apple'))
+    self.assertEqual('Banana', parser.parse('BANANA'))
+
   def test_parse(self):
     parser = _argument_parser.EnumParser(['apple', 'banana'])
     self.assertEqual('apple', parser.parse('apple'))
