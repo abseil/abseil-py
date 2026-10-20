@@ -558,14 +558,6 @@ class TestCase(unittest.TestCase):
   maxDiff = 80 * 20
   longMessage = True
 
-  # Exit stacks for per-test and per-class scopes.
-  _exit_stack: Any
-  _cls_exit_stack: Any
-
-  if sys.version_info < (3, 11):
-    _exit_stack = None
-    _cls_exit_stack = None
-
   def __init__(self, *args, **kwargs) -> None:
     super().__init__(*args, **kwargs)
     # This is to work around missing type stubs in unittest.pyi
@@ -576,27 +568,6 @@ class TestCase(unittest.TestCase):
     self.__subtest_properties: dict[str, dict[str, Any]] = (
         collections.defaultdict(dict)
     )
-
-  def setUp(self) -> None:
-    super().setUp()
-    # NOTE: Only Python 3 contextlib has ExitStack and
-    # Python 3.11+ already has enterContext.
-    if hasattr(contextlib, 'ExitStack') and sys.version_info < (3, 11):
-      self._exit_stack = contextlib.ExitStack()
-      self.addCleanup(self._exit_stack.close)
-
-  @classmethod
-  def setUpClass(cls) -> None:
-    super().setUpClass()
-    # NOTE: Only Python 3 contextlib has ExitStack, only Python 3.8+ has
-    # addClassCleanup and Python 3.11+ already has enterClassContext.
-    if (
-        hasattr(contextlib, 'ExitStack')
-        and hasattr(cls, 'addClassCleanup')
-        and sys.version_info < (3, 11)
-    ):
-      cls._cls_exit_stack = contextlib.ExitStack()
-      cls.addClassCleanup(cls._cls_exit_stack.close)
 
   def get_recorded_properties(self, subtest=None) -> dict[str, Any]:
     """Returns any properties that the user has recorded.
@@ -780,15 +751,7 @@ class TestCase(unittest.TestCase):
     Args:
       manager: The context manager to enter.
     """
-    if sys.version_info >= (3, 11):
-      return self.enterContext(manager)
-
-    if not self._exit_stack:
-      raise AssertionError(
-          'self._exit_stack is not set: enter_context is Py3-only; also make '
-          'sure that AbslTest.setUp() is called.'
-      )
-    return self._exit_stack.enter_context(manager)
+    return self.enterContext(manager)
 
   @enter_context.classmethod
   @classmethod
@@ -796,15 +759,7 @@ class TestCase(unittest.TestCase):
       cls, manager: contextlib.AbstractContextManager[_T]
   ) -> _T:
     """A classmethod version of enter_context."""
-    if sys.version_info >= (3, 11):
-      return cls.enterClassContext(manager)
-
-    if not cls._cls_exit_stack:
-      raise AssertionError(
-          'cls._cls_exit_stack is not set: cls.enter_context requires '
-          'Python 3.8+; also make sure that AbslTest.setUpClass() is called.'
-      )
-    return cls._cls_exit_stack.enter_context(manager)
+    return cls.enterClassContext(manager)
 
   @classmethod
   def _get_tempdir_path_cls(cls) -> str:
@@ -865,20 +820,13 @@ class TestCase(unittest.TestCase):
   ) -> bool:
     """Returns whether test is passed. Expected to be called during cleanup."""
     outcome = self._outcome
-    if sys.version_info[:2] >= (3, 11):
-      assert outcome is not None
-      current_failure_count = (
-          len(outcome.result.failures)
-          + len(outcome.result.errors)
-          + len(outcome.result.unexpectedSuccesses)
-      )
-      return current_failure_count == previous_failure_count
-    else:
-      # Before Python 3.11 https://github.com/python/cpython/pull/28180, errors
-      # were bufferred in _Outcome before calling cleanup.
-      result = self.defaultTestResult()
-      self._feedErrorsToResult(result, outcome.errors)
-      return result.wasSuccessful()
+    assert outcome is not None
+    current_failure_count = (
+        len(outcome.result.failures)
+        + len(outcome.result.errors)
+        + len(outcome.result.unexpectedSuccesses)
+    )
+    return current_failure_count == previous_failure_count
 
   def shortDescription(self) -> str:
     """Formats both the test method name and the first line of its docstring.
