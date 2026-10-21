@@ -870,6 +870,88 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     self._assert_match(expected_testcase2_re, testcase1)
     self._assert_match(expected_testcase1_re, testcase2)
 
+  def test_subtests_with_time(self):
+    start_time = 100
+    subtest1_end_time = 150
+    subtest2_end_time = 250
+    subtest3_end_time = 550
+    result = self._make_result((
+        start_time,
+        start_time,
+        subtest1_end_time,
+        subtest2_end_time,
+        subtest3_end_time,
+        subtest3_end_time,
+    ))
+
+    class SubTestCase(absltest.TestCase):
+
+      def test_subtests(self):
+        with self.subTest('sub1'):
+          pass
+        with self.subTest('sub2'):
+          self.fail('e')
+        with self.subTest('sub3'):
+          self.skipTest('skipped')
+
+    test = SubTestCase('test_subtests')
+    result.startTestRun()
+    test.run(result)
+    result.stopTestRun()
+    result.printErrors()
+
+    start_time_str = re.escape(self._iso_timestamp(start_time))
+    subtest1_end_time_str = re.escape(self._iso_timestamp(subtest1_end_time))
+    subtest2_end_time_str = re.escape(self._iso_timestamp(subtest2_end_time))
+    classname = xml_reporter._escape_xml_attr(
+        unittest.util.strclass(test.__class__)
+    )
+    expected_re = OUTPUT_STRING % {
+        'suite_name': 'SubTestCase',
+        'tests': 3,
+        'failures': 1,
+        'errors': 0,
+        'run_time': subtest3_end_time - start_time,
+        'start_time': start_time_str,
+    }
+    expected_testcase1_re = TESTCASE_STRING % {
+        'run_time': subtest1_end_time - start_time,
+        'start_time': start_time_str,
+        'test_name': r'test_subtests&#x20;\[sub1\]',
+        'classname': classname,
+        'status': 'run',
+        'result': 'completed',
+        'message': '',
+    }
+    expected_testcase2_re = TESTCASE_STRING % {
+        'run_time': subtest2_end_time - subtest1_end_time,
+        'start_time': subtest1_end_time_str,
+        'test_name': r'test_subtests&#x20;\[sub2\]',
+        'classname': classname,
+        'status': 'run',
+        'result': 'completed',
+        'message': FAILURE_MESSAGE.replace(
+            'get_sample_failure', 'test_subtests'
+        ),
+    }
+    expected_testcase3_re = TESTCASE_STRING % {
+        'run_time': subtest3_end_time - subtest2_end_time,
+        'start_time': subtest2_end_time_str,
+        'test_name': r'test_subtests&#x20;\[sub3\]',
+        'classname': classname,
+        'status': 'notrun',
+        'result': 'suppressed',
+        'message': '',
+    }
+
+    (testcases,) = self._assert_match(
+        expected_re, self.xml_stream.getvalue(), re.DOTALL
+    )
+    testcase1, testcase2, testcase3 = testcases.split('\n  </testcase>\n')
+    self._assert_match(expected_testcase1_re, testcase1)
+    self._assert_match(expected_testcase2_re, testcase2)
+    self._assert_match(expected_testcase3_re, testcase3)
+
   def test_with_no_suite_name(self):
     start_time = 1000
     end_time = 1200

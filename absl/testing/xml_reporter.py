@@ -386,6 +386,7 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
 
   def startTest(self, test):
     self.start_time = self.time_getter()
+    self._subtest_start_time = self.start_time
     super().startTest(test)
 
   def stopTest(self, test):
@@ -426,9 +427,10 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
       for test_id in self.pending_test_case_results:
         result = self.pending_test_case_results[test_id]
         if getattr(self, 'start_time', None) is not None:
-          run_time = self.suite.overall_end_time - self.start_time
-          result.set_run_time(run_time)
-          result.set_start_time(self.start_time)
+          if result.start_time == -1:
+            result.set_start_time(self.start_time)
+          if result.run_time == -1:
+            result.set_run_time(self.suite.overall_end_time - result.start_time)
         self.suite.add_test_case_result(result)
       self.pending_test_case_results.clear()
 
@@ -478,6 +480,18 @@ class _TextAndXMLTestResult(_pretty_print_reporter.TextTestResult):
         self.pending_test_case_results[test_id] = self._TEST_CASE_RESULT_CLASS(
             test
         )
+        if isinstance(test, unittest.case._SubTest):  # pylint: disable=protected-access
+          end_time = self.time_getter()
+          start_time = getattr(
+              self,
+              '_subtest_start_time',
+              getattr(self, 'start_time', end_time),
+          )
+          self.pending_test_case_results[test_id].set_start_time(start_time)
+          self.pending_test_case_results[test_id].set_run_time(
+              end_time - start_time
+          )
+          self._subtest_start_time = end_time
       if error_summary:
         self.pending_test_case_results[test_id].errors.append(error_summary)
       if skip_reason:
