@@ -936,16 +936,21 @@ specify delta or places not both
   def test_assert_starts_with(self):
     self.assertStartsWith('foobar', 'foo')
     self.assertStartsWith('foobar', 'foobar')
+    self.assertStartsWith('foobar', ('baz', 'foo'))
     msg = 'This is a useful message'
     whole_msg = "'foobar' does not start with 'bar' : This is a useful message"
     self.assertRaisesWithLiteralMatch(
         AssertionError, whole_msg, self.assertStartsWith, 'foobar', 'bar', msg
     )
     self.assertRaises(AssertionError, self.assertStartsWith, 'foobar', 'blah')
+    self.assertRaises(
+        AssertionError, self.assertStartsWith, 'foobar', ('bar', 'baz')
+    )
 
   def test_assert_not_starts_with(self):
     self.assertNotStartsWith('foobar', 'bar')
     self.assertNotStartsWith('foobar', 'blah')
+    self.assertNotStartsWith('foobar', ('bar', 'baz'))
     msg = 'This is a useful message'
     whole_msg = "'foobar' does start with 'foo' : This is a useful message"
     self.assertRaisesWithLiteralMatch(
@@ -959,20 +964,28 @@ specify delta or places not both
     self.assertRaises(
         AssertionError, self.assertNotStartsWith, 'foobar', 'foobar'
     )
+    self.assertRaises(
+        AssertionError, self.assertNotStartsWith, 'foobar', ('baz', 'foo')
+    )
 
   def test_assert_ends_with(self):
     self.assertEndsWith('foobar', 'bar')
     self.assertEndsWith('foobar', 'foobar')
+    self.assertEndsWith('foobar', ('foo', 'bar'))
     msg = 'This is a useful message'
     whole_msg = "'foobar' does not end with 'foo' : This is a useful message"
     self.assertRaisesWithLiteralMatch(
         AssertionError, whole_msg, self.assertEndsWith, 'foobar', 'foo', msg
     )
     self.assertRaises(AssertionError, self.assertEndsWith, 'foobar', 'blah')
+    self.assertRaises(
+        AssertionError, self.assertEndsWith, 'foobar', ('foo', 'baz')
+    )
 
   def test_assert_not_ends_with(self):
     self.assertNotEndsWith('foobar', 'foo')
     self.assertNotEndsWith('foobar', 'blah')
+    self.assertNotEndsWith('foobar', ('foo', 'baz'))
     msg = 'This is a useful message'
     whole_msg = "'foobar' does end with 'bar' : This is a useful message"
     self.assertRaisesWithLiteralMatch(
@@ -980,6 +993,9 @@ specify delta or places not both
     )
     self.assertRaises(
         AssertionError, self.assertNotEndsWith, 'foobar', 'foobar'
+    )
+    self.assertRaises(
+        AssertionError, self.assertNotEndsWith, 'foobar', ('foo', 'bar')
     )
 
   def test_assert_is_subclass(self):

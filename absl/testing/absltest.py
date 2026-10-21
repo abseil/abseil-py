@@ -863,7 +863,7 @@ class TestCase(unittest.TestCase):
 
     Args:
       actual: str
-      expected_start: str
+      expected_start: str, or a tuple of strings.
       msg: Optional message to report on failure.
     """
     if not actual.startswith(expected_start):
@@ -874,7 +874,7 @@ class TestCase(unittest.TestCase):
 
     Args:
       actual: str
-      unexpected_start: str
+      unexpected_start: str, or a tuple of strings.
       msg: Optional message to report on failure.
     """
     if actual.startswith(unexpected_start):
@@ -885,7 +885,7 @@ class TestCase(unittest.TestCase):
 
     Args:
       actual: str
-      expected_end: str
+      expected_end: str, or a tuple of strings.
       msg: Optional message to report on failure.
     """
     if not actual.endswith(expected_end):
@@ -896,7 +896,7 @@ class TestCase(unittest.TestCase):
 
     Args:
       actual: str
-      unexpected_end: str
+      unexpected_end: str, or a tuple of strings.
       msg: Optional message to report on failure.
     """
     if actual.endswith(unexpected_end):
