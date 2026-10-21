@@ -61,6 +61,20 @@ def xml_escaped_exception_type(exception_type):
   return xml_reporter._escape_xml_attr(str(exception_type))
 
 
+def _xml_escaped_classname(test):
+  """Returns the XML-escaped class name of a test case."""
+  return xml_reporter._escape_xml_attr(unittest.util.strclass(test.__class__))
+
+
+def _escaped_iso_timestamp(timestamp):
+  """Returns the regex-escaped ISO-8601 UTC timestamp string."""
+  return re.escape(
+      datetime.datetime.fromtimestamp(
+          timestamp, tz=datetime.timezone.utc
+      ).isoformat()
+  )
+
+
 # Matches the entire XML output. Captures all <testcase> tags except for the
 # last closing </testcase> in a single group.
 OUTPUT_STRING = """\
@@ -172,9 +186,6 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.addSuccess(test)
     result.stopTest(test)
 
-  def _iso_timestamp(self, timestamp):
-    return datetime.datetime.utcfromtimestamp(timestamp).isoformat() + '+00:00'
-
   def test_with_passing_test(self):
     start_time = 0
     end_time = 2
@@ -188,7 +199,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -216,21 +227,28 @@ class TextAndXMLTestResultTest(absltest.TestCase):
   def test_with_passing_subtest(self):
     start_time = 0
     end_time = 2
-    result = self._make_result((start_time, start_time, end_time, end_time))
+    result = self._make_result(
+        (start_time, start_time, end_time, end_time, end_time)
+    )
 
-    test = MockTest('__main__.MockTest.passing_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)  # pyrefly: ignore[missing-attribute]
+    class SubTestCase(absltest.TestCase):
+
+      def passing_test(self):
+        with self.subTest('msg'):
+          pass
+
+    test = SubTestCase('passing_test')
     result.startTestRun()
-    result.startTest(test)
-    result.addSubTest(test, subtest, None)
+    test.run(result)
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
+    classname = _xml_escaped_classname(test)
     expected_re = OUTPUT_STRING % {
-        'suite_name': 'MockTest',
-        'tests': 1,
+        'suite_name': 'SubTestCase',
+        'tests': 2,
         'failures': 0,
         'errors': 0,
         'run_time': run_time,
@@ -239,57 +257,88 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     expected_testcase_re = TESTCASE_STRING % {
         'run_time': run_time,
         'start_time': start_time_str,
-        'test_name': r'passing_test&#x20;\[msg\]',
-        'classname': '__main__.MockTest',
+        'test_name': 'passing_test',
+        'classname': classname,
         'status': 'run',
         'result': 'completed',
         'attributes': '',
         'message': '',
     }
-    (testcase,) = self._assert_match(
+    expected_subtest_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
+        'test_name': r'passing_test&#x20;\[msg\]',
+        'classname': classname,
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': '',
+    }
+    (testcases,) = self._assert_match(
         expected_re, self.xml_stream.getvalue(), re.DOTALL
     )
+    testcase, subtest = testcases.split('\n  </testcase>\n')
     self._assert_match(expected_testcase_re, testcase)
+    self._assert_match(expected_subtest_re, subtest)
 
   def test_with_passing_subtest_with_dots_in_parameter_name(self):
     start_time = 0
     end_time = 2
-    result = self._make_result((start_time, start_time, end_time, end_time))
+    result = self._make_result(
+        (start_time, start_time, end_time, end_time, end_time)
+    )
 
-    test = MockTest('__main__.MockTest.passing_test')
-    subtest = unittest.case._SubTest(test, 'msg', {'case': 'a.b.c'})  # pyrefly: ignore[missing-attribute]
+    class SubTestCase(absltest.TestCase):
+
+      def passing_test(self):
+        with self.subTest('msg', case='a.b.c'):
+          pass
+
+    test = SubTestCase('passing_test')
     result.startTestRun()
-    result.startTest(test)
-    result.addSubTest(test, subtest, None)
+    test.run(result)
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
+    classname = _xml_escaped_classname(test)
     expected_re = OUTPUT_STRING % {
-        'suite_name': 'MockTest',
-        'tests': 1,
+        'suite_name': 'SubTestCase',
+        'tests': 2,
         'failures': 0,
         'errors': 0,
         'run_time': run_time,
         'start_time': start_time_str,
     }
     expected_testcase_re = TESTCASE_STRING % {
+        'run_time': run_time,
+        'start_time': start_time_str,
+        'test_name': 'passing_test',
+        'classname': classname,
+        'status': 'run',
+        'result': 'completed',
+        'attributes': '',
+        'message': '',
+    }
+    expected_subtest_re = TESTCASE_STRING % {
         'run_time': run_time,
         'start_time': start_time_str,
         'test_name': (
             r'passing_test&#x20;\[msg\]&#x20;\(case=&apos;a.b.c&apos;\)'
         ),
-        'classname': '__main__.MockTest',
+        'classname': classname,
         'status': 'run',
         'result': 'completed',
         'attributes': '',
         'message': '',
     }
-    (testcase,) = self._assert_match(
+    (testcases,) = self._assert_match(
         expected_re, self.xml_stream.getvalue(), re.DOTALL
     )
+    testcase, subtest = testcases.split('\n  </testcase>\n')
     self._assert_match(expected_testcase_re, testcase)
+    self._assert_match(expected_subtest_re, subtest)
 
   def get_sample_error(self):
     try:
@@ -347,7 +396,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -377,18 +426,23 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     end_time = 20
     result = self._make_result((start_time, start_time, end_time, end_time))
 
-    test = MockTest('__main__.MockTest.failing_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)  # pyrefly: ignore[missing-attribute]
+    class SubTestCase(absltest.TestCase):
+
+      def failing_test(self):
+        with self.subTest('msg'):
+          self.fail('e')
+
+    test = SubTestCase('failing_test')
     result.startTestRun()
-    result.startTest(test)
-    result.addSubTest(test, subtest, self.get_sample_failure())
+    test.run(result)
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
+    classname = _xml_escaped_classname(test)
     expected_re = OUTPUT_STRING % {
-        'suite_name': 'MockTest',
+        'suite_name': 'SubTestCase',
         'tests': 1,
         'failures': 1,
         'errors': 0,
@@ -399,11 +453,13 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'run_time': run_time,
         'start_time': start_time_str,
         'test_name': r'failing_test&#x20;\[msg\]',
-        'classname': '__main__.MockTest',
+        'classname': classname,
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': FAILURE_MESSAGE,
+        'message': FAILURE_MESSAGE.replace(
+            'get_sample_failure', 'failing_test'
+        ),
     }
     (testcase,) = self._assert_match(
         expected_re, self.xml_stream.getvalue(), re.DOTALL
@@ -426,7 +482,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -454,18 +510,23 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     end_time = 20
     result = self._make_result((start_time, start_time, end_time, end_time))
 
-    test = MockTest('__main__.MockTest.error_test')
-    subtest = unittest.case._SubTest(test, 'msg', None)  # pyrefly: ignore[missing-attribute]
+    class SubTestCase(absltest.TestCase):
+
+      def error_test(self):
+        with self.subTest('msg'):
+          int('a')
+
+    test = SubTestCase('error_test')
     result.startTestRun()
-    result.startTest(test)
-    result.addSubTest(test, subtest, self.get_sample_error())
+    test.run(result)
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
+    classname = _xml_escaped_classname(test)
     expected_re = OUTPUT_STRING % {
-        'suite_name': 'MockTest',
+        'suite_name': 'SubTestCase',
         'tests': 1,
         'failures': 0,
         'errors': 1,
@@ -476,11 +537,11 @@ class TextAndXMLTestResultTest(absltest.TestCase):
         'run_time': run_time,
         'start_time': start_time_str,
         'test_name': r'error_test&#x20;\[msg\]',
-        'classname': '__main__.MockTest',
+        'classname': classname,
         'status': 'run',
         'result': 'completed',
         'attributes': '',
-        'message': ERROR_MESSAGE,
+        'message': ERROR_MESSAGE.replace('get_sample_error', 'error_test'),
     }
     (testcase,) = self._assert_match(
         expected_re, self.xml_stream.getvalue(), re.DOTALL
@@ -506,7 +567,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -548,7 +609,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -588,7 +649,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = (
         OUTPUT_STRING
@@ -631,7 +692,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     self._assert_valid_xml(xml)
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -707,7 +768,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -745,7 +806,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -783,7 +844,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -832,9 +893,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
 
     start_time = min(start_time1, start_time2)
     run_time = max(end_time1, end_time2) - start_time
-    start_time_str = re.escape(self._iso_timestamp(start_time))
-    start_time_str1 = re.escape(self._iso_timestamp(start_time1))
-    start_time_str2 = re.escape(self._iso_timestamp(start_time2))
+    start_time_str = _escaped_iso_timestamp(start_time)
+    start_time_str1 = _escaped_iso_timestamp(start_time1)
+    start_time_str2 = _escaped_iso_timestamp(start_time2)
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
         'tests': 2,
@@ -900,12 +961,10 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
-    subtest1_end_time_str = re.escape(self._iso_timestamp(subtest1_end_time))
-    subtest2_end_time_str = re.escape(self._iso_timestamp(subtest2_end_time))
-    classname = xml_reporter._escape_xml_attr(
-        unittest.util.strclass(test.__class__)
-    )
+    start_time_str = _escaped_iso_timestamp(start_time)
+    subtest1_end_time_str = _escaped_iso_timestamp(subtest1_end_time)
+    subtest2_end_time_str = _escaped_iso_timestamp(subtest2_end_time)
+    classname = _xml_escaped_classname(test)
     expected_re = OUTPUT_STRING % {
         'suite_name': 'SubTestCase',
         'tests': 3,
@@ -965,7 +1024,7 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
     expected_re = OUTPUT_STRING % {
         'suite_name': 'MockTest',
@@ -1015,11 +1074,9 @@ class TextAndXMLTestResultTest(absltest.TestCase):
     result.stopTestRun()
     result.printErrors()
 
-    start_time_str = re.escape(self._iso_timestamp(start_time))
+    start_time_str = _escaped_iso_timestamp(start_time)
     run_time = end_time - start_time
-    classname = xml_reporter._escape_xml_attr(
-        unittest.util.strclass(test.__class__)
-    )
+    classname = _xml_escaped_classname(test)
     expected_re = OUTPUT_STRING % {
         'suite_name': 'ParameterizedTest',
         'tests': 1,
