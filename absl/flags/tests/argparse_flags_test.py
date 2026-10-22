@@ -14,6 +14,7 @@
 
 """Tests for absl.flags.argparse_flags."""
 
+import argparse
 import io
 import os
 import subprocess
@@ -137,6 +138,72 @@ class ArgparseFlagsTest(parameterized.TestCase):
     self.assertIsNone(self._absl_flags['notice'].value)
     parser.parse_args(args)
     self.assertEqual(expected, self._absl_flags.notice)
+
+  @parameterized.product(
+      argument=[
+          '--absl_integer=invalid',
+          '--absl_float=invalid',
+          '--absl_enum=invalid',
+          '--multi_integer=invalid',
+          '-i=invalid',
+      ],
+      exit_on_error=[True, False],
+      parse_known=[True, False],
+  )
+  def test_invalid_absl_value(self, argument, exit_on_error, parse_known):
+    flags.DEFINE_multi_integer(
+        'multi_integer', [], 'Integers.', flag_values=self._absl_flags
+    )
+    flags.DEFINE_integer(
+        'short_integer',
+        1,
+        'Integer.',
+        short_name='i',
+        flag_values=self._absl_flags,
+    )
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags, exit_on_error=exit_on_error
+    )
+    parse = parser.parse_known_args if parse_known else parser.parse_args
+    with mock.patch.object(sys, 'stderr', new_callable=io.StringIO) as stderr:
+      if exit_on_error:
+        with self.assertRaises(SystemExit) as caught:
+          parse([argument])
+        self.assertEqual(caught.exception.code, 2)
+        self.assertIn('usage:', stderr.getvalue())
+        self.assertIn('error:', stderr.getvalue())
+        self.assertIn('invalid', stderr.getvalue())
+        self.assertNotIn('Traceback', stderr.getvalue())
+      else:
+        with self.assertRaises(argparse.ArgumentError) as caught:
+          parse([argument])
+        self.assertIn('invalid', str(caught.exception))
+        self.assertEmpty(stderr.getvalue())
+    self.assertFalse(self._absl_flags.is_parsed())
+
+  def test_valid_absl_value_after_invalid_value(self):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags, exit_on_error=False
+    )
+    with self.assertRaises(argparse.ArgumentError):
+      parser.parse_args(['--absl_integer=invalid'])
+    self.assertEqual(self._absl_flags['absl_integer'].value, 1)
+    self.assertTrue(self._absl_flags['absl_integer'].using_default_value)
+    parser.parse_args(['--absl_integer=2'])
+    self.assertEqual(self._absl_flags.absl_integer, 2)
+    self.assertFalse(self._absl_flags['absl_integer'].using_default_value)
+
+  def test_unexpected_absl_parse_error_propagates(self):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags
+    )
+    with mock.patch.object(
+        self._absl_flags['absl_integer'],
+        'parse',
+        side_effect=RuntimeError('unexpected parser error'),
+    ):
+      with self.assertRaisesRegex(RuntimeError, 'unexpected parser error'):
+        parser.parse_args(['--absl_integer=2'])
 
   def test_unrecognized_flag(self):
     parser = argparse_flags.ArgumentParser(

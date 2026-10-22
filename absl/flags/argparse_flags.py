@@ -282,7 +282,10 @@ class _FlagAction(argparse.Action):
 
   def __call__(self, parser, namespace, values, option_string=None):
     """See https://docs.python.org/3/library/argparse.html#action-classes."""
-    self._flag_instance.parse(values)
+    try:
+      self._flag_instance.parse(values)
+    except flags.IllegalFlagValueError as e:
+      raise argparse.ArgumentError(self, str(e)) from e
     self._flag_instance.using_default_value = False
 
 
