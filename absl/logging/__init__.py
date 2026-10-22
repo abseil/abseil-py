@@ -77,7 +77,7 @@ The differences in behavior are historical and unfortunate.
 """
 
 import collections
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 import getpass
 import inspect
 import io
