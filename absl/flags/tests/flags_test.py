@@ -1438,6 +1438,100 @@ class FlagsUnitTest(absltest.TestCase):
     with self.assertRaises(ValueError):
       flags.DEFINE_multi_enum('fruit', None, 'option', 'help', flag_values=fv)  # type: ignore
 
+  def test_enum_flag_with_empty_generator(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_enum('fruit', None, (x for x in []), 'help', flag_values=fv)
+
+  def test_enum_flag_with_empty_iterator(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_enum('fruit', None, iter([]), 'help', flag_values=fv)
+
+  def test_multi_enum_flag_with_empty_values(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_multi_enum('fruit', None, [], 'help', flag_values=fv)
+
+  def test_multi_enum_flag_with_empty_generator(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_multi_enum(
+          'fruit', None, (x for x in []), 'help', flag_values=fv
+      )
+
+  def test_multi_enum_flag_with_empty_iterator(self):
+    fv = flags.FlagValues()
+    with self.assertRaises(ValueError):
+      flags.DEFINE_multi_enum('fruit', None, iter([]), 'help', flag_values=fv)
+
+  def test_enum_flag_with_generator(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum(
+        'fruit',
+        None,
+        (x for x in ['apple', 'orange']),
+        'help message',
+        flag_values=fv,
+    )
+    helpstr = fv.main_module_help()
+    self.assertIn('--fruit: <apple|orange>: help message', helpstr)
+    argv = ('./program', '--fruit=orange')
+    argv = fv(argv)
+    self.assertEqual(fv.fruit, 'orange')
+
+  def test_enum_flag_case_insensitive_with_generator(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum(
+        'fruit',
+        None,
+        (x for x in ['Apple', 'Orange']),
+        'help message',
+        case_sensitive=False,
+        flag_values=fv,
+    )
+    argv = ('./program', '--fruit=apple')
+    argv = fv(argv)
+    self.assertEqual(fv.fruit, 'Apple')
+
+  def test_multi_enum_flag_with_generator(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_multi_enum(
+        'fruit',
+        None,
+        (x for x in ['apple', 'orange']),
+        'help message',
+        flag_values=fv,
+    )
+    helpstr = fv.main_module_help()
+    self.assertIn('--fruit: <apple|orange>: help message', helpstr)
+    argv = ('./program', '--fruit=orange', '--fruit=apple')
+    argv = fv(argv)
+    self.assertEqual(fv.fruit, ['orange', 'apple'])
+
+  def test_multi_enum_flag_with_iterator(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_multi_enum(
+        'fruit',
+        None,
+        iter(['apple', 'orange']),
+        'help message',
+        flag_values=fv,
+    )
+    helpstr = fv.main_module_help()
+    self.assertIn('--fruit: <apple|orange>: help message', helpstr)
+    argv = ('./program', '--fruit=orange', '--fruit=apple')
+    argv = fv(argv)
+    self.assertEqual(fv.fruit, ['orange', 'apple'])
+
+  def test_enum_flag_with_tuple_and_set(self):
+    fv = flags.FlagValues()
+    flags.DEFINE_enum('tup', 'a', ('a', 'b'), 'help', flag_values=fv)
+    flags.DEFINE_enum('st', 'c', {'c'}, 'help', flag_values=fv)
+    fv.mark_as_parsed()
+    self.assertEqual(fv.tup, 'a')
+    self.assertEqual(fv.st, 'c')
+
   def test_define_enum_class_flag(self):
     fv = flags.FlagValues()
     flags.DEFINE_enum_class('fruit', None, Fruit, '?', flag_values=fv)
