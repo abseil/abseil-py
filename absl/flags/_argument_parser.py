@@ -333,7 +333,8 @@ class EnumParser(ArgumentParser[str]):
     """Initializes EnumParser.
 
     Args:
-      enum_values: [str], a non-empty list of string values in the enum.
+      enum_values: Iterable[str], a non-empty collection of string values in the
+        enum.
       case_sensitive: bool, whether or not the enum is to be case-sensitive.
 
     Raises:
@@ -343,8 +344,10 @@ class EnumParser(ArgumentParser[str]):
       raise ValueError(f'enum_values cannot be empty, found "{enum_values}"')
     if isinstance(enum_values, str):
       raise ValueError(f'enum_values cannot be a str, found "{enum_values}"')
-    super().__init__()
     self.enum_values = list(enum_values)
+    if not self.enum_values:
+      raise ValueError(f'enum_values cannot be empty, found "{enum_values}"')
+    super().__init__()
     self.case_sensitive = case_sensitive
 
   def parse(self, argument: str) -> str:
