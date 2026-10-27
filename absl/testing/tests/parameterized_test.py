@@ -1061,8 +1061,6 @@ class AsyncTest(unittest.IsolatedAsyncioTestCase, parameterized.TestCase):
     self.verify_ran = False
 
   def tearDown(self):
-    super().tearDown()
-
     # We need the additional check here because originally the test function
     # would run, but a coroutine results from the execution and is never
     # awaited, so it looked like a successful test run when in fact the
@@ -1070,6 +1068,7 @@ class AsyncTest(unittest.IsolatedAsyncioTestCase, parameterized.TestCase):
     # coroutine and run_until_complete, then set the parameters to fail they
     # never will.
     self.assertTrue(self.verify_ran)
+    super().tearDown()
 
   @parameterized.parameters((1, 2, 2), (2, 2, 4), (3, 2, 6))
   async def test_multiply_expected_matches_actual(self, x, y, expected):

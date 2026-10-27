@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for absltest."""
-
 import collections
 from collections.abc import ItemsView, Iterator, KeysView, Mapping, ValuesView
 import contextlib
@@ -525,40 +523,33 @@ class TestCaseTest(BaseTestCase):
     self.assertRaises(AssertionError, assert_dict_equal, [], d)
     self.assertRaises(AssertionError, assert_dict_equal, 1, 1)
 
-    try:
+    with self.assertRaises(AssertionError) as cm:
       # Ensure we use equality as the sole measure of elements, not type, since
       # that is consistent with dict equality.
       assert_dict_equal({1: 1.0, 2: 2}, {1: 1, 2: 3})
-    except AssertionError as e:
-      self.assertMultiLineEqual(
-          '{1: 1.0, 2: 2} != {1: 1, 2: 3}\n'
-          'repr() of differing entries:\n2: 2 != 3\n',
-          str(e),
-      )
+    self.assertMultiLineEqual(
+        '{1: 1.0, 2: 2} != {1: 1, 2: 3}\n'
+        'repr() of differing entries:\n2: 2 != 3\n',
+        str(cm.exception),
+    )
 
-    try:
+    with self.assertRaises(AssertionError) as cm:
       assert_dict_equal({}, {'x': 1})
-    except AssertionError as e:
-      self.assertMultiLineEqual(
-          "{} != {'x': 1}\nUnexpected, but present entries:\n'x': 1\n", str(e)
-      )
-    else:
-      self.fail('Expecting AssertionError')
+    self.assertMultiLineEqual(
+        "{} != {'x': 1}\nUnexpected, but present entries:\n'x': 1\n",
+        str(cm.exception),
+    )
 
-    try:
+    with self.assertRaises(AssertionError) as cm:
       assert_dict_equal({}, {'x': 1}, 'a message')
-    except AssertionError as e:
-      self.assertIn('a message', str(e))
-    else:
-      self.fail('Expecting AssertionError')
+    self.assertIn('a message', str(cm.exception))
 
     expected = {'a': 1, 'b': 2, 'c': 3}
     seen = {'a': 2, 'c': 3, 'd': 4}
-    try:
+    with self.assertRaises(AssertionError) as cm:
       assert_dict_equal(expected, seen)
-    except AssertionError as e:
-      self.assertMultiLineEqual(
-          """\
+    self.assertMultiLineEqual(
+        """\
 {'a': 1, 'b': 2, 'c': 3} != {'a': 2, 'c': 3, 'd': 4}
 Unexpected, but present entries:
 'd': 4
@@ -569,10 +560,8 @@ repr() of differing entries:
 Missing entries:
 'b': 2
 """,
-          str(e),
-      )
-    else:
-      self.fail('Expecting AssertionError')
+        str(cm.exception),
+    )
 
     self.assertRaises(AssertionError, assert_dict_equal, (1, 2), {})
     self.assertRaises(AssertionError, assert_dict_equal, {}, (1, 2))
@@ -588,34 +577,31 @@ Missing entries:
       def __repr__(self):
         return self.name
 
-    try:
+    with self.assertRaises(AssertionError) as cm:
       assert_dict_equal(
           {'a': Obj('A'), Obj('b'): Obj('B'), Obj('c'): Obj('C')},
           {'a': Obj('A'), Obj('d'): Obj('D'), Obj('e'): Obj('E')},
       )
-    except AssertionError as e:
-      # Do as best we can not to be misleading when objects have the same repr
-      # but aren't equal.
-      err_str = str(e)
-      self.assertStartsWith(
-          err_str, "{'a': A, b: B, c: C} != {'a': A, d: D, e: E}\n"
-      )
-      self.assertRegex(
-          err_str,
-          r'(?ms).*^Unexpected, but present entries:\s+'
-          r'^(d: D$\s+^e: E|e: E$\s+^d: D)$',
-      )
-      self.assertRegex(
-          err_str,
-          r'(?ms).*^repr\(\) of differing entries:\s+' r'^.a.: A != A$',
-          err_str,
-      )
-      self.assertRegex(
-          err_str,
-          r'(?ms).*^Missing entries:\s+' r'^(b: B$\s+^c: C|c: C$\s+^b: B)$',
-      )
-    else:
-      self.fail('Expecting AssertionError')
+    # Do as best we can not to be misleading when objects have the same repr
+    # but aren't equal.
+    err_str = str(cm.exception)
+    self.assertStartsWith(
+        err_str, "{'a': A, b: B, c: C} != {'a': A, d: D, e: E}\n"
+    )
+    self.assertRegex(
+        err_str,
+        r'(?ms).*^Unexpected, but present entries:\s+'
+        r'^(d: D$\s+^e: E|e: E$\s+^d: D)$',
+    )
+    self.assertRegex(
+        err_str,
+        r'(?ms).*^repr\(\) of differing entries:\s+' r'^.a.: A != A$',
+        err_str,
+    )
+    self.assertRegex(
+        err_str,
+        r'(?ms).*^Missing entries:\s+' r'^(b: B$\s+^c: C|c: C$\s+^b: B)$',
+    )
 
     # Confirm that safe_repr, not repr, is being used.
     class RaisesOnRepr:
@@ -623,21 +609,19 @@ Missing entries:
       def __repr__(self):
         return 1 / 0  # Intentionally broken __repr__ implementation.
 
-    try:
+    with self.assertRaises(AssertionError) as cm:
       assert_dict_equal(
           {RaisesOnRepr(): RaisesOnRepr()},
           {RaisesOnRepr(): RaisesOnRepr()},
       )
-      self.fail('Expected dicts not to match')
-    except AssertionError as e:
-      # Depending on the testing environment, the object may get a __main__
-      # prefix or a absltest_test prefix, so strip that for comparison.
-      error_msg = re.sub(
-          r'( at 0x[^>]+)|__main__\.|absltest_test\.', '', str(e)
-      )
-      self.assertRegex(
-          error_msg,
-          """(?m)\
+    # Depending on the testing environment, the object may get a __main__
+    # prefix or a absltest_test prefix, so strip that for comparison.
+    error_msg = re.sub(
+        r'( at 0x[^>]+)|__main__\.|absltest_test\.', '', str(cm.exception)
+    )
+    self.assertRegex(
+        error_msg,
+        """(?m)\
 {<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>} != \
 {<.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>}
 Unexpected, but present entries:
@@ -646,7 +630,7 @@ Unexpected, but present entries:
 Missing entries:
 <.*RaisesOnRepr object.*>: <.*RaisesOnRepr object.*>
 """,
-      )
+    )
 
     # Confirm that safe_repr, not repr, is being used.
     class RaisesOnLt:
@@ -657,14 +641,15 @@ Missing entries:
       def __repr__(self):
         return '<RaisesOnLt object>'
 
-    try:
+    with self.assertRaises(AssertionError) as cm:
       assert_dict_equal(
           {RaisesOnLt(): RaisesOnLt()},
           {RaisesOnLt(): RaisesOnLt()},
       )
-    except AssertionError as e:
-      self.assertIn('Unexpected, but present entries:\n<RaisesOnLt', str(e))
-      self.assertIn('Missing entries:\n<RaisesOnLt', str(e))
+    self.assertIn(
+        'Unexpected, but present entries:\n<RaisesOnLt', str(cm.exception)
+    )
+    self.assertIn('Missing entries:\n<RaisesOnLt', str(cm.exception))
 
   def test_assert_set_equal(self):
     set1 = set()
@@ -2024,7 +2009,7 @@ test case
     self.assertIn('second', error_context.exception.args[0])
     self.assertIn('alhg', error_context.exception.args[0])
 
-    with self.assertRaises(ValueError) as error_context:
+    with self.assertRaises(ValueError):
       self.assertJsonEqual('', '')
 
   @parameterized.named_parameters(
@@ -2050,7 +2035,8 @@ test case
     self.assertDictContainsSubset(subset, dictionary)
 
   def test_assert_dict_contains_subset_converts_to_dict(self):
-    class ConvertibleToDict(Mapping):
+
+    class ConvertibleToDict(Mapping[str, Any]):
 
       def __init__(self, **kwargs):
         self._data = kwargs
@@ -2058,19 +2044,19 @@ test case
       def __getitem__(self, key: Any) -> Any:
         return self._data[key]
 
-      def __iter__(self) -> Iterator:
+      def __iter__(self) -> Iterator[str]:
         return iter(self._data)
 
       def __len__(self) -> int:
         return len(self._data)
 
-      def keys(self) -> KeysView:
+      def keys(self) -> KeysView[str]:
         return self._data.keys()
 
-      def values(self) -> ValuesView:
+      def values(self) -> ValuesView[Any]:
         return self._data.values()
 
-      def items(self) -> ItemsView:
+      def items(self) -> ItemsView[str, Any]:
         return self._data.items()
 
     self.assertDictContainsSubset(
@@ -2597,6 +2583,7 @@ class TestLoaderTest(absltest.TestCase):
   # pylint: enable=invalid-name
 
   def setUp(self):
+    super().setUp()
     self.loader = absltest.TestLoader()
 
   def test_valid(self):

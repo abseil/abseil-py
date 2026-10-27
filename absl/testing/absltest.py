@@ -1707,8 +1707,7 @@ class TestCase(unittest.TestCase):
       self.assertFalse(
           big <= small,
           self._formatMessage(
-              f'{big!r} unexpectedly less than or equal to {small!r}',
-              msg,  # pyrefly: ignore[bad-argument-type]
+              msg, f'{big!r} unexpectedly less than or equal to {small!r}'
           ),
       )
       self.assertGreater(big, small, msg)
@@ -1718,7 +1717,7 @@ class TestCase(unittest.TestCase):
               msg, f'{small!r} unexpectedly greater than {big!r}'
           ),
       )
-      self.assertGreaterEqual(big, small)
+      self.assertGreaterEqual(big, small, msg)
       self.assertFalse(
           small >= big,
           self._formatMessage(
@@ -2269,8 +2268,8 @@ def _walk_structure_for_problems(
         if k not in a:
           problem_list.append(f'{aname} lacks {k!r} but {bname} has it')
 
-    # NOTE: a or b could be a defaultdict, so we must take care that the traversal
-    # doesn't modify the data.
+    # NOTE: a or b could be a defaultdict, so we must take care that the
+    # traversal doesn't modify the data.
     case abc.Mapping():
       for k in a:
         if k in b:

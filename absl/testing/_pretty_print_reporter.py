@@ -83,10 +83,10 @@ class TextTestRunner(unittest.TextTestRunner):
     else:
       return super().run(test)
 
-  def _run_debug(self, test) -> unittest.TextTestResult:
+  def _run_debug(self, test) -> TextTestResult:
     test.debug()
     # Return an empty result to indicate success.
     return self._makeResult()
 
-  def _makeResult(self):
+  def _makeResult(self) -> TextTestResult:
     return TextTestResult(self.stream, self.descriptions, self.verbosity)

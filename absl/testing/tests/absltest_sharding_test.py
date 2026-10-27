@@ -38,9 +38,9 @@ class TestShardingTest(parameterized.TestCase):
     self._shard_file = None
 
   def tearDown(self):
-    super().tearDown()
     if self._shard_file is not None and os.path.exists(self._shard_file):
       os.unlink(self._shard_file)
+    super().tearDown()
 
   def _run_sharded(
       self,

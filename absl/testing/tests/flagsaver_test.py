@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for flagsaver."""
 
 import unittest
 from absl import flags
@@ -511,8 +510,8 @@ class SetUpTearDownTest(absltest.TestCase):
     self.saved_flag_values = flagsaver.save_flag_values()
 
   def tearDown(self):
-    super().tearDown()
     flagsaver.restore_flag_values(self.saved_flag_values)
+    super().tearDown()
 
   def test_mutate1(self):
     # Even though other test cases change the flag, it should be

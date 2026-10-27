@@ -66,6 +66,7 @@ class FailableTest(absltest.TestCase):
 
   @classmethod
   def setUpClass(cls):
+    super().setUpClass()
     if FLAGS.set_up_class_error or _random_error():
       raise Exception('setUpClass Errored!')
 
@@ -73,8 +74,10 @@ class FailableTest(absltest.TestCase):
   def tearDownClass(cls):
     if FLAGS.tear_down_class_error or _random_error():
       raise Exception('tearDownClass Errored!')
+    super().tearDownClass()
 
   def setUp(self):
+    super().setUp()
     if FLAGS.set_up_error or _random_error():
       raise Exception('setUp Errored!')
 
@@ -87,6 +90,7 @@ class FailableTest(absltest.TestCase):
 
     if FLAGS.tear_down_fail:
       self.fail('tearDown Failed!')
+    super().tearDown()
 
   def test(self):
     if FLAGS.test_error or _random_error():
