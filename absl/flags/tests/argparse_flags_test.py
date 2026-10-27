@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Tests for absl.flags.argparse_flags."""
-
 import io
 import os
 import subprocess
@@ -216,9 +214,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
     parser.add_argument('--header', help='Header message to print.')
     subparsers = parser.add_subparsers(help='The command to execute.')
 
-    # NOTE: The sub parsers don't work well with typing hence `type: ignore`.
     # See https://github.com/python/typeshed/issues/10082.
-    sub_parser = subparsers.add_parser(  # type: ignore
+    sub_parser = subparsers.add_parser(  # type: ignore[call-arg]
         'sub_cmd', help='Sub command.', inherited_absl_flags=self._absl_flags
     )
     sub_parser.add_argument('--sub_flag', help='Sub command flag.')
@@ -248,9 +245,8 @@ class ArgparseFlagsTest(parameterized.TestCase):
     )
     subparsers = parser.add_subparsers(help='The command to execute.')
 
-    # NOTE: The sub parsers don't work well with typing hence `type: ignore`.
     # See https://github.com/python/typeshed/issues/10082.
-    subparsers.add_parser(  # type: ignore
+    subparsers.add_parser(  # type: ignore[call-arg]
         'sub_cmd',
         help='Sub command.',
         # Do not inherit absl flags in the subparser.

@@ -516,15 +516,11 @@ class EnumClassListSerializer(ListSerializer[_ET]):
 class CsvListSerializer(ListSerializer[str]):
 
   def serialize(self, value: list[str]) -> str:
-    """Serializes a list as a CSV string or unicode."""
+    """Serializes a list as a CSV string."""
     output = io.StringIO()
     writer = csv.writer(output, delimiter=self.list_sep)
     writer.writerow([str(x) for x in value])
-    serialized_value = output.getvalue().strip()
-
-    # We need the returned value to be pure ascii or Unicodes so that
-    # when the xml help is generated they are usefully encodable.
-    return str(serialized_value)
+    return output.getvalue().strip()
 
 
 class EnumClassSerializer(ArgumentSerializer[_ET]):

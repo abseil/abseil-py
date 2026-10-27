@@ -68,10 +68,11 @@ class FlagTest(absltest.TestCase):
     )
     self.assertEqual(1, flag.default_unparsed)
 
-  def test_no_truthiness(self):
-    with self.assertRaises(TypeError):
-      if self.flag:
-        self.fail('Flag instances must raise rather than be truthy.')
+  def test_no_bool_conversion(self):
+    with self.assertRaisesRegex(
+        TypeError, 'A Flag instance would always be True'
+    ):
+      bool(self.flag)
 
   def test_set_default_overrides_current_value(self):
     self.assertEqual('apple', self.flag.value)
@@ -110,7 +111,7 @@ class BooleanFlagTest(parameterized.TestCase):
       ('', '(no help available)'),
       ('Is my test brilliant?', 'Is my test brilliant?'),
   )
-  def test_help_text(self, helptext_input, helptext_output):
+  def test_help_text(self, helptext_input: str, helptext_output: str):
     f = _flag.BooleanFlag('a_bool', False, helptext_input)
     self.assertEqual(helptext_output, f.help)
 
@@ -121,7 +122,7 @@ class EnumFlagTest(parameterized.TestCase):
       ('', '<apple|orange>: (no help available)'),
       ('Type of fruit.', '<apple|orange>: Type of fruit.'),
   )
-  def test_help_text(self, helptext_input, helptext_output):
+  def test_help_text(self, helptext_input: str, helptext_output: str):
     f = _flag.EnumFlag('fruit', 'apple', helptext_input, ['apple', 'orange'])
     self.assertEqual(helptext_output, f.help)
 
@@ -145,7 +146,9 @@ class EnumClassFlagTest(parameterized.TestCase):
       ('', '<apple|orange>: (no help available)'),
       ('Type of fruit.', '<apple|orange>: Type of fruit.'),
   )
-  def test_help_text_case_insensitive(self, helptext_input, helptext_output):
+  def test_help_text_case_insensitive(
+      self, helptext_input: str, helptext_output: str
+  ):
     f = _flag.EnumClassFlag('fruit', None, helptext_input, Fruit)
     self.assertEqual(helptext_output, f.help)
 
@@ -153,7 +156,9 @@ class EnumClassFlagTest(parameterized.TestCase):
       ('', '<APPLE|ORANGE>: (no help available)'),
       ('Type of fruit.', '<APPLE|ORANGE>: Type of fruit.'),
   )
-  def test_help_text_case_sensitive(self, helptext_input, helptext_output):
+  def test_help_text_case_sensitive(
+      self, helptext_input: str, helptext_output: str
+  ):
     f = _flag.EnumClassFlag(
         'fruit', None, helptext_input, Fruit, case_sensitive=True
     )
@@ -161,7 +166,7 @@ class EnumClassFlagTest(parameterized.TestCase):
 
   def test_requires_enum(self):
     with self.assertRaises(TypeError):
-      _flag.EnumClassFlag('fruit', None, 'help', ['apple', 'orange'])  # type: ignore
+      _flag.EnumClassFlag('fruit', None, 'help', ['apple', 'orange'])  # type: ignore[arg-type]
 
   def test_requires_non_empty_enum_class(self):
     with self.assertRaises(ValueError):
@@ -210,7 +215,9 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
           True,
       ),
   )
-  def test_help_text(self, helptext_input, helptext_output, case_sensitive):
+  def test_help_text(
+      self, helptext_input: str, helptext_output: str, case_sensitive: bool
+  ):
     f = _flag.MultiEnumClassFlag(
         'fruit', None, helptext_input, Fruit, case_sensitive=case_sensitive
     )
@@ -218,7 +225,7 @@ class MultiEnumClassFlagTest(parameterized.TestCase):
 
   def test_requires_enum(self):
     with self.assertRaises(TypeError):
-      _flag.MultiEnumClassFlag('fruit', None, 'help', ['apple', 'orange'])  # type: ignore
+      _flag.MultiEnumClassFlag('fruit', None, 'help', ['apple', 'orange'])  # type: ignore[arg-type]
 
   def test_requires_non_empty_enum_class(self):
     with self.assertRaises(ValueError):

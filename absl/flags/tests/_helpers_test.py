@@ -22,23 +22,23 @@ from absl.flags.tests import module_foo
 from absl.testing import absltest
 
 
-class FlagSuggestionTest(absltest.TestCase):
+_LONGOPTS = (
+    'fsplit-ivs-in-unroller=',
+    'fsplit-wide-types=',
+    'fstack-protector=',
+    'fstack-protector-all=',
+    'fstrict-aliasing=',
+    'fstrict-overflow=',
+    'fthread-jumps=',
+    'ftracer',
+    'ftree-bit-ccp',
+    'ftree-builtin-call-dce',
+    'ftree-ccp',
+    'ftree-ch',
+)
 
-  def setUp(self):
-    self.longopts = [
-        'fsplit-ivs-in-unroller=',
-        'fsplit-wide-types=',
-        'fstack-protector=',
-        'fstack-protector-all=',
-        'fstrict-aliasing=',
-        'fstrict-overflow=',
-        'fthread-jumps=',
-        'ftracer',
-        'ftree-bit-ccp',
-        'ftree-builtin-call-dce',
-        'ftree-ccp',
-        'ftree-ch',
-    ]
+
+class FlagSuggestionTest(absltest.TestCase):
 
   def test_damerau_levenshtein_id(self):
     self.assertEqual(0, _helpers._damerau_levenshtein('asdf', 'asdf'))
@@ -56,20 +56,20 @@ class FlagSuggestionTest(absltest.TestCase):
 
   def test_mispelled_suggestions(self):
     suggestions = _helpers.get_flag_suggestions(
-        'fstack_protector_all', self.longopts
+        'fstack_protector_all', _LONGOPTS
     )
     self.assertEqual(['fstack-protector-all'], suggestions)
 
   def test_ambiguous_prefix_suggestion(self):
-    suggestions = _helpers.get_flag_suggestions('fstack', self.longopts)
+    suggestions = _helpers.get_flag_suggestions('fstack', _LONGOPTS)
     self.assertEqual(['fstack-protector', 'fstack-protector-all'], suggestions)
 
   def test_misspelled_ambiguous_prefix_suggestion(self):
-    suggestions = _helpers.get_flag_suggestions('stack', self.longopts)
+    suggestions = _helpers.get_flag_suggestions('stack', _LONGOPTS)
     self.assertEqual(['fstack-protector', 'fstack-protector-all'], suggestions)
 
   def test_crazy_suggestion(self):
-    suggestions = _helpers.get_flag_suggestions('asdfasdgasdfa', self.longopts)
+    suggestions = _helpers.get_flag_suggestions('asdfasdgasdfa', _LONGOPTS)
     self.assertEqual([], suggestions)
 
   def test_suggestions_are_sorted(self):

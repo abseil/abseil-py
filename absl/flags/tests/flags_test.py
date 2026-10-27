@@ -201,7 +201,7 @@ class AliasFlagsTest(absltest.TestCase):
     with self.subTest('not setting anything'):
       define_flags()
       self.flags(['./program'])
-      self.assertEqual(None, self.alias.value)
+      self.assertIsNone(self.alias.value)
       self.assert_alias_mirrors_aliased(self.alias, self.aliased)
 
   def test_aliasing_multi_with_default(self):
@@ -1078,18 +1078,18 @@ class FlagsUnitTest(absltest.TestCase):
     new_flags = flags.FlagValues()
     flags.DEFINE_boolean('new1', 0, 'runhelp n1', flag_values=new_flags)
     flags.DEFINE_boolean('new2', 0, 'runhelp n2', flag_values=new_flags)
-    self.assertEqual(len(new_flags._flags()), 2)
+    self.assertLen(new_flags._flags(), 2)
     old_len = len(FLAGS._flags())
     FLAGS.append_flag_values(new_flags)
     self.assertEqual(len(FLAGS._flags()) - old_len, 2)
-    self.assertEqual('new1' in FLAGS._flags(), True)
-    self.assertEqual('new2' in FLAGS._flags(), True)
+    self.assertIn('new1', FLAGS._flags())
+    self.assertIn('new2', FLAGS._flags())
 
     # Then test that removing those flags works
     FLAGS.remove_flag_values(new_flags)
-    self.assertEqual(len(FLAGS._flags()), old_len)
-    self.assertFalse('new1' in FLAGS._flags())
-    self.assertFalse('new2' in FLAGS._flags())
+    self.assertLen(FLAGS._flags(), old_len)
+    self.assertNotIn('new1', FLAGS._flags())
+    self.assertNotIn('new2', FLAGS._flags())
 
     # Make sure append_flag_values works with flags with shortnames.
     new_flags = flags.FlagValues()
@@ -1097,7 +1097,7 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_boolean(
         'new4', 0, 'runhelp n4', flag_values=new_flags, short_name='n4'
     )
-    self.assertEqual(len(new_flags._flags()), 3)
+    self.assertLen(new_flags._flags(), 3)
     old_len = len(FLAGS._flags())
     FLAGS.append_flag_values(new_flags)
     self.assertEqual(len(FLAGS._flags()) - old_len, 3)
@@ -1108,10 +1108,10 @@ class FlagsUnitTest(absltest.TestCase):
 
     # Then test removing them
     FLAGS.remove_flag_values(new_flags)
-    self.assertEqual(len(FLAGS._flags()), old_len)
-    self.assertFalse('new3' in FLAGS._flags())
-    self.assertFalse('new4' in FLAGS._flags())
-    self.assertFalse('n4' in FLAGS._flags())
+    self.assertLen(FLAGS._flags(), old_len)
+    self.assertNotIn('new3', FLAGS._flags())
+    self.assertNotIn('new4', FLAGS._flags())
+    self.assertNotIn('n4', FLAGS._flags())
 
     # Make sure append_flag_values fails on duplicates
     flags.DEFINE_boolean('dup4', 0, 'runhelp d41')
@@ -1170,10 +1170,8 @@ class FlagsUnitTest(absltest.TestCase):
     flags.DEFINE_alias('alias_letters', 'letters')
     self.assertEqual(FLAGS['name'].default, FLAGS.alias_name)
     self.assertEqual(FLAGS['debug'].default, FLAGS.alias_debug)
-    # pyrefly: ignore[bad-argument-type]
-    self.assertEqual(int(FLAGS['decimal'].default), FLAGS.alias_decimal)
-    # pyrefly: ignore[bad-argument-type]
-    self.assertEqual(float(FLAGS['float'].default), FLAGS.alias_float)
+    self.assertEqual(FLAGS['decimal'].default, FLAGS.alias_decimal)
+    self.assertEqual(FLAGS['float'].default, FLAGS.alias_float)
     self.assertSameElements(FLAGS['letters'].default, FLAGS.alias_letters)
 
     # Original flags set on command line
@@ -1545,14 +1543,14 @@ class FlagsUnitTest(absltest.TestCase):
 
     argv = ('./program', '--fruit=orange')
     argv = fv(argv)
-    self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(fv['fruit'].present, 1)
     self.assertEqual(fv['fruit'].value, Fruit.ORANGE)
     fv.unparse_flags()
     argv = ('./program', '--fruit=APPLE')
     argv = fv(argv)
-    self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(fv['fruit'].present, 1)
     self.assertEqual(fv['fruit'].value, Fruit.APPLE)
@@ -1678,7 +1676,7 @@ class MultiNumericalFlagsTest(absltest.TestCase):
         'm_float1', float_default, 'float option that can occur multiple times'
     )
     actual = FLAGS.get_flag_value('m_float1', None)
-    self.assertEqual(1, len(actual))
+    self.assertLen(actual, 1)
     self.assertAlmostEqual(actual[0], float_default)
 
   def test_bad_multi_numerical_flags(self):
@@ -2088,6 +2086,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
   """Testing loading flags from a file and parsing them."""
 
   def setUp(self):
+    super().setUp()
     self.flag_values = flags.FlagValues()
     flags.DEFINE_string(
         'unittest_message1',
@@ -2122,6 +2121,7 @@ class LoadFromFlagFileTest(absltest.TestCase):
 
   def tearDown(self):
     self._remove_test_files()
+    super().tearDown()
 
   def _setup_test_files(self):
     """Creates and sets up some dummy flagfile files with bogus flags."""
@@ -2490,8 +2490,8 @@ class LoadFromFlagFileTest(absltest.TestCase):
 
     # Test that setting the default to None works correctly.
     self.flag_values.set_default('unittest_number', None)
-    self.assertEqual(self.flag_values.unittest_number, None)
-    self.assertEqual(self.flag_values['unittest_number'].default_as_str, None)
+    self.assertIsNone(self.flag_values.unittest_number)
+    self.assertIsNone(self.flag_values['unittest_number'].default_as_str)
     self.flag_values(['dummyscript', '--unittest_number=56'])
     self.assertEqual(self.flag_values.unittest_number, 56)
 
@@ -2538,6 +2538,7 @@ class FlagsParsingTest(absltest.TestCase):
   """Testing different aspects of parsing: '-f' vs '--flag', etc."""
 
   def setUp(self):
+    super().setUp()
     self.flag_values = flags.FlagValues()
 
   def test_two_dash_arg_first(self):
@@ -2580,7 +2581,7 @@ class FlagsParsingTest(absltest.TestCase):
     argv = ('./program', '-', '--onedash_name=Harry')
     with _use_gnu_getopt(self.flag_values, False):
       argv = self.flag_values(argv)
-      self.assertEqual(len(argv), 3)
+      self.assertLen(argv, 3)
       self.assertEqual(argv[1], '-')
       self.assertEqual(argv[2], '--onedash_name=Harry')
 
@@ -2649,7 +2650,7 @@ class FlagsParsingTest(absltest.TestCase):
         'extra',
     )
     argv = self.flag_values(argv)
-    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertLen(argv, 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
 
@@ -2662,12 +2663,12 @@ class FlagsParsingTest(absltest.TestCase):
         'extra',
     )
     argv = self.flag_values(argv)
-    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertLen(argv, 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
 
     # But not if the flagname is misspelled:
-    try:
+    with self.assertRaises(flags.UnrecognizedFlagError) as cm:
       argv = (
           './program',
           '--nosuchflag',
@@ -2676,11 +2677,9 @@ class FlagsParsingTest(absltest.TestCase):
           'extra',
       )
       self.flag_values(argv)
-      raise AssertionError('Unknown flag exception not raised')
-    except flags.UnrecognizedFlagError as e:
-      self.assertEqual(e.flagname, 'nosuchflag')
+    self.assertEqual(cm.exception.flagname, 'nosuchflag')
 
-    try:
+    with self.assertRaises(flags.UnrecognizedFlagError) as cm:
       argv = (
           './program',
           '--nosuchflag',
@@ -2689,14 +2688,12 @@ class FlagsParsingTest(absltest.TestCase):
           'extra',
       )
       self.flag_values(argv)
-      raise AssertionError('Unknown flag exception not raised')
-    except flags.UnrecognizedFlagError as e:
-      self.assertEqual(e.flagname, 'nosuchflag')
+    self.assertEqual(cm.exception.flagname, 'nosuchflag')
 
     # Allow unknown short flag -w if specified with undefok
     argv = ('./program', '-w', '--name=Bob', '--undefok=w', 'extra')
     argv = self.flag_values(argv)
-    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertLen(argv, 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
 
@@ -2710,7 +2707,7 @@ class FlagsParsingTest(absltest.TestCase):
         'extra',
     )
     argv = self.flag_values(argv)
-    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertLen(argv, 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
 
@@ -2725,12 +2722,12 @@ class FlagsParsingTest(absltest.TestCase):
         'extra',
     )
     argv = self.flag_values(argv)
-    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertLen(argv, 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
 
     # However, not if undefok doesn't specify the flag
-    try:
+    with self.assertRaises(flags.UnrecognizedFlagError) as cm:
       argv = (
           './program',
           '--nosuchflag',
@@ -2739,20 +2736,14 @@ class FlagsParsingTest(absltest.TestCase):
           'extra',
       )
       self.flag_values(argv)
-      raise AssertionError('Unknown flag exception not raised')
-    except flags.UnrecognizedFlagError as e:
-      self.assertEqual(e.flagname, 'nosuchflag')
+    self.assertEqual(cm.exception.flagname, 'nosuchflag')
 
     # Make sure --undefok doesn't mask other option errors.
-    try:
+    with self.assertRaises(flags.Error) as cm:
       # Provide an option requiring a parameter but not giving it one.
       argv = ('./program', '--undefok=name', '--name')
       self.flag_values(argv)
-      raise AssertionError('Missing option parameter exception not raised')
-    except flags.UnrecognizedFlagError:
-      raise AssertionError('Wrong kind of error exception raised')
-    except flags.Error:
-      pass
+    self.assertNotIsInstance(cm.exception, flags.UnrecognizedFlagError)
 
     # Test --undefok <list>
     argv = (
@@ -2766,7 +2757,7 @@ class FlagsParsingTest(absltest.TestCase):
         'extra',
     )
     argv = self.flag_values(argv)
-    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertLen(argv, 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
 
@@ -2784,7 +2775,7 @@ class NonGlobalFlagsTest(absltest.TestCase):
     flags.DEFINE_string('nonglobal_flag', 'Bob', 'flaghelp', nonglobal_flags)
     argv = ('./program', '--nonglobal_flag=Mary', 'extra')
     argv = nonglobal_flags(argv)
-    self.assertEqual(len(argv), 2, 'wrong number of arguments pulled')
+    self.assertLen(argv, 2, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
     self.assertEqual(argv[1], 'extra', 'extra argument not preserved')
     self.assertEqual(nonglobal_flags['nonglobal_flag'].value, 'Mary')
@@ -2793,16 +2784,14 @@ class NonGlobalFlagsTest(absltest.TestCase):
     """Test unrecognized non-global flags."""
     nonglobal_flags = flags.FlagValues()
     argv = ('./program', '--nosuchflag')
-    try:
-      argv = nonglobal_flags(argv)
-      raise AssertionError('Unknown flag exception not raised')
-    except flags.UnrecognizedFlagError as e:
-      self.assertEqual(e.flagname, 'nosuchflag')
+    with self.assertRaises(flags.UnrecognizedFlagError) as cm:
+      nonglobal_flags(argv)
+    self.assertEqual(cm.exception.flagname, 'nosuchflag')
 
     argv = ('./program', '--nosuchflag', '--undefok=nosuchflag')
 
     argv = nonglobal_flags(argv)
-    self.assertEqual(len(argv), 1, 'wrong number of arguments pulled')
+    self.assertLen(argv, 1, 'wrong number of arguments pulled')
     self.assertEqual(argv[0], './program', 'program name not preserved')
 
   def test_create_flag_errors(self):
@@ -2832,7 +2821,7 @@ class NonGlobalFlagsTest(absltest.TestCase):
     # We also check that _FlagIsRegistered works as expected :)
     self.assertTrue(flag_values._flag_is_registered(flag_obj))
     del flag_values.delattr_foo
-    self.assertFalse('delattr_foo' in flag_values._flags())
+    self.assertNotIn('delattr_foo', flag_values._flags())
     self.assertFalse(flag_values._flag_is_registered(flag_obj))
     # If the previous del FLAGS.delattr_foo did not work properly, the
     # next definition will trigger a redefinition error.
@@ -2841,7 +2830,7 @@ class NonGlobalFlagsTest(absltest.TestCase):
     )
     del flag_values.delattr_foo
 
-    self.assertFalse('delattr_foo' in flag_values)
+    self.assertNotIn('delattr_foo', flag_values)
 
     # 2. Declare and delete a flag with a short name.
     flags.DEFINE_string(
@@ -2873,8 +2862,8 @@ class NonGlobalFlagsTest(absltest.TestCase):
     del flag_values.x5
     self.assertFalse(flag_values._flag_is_registered(flag_obj))
 
-    self.assertFalse('delattr_bar' in flag_values)
-    self.assertFalse('x5' in flag_values)
+    self.assertNotIn('delattr_bar', flag_values)
+    self.assertNotIn('x5', flag_values)
 
   def test_list_flag_format(self):
     """Tests for correctly-formatted list flags."""
@@ -3088,6 +3077,7 @@ class OverrideValueTest(absltest.TestCase):
 class KeyFlagsTest(absltest.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.flag_values = flags.FlagValues()
 
   def _get_names_of_defined_flags(self, module, flag_values):
@@ -3455,6 +3445,7 @@ class FlagsErrorMessagesTest(absltest.TestCase):
   """Testing special cases for integer and float flags error messages."""
 
   def setUp(self):
+    super().setUp()
     self.flag_values = flags.FlagValues()
 
   def test_integer_error_text(self):
@@ -3604,15 +3595,13 @@ class FlagsErrorMessagesTest(absltest.TestCase):
   ):
     """Set a flag to a given value and make sure we get expected message."""
 
-    try:
+    with self.assertRaises(flags.IllegalFlagValueError) as cm:
       self.flag_values.__setattr__(flag_name, flag_value)
-      raise AssertionError('Bounds exception not raised!')
-    except flags.IllegalFlagValueError as e:
-      expected = (
-          f'flag --{flag_name}={flag_value}: '
-          f'{flag_value} is not {expected_message_suffix}'
-      )
-      self.assertEqual(str(e), expected)
+    expected = (
+        f'flag --{flag_name}={flag_value}: '
+        f'{flag_value} is not {expected_message_suffix}'
+    )
+    self.assertEqual(str(cm.exception), expected)
 
 
 if __name__ == '__main__':

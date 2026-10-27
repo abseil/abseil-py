@@ -89,6 +89,7 @@ class FlagCreateXMLDOMElement(absltest.TestCase):
   """
 
   def setUp(self):
+    super().setUp()
     # self.fv is a FlagValues object, just like flags.FLAGS.  Each
     # test registers one flag with this FlagValues.
     self.fv = flags.FlagValues()

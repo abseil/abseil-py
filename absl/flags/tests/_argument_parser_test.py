@@ -17,49 +17,38 @@ Most of the argument parsers are covered in the flags_test.py.
 """
 
 import enum
+from typing import Any
 
 from absl.flags import _argument_parser
 from absl.testing import absltest
 from absl.testing import parameterized
 
 
-class ArgumentParserTest(absltest.TestCase):
+class ArgumentParserTest(parameterized.TestCase):
 
   def test_instance_cache(self):
     parser1 = _argument_parser.FloatParser()
     parser2 = _argument_parser.FloatParser()
     self.assertIs(parser1, parser2)
 
-  def test_parse_wrong_type(self):
-    parser = _argument_parser.ArgumentParser()
+  @parameterized.named_parameters([
+      ('int', 0),
+      ('bytes', b''),
+  ])
+  def test_parse_wrong_type(self, value: Any):
+    parser = _argument_parser.ArgumentParser[Any]()
     with self.assertRaises(TypeError):
-      parser.parse(0)  # type: ignore
-
-    if bytes is not str:
-      # In PY3, it does not accept bytes.
-      with self.assertRaises(TypeError):
-        parser.parse(b'')  # type: ignore
+      parser.parse(value)
 
 
-class BooleanParserTest(absltest.TestCase):
+class BooleanParserTest(parameterized.TestCase):
 
   def setUp(self):
     super().setUp()
     self.parser = _argument_parser.BooleanParser()
 
-  def test_parse_bytes(self):
-    with self.assertRaises(TypeError):
-      self.parser.parse(b'true')  # type: ignore
-
   def test_parse_str(self):
     self.assertTrue(self.parser.parse('true'))
-
-  def test_parse_unicode(self):
-    self.assertTrue(self.parser.parse('true'))
-
-  def test_parse_wrong_type(self):
-    with self.assertRaises(TypeError):
-      self.parser.parse(1.234)  # type: ignore
 
   def test_parse_str_false(self):
     self.assertFalse(self.parser.parse('false'))
@@ -67,18 +56,27 @@ class BooleanParserTest(absltest.TestCase):
   def test_parse_integer(self):
     self.assertTrue(self.parser.parse(1))
 
-  def test_parse_invalid_integer(self):
-    with self.assertRaises(ValueError):
-      self.parser.parse(-1)
+  @parameterized.named_parameters(
+      ('bytes', b'true'),
+      ('float', 1.234),
+  )
+  def test_parse_wrong_type(self, value: Any):
+    with self.assertRaises(TypeError):
+      self.parser.parse(value)
 
-  def test_parse_invalid_str(self):
+  @parameterized.named_parameters(
+      ('negative', -1),
+      ('bad_string', 'nottrue'),
+  )
+  def test_parse_invalid_value(self, value: int | str):
     with self.assertRaises(ValueError):
-      self.parser.parse('nottrue')
+      self.parser.parse(value)
 
 
 class FloatParserTest(absltest.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.parser = _argument_parser.FloatParser()
 
   def test_parse_string(self):
@@ -86,22 +84,25 @@ class FloatParserTest(absltest.TestCase):
 
   def test_parse_wrong_type(self):
     with self.assertRaises(TypeError):
-      self.parser.parse(False)  # type: ignore
+      self.parser.parse(False)
 
 
-class IntegerParserTest(absltest.TestCase):
+class IntegerParserTest(parameterized.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.parser = _argument_parser.IntegerParser()
 
   def test_parse_string(self):
     self.assertEqual(1, self.parser.parse('1'))
 
-  def test_parse_wrong_type(self):
+  @parameterized.named_parameters(
+      ('float', 1e2),
+      ('bool', False),
+  )
+  def test_parse_wrong_type(self, value: Any):
     with self.assertRaises(TypeError):
-      self.parser.parse(1e2)  # type: ignore
-    with self.assertRaises(TypeError):
-      self.parser.parse(False)  # type: ignore
+      self.parser.parse(value)
 
 
 class EnumParserTest(absltest.TestCase):
@@ -157,14 +158,14 @@ class EmptyEnum(enum.Enum):
 class MixedCaseEnum(enum.Enum):
   APPLE = 1
   BANANA = 2
-  apple = 3
+  apple = 3  # pylint: disable=invalid-name
 
 
 class EnumClassParserTest(parameterized.TestCase):
 
   def test_requires_enum(self):
     with self.assertRaises(TypeError):
-      _argument_parser.EnumClassParser(['apple', 'banana'])  # type: ignore
+      _argument_parser.EnumClassParser(['apple', 'banana'])  # type: ignore[arg-type]
 
   def test_requires_non_empty_enum_class(self):
     with self.assertRaises(ValueError):
@@ -185,7 +186,7 @@ class EnumClassParserTest(parameterized.TestCase):
       parser.parse('apple')
 
   @parameterized.parameters('APPLE', 'apple', 'Apple')
-  def test_parse_string_case_insensitive(self, value):
+  def test_parse_string_case_insensitive(self, value: str):
     parser = _argument_parser.EnumClassParser(Fruit, case_sensitive=False)
     self.assertIs(Fruit.APPLE, parser.parse(value))
 
@@ -201,8 +202,10 @@ class EnumClassParserTest(parameterized.TestCase):
   @parameterized.parameters(
       (Fruit.BANANA, False, 'BANANA'), (Fruit.BANANA, True, 'banana')
   )
-  def test_serialize_parse(self, value, lowercase, expected):
-    serializer = _argument_parser.EnumClassSerializer(lowercase=lowercase)
+  def test_serialize_parse(self, value: Fruit, lowercase: bool, expected: str):
+    serializer = _argument_parser.EnumClassSerializer[Fruit](
+        lowercase=lowercase
+    )
     parser = _argument_parser.EnumClassParser(
         Fruit, case_sensitive=not lowercase
     )
@@ -221,9 +224,9 @@ class SerializerTest(parameterized.TestCase):
       dict(lowercase=False, expected='APPLE+BANANA'),
       dict(lowercase=True, expected='apple+banana'),
   ])
-  def test_enum_class_list_serializer(self, lowercase, expected):
+  def test_enum_class_list_serializer(self, lowercase: bool, expected: str):
     values = [Fruit.APPLE, Fruit.BANANA]
-    serializer = _argument_parser.EnumClassListSerializer(
+    serializer = _argument_parser.EnumClassListSerializer[Fruit](
         list_sep='+', lowercase=lowercase
     )
     serialized = serializer.serialize(values)

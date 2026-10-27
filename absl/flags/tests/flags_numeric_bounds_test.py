@@ -26,8 +26,7 @@ class NumericFlagBoundsTest(absltest.TestCase):
     super().setUp()
     self.flag_values = flags.FlagValues()
 
-  def test_no_validator_if_no_bounds(self):
-    """Validator is not registered if lower and upper bound are None."""
+  def test_validator_if_lower_bound(self):
     with mock.patch.object(
         _validators, 'register_validator'
     ) as register_validator:
@@ -41,6 +40,8 @@ class NumericFlagBoundsTest(absltest.TestCase):
       register_validator.assert_called_once_with(
           'positive_flag', mock.ANY, flag_values=self.flag_values
       )
+
+  def test_no_validator_if_no_bounds(self):
     with mock.patch.object(
         _validators, 'register_validator'
     ) as register_validator:
@@ -95,16 +96,18 @@ class NumericFlagBoundsTest(absltest.TestCase):
         flag_values=self.flag_values,
     )
     argv = ('./program', '--int_flag=-1')
-    try:
+    with self.assertRaises(flags.IllegalFlagValueError) as context:
       self.flag_values(argv)
-    except flags.IllegalFlagValueError as e:
-      text = 'flag --int_flag=-1: -1 is not an integer in the range [0, 5]'
-      self.assertEqual(text, str(e))
+    self.assertEqual(
+        str(context.exception),
+        'flag --int_flag=-1: -1 is not an integer in the range [0, 5]',
+    )
 
 
 class SettingFlagAfterStartTest(absltest.TestCase):
 
   def setUp(self):
+    super().setUp()
     self.flag_values = flags.FlagValues()
 
   def test_success(self):
