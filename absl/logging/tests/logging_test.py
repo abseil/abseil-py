@@ -164,17 +164,14 @@ class PythonHandlerTest(absltest.TestCase):
         mock.patch.object(os.path, 'islink', return_value=True),
         mock.patch.object(os, 'getpid', return_value=4321),
         mock.patch.object(os, 'unlink') as mock_unlink,
+        mock.patch.object(os, 'symlink') as mock_symlink,
     ):
-      if getattr(os, 'symlink', None):
-        expected_symlink = os.path.join('here', 'prog1.INFO')
-        with mock.patch.object(os, 'symlink') as mock_symlink:
-          self.python_handler.start_logging_to_file()
-          mock_unlink.assert_called_once_with(expected_symlink)
-          mock_symlink.assert_called_once_with(
-              'prog1.INFO.19791021-181716.4321', expected_symlink
-          )
-      else:
-        self.python_handler.start_logging_to_file()
+      expected_symlink = os.path.join('here', 'prog1.INFO')
+      self.python_handler.start_logging_to_file()
+      mock_unlink.assert_called_once_with(expected_symlink)
+      mock_symlink.assert_called_once_with(
+          'prog1.INFO.19791021-181716.4321', expected_symlink
+      )
 
   def test_log_file(self):
     handler = logging.PythonHandler()
@@ -245,17 +242,24 @@ class PythonHandlerTest(absltest.TestCase):
       self.python_handler.emit(record)
       mock_log_to_stderr.assert_called_once_with(record)
 
+  @flagsaver.flagsaver(
+      logtostderr=False, alsologtostderr=False, stderrthreshold='fatal'
+  )
   def test_emit(self):
+    mock_stderr = io.StringIO()
     stream = io.StringIO()
     handler = logging.PythonHandler(stream)
-    handler.stderr_threshold = std_logging.FATAL  # pyrefly: ignore[missing-attribute]
     record = std_logging.LogRecord(
         'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
-    handler.emit(record)
+    with mock.patch.object(sys, 'stderr', new=mock_stderr):
+      handler.emit(record)
     self.assertEqual(1, stream.getvalue().count('logging_msg'))
+    self.assertEmpty(mock_stderr.getvalue())
 
-  @flagsaver.flagsaver(stderrthreshold='debug')
+  @flagsaver.flagsaver(
+      logtostderr=False, alsologtostderr=False, stderrthreshold='debug'
+  )
   def test_emit_and_stderr_threshold(self):
     mock_stderr = io.StringIO()
     stream = io.StringIO()
@@ -268,12 +272,13 @@ class PythonHandlerTest(absltest.TestCase):
       self.assertEqual(1, stream.getvalue().count('logging_msg'))
       self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
 
-  @flagsaver.flagsaver(alsologtostderr=True)
+  @flagsaver.flagsaver(
+      logtostderr=False, alsologtostderr=True, stderrthreshold='fatal'
+  )
   def test_emit_also_log_to_stderr(self):
     mock_stderr = io.StringIO()
     stream = io.StringIO()
     handler = logging.PythonHandler(stream)
-    handler.stderr_threshold = std_logging.FATAL  # pyrefly: ignore[missing-attribute]
     record = std_logging.LogRecord(
         'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
     )
@@ -282,11 +287,13 @@ class PythonHandlerTest(absltest.TestCase):
       self.assertEqual(1, stream.getvalue().count('logging_msg'))
       self.assertEqual(1, mock_stderr.getvalue().count('logging_msg'))
 
+  @flagsaver.flagsaver(
+      logtostderr=False, alsologtostderr=False, stderrthreshold='info'
+  )
   def test_emit_on_stderr(self):
     mock_stderr = io.StringIO()
     with mock.patch.object(sys, 'stderr', new=mock_stderr):
       handler = logging.PythonHandler()
-      handler.stderr_threshold = std_logging.INFO  # pyrefly: ignore[missing-attribute]
       record = std_logging.LogRecord(
           'name', std_logging.INFO, 'path', 12, 'logging_msg', None, None
       )

@@ -920,19 +920,17 @@ class PythonHandler(logging.StreamHandler):
 
     self.stream = open(filename, 'a', encoding='utf-8')
 
-    # os.symlink is not available on Windows Python 2.
-    if getattr(os, 'symlink', None):
-      # Create a symlink to the log file with a canonical name.
-      symlink = os.path.join(actual_log_dir, symlink_prefix + '.INFO')
-      try:
-        if os.path.islink(symlink):
-          os.unlink(symlink)
-        os.symlink(os.path.basename(filename), symlink)
-      except OSError:
-        # If it fails, we're sad but it's no error.  Commonly, this
-        # fails because the symlink was created by another user and so
-        # we can't modify it
-        pass
+    # Create a symlink to the log file with a canonical name.
+    symlink = os.path.join(actual_log_dir, symlink_prefix + '.INFO')
+    try:
+      if os.path.islink(symlink):
+        os.unlink(symlink)
+      os.symlink(os.path.basename(filename), symlink)
+    except OSError:
+      # If it fails, we're sad but it's no error.  Commonly, this
+      # fails because the symlink was created by another user and so
+      # we can't modify it
+      pass
 
   def use_absl_log_file(self, program_name=None, log_dir=None):
     """Conditionally logs to files, based on --logtostderr."""
