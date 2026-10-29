@@ -170,23 +170,11 @@ class ArgumentParser(argparse.ArgumentParser):
           args, force_gnu=True
       )
 
-    undefok_missing = object()
-    undefok = getattr(namespace, 'undefok', undefok_missing)
-
     namespace, args = super().parse_known_args(args, namespace)
-
-    # For Python <= 2.7.8: https://bugs.python.org/issue9351, a bug where
-    # sub-parsers don't preserve existing namespace attributes.
-    # Restore the undefok attribute if a sub-parser dropped it.
-    if undefok is not undefok_missing:
-      namespace.undefok = undefok
 
     if self._inherited_absl_flags is not None:
       # Handle --undefok. At this point, `args` only contains unknown flags,
       # so it won't strip defined flags that are also specified with --undefok.
-      # For Python <= 2.7.8: https://bugs.python.org/issue9351, a bug where
-      # sub-parsers don't preserve existing namespace attributes. The undefok
-      # attribute might not exist because a subparser dropped it.
       if hasattr(namespace, 'undefok'):
         args = _strip_undefok_args(namespace.undefok, args)
         # absl flags are not exposed in the Namespace object. See Namespace:

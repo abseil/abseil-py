@@ -453,8 +453,24 @@ class ArgparseFlagsTest(parameterized.TestCase):
     )
     args = parser.parse_args(cmd_args)  # Make sure it doesn't raise.
     # Make sure `undefok` is not exposed in namespace.
-    sentinel = object()
-    self.assertIs(sentinel, getattr(args, 'undefok', sentinel))
+    with self.assertRaises(AttributeError):
+      getattr(args, 'undefok')
+
+  @parameterized.named_parameters(
+      ('before_subcommand', ['--undefok=unknown', '--unknown', 'sub_cmd']),
+      ('across_subcommand', ['--undefok=unknown', 'sub_cmd', '--unknown']),
+      ('after_subcommand', ['sub_cmd', '--undefok=unknown', '--unknown']),
+  )
+  def test_undefok_with_subparsers(self, cmd_args):
+    parser = argparse_flags.ArgumentParser(
+        inherited_absl_flags=self._absl_flags
+    )
+    subparsers = parser.add_subparsers(help='The command to execute.')
+    subparsers.add_parser('sub_cmd', help='Sub command.')
+    args = parser.parse_args(cmd_args)  # Make sure it doesn't raise.
+    # Make sure `undefok` is not exposed in namespace.
+    with self.assertRaises(AttributeError):
+      getattr(args, 'undefok')
 
   def test_undefok_flag_existing(self):
     parser = argparse_flags.ArgumentParser(
