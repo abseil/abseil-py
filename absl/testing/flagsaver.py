@@ -379,8 +379,13 @@ class _ParsingFlagOverrider(_FlagOverrider):
     self._saved_flag_values = save_flag_values(FLAGS)
     try:
       for flag_name, unparsed_value in self._overrides.items():
+        flag = FLAGS[flag_name]
+        if isinstance(flag.value, list):
+          # MultiFlag.parse appends to an existing value, including via aliases.
+          # Do not mutate the list retained by save_flag_values().
+          flag.value = flag.value.copy()
         # LINT.IfChange(flag_override_parsing)
-        FLAGS[flag_name].parse(unparsed_value)
+        flag.parse(unparsed_value)
         FLAGS[flag_name].using_default_value = False
         # LINT.ThenChange()
 
