@@ -10,6 +10,7 @@ licenses(["notice"])
 py_library(
     name = "logging",
     srcs = ["__init__.py"],
+    pyi_srcs = ["__init__.pyi"],
     visibility = ["//visibility:public"],
     deps = [
         ":converter",
@@ -39,6 +40,10 @@ py_test(
     name = "tests/logging_test",
     size = "small",
     srcs = ["tests/logging_test.py"],
+    main = "tests/logging_test.py",
+    pyi_deps = [
+        "//base/python:pywrapbase",
+    ],
     deps = [
         ":logging",
         "//absl/flags",
@@ -72,6 +77,11 @@ py_binary(
     name = "tests/logging_functional_test_helper",
     testonly = 1,
     srcs = ["tests/logging_functional_test_helper.py"],
+    main = "tests/logging_functional_test_helper.py",
+    pyi_deps = [
+        "//base/python:pywrapbase",
+        "//third_party/py/absl/logging/tests/python:logging_functional_test_cpp_helper",
+    ],
     deps = [
         ":logging",
         "//absl:app",
@@ -84,6 +94,7 @@ py_test(
     size = "large",
     srcs = ["tests/logging_functional_test.py"],
     data = [":tests/logging_functional_test_helper"],
+    main = "tests/logging_functional_test.py",
     shard_count = 50,
     deps = [
         ":logging",
