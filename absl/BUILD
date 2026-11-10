@@ -9,6 +9,7 @@ py_library(
     srcs = [
         "app.py",
     ],
+    pyi_srcs = ["app.pyi"],
     visibility = ["//visibility:public"],
     deps = [
         ":command_name",
