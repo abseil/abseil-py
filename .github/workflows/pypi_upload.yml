@@ -14,13 +14,10 @@ jobs:
       name: pypi
       url: https://pypi.org/p/absl-py
     permissions:
-      contents: read
       id-token: write
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      with:
-        persist-credentials: false
 
     - name: Set up Python
       uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -33,71 +30,5 @@ jobs:
     - name: Build package
       run: python -m build
 
-    - name: Collect and verify package version
-      id: pkg_version
-      run: |
-        set -euo pipefail
-        PKG_VER="${GITHUB_REF_NAME#v}"
-        test -f "dist/absl_py-${PKG_VER}-py3-none-any.whl"
-        test -f "dist/absl_py-${PKG_VER}.tar.gz"
-        echo "pkg_ver=${PKG_VER}" >> "$GITHUB_OUTPUT"
-
-    - name: Authenticate to Google Cloud (OSS Exit Gate)
-      id: auth
-      uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
-      with:
-        workload_identity_provider: 'projects/305452601764/locations/global/workloadIdentityPools/builders/providers/github'
-
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
-
-    - name: Clean up previous staging attempt for this version (if any)
-      env:
-        PKG_VER: ${{ steps.pkg_version.outputs.pkg_ver }}
-      run: |
-        set -euo pipefail
-        if gcloud artifacts versions describe "${PKG_VER}" \
-          --package="absl-py" \
-          --project="oss-exit-gate-prod" \
-          --location="us" \
-          --repository="abseil-py--pypi" >/dev/null 2>&1; then
-          gcloud artifacts versions delete "${PKG_VER}" \
-            --package="absl-py" \
-            --project="oss-exit-gate-prod" \
-            --location="us" \
-            --repository="abseil-py--pypi" \
-            --quiet
-        fi
-
-    - name: Stage distributions to OSS Exit Gate
-      uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # release/v1
-      with:
-        repository-url: https://us-python.pkg.dev/oss-exit-gate-prod/abseil-py--pypi/
-        user: oauth2accesstoken
-        password: ${{ steps.auth.outputs.auth_token }}
-        attestations: false
-
-    - name: Upload OSS Exit Gate manifest
-      env:
-        PKG_VER: ${{ steps.pkg_version.outputs.pkg_ver }}
-        RUN_ID: ${{ github.run_id }}
-        RUN_ATTEMPT: ${{ github.run_attempt }}
-      run: |
-        set -euo pipefail
-        cat <<EOF > manifest.json
-        {
-          "publish_all": false,
-          "publishing_groups": [
-            {
-              "packages": [
-                {
-                  "name": "absl-py",
-                  "version": "${PKG_VER}"
-                }
-              ]
-            }
-          ]
-        }
-        EOF
-        gcloud storage cp manifest.json \
-          "gs://oss-exit-gate-prod-projects-bucket/abseil-py/pypi/manifests/manifest-${PKG_VER}-${RUN_ID}-${RUN_ATTEMPT}.json"
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # v1.14.2
