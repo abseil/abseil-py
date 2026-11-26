@@ -91,6 +91,7 @@ There are several differences between :mod:`absl.flags` and
 """
 
 import argparse
+import copy
 import sys
 
 from absl import flags
@@ -169,8 +170,8 @@ class ArgumentParser(argparse.ArgumentParser):
       args = self._inherited_absl_flags.read_flags_from_files(
           args, force_gnu=True
       )
-
-    namespace, args = super().parse_known_args(args, namespace)
+    else:
+      namespace, args = super().parse_known_args(args, namespace)
 
     if self._inherited_absl_flags is not None:
       # Handle --undefok. At this point, `args` only contains unknown flags,
@@ -219,6 +220,7 @@ class ArgumentParser(argparse.ArgumentParser):
     if flag_instance.boolean:
       # Only add the `no` form to the long name.
       argument_names.append('--no' + flag_name)
+    if flag_instance.boolean:
       self.add_argument(
           *argument_names,
           action=_BooleanFlagAction,
