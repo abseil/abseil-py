@@ -1319,10 +1319,10 @@ class XmlReporterFixtureTest(absltest.TestCase):
 
     self.assertEqual(int(xml.attrib['errors']), num_errors)
     self.assertEqual(int(xml.attrib['failures']), num_failures)
-    self.assertLen(xml, len(suites))
     actual_suites = sorted(
         xml.findall('testsuite'), key=lambda x: x.attrib['name']
     )
+    self.assertLen(actual_suites, len(suites))
     suites = sorted(suites, key=lambda x: x['name'])
     for actual_suite, expected_suite in zip(actual_suites, suites):
       self.assertEqual(actual_suite.attrib['name'], expected_suite['name'])
